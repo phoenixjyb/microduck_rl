@@ -84,6 +84,10 @@ from .microduck_spin_env_cfg import (
     make_microduck_spin_env_cfg,
     MicroduckSpinRlCfg,
 )
+from .microduck_velocity_hostile_env_cfg import (
+    MicroduckHostileRlCfg,
+    make_microduck_velocity_hostile_env_cfg,
+)
 from .backlash import make_backlash_variant
 from .run import make_run_variant, MicroduckRunRlCfg
 from .sprung import SWEEP_ARMS, make_sprung_variant, sprung_rl_cfg, ARM_TASK_SUFFIX
@@ -215,6 +219,22 @@ register_mjlab_task(
     runner_cls=MicroduckOnPolicyRunner,
 )
 print("✓ VelStand task registered: Mjlab-VelStand-Flat-MicroDuck")
+
+# Hostile terrain (2026-08-29). Finetune* variants are meant to resume from the shipped walk's
+# checkpoint (wandb yr25mna4, model_9999.pt); Scratch* start from random weights.
+for _name, _kw in {
+    "FinetuneBase": dict(finetune=True, feet=False, track=False),   # A: ladder only, reward unchanged
+    "FinetuneFeet": dict(finetune=True, feet=True, track=False),    # B: + foot 3.5 cm, hip roll loose
+    "ScratchFeet": dict(finetune=False, feet=True, track=False),    # C: same env as B, from scratch
+    "FinetuneFeetTrack": dict(finetune=True, feet=True, track=True),  # D: B + stricter speed tracking
+}.items():
+    register_mjlab_task(
+        task_id=f"Mjlab-Hostile-{_name}-MicroDuck",
+        env_cfg=make_microduck_velocity_hostile_env_cfg(**_kw),
+        play_env_cfg=make_microduck_velocity_hostile_env_cfg(play=True, **_kw),
+        rl_cfg=MicroduckHostileRlCfg,
+        runner_cls=MicroduckOnPolicyRunner,
+    )
 
 register_mjlab_task(
     task_id="Mjlab-VelStand-Rough-MicroDuck",

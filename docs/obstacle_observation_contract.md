@@ -1,0 +1,50 @@
+# Obstacle observation contract v1
+
+The obstacle-avoidance locomotion policy does **not** consume camera images,
+depth maps, or detector features. Perception is a separate component that
+supplies one compact estimate for the nearest relevant obstacle. This keeps
+raw-camera perception outside locomotion RL and gives simulation and the robot
+the same stable policy interface.
+
+## Actor input
+
+The actor receives seven normalized values in this exact order:
+
+| Index | Field | Definition | Range |
+| ---: | --- | --- | ---: |
+| 0 | `range` | forward surface range / 2.0 m | [0, 1] |
+| 1 | `bearing_sin` | sine of base-frame bearing | [-1, 1] |
+| 2 | `bearing_cos` | cosine of base-frame bearing | [-1, 1] |
+| 3 | `width` | obstacle width / 0.50 m | [0, 1] |
+| 4 | `height` | obstacle height / 0.25 m | [0, 1] |
+| 5 | `closing_rate` | closing rate / 2.0 m/s; positive means approaching | [-1, 1] |
+| 6 | `valid` | 1 for a current estimate, otherwise 0 | {0, 1} |
+
+Sine/cosine bearing avoids a discontinuity at plus/minus pi. Values outside
+the physical envelope are clipped. If the estimate is absent or contains a
+non-finite field, every channel is zero; `valid` distinguishes that state from
+an obstacle at the origin.
+
+The canonical implementation is
+`mjlab_microduck.tasks.obstacle_observation.encode_obstacle_observation`.
+
+## Training boundary
+
+Simulation should derive the physical fields from ground-truth geometry, then
+apply an explicit sensor model before encoding the actor observation. That
+sensor model will independently randomize measurement noise, latency, dropout,
+and limited field of view. It must not expose future state or simulator-only
+identifiers to the actor.
+
+An asymmetric critic may additionally receive unperturbed ground-truth
+geometry. The deployed actor must receive only the same v1 estimate that the
+external perception stack can supply. Perception model training and validation
+remain a separate project and acceptance gate.
+
+## Next integration gate
+
+Before obstacle-policy training, add a simulated obstacle entity and an adapter
+that computes these fields in the robot base frame. Unit-test geometry and
+sensor perturbations, register a short flat-terrain curriculum, and run a
+CPU-only configuration smoke test. GPU training starts only after those checks
+pass and after an idle-GPU gate.

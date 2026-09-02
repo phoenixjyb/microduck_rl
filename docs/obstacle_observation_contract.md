@@ -78,3 +78,15 @@ Before obstacle-policy training, register a short flat-terrain curriculum that
 starts with this single stationary box and adds sensor perturbations only in
 later stages. Run a CPU-only configuration smoke test first. GPU training
 starts only after those checks pass and after an idle-GPU gate.
+
+`Mjlab-Run-Obstacle-Flat-MicroDuck` now provides that configuration. It stages
+placement from 1.0-1.3 m down to 0.6-1.0 m, command speed from 0.5 to 0.8 m/s,
+and sensor perturbations from exact measurements to the documented stress
+envelope. The actor receives delayed/perturbed observations; the asymmetric
+critic receives exact ground truth. Play mode remains deterministic.
+
+This task is **not yet cleared for GPU training**. Adding the seven obstacle
+channels changes the first actor layer from the retained Stage 2 checkpoint.
+A reviewed warm-start migration must copy the old columns exactly, initialize
+only the seven new columns, and prove identical outputs when those channels are
+zero before any long run starts.

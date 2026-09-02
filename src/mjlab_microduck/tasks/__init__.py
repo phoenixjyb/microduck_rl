@@ -91,6 +91,10 @@ from .microduck_velocity_hostile_env_cfg import (
 from .backlash import make_backlash_variant
 from .run import make_run_variant, MicroduckRunRlCfg
 from .motor_aware import make_motor_aware_run_variant, MicroduckMotorAwareRunRlCfg
+from .obstacle_avoidance import (
+    MicroduckObstacleAvoidanceRlCfg,
+    make_obstacle_avoidance_variant,
+)
 from .sprung import SWEEP_ARMS, make_sprung_variant, sprung_rl_cfg, ARM_TASK_SUFFIX
 from .hop import HOP_ARMS, HOP_ARM_SUFFIX, hop_rl_cfg, make_hop_variant
 from mjlab_microduck.robot.sprung_foot import H_ADD
@@ -150,6 +154,26 @@ register_mjlab_task(
     runner_cls=MicroduckOnPolicyRunner,
 )
 print("✓ Motor-aware Run task registered: Mjlab-Run-MotorAware-Flat-MicroDuck")
+
+# Single-box obstacle curriculum. The actor is 7D wider than Stage 2; training
+# remains gated on a reviewed first-layer warm-start migration.
+register_mjlab_task(
+    task_id="Mjlab-Run-Obstacle-Flat-MicroDuck",
+    env_cfg=make_obstacle_avoidance_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg())
+        )
+    ),
+    play_env_cfg=make_obstacle_avoidance_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg(play=True))
+        ),
+        play=True,
+    ),
+    rl_cfg=MicroduckObstacleAvoidanceRlCfg,
+    runner_cls=MicroduckOnPolicyRunner,
+)
+print("✓ Obstacle Run task registered: Mjlab-Run-Obstacle-Flat-MicroDuck")
 
 # Sprung-foot stiffness sweep — Phase 2. See
 # docs/superpowers/specs/2026-08-20-sprung-foot-design.md

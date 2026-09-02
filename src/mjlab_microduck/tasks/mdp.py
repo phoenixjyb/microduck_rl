@@ -4466,6 +4466,27 @@ def event_param_curriculum(
     return torch.tensor(float(first_val) if isinstance(first_val, (int, float)) else 0.0)
 
 
+def observation_param_curriculum(
+    env: ManagerBasedRlEnv,
+    env_ids: torch.Tensor,
+    group_name: str,
+    term_name: str,
+    param_stages: list[dict],
+) -> torch.Tensor:
+    """Mutate a live observation term's params at scheduled steps."""
+    del env_ids
+    term_cfg = env.observation_manager.get_term_cfg(group_name, term_name)
+    current = param_stages[0]["params"]
+    for stage in param_stages:
+        if env.common_step_counter >= stage["step"]:
+            current = stage["params"]
+    term_cfg.params.update(current)
+    first_value = next(iter(current.values()))
+    return torch.tensor(
+        float(first_value) if isinstance(first_value, (int, float)) else 0.0
+    )
+
+
 def face_down_prob_curriculum(
     env: ManagerBasedRlEnv,
     env_ids: torch.Tensor,

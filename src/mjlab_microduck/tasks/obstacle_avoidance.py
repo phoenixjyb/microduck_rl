@@ -175,7 +175,7 @@ def make_obstacle_avoidance_variant(
     )
     cfg.rewards["obstacle_lateral_excursion"] = RewardTermCfg(
         func=microduck_mdp.obstacle_lateral_excursion_cost,
-        weight=-1.0,
+        weight=-0.5,
         params={"soft_limit_m": 0.45, "hard_limit_m": 0.75},
     )
     cfg.terminations["obstacle_collision"] = TerminationTermCfg(

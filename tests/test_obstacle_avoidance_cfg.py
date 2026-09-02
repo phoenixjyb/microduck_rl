@@ -103,7 +103,7 @@ def test_obstacle_reward_and_collision_contract_is_registered():
         cfg.rewards["obstacle_lateral_excursion"].func
         is microduck_mdp.obstacle_lateral_excursion_cost
     )
-    assert cfg.rewards["obstacle_lateral_excursion"].weight == -1.0
+    assert cfg.rewards["obstacle_lateral_excursion"].weight == -0.5
     assert cfg.rewards["obstacle_lateral_excursion"].params == {
         "soft_limit_m": 0.45,
         "hard_limit_m": 0.75,

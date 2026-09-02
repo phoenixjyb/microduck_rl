@@ -106,3 +106,9 @@ critic 76→83, preserves every old first-layer column, initializes only new
 columns to zero, gives new normalizer channels mean 0 and variance/std 1, and
 expands Adam moments with zero new columns. The output records the source
 SHA-256 and migration contract under `infos.obstacle_warm_start`.
+
+`python -m mjlab_microduck.obstacle_smoke CHECKPOINT OUTPUT_DIR` is the bounded
+runtime gate. It disables external model uploads, allows at most 256 simulation
+environments and two learning iterations, strict-loads actor/critic/optimizer,
+and retains a smoke checkpoint. Passing this gate proves runtime compatibility;
+it is not evidence that obstacle avoidance has been learned.

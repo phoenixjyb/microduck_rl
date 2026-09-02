@@ -19,10 +19,14 @@ from mjlab_microduck.tasks.microduck_velocity_hostile_env_cfg import (
     make_hostile_terrains_cfg,
     make_microduck_velocity_hostile_env_cfg,
 )
+from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
+    make_microduck_velocity_env_cfg,
+)
 
 
 @pytest.mark.parametrize("finetune,feet,track", [(True, False, False), (True, True, False), (False, True, False), (True, True, True)])
 def test_variants_build(finetune, feet, track):
+    base = make_microduck_velocity_env_cfg(rough=True)
     cfg = make_microduck_velocity_hostile_env_cfg(finetune=finetune, feet=feet, track=track)
     gen = cfg.scene.terrain.terrain_generator
     assert gen.curriculum is True and gen.num_rows == LADDER_ROWS
@@ -33,10 +37,26 @@ def test_variants_build(finetune, feet, track):
     fc = cfg.rewards["foot_clearance"].params["target_height"]
     sw = cfg.rewards["foot_swing_height"].params["target_height"]
     hip = cfg.rewards["pose"].params["std_walking"][r".*hip_roll.*"]
-    assert (fc, sw, hip) == ((FOOT_TARGET_HEIGHT, FOOT_TARGET_HEIGHT, HIP_ROLL_STD) if feet else (0.02, 0.02, 0.05))
-    assert cfg.rewards["pose"].params["std_standing"][r".*hip_roll.*"] == 0.05  # standing stays tight
+    expected_base = (
+        base.rewards["foot_clearance"].params["target_height"],
+        base.rewards["foot_swing_height"].params["target_height"],
+        base.rewards["pose"].params["std_walking"][r".*hip_roll.*"],
+    )
+    assert (fc, sw, hip) == (
+        (FOOT_TARGET_HEIGHT, FOOT_TARGET_HEIGHT, HIP_ROLL_STD)
+        if feet
+        else expected_base
+    )
+    assert (
+        cfg.rewards["pose"].params["std_standing"][r".*hip_roll.*"]
+        == base.rewards["pose"].params["std_standing"][r".*hip_roll.*"]
+    )  # hostile terrain must not loosen standing
     std = cfg.rewards["track_linear_velocity"].params["std"]
-    assert std == pytest.approx(TRACK_LIN_STD if track else np.sqrt(0.1))
+    assert std == pytest.approx(
+        TRACK_LIN_STD
+        if track
+        else base.rewards["track_linear_velocity"].params["std"]
+    )
     # penalties keep their sign
     for name in ("foot_clearance", "foot_swing_height", "action_rate_l2", "foot_slip"):
         assert cfg.rewards[name].weight < 0
@@ -44,14 +64,20 @@ def test_variants_build(finetune, feet, track):
 
 
 def test_finetune_freezes_step_curricula():
+    base_stages = make_microduck_velocity_env_cfg(rough=True).curriculum[
+        "action_rate_weight"
+    ].params["weight_stages"]
     ft = make_microduck_velocity_hostile_env_cfg(finetune=True)
     stages = ft.curriculum["action_rate_weight"].params["weight_stages"]
-    assert stages == [{"step": 0, "weight": -1.0}]
+    assert stages == [{"step": 0, "weight": base_stages[-1]["weight"]}]
     standing = ft.curriculum["standing_envs"].params["standing_stages"]
     assert len(standing) == 1 and standing[0]["step"] == 0 and standing[0]["rel_standing_envs"] >= 0.2
     scratch = make_microduck_velocity_hostile_env_cfg(finetune=False)
     assert len(scratch.curriculum["action_rate_weight"].params["weight_stages"]) > 1
-    assert scratch.curriculum["action_rate_weight"].params["weight_stages"][0]["weight"] == -0.1
+    assert (
+        scratch.curriculum["action_rate_weight"].params["weight_stages"][0]["weight"]
+        == base_stages[0]["weight"]
+    )
 
 
 def test_terrain_compiles_on_cpu_and_stays_cheap():

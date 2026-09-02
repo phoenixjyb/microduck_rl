@@ -3,6 +3,8 @@ par gravité), plafonné à cap_speed, nul si les roues reculent, NaN-safe.
 Indépendant de toute commande (la tâche pente a une commande nulle).
 """
 
+import re
+
 import torch
 
 from mjlab_microduck.tasks.mdp import wheel_glide_reward
@@ -21,7 +23,8 @@ class _Asset:
         self.data = data
 
     def find_joints(self, name):
-        return [_WHEELS[name]], None
+        matches = [idx for joint_name, idx in _WHEELS.items() if re.fullmatch(name, joint_name)]
+        return matches, None
 
 
 class _Env:

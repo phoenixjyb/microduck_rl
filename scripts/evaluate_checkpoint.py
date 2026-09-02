@@ -1,0 +1,229 @@
+"""Evaluate a MicroDuck checkpoint across fixed speeds and random seeds."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+from dataclasses import asdict
+from pathlib import Path
+
+import torch
+from rsl_rl.runners import OnPolicyRunner
+
+from mjlab.envs import ManagerBasedRlEnv
+from mjlab.rl import RslRlVecEnvWrapper
+from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
+from mjlab.utils.torch import configure_torch_backends
+
+from mjlab_microduck.evaluation import (
+    aggregate_speed_cases,
+    parse_float_list,
+    parse_int_list,
+)
+from mjlab_microduck.tasks.run import (
+    MOTOR_NEAR_LIMIT_FRACTION,
+    XL330_M288_RATED_NO_LOAD_SPEED_RAD_S,
+    XL330_M288_RATED_STALL_TORQUE_NM_6V,
+)
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _fix_commands(env_cfg, speed: float) -> None:
+    commands = env_cfg.commands
+    twist = commands["twist"]
+    twist.resampling_time_range = (1.0e6, 1.0e6)
+    twist.rel_standing_envs = 0.0
+    twist.rel_heading_envs = 0.0
+    twist.rel_world_envs = 0.0
+    twist.rel_forward_envs = 1.0
+    twist.rel_turn_in_place_envs = 0.0
+    twist.init_velocity_prob = 0.0
+    twist.ranges.lin_vel_x = (speed, speed)
+    twist.ranges.lin_vel_y = (0.0, 0.0)
+    twist.ranges.ang_vel_z = (0.0, 0.0)
+
+    for name in ("head_pose", "body_pose"):
+        command = commands[name]
+        command.resampling_time_range = (1.0e6, 1.0e6)
+        command.ranges = tuple((0.0, 0.0) for _ in command.ranges)
+        command.zero_command_prob = 1.0
+
+
+def _quantile(values: torch.Tensor, q: float) -> float:
+    return float(torch.quantile(values, q).item())
+
+
+def _run_case(args, speed: float, seed: int) -> dict:
+    env_cfg = load_env_cfg(args.task, play=True)
+    agent_cfg = load_rl_cfg(args.task)
+    env_cfg.seed = seed
+    env_cfg.scene.num_envs = args.num_envs
+    _fix_commands(env_cfg, speed)
+    env_cfg.curriculum = {}
+    env_cfg.events.pop("push_robot", None)
+
+    raw_env = ManagerBasedRlEnv(cfg=env_cfg, device=args.device, render_mode=None)
+    env = RslRlVecEnvWrapper(raw_env, clip_actions=agent_cfg.clip_actions)
+    try:
+        runner_cls = load_runner_cls(args.task) or OnPolicyRunner
+        runner = runner_cls(env, asdict(agent_cfg), device=args.device)
+        runner.load(str(args.checkpoint), map_location=args.device)
+        policy = runner.get_inference_policy(device=args.device)
+        observations = env.get_observations()
+
+        robot = raw_env.scene["robot"]
+        joint_ids, _ = robot.find_joints(r"^(?!passive_).*")
+        forward_samples = []
+        joint_speed_samples = []
+        torque_samples = []
+        power_samples = []
+        action_samples = []
+        episode_ends = 0
+        timeouts = 0
+
+        with torch.inference_mode():
+            for step in range(args.warmup_steps + args.steps):
+                actions = policy(observations)
+                observations, _, dones, extras = env.step(actions)
+                if step < args.warmup_steps:
+                    continue
+
+                forward = robot.data.root_link_lin_vel_b[:, 0].float()
+                joint_speed = robot.data.joint_vel[:, joint_ids].abs().float()
+                torque = robot.data.actuator_force.abs().float()
+                if joint_speed.shape != torque.shape:
+                    raise RuntimeError(
+                        f"joint speed shape {joint_speed.shape} does not match "
+                        f"actuator torque shape {torque.shape}"
+                    )
+                forward_samples.append(forward)
+                joint_speed_samples.append(joint_speed)
+                torque_samples.append(torque)
+                power_samples.append(torch.sum(joint_speed * torque, dim=1))
+                applied_actions = raw_env.action_manager.action
+                action_samples.append(applied_actions.abs().float())
+                episode_ends += int(dones.sum().item())
+                timeout_tensor = extras.get("time_outs")
+                if timeout_tensor is not None:
+                    timeouts += int(timeout_tensor.sum().item())
+
+        forward = torch.cat(forward_samples)
+        joint_speed = torch.cat(joint_speed_samples).flatten()
+        torque = torch.cat(torque_samples).flatten()
+        power = torch.cat(power_samples)
+        actions = torch.cat(action_samples).flatten()
+        speed_util = joint_speed / XL330_M288_RATED_NO_LOAD_SPEED_RAD_S
+        torque_util = torque / XL330_M288_RATED_STALL_TORQUE_NM_6V
+        tracking_error = (forward - speed).abs()
+
+        return {
+            "commanded_speed_mps": speed,
+            "seed": seed,
+            "num_envs": args.num_envs,
+            "steps": args.steps,
+            "warmup_steps": args.warmup_steps,
+            "simulated_seconds_per_env": args.steps * raw_env.step_dt,
+            "observed_speed_mean_mps": float(forward.mean().item()),
+            "observed_speed_p05_mps": _quantile(forward, 0.05),
+            "observed_speed_p95_mps": _quantile(forward, 0.95),
+            "tracking_error_mean_mps": float(tracking_error.mean().item()),
+            "tracking_error_p95_mps": _quantile(tracking_error, 0.95),
+            "episode_ends": episode_ends,
+            "timeouts": timeouts,
+            "non_timeout_ends": episode_ends - timeouts,
+            "motor_joint_speed_abs_max_rad_s": float(joint_speed.max().item()),
+            "motor_joint_speed_abs_p99_rad_s": _quantile(joint_speed, 0.99),
+            "motor_speed_utilization_p99": _quantile(speed_util, 0.99),
+            "motor_speed_rated_exceed_fraction": float(
+                (speed_util > 1.0).float().mean().item()
+            ),
+            "motor_torque_abs_max_nm": float(torque.max().item()),
+            "motor_torque_abs_p99_nm": _quantile(torque, 0.99),
+            "motor_torque_utilization_p99": _quantile(torque_util, 0.99),
+            "motor_torque_near_stall_fraction": float(
+                (torque_util >= MOTOR_NEAR_LIMIT_FRACTION).float().mean().item()
+            ),
+            "motor_mechanical_power_abs_mean_w": float(power.mean().item()),
+            "motor_mechanical_power_abs_p99_w": _quantile(power, 0.99),
+            "motor_thermal_load_proxy_mean": float(
+                torch.square(torque_util).mean().item()
+            ),
+            "action_abs_max": float(actions.max().item()),
+            "action_abs_p99": _quantile(actions, 0.99),
+        }
+    finally:
+        env.close()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("checkpoint", type=Path)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--task", default="Mjlab-Run-Flat-MicroDuck")
+    parser.add_argument("--speeds", default="0.5,0.8,1.0,1.2,1.5")
+    parser.add_argument("--seeds", default="41,42,43")
+    parser.add_argument("--num-envs", type=int, default=64)
+    parser.add_argument("--steps", type=int, default=600)
+    parser.add_argument("--warmup-steps", type=int, default=100)
+    parser.add_argument("--device", default="cuda:0")
+    args = parser.parse_args()
+    args.checkpoint = args.checkpoint.expanduser().resolve()
+    args.output_dir = args.output_dir.expanduser().resolve()
+    args.speeds = parse_float_list(args.speeds)
+    args.seeds = parse_int_list(args.seeds)
+    if not args.checkpoint.is_file():
+        parser.error(f"checkpoint does not exist: {args.checkpoint}")
+    if args.num_envs <= 0 or args.steps <= 0 or args.warmup_steps < 0:
+        parser.error("num-envs and steps must be positive; warmup-steps cannot be negative")
+    return args
+
+
+def main() -> None:
+    args = parse_args()
+    import mjlab_microduck.tasks  # noqa: F401
+
+    configure_torch_backends()
+    cases = []
+    for speed in args.speeds:
+        for seed in args.seeds:
+            print(f"[EVAL] speed={speed:.2f} m/s seed={seed}", flush=True)
+            case = _run_case(args, speed, seed)
+            cases.append(case)
+            print(json.dumps(case, sort_keys=True), flush=True)
+
+    result = {
+        "schema_version": 1,
+        "task": args.task,
+        "checkpoint": str(args.checkpoint),
+        "checkpoint_sha256": _sha256(args.checkpoint),
+        "device": args.device,
+        "speeds_mps": list(args.speeds),
+        "seeds": list(args.seeds),
+        "cases": cases,
+        "aggregates": aggregate_speed_cases(cases),
+    }
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = args.output_dir / "checkpoint-evaluation.json"
+    csv_path = args.output_dir / "checkpoint-evaluation-cases.csv"
+    json_path.write_text(json.dumps(result, indent=2) + "\n")
+    with csv_path.open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(cases[0]))
+        writer.writeheader()
+        writer.writerows(cases)
+    print(f"[EVAL] wrote {json_path}")
+    print(f"[EVAL] wrote {csv_path}")
+
+
+if __name__ == "__main__":
+    main()

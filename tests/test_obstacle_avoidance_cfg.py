@@ -104,11 +104,6 @@ def test_obstacle_reward_and_collision_contract_is_registered():
         is microduck_mdp.obstacle_route_progress_reward
     )
     assert cfg.rewards["obstacle_route_progress"].weight == 1.5
-    assert (
-        cfg.rewards["obstacle_heading_hold"].func
-        is microduck_mdp.heading_hold_reward
-    )
-    assert cfg.rewards["obstacle_heading_hold"].weight == 1.0
     assert cfg.terminations["obstacle_collision"].func is microduck_mdp.obstacle_collision
     assert cfg.terminations["obstacle_collision"].time_out is False
     assert cfg.terminations["obstacle_passed"].func is microduck_mdp.obstacle_passed

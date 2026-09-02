@@ -1,12 +1,14 @@
 """Static bounds and config tests for the obstacle baseline evaluator."""
 
 import pytest
+from pathlib import Path
 
 from mjlab_microduck.obstacle_baseline import (
     MAX_BASELINE_ENVS,
     MAX_BASELINE_SEEDS,
     MAX_BASELINE_STEPS,
     prepare_baseline_configs,
+    run_baseline,
     validate_baseline_bounds,
 )
 
@@ -45,3 +47,8 @@ def test_baseline_rejects_unbounded_work(num_envs, steps, seeds):
 def test_baseline_rejects_nonpositive_speed():
     with pytest.raises(ValueError, match="speed_mps"):
         prepare_baseline_configs(8, 0.0)
+
+
+def test_baseline_rejects_empty_purpose_before_resolving_checkpoint(tmp_path: Path):
+    with pytest.raises(ValueError, match="purpose"):
+        run_baseline(tmp_path / "missing.pt", tmp_path / "out", purpose="  ")

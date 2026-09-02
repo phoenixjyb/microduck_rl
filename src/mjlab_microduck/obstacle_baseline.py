@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 TASK_ID = "Mjlab-Run-Obstacle-Flat-MicroDuck"
+DEFAULT_PURPOSE = "untrained obstacle warm-start baseline; not trained-policy evidence"
 MAX_BASELINE_ENVS = 256
 MAX_BASELINE_STEPS = 1000
 MAX_BASELINE_SEEDS = 5
@@ -153,8 +154,11 @@ def run_baseline(
     steps: int = 600,
     speed_mps: float = 0.5,
     seeds: tuple[int, ...] = (41, 42, 43),
+    purpose: str = DEFAULT_PURPOSE,
 ) -> Path:
     validate_baseline_bounds(num_envs, steps, seeds)
+    if not purpose.strip():
+        raise ValueError("purpose must be non-empty")
     checkpoint = checkpoint.resolve(strict=True)
     output_dir = output_dir.resolve()
     if output_dir.exists():
@@ -178,7 +182,7 @@ def run_baseline(
     summary = {
         "task_id": TASK_ID,
         "checkpoint": str(checkpoint),
-        "purpose": "untrained obstacle warm-start baseline; not trained-policy evidence",
+        "purpose": purpose,
         "cases": cases,
         "totals": totals,
         "mean_clearance_m": sum(c["mean_clearance_m"] for c in cases) / len(cases),
@@ -200,6 +204,7 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=600)
     parser.add_argument("--speed-mps", type=float, default=0.5)
     parser.add_argument("--seeds", default="41,42,43")
+    parser.add_argument("--purpose", default=DEFAULT_PURPOSE)
     args = parser.parse_args()
     seeds = tuple(int(value) for value in args.seeds.split(",") if value)
     run_baseline(
@@ -209,6 +214,7 @@ def main() -> None:
         steps=args.steps,
         speed_mps=args.speed_mps,
         seeds=seeds,
+        purpose=args.purpose,
     )
 
 

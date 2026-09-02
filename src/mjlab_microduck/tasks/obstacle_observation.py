@@ -98,3 +98,54 @@ def encode_obstacle_observation(
     )
     encoded = torch.where(valid.unsqueeze(-1), encoded, torch.zeros_like(encoded))
     return torch.cat((encoded, valid.to(dtype=encoded.dtype).unsqueeze(-1)), dim=-1)
+
+
+def encode_relative_obstacle_observation(
+    relative_position_m: torch.Tensor,
+    relative_velocity_mps: torch.Tensor,
+    width_m: torch.Tensor,
+    height_m: torch.Tensor,
+    valid: torch.Tensor,
+    *,
+    limits: ObstacleObservationLimits = DEFAULT_OBSTACLE_OBSERVATION_LIMITS,
+) -> torch.Tensor:
+    """Encode simulated relative state without introducing perception code.
+
+    Position and velocity are expressed in the robot base frame and need at
+    least planar ``x, y`` components.  The simulated surface range uses a
+    conservative circular footprint with radius ``width_m / 2``.  Positive
+    closing rate means decreasing center distance.
+
+    A scene adapter can call this function after transforming simulator state
+    into the base frame.  Noise, latency, dropout, and field-of-view masking
+    belong between that adapter and this deterministic geometry encoder.
+    """
+    if relative_position_m.shape[-1] < 2:
+        raise ValueError("relative obstacle position needs x and y components")
+    if relative_velocity_mps.shape[-1] < 2:
+        raise ValueError("relative obstacle velocity needs x and y components")
+
+    relative_position_xy = relative_position_m[..., :2]
+    relative_velocity_xy = relative_velocity_mps[..., :2]
+    center_range_m = torch.linalg.vector_norm(relative_position_xy, dim=-1)
+    direction = relative_position_xy / center_range_m.clamp_min(1e-8).unsqueeze(-1)
+    closing_rate_mps = -(relative_velocity_xy * direction).sum(dim=-1)
+    closing_rate_mps = torch.where(
+        center_range_m > 1e-8,
+        closing_rate_mps,
+        torch.zeros_like(closing_rate_mps),
+    )
+    bearing_rad = torch.atan2(
+        relative_position_xy[..., 1], relative_position_xy[..., 0]
+    )
+    surface_range_m = (center_range_m - width_m / 2.0).clamp_min(0.0)
+
+    return encode_obstacle_observation(
+        range_m=surface_range_m,
+        bearing_rad=bearing_rad,
+        width_m=width_m,
+        height_m=height_m,
+        closing_rate_mps=closing_rate_mps,
+        valid=valid,
+        limits=limits,
+    )

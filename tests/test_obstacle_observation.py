@@ -10,6 +10,7 @@ from mjlab_microduck.tasks.obstacle_observation import (
     OBSTACLE_OBSERVATION_FIELDS,
     ObstacleObservationLimits,
     encode_obstacle_observation,
+    encode_relative_obstacle_observation,
 )
 
 
@@ -84,3 +85,54 @@ def test_inputs_broadcast_over_environment_batch():
 def test_limits_reject_zero_or_negative_scales():
     with pytest.raises(ValueError, match="must all be positive"):
         ObstacleObservationLimits(max_range_m=0.0)
+
+
+def test_relative_state_maps_surface_range_bearing_and_closing_rate():
+    out = encode_relative_obstacle_observation(
+        relative_position_m=torch.tensor([[1.0, 0.0, 0.1]]),
+        relative_velocity_mps=torch.tensor([[-0.5, 0.0, 0.0]]),
+        width_m=torch.tensor([0.2]),
+        height_m=torch.tensor([0.1]),
+        valid=torch.tensor([True]),
+    )
+    # Surface range is 1.0 - width/2 = 0.9 m.  The obstacle approaches at
+    # 0.5 m/s, so the normalized closing-rate channel is +0.25.
+    expected = torch.tensor([[0.45, 0.0, 1.0, 0.4, 0.4, 0.25, 1.0]])
+    torch.testing.assert_close(out, expected, atol=1e-6, rtol=0.0)
+
+
+def test_relative_state_uses_robot_frame_bearing_and_signed_closing_rate():
+    out = encode_relative_obstacle_observation(
+        relative_position_m=torch.tensor([[0.0, 1.0], [1.0, 0.0]]),
+        relative_velocity_mps=torch.tensor([[0.0, -0.2], [0.2, 0.0]]),
+        width_m=torch.tensor([0.0, 0.0]),
+        height_m=torch.tensor([0.1, 0.1]),
+        valid=torch.tensor([True, True]),
+    )
+    # Left-side obstacle: bearing +pi/2, approaching.  Forward obstacle:
+    # bearing zero, receding.
+    torch.testing.assert_close(out[:, 1], torch.tensor([1.0, 0.0]), atol=1e-6, rtol=0.0)
+    torch.testing.assert_close(out[:, 2], torch.tensor([0.0, 1.0]), atol=1e-6, rtol=0.0)
+    torch.testing.assert_close(out[:, 5], torch.tensor([0.1, -0.1]), atol=1e-6, rtol=0.0)
+
+
+def test_relative_state_clamps_surface_range_inside_obstacle():
+    out = encode_relative_obstacle_observation(
+        relative_position_m=torch.tensor([[0.05, 0.0]]),
+        relative_velocity_mps=torch.zeros(1, 2),
+        width_m=torch.tensor([0.2]),
+        height_m=torch.tensor([0.1]),
+        valid=torch.tensor([True]),
+    )
+    assert float(out[0, 0]) == 0.0
+
+
+def test_relative_state_requires_planar_vectors():
+    with pytest.raises(ValueError, match="position needs x and y"):
+        encode_relative_obstacle_observation(
+            relative_position_m=torch.tensor([1.0]),
+            relative_velocity_mps=torch.tensor([0.0, 0.0]),
+            width_m=torch.tensor(0.1),
+            height_m=torch.tensor(0.1),
+            valid=torch.tensor(True),
+        )

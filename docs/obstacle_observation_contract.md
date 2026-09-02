@@ -28,6 +28,12 @@ an obstacle at the origin.
 The canonical implementation is
 `mjlab_microduck.tasks.obstacle_observation.encode_obstacle_observation`.
 
+For simulation, `encode_relative_obstacle_observation` deterministically maps
+relative position and velocity in the robot base frame into the same layout.
+Its conservative surface-range approximation treats `width / 2` as a planar
+footprint radius. A later scene adapter remains responsible for transforming
+world state into the base frame and selecting the nearest relevant obstacle.
+
 ## Training boundary
 
 Simulation should derive the physical fields from ground-truth geometry, then

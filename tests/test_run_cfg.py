@@ -7,9 +7,12 @@ from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
 )
 from mjlab_microduck.tasks.run import (
     AIR_TIME_WINDOW,
+    MOTOR_NEAR_LIMIT_FRACTION,
     RUNNING_THRESHOLD,
     STD_RUNNING,
     VELOCITY_STAGES,
+    XL330_M288_RATED_NO_LOAD_SPEED_RAD_S,
+    XL330_M288_RATED_STALL_TORQUE_NM_6V,
     make_run_variant,
 )
 from mjlab_microduck.tasks import mdp as microduck_mdp
@@ -82,6 +85,23 @@ def test_forward_speed_monitor_weight_is_non_zero(run_cfg):
     term = run_cfg.rewards["forward_speed_monitor"]
     assert term.func is microduck_mdp.forward_speed_monitor
     assert term.weight != 0.0
+
+
+def test_motor_envelope_monitor_registered_without_changing_reward(run_cfg):
+    term = run_cfg.rewards["motor_envelope_monitor"]
+    assert term.func is microduck_mdp.motor_envelope_monitor
+    # The function itself returns zeros; a non-zero manager weight is required
+    # for mjlab to call it and publish its metrics.
+    assert term.weight != 0.0
+    assert (
+        term.params["rated_no_load_speed_rad_s"]
+        == XL330_M288_RATED_NO_LOAD_SPEED_RAD_S
+    )
+    assert (
+        term.params["rated_stall_torque_nm"]
+        == XL330_M288_RATED_STALL_TORQUE_NM_6V
+    )
+    assert term.params["near_limit_fraction"] == MOTOR_NEAR_LIMIT_FRACTION
 
 
 def test_curriculum_ramps_forward_speed_only(run_cfg):

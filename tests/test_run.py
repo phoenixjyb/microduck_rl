@@ -10,6 +10,7 @@ from mjlab_microduck.tasks.mdp import (
     alternating_flight,
     feet_air_time_capped,
     forward_speed_monitor,
+    motor_envelope_monitor,
 )
 
 
@@ -289,3 +290,97 @@ def test_forward_speed_monitor_survives_non_finite_velocities():
     assert torch.all(out == 0.0)
     assert torch.isfinite(log["Metrics/forward_speed_mean"])
     assert torch.isfinite(log["Metrics/forward_speed_max"])
+
+
+# --------------------------------------------------------------------------
+# motor_envelope_monitor — physical-feasibility instrumentation.
+# --------------------------------------------------------------------------
+
+
+class _MotorAssetData:
+    def __init__(self, joint_vel, actuator_force):
+        self.joint_vel = torch.tensor(joint_vel, dtype=torch.float32)
+        self.actuator_force = torch.tensor(actuator_force, dtype=torch.float32)
+
+
+class _MotorAsset:
+    def __init__(self, joint_vel, actuator_force):
+        self.data = _MotorAssetData(joint_vel, actuator_force)
+
+    def find_joints(self, _pattern):
+        return list(range(self.data.joint_vel.shape[1])), []
+
+
+class _MotorEnv:
+    def __init__(self, joint_vel, actuator_force):
+        self.num_envs = len(joint_vel)
+        self.device = "cpu"
+        self.extras = {"log": {}}
+        self.scene = _AssetScene(_MotorAsset(joint_vel, actuator_force))
+
+
+_RATED_SPEED = 10.0
+_RATED_TORQUE = 0.6
+
+
+def _run_motor_monitor(env):
+    return motor_envelope_monitor(
+        env,
+        rated_no_load_speed_rad_s=_RATED_SPEED,
+        rated_stall_torque_nm=_RATED_TORQUE,
+        near_limit_fraction=0.95,
+    )
+
+
+def test_motor_envelope_monitor_contributes_exactly_zero_reward():
+    env = _MotorEnv([[1.0, 2.0]], [[0.1, 0.2]])
+    out = _run_motor_monitor(env)
+    assert out.shape == (1,)
+    assert torch.all(out == 0.0)
+
+
+def test_motor_envelope_monitor_reports_speed_and_torque_utilization():
+    env = _MotorEnv([[5.0, 12.0]], [[0.3, 0.6]])
+    _run_motor_monitor(env)
+    log = env.extras["log"]
+    assert abs(float(log["Metrics/motor_joint_speed_abs_max_rad_s"]) - 12.0) < 1e-6
+    assert abs(float(log["Metrics/motor_torque_abs_max_nm"]) - 0.6) < 1e-6
+    assert abs(float(log["Metrics/motor_speed_rated_exceed_fraction"]) - 0.5) < 1e-6
+    assert abs(
+        float(log["Metrics/motor_torque_near_rated_stall_fraction"]) - 0.5
+    ) < 1e-6
+
+
+def test_motor_envelope_monitor_reports_absolute_mechanical_power():
+    env = _MotorEnv([[-2.0, 4.0]], [[-0.5, 0.25]])
+    _run_motor_monitor(env)
+    log = env.extras["log"]
+    # abs(-0.5 * -2.0) + abs(0.25 * 4.0) = 2 W.
+    assert abs(float(log["Metrics/motor_mechanical_power_abs_mean_w"]) - 2.0) < 1e-6
+
+
+def test_motor_envelope_monitor_thermal_proxy_is_normalized_torque_squared():
+    env = _MotorEnv([[0.0, 0.0]], [[0.3, 0.6]])
+    _run_motor_monitor(env)
+    expected = ((0.3 / 0.6) ** 2 + (0.6 / 0.6) ** 2) / 2.0
+    assert abs(
+        float(env.extras["log"]["Metrics/motor_thermal_load_proxy_mean"])
+        - expected
+    ) < 1e-6
+
+
+def test_motor_envelope_monitor_is_nan_safe():
+    env = _MotorEnv(
+        [[float("nan"), float("inf"), 2.0]],
+        [[float("nan"), float("-inf"), 0.2]],
+    )
+    out = _run_motor_monitor(env)
+    assert torch.all(out == 0.0)
+    assert all(torch.isfinite(value) for value in env.extras["log"].values())
+
+
+def test_motor_envelope_monitor_skips_mismatched_joint_and_actuator_shapes():
+    env = _MotorEnv([[1.0, 2.0, 3.0]], [[0.1, 0.2]])
+    out = _run_motor_monitor(env)
+    assert torch.all(out == 0.0)
+    assert env.extras["log"] == {}

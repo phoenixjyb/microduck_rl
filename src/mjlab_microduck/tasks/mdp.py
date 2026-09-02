@@ -6230,6 +6230,95 @@ def forward_speed_monitor(
     return zeros
 
 
+def motor_envelope_monitor(
+    env: ManagerBasedRlEnv,
+    rated_no_load_speed_rad_s: float,
+    rated_stall_torque_nm: float,
+    near_limit_fraction: float = 0.95,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Log how much of the XL330's rated motor envelope the policy consumes.
+
+    This is instrumentation, not a reward or a simulator clamp.  A commanded
+    base speed is not a physical motor limit: the gait must also fit inside the
+    joints' speed/torque envelope under load.  The monitor therefore reports
+    raw joint speed and actuator torque together with utilization against the
+    rated 6 V XL330-M288 no-load speed and stall torque supplied by the task.
+
+    ``rated_stall_torque_nm`` is a *momentary* reference, not a continuous
+    rating.  ``thermal_load_proxy_mean`` is correspondingly only an I-squared
+    duty proxy: torque is proportional to current, so mean((tau/tau_stall)^2)
+    is useful for comparing checkpoints, but it is not a temperature model.
+
+    Mechanical power uses ``sum(abs(tau * omega))`` across the 14 servo joints.
+    Absolute per-joint power is intentional: positive and regenerative work
+    must not cancel when estimating actuator demand.
+
+    Returns zeros so the policy objective is unchanged.  Register this term at
+    a non-zero weight because mjlab skips zero-weight reward functions before
+    calling them.
+    """
+    zeros = torch.zeros(env.num_envs, device=env.device)
+    if rated_no_load_speed_rad_s <= 0.0 or rated_stall_torque_nm <= 0.0:
+        return zeros
+    if not 0.0 < near_limit_fraction <= 1.0:
+        return zeros
+
+    asset: Entity = env.scene[asset_cfg.name]
+    joint_vel = _servo_joint_vel(env, asset)
+    actuator_force = asset.data.actuator_force
+    if (
+        joint_vel is None
+        or actuator_force is None
+        or joint_vel.numel() == 0
+        or actuator_force.numel() == 0
+        or joint_vel.shape != actuator_force.shape
+    ):
+        return zeros
+
+    abs_speed = torch.nan_to_num(
+        joint_vel.abs().float(), nan=0.0, posinf=0.0, neginf=0.0
+    )
+    abs_torque = torch.nan_to_num(
+        actuator_force.abs().float(), nan=0.0, posinf=0.0, neginf=0.0
+    )
+    speed_util = abs_speed / rated_no_load_speed_rad_s
+    torque_util = abs_torque / rated_stall_torque_nm
+
+    log = env.extras.get("log") if hasattr(env, "extras") else None
+    if log is not None:
+        log["Metrics/motor_joint_speed_abs_max_rad_s"] = abs_speed.max()
+        log["Metrics/motor_joint_speed_abs_p99_rad_s"] = torch.quantile(
+            abs_speed.flatten(), 0.99
+        )
+        log["Metrics/motor_speed_rated_utilization_p99"] = torch.quantile(
+            speed_util.flatten(), 0.99
+        )
+        log["Metrics/motor_speed_rated_exceed_fraction"] = (
+            speed_util > 1.0
+        ).float().mean()
+        log["Metrics/motor_torque_abs_max_nm"] = abs_torque.max()
+        log["Metrics/motor_torque_abs_p99_nm"] = torch.quantile(
+            abs_torque.flatten(), 0.99
+        )
+        log["Metrics/motor_torque_rated_utilization_p99"] = torch.quantile(
+            torque_util.flatten(), 0.99
+        )
+        log["Metrics/motor_torque_near_rated_stall_fraction"] = (
+            torque_util >= near_limit_fraction
+        ).float().mean()
+        per_env_abs_power = torch.sum(abs_torque * abs_speed, dim=1)
+        log["Metrics/motor_mechanical_power_abs_mean_w"] = per_env_abs_power.mean()
+        log["Metrics/motor_mechanical_power_abs_p99_w"] = torch.quantile(
+            per_env_abs_power, 0.99
+        )
+        log["Metrics/motor_thermal_load_proxy_mean"] = torch.square(
+            torque_util
+        ).mean()
+
+    return zeros
+
+
 def spring_compression_monitor(
     env: ManagerBasedRlEnv,
     joint_names: tuple,

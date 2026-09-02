@@ -6,7 +6,7 @@ transform rather than a new env cfg so it composes: the sprung phase becomes
 ``make_sprung_variant(make_run_variant(cfg))`` instead of a fourth copy of the
 velocity env — the duplication that stranded the previous campaign.
 
-Six changes:
+Seven changes:
 
 1. Activate the posture running regime. ``variable_posture`` gates on
    ``|lin| + |ang|`` with ``running_threshold`` defaulting to 1.5, which the
@@ -28,8 +28,11 @@ Six changes:
    velocity env's base value. ``ang_vel_range`` is held constant across stages,
    so forward speed is the single moving variable and the plateau measurement is
    a forward-speed number rather than an isotropic xy error.
+7. Add a zero-contribution physical motor-envelope monitor for rated joint
+   speed, torque, mechanical power, and an I-squared thermal-load proxy.
 """
 
+import math
 from copy import deepcopy
 from dataclasses import replace
 
@@ -84,6 +87,18 @@ VELOCITY_STAGES = [
 
 ALTERNATING_FLIGHT_WEIGHT = 3.0
 
+# Physical references for the Dynamixel XL330-M288-T at the top of its rated
+# voltage range (6.0 V).  These are evaluation references, not claims about a
+# sustainable robot speed: the manufacturer specifies 123 rpm no-load and
+# 0.60 Nm momentary stall torque, while continuous capability is lower and must
+# be established from the torque-speed curve plus real temperature telemetry.
+XL330_M288_RATED_NO_LOAD_RPM_6V = 123.0
+XL330_M288_RATED_NO_LOAD_SPEED_RAD_S = (
+    XL330_M288_RATED_NO_LOAD_RPM_6V * 2.0 * math.pi / 60.0
+)
+XL330_M288_RATED_STALL_TORQUE_NM_6V = 0.60
+MOTOR_NEAR_LIMIT_FRACTION = 0.95
+
 
 def make_run_variant(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
     """Convert a microduck velocity-family env cfg into the Run task."""
@@ -130,7 +145,23 @@ def make_run_variant(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
         params={},
     )
 
-    # 6. Speed curriculum — forward speed is the ONLY moving variable.
+    # 6. Motor-envelope instrumentation.  This contributes zero reward and
+    # does not alter the 61D actor observation contract.  It is deliberately
+    # referenced to the manufacturer's rated 6 V envelope even though the
+    # current BAM domain randomizes the prototype's over-voltage 2S bus: any
+    # apparent performance that needs more than the rated envelope must remain
+    # visible rather than being silently accepted as a physical top speed.
+    cfg.rewards["motor_envelope_monitor"] = RewardTermCfg(
+        func=microduck_mdp.motor_envelope_monitor,
+        weight=1.0,
+        params={
+            "rated_no_load_speed_rad_s": XL330_M288_RATED_NO_LOAD_SPEED_RAD_S,
+            "rated_stall_torque_nm": XL330_M288_RATED_STALL_TORQUE_NM_6V,
+            "near_limit_fraction": MOTOR_NEAR_LIMIT_FRACTION,
+        },
+    )
+
+    # 7. Speed curriculum — forward speed is the ONLY moving variable.
     #    `velocity_command_ranges_curriculum` defaults to `forward_only=False`
     #    and `update_lin_vel_y=True`, which would ramp backward and lateral
     #    speed alongside forward speed (the last stage would set BOTH

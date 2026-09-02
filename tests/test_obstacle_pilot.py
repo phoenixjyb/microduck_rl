@@ -8,6 +8,7 @@ from mjlab_microduck.obstacle_pilot import (
     MAX_PILOT_ENVS,
     MAX_PILOT_ITERATIONS,
     PILOT_CHECKPOINT_INTERVAL,
+    _stamp_intermediate_checkpoints,
     prepare_pilot_configs,
     run_pilot,
 )
@@ -42,3 +43,19 @@ def test_pilot_refuses_to_reuse_output_directory(tmp_path: Path):
     output_dir.mkdir()
     with pytest.raises(FileExistsError, match="refusing to reuse"):
         run_pilot(checkpoint, output_dir)
+
+
+def test_intermediate_checkpoints_retain_obstacle_migration_metadata(tmp_path: Path):
+    import torch
+
+    checkpoint = tmp_path / "model_8016.pt"
+    torch.save({"infos": {"env_state": {"step": 18}}, "iter": 8016}, checkpoint)
+    metadata = {"actor_dims": [61, 68], "critic_dims": [76, 83]}
+
+    retained = _stamp_intermediate_checkpoints(tmp_path, metadata)
+    payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
+
+    assert payload["infos"]["env_state"] == {"step": 18}
+    assert payload["infos"]["obstacle_warm_start"] == metadata
+    assert retained == {"model_8016.pt": retained["model_8016.pt"]}
+    assert len(retained["model_8016.pt"]) == 64

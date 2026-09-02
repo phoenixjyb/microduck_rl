@@ -22,6 +22,29 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _stamp_intermediate_checkpoints(
+    output_dir: Path, obstacle_warm_start: dict
+) -> dict[str, str]:
+    """Carry obstacle migration provenance into periodic runner checkpoints."""
+    import torch
+
+    retained: dict[str, str] = {}
+    for checkpoint in sorted(output_dir.glob("model_[0-9]*.pt")):
+        payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
+        infos = payload.setdefault("infos", {})
+        existing = infos.get("obstacle_warm_start")
+        if existing is not None and existing != obstacle_warm_start:
+            raise ValueError(
+                f"conflicting obstacle warm-start metadata in {checkpoint.name}"
+            )
+        infos["obstacle_warm_start"] = dict(obstacle_warm_start)
+        temporary = checkpoint.with_suffix(".pt.tmp")
+        torch.save(payload, temporary)
+        temporary.replace(checkpoint)
+        retained[checkpoint.name] = _sha256(checkpoint)
+    return retained
+
+
 def prepare_pilot_configs(num_envs: int, seed: int):
     """Load an isolated training config with bounded local-only logging."""
     if not 1 <= num_envs <= MAX_PILOT_ENVS:
@@ -89,6 +112,9 @@ def run_pilot(
             num_learning_iterations=iterations,
             init_at_random_ep_len=False,
         )
+        intermediate_checkpoints = _stamp_intermediate_checkpoints(
+            output_dir, metadata
+        )
         retained = output_dir / "model_obstacle_pilot.pt"
         runner.save(str(retained), infos=infos)
         manifest = {
@@ -102,6 +128,7 @@ def run_pilot(
             "num_envs": num_envs,
             "iterations": iterations,
             "checkpoint_interval": PILOT_CHECKPOINT_INTERVAL,
+            "intermediate_checkpoints": intermediate_checkpoints,
             "seed": seed,
             "start_iteration": start_iteration,
             "end_iteration": runner.current_learning_iteration,

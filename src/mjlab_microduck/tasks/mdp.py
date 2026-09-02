@@ -21,7 +21,9 @@ from rsl_rl.algorithms.ppo import PPO as _PPO
 
 from mjlab_microduck.tasks.obstacle_observation import (
     ObstacleObservationLimits,
-    encode_relative_obstacle_observation,
+    ObstacleSensorModel,
+    encode_perturbed_obstacle_observation,
+    relative_obstacle_measurement,
 )
 
 # ---------------------------------------------------------------------------
@@ -5699,6 +5701,12 @@ def obstacle_geometry_observation(
     max_width_m: float = 0.50,
     max_height_m: float = 0.25,
     max_closing_rate_mps: float = 2.0,
+    range_noise_m: float = 0.0,
+    bearing_noise_rad: float = 0.0,
+    width_noise_m: float = 0.0,
+    height_noise_m: float = 0.0,
+    closing_rate_noise_mps: float = 0.0,
+    dropout_probability: float = 0.0,
 ) -> torch.Tensor:
     """Encode one simulated obstacle using the policy's external-sensor contract.
 
@@ -5707,9 +5715,10 @@ def obstacle_geometry_observation(
     horizontal field-of-view visibility, then calls the perception-independent
     v1 encoder.  It does not process images or train a perception model.
 
-    Noise and dropout should be attached as an explicit observation sensor
-    model.  Delay should use MJLab's observation-term delay buffer so its state
-    resets with the environment.
+    Noise and dropout are applied to the physical estimate before encoding.
+    Their defaults are exact/no-dropout until a task explicitly opts into a
+    documented sensor envelope. Delay should use MJLab's observation-term delay
+    buffer so its state resets with the environment.
     """
     if not 0.0 < horizontal_fov_rad <= 2.0 * math.pi:
         raise ValueError("horizontal_fov_rad must be in (0, 2*pi]")
@@ -5742,13 +5751,27 @@ def obstacle_geometry_observation(
     )
     obstacle_width_m = torch.full_like(center_range_m, width_m)
     obstacle_height_m = torch.full_like(center_range_m, height_m)
-
-    return encode_relative_obstacle_observation(
+    surface_range_m, bearing_rad, closing_rate_mps = relative_obstacle_measurement(
         relative_position_m=relative_position_b,
         relative_velocity_mps=relative_velocity_b,
         width_m=obstacle_width_m,
+    )
+
+    return encode_perturbed_obstacle_observation(
+        range_m=surface_range_m,
+        bearing_rad=bearing_rad,
+        width_m=obstacle_width_m,
         height_m=obstacle_height_m,
+        closing_rate_mps=closing_rate_mps,
         valid=valid,
+        sensor_model=ObstacleSensorModel(
+            range_noise_m=range_noise_m,
+            bearing_noise_rad=bearing_noise_rad,
+            width_noise_m=width_noise_m,
+            height_noise_m=height_noise_m,
+            closing_rate_noise_mps=closing_rate_noise_mps,
+            dropout_probability=dropout_probability,
+        ),
         limits=ObstacleObservationLimits(
             max_range_m=max_range_m,
             max_width_m=max_width_m,

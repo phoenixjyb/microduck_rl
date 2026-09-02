@@ -46,6 +46,9 @@ to the five physical fields and whole-estimate dropout before normalization.
 Their defaults are exact and dropout-free: task-specific values must be
 explicitly justified by perception measurements or a documented stress test.
 Optional noise and dropout samples make retained evaluations reproducible.
+The simulator scene adapter exposes these bounds as explicit parameters and
+applies them before normalization; its default path remains exact and does not
+consume random numbers.
 
 Observation latency is not implemented inside this encoder. The eventual
 actor term must use MJLab's reset-aware observation delay buffer; this avoids

@@ -161,6 +161,29 @@ def encode_perturbed_obstacle_observation(
         )
     )
     batch_shape = range_m.shape
+    noise_bounds_tuple = (
+        sensor_model.range_noise_m,
+        sensor_model.bearing_noise_rad,
+        sensor_model.width_noise_m,
+        sensor_model.height_noise_m,
+        sensor_model.closing_rate_noise_mps,
+    )
+    if (
+        uniform_noise_samples is None
+        and dropout_samples is None
+        and not any(noise_bounds_tuple)
+        and sensor_model.dropout_probability == 0.0
+    ):
+        return encode_obstacle_observation(
+            range_m=range_m,
+            bearing_rad=bearing_rad,
+            width_m=width_m,
+            height_m=height_m,
+            closing_rate_mps=closing_rate_mps,
+            valid=valid,
+            limits=limits,
+        )
+
     sample_shape = (*batch_shape, 5)
     if uniform_noise_samples is None:
         uniform_noise_samples = torch.rand(
@@ -195,15 +218,7 @@ def encode_perturbed_obstacle_observation(
             raise ValueError("dropout_samples must be in [0, 1]")
 
     symmetric_noise = 2.0 * uniform_noise_samples - 1.0
-    noise_bounds = range_m.new_tensor(
-        (
-            sensor_model.range_noise_m,
-            sensor_model.bearing_noise_rad,
-            sensor_model.width_noise_m,
-            sensor_model.height_noise_m,
-            sensor_model.closing_rate_noise_mps,
-        )
-    )
+    noise_bounds = range_m.new_tensor(noise_bounds_tuple)
     noisy = torch.stack(
         (range_m, bearing_rad, width_m, height_m, closing_rate_mps), dim=-1
     ) + symmetric_noise * noise_bounds
@@ -242,6 +257,29 @@ def encode_relative_obstacle_observation(
     into the base frame.  Noise, latency, dropout, and field-of-view masking
     belong between that adapter and this deterministic geometry encoder.
     """
+    surface_range_m, bearing_rad, closing_rate_mps = relative_obstacle_measurement(
+        relative_position_m=relative_position_m,
+        relative_velocity_mps=relative_velocity_mps,
+        width_m=width_m,
+    )
+
+    return encode_obstacle_observation(
+        range_m=surface_range_m,
+        bearing_rad=bearing_rad,
+        width_m=width_m,
+        height_m=height_m,
+        closing_rate_mps=closing_rate_mps,
+        valid=valid,
+        limits=limits,
+    )
+
+
+def relative_obstacle_measurement(
+    relative_position_m: torch.Tensor,
+    relative_velocity_mps: torch.Tensor,
+    width_m: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Return physical surface range, bearing, and closing rate in base frame."""
     if relative_position_m.shape[-1] < 2:
         raise ValueError("relative obstacle position needs x and y components")
     if relative_velocity_mps.shape[-1] < 2:
@@ -261,13 +299,4 @@ def encode_relative_obstacle_observation(
         relative_position_xy[..., 1], relative_position_xy[..., 0]
     )
     surface_range_m = (center_range_m - width_m / 2.0).clamp_min(0.0)
-
-    return encode_obstacle_observation(
-        range_m=surface_range_m,
-        bearing_rad=bearing_rad,
-        width_m=width_m,
-        height_m=height_m,
-        closing_rate_mps=closing_rate_mps,
-        valid=valid,
-        limits=limits,
-    )
+    return surface_range_m, bearing_rad, closing_rate_mps

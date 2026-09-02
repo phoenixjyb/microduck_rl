@@ -80,6 +80,13 @@ def test_scene_adapter_keeps_obstacle_at_field_of_view_edge():
     )
 
 
+def test_scene_adapter_applies_whole_estimate_dropout_before_actor_input():
+    out = microduck_mdp.obstacle_geometry_observation(
+        _env((1.0, 0.0, 0.1)), dropout_probability=1.0
+    )
+    assert torch.equal(out, torch.zeros_like(out))
+
+
 @pytest.mark.parametrize("horizontal_fov_rad", [0.0, -0.1, 2.0 * math.pi + 0.1])
 def test_scene_adapter_rejects_invalid_field_of_view(horizontal_fov_rad):
     with pytest.raises(ValueError, match="horizontal_fov_rad"):

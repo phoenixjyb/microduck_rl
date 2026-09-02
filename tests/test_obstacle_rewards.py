@@ -103,6 +103,39 @@ def test_route_progress_rejects_negative_command_threshold():
         )
 
 
+def test_lateral_excursion_cost_uses_episode_origin_and_soft_corridor():
+    env = _env(
+        [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0)],
+        [(1.0, 0.0), (1.0, 0.0), (1.0, 0.0)],
+    )
+    env.episode_length_buf = torch.zeros(3, dtype=torch.long)
+    microduck_mdp.obstacle_lateral_excursion_cost(env)
+
+    env.scene["robot"].data.root_link_pos_w[:, 1] = torch.tensor([0.45, 0.60, 0.80])
+    env.episode_length_buf.fill_(2)
+    cost = microduck_mdp.obstacle_lateral_excursion_cost(env)
+
+    torch.testing.assert_close(
+        cost, torch.tensor([0.0, 0.5, 1.0]), atol=1e-6, rtol=0.0
+    )
+    assert "Metrics/obstacle_lateral_excursion_mean_m" in env.extras["log"]
+    assert "Metrics/obstacle_corridor_exceed_fraction" in env.extras["log"]
+
+
+@pytest.mark.parametrize(
+    "kwargs, message",
+    [
+        ({"soft_limit_m": -0.01}, "soft_limit_m"),
+        ({"soft_limit_m": 0.45, "hard_limit_m": 0.45}, "hard_limit_m"),
+    ],
+)
+def test_lateral_excursion_cost_rejects_invalid_limits(kwargs, message):
+    with pytest.raises(ValueError, match=message):
+        microduck_mdp.obstacle_lateral_excursion_cost(
+            _env([(0.0, 0.0)], [(1.0, 0.0)]), **kwargs
+        )
+
+
 @pytest.mark.parametrize(
     "function, kwargs, message",
     [

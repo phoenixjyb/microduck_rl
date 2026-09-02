@@ -5913,6 +5913,55 @@ def obstacle_route_progress_reward(
     return reward
 
 
+def obstacle_lateral_excursion_cost(
+    env: ManagerBasedRlEnv,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+    soft_limit_m: float = 0.45,
+    hard_limit_m: float = 0.75,
+) -> torch.Tensor:
+    """Penalize wide detours from the episode's fixed reset route.
+
+    The route origin is captured independently for each environment at reset.
+    Excursions inside the soft corridor are free; the cost then ramps linearly
+    to one at the hard limit.  This term depends only on simulated locomotion
+    state and does not change the external obstacle-observation contract.
+    """
+    if soft_limit_m < 0.0:
+        raise ValueError("obstacle lateral soft_limit_m must be non-negative")
+    if hard_limit_m <= soft_limit_m:
+        raise ValueError("obstacle lateral hard_limit_m must exceed soft_limit_m")
+    if not hasattr(env, "_obstacle_path_dir_w"):
+        env._obstacle_path_dir_w = torch.zeros(env.num_envs, 2, device=env.device)
+        env._obstacle_path_dir_w[:, 0] = 1.0
+
+    robot: Entity = env.scene[asset_cfg.name]
+    robot_xy = robot.data.root_link_pos_w[:, :2]
+    if not hasattr(env, "_obstacle_route_origin_w"):
+        env._obstacle_route_origin_w = robot_xy.clone()
+    if hasattr(env, "episode_length_buf"):
+        reset_mask = env.episode_length_buf <= 1
+        env._obstacle_route_origin_w[reset_mask] = robot_xy[reset_mask]
+
+    lateral_dir = torch.stack(
+        (-env._obstacle_path_dir_w[:, 1], env._obstacle_path_dir_w[:, 0]), dim=-1
+    )
+    displacement = robot_xy - env._obstacle_route_origin_w
+    excursion = torch.abs((displacement * lateral_dir).sum(dim=-1))
+    cost = ((excursion - soft_limit_m) / (hard_limit_m - soft_limit_m)).clamp(
+        0.0, 1.0
+    )
+    cost = torch.nan_to_num(cost, nan=1.0, posinf=1.0, neginf=1.0)
+    if hasattr(env, "extras"):
+        log = env.extras.setdefault("log", {})
+        log["Metrics/obstacle_lateral_excursion_mean_m"] = torch.nan_to_num(
+            excursion, nan=0.0, posinf=hard_limit_m, neginf=hard_limit_m
+        ).mean()
+        log["Metrics/obstacle_corridor_exceed_fraction"] = (
+            excursion > soft_limit_m
+        ).float().mean()
+    return cost
+
+
 def obstacle_geometry_observation(
     env: ManagerBasedRlEnv,
     asset_name: str = "obstacle",

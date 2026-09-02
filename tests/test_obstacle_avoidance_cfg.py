@@ -99,6 +99,15 @@ def test_obstacle_reward_and_collision_contract_is_registered():
         is microduck_mdp.obstacle_route_progress_reward
     )
     assert cfg.rewards["obstacle_route_progress"].weight == 1.5
+    assert (
+        cfg.rewards["obstacle_lateral_excursion"].func
+        is microduck_mdp.obstacle_lateral_excursion_cost
+    )
+    assert cfg.rewards["obstacle_lateral_excursion"].weight == -1.0
+    assert cfg.rewards["obstacle_lateral_excursion"].params == {
+        "soft_limit_m": 0.45,
+        "hard_limit_m": 0.75,
+    }
     assert cfg.terminations["obstacle_collision"].func is microduck_mdp.obstacle_collision
     assert cfg.terminations["obstacle_collision"].time_out is False
     assert cfg.terminations["obstacle_passed"].func is microduck_mdp.obstacle_passed

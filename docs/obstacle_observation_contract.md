@@ -112,3 +112,10 @@ runtime gate. It disables external model uploads, allows at most 256 simulation
 environments and two learning iterations, strict-loads actor/critic/optimizer,
 and retains a smoke checkpoint. Passing this gate proves runtime compatibility;
 it is not evidence that obstacle avoidance has been learned.
+
+`python -m mjlab_microduck.obstacle_baseline CHECKPOINT OUTPUT_DIR` runs a
+bounded, inference-only baseline (at most 256 environments, 1,000 steps, and
+five seeds). It fixes the command to straight 0.5 m/s, disables actor sensor
+noise through the deterministic play config, and retains collision, fall,
+timeout, clean-pass, non-finite, clearance, and forward-speed evidence. Its
+output explicitly remains untrained-policy evidence.

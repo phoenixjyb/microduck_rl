@@ -173,6 +173,15 @@ def make_obstacle_avoidance_variant(
         weight=1.5,
         params={"command_name": "twist", "command_threshold": 0.01},
     )
+    cfg.rewards["obstacle_stall"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_stall_cost,
+        weight=-1.0,
+        params={
+            "command_name": "twist",
+            "min_progress_fraction": 0.5,
+            "command_threshold": 0.01,
+        },
+    )
     cfg.terminations["obstacle_collision"] = TerminationTermCfg(
         func=microduck_mdp.obstacle_collision,
         params=dict(envelope_params),

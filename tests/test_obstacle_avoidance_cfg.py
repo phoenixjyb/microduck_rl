@@ -104,6 +104,9 @@ def test_obstacle_reward_and_collision_contract_is_registered():
         is microduck_mdp.obstacle_route_progress_reward
     )
     assert cfg.rewards["obstacle_route_progress"].weight == 1.5
+    assert cfg.rewards["obstacle_stall"].func is microduck_mdp.obstacle_stall_cost
+    assert cfg.rewards["obstacle_stall"].weight == -1.0
+    assert cfg.rewards["obstacle_stall"].params["min_progress_fraction"] == 0.5
     assert cfg.terminations["obstacle_collision"].func is microduck_mdp.obstacle_collision
     assert cfg.terminations["obstacle_collision"].time_out is False
     assert cfg.terminations["obstacle_passed"].func is microduck_mdp.obstacle_passed

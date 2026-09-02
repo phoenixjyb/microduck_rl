@@ -3537,6 +3537,7 @@ def velocity_command_ranges_curriculum(
     update_lin_vel_y: bool = True,
     update_ang_vel_z: bool = True,
     forward_only: bool = False,
+    min_lin_vel: float = 0.0,
 ) -> torch.Tensor:
     """Update velocity command ranges based on training progress.
 
@@ -3578,8 +3579,12 @@ def velocity_command_ranges_curriculum(
             current_ang_vel = stage["ang_vel_range"]
 
     # Update command ranges
+    if not 0.0 <= min_lin_vel <= current_lin_vel:
+        raise ValueError(
+            f"min_lin_vel must be in [0, {current_lin_vel}], got {min_lin_vel}"
+        )
     if forward_only:
-        cfg.ranges.lin_vel_x = (0.0, current_lin_vel)
+        cfg.ranges.lin_vel_x = (min_lin_vel, current_lin_vel)
     else:
         cfg.ranges.lin_vel_x = (-current_lin_vel, current_lin_vel)
     if update_lin_vel_y:

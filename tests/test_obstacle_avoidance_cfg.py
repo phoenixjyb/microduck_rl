@@ -11,6 +11,7 @@ from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
 )
 from mjlab_microduck.tasks.motor_aware import make_motor_aware_run_variant
 from mjlab_microduck.tasks.obstacle_avoidance import (
+    OBSTACLE_MIN_FORWARD_SPEED_MPS,
     OBSTACLE_PLACEMENT_STAGES,
     OBSTACLE_RESUME_ITERATION,
     OBSTACLE_SENSOR_STAGES,
@@ -51,11 +52,40 @@ def test_curricula_are_offset_from_stage2_checkpoint_and_bounded_at_point8():
     velocity = cfg.curriculum["velocity_command_ranges"].params
     assert velocity["velocity_stages"] == OBSTACLE_VELOCITY_STAGES
     assert velocity["forward_only"] is True
+    assert velocity["min_lin_vel"] == OBSTACLE_MIN_FORWARD_SPEED_MPS
     assert velocity["update_lin_vel_y"] is False
     assert velocity["update_ang_vel_z"] is True
     assert all(stage["ang_vel_range"] == 0.0 for stage in OBSTACLE_VELOCITY_STAGES)
     assert cfg.commands["twist"].ranges.lin_vel_y == (0.0, 0.0)
+    assert cfg.commands["twist"].ranges.lin_vel_x == (
+        OBSTACLE_MIN_FORWARD_SPEED_MPS,
+        0.50,
+    )
     assert cfg.commands["twist"].ranges.ang_vel_z == (0.0, 0.0)
+
+
+def test_velocity_curriculum_preserves_nonstanding_speed_floor():
+    ranges = SimpleNamespace(
+        lin_vel_x=(-1.0, 1.0),
+        lin_vel_y=(-1.0, 1.0),
+        ang_vel_z=(-1.0, 1.0),
+    )
+    command_cfg = SimpleNamespace(ranges=ranges)
+    env = SimpleNamespace(
+        common_step_counter=0,
+        command_manager=SimpleNamespace(
+            get_term=lambda name: SimpleNamespace(cfg=command_cfg)
+        ),
+    )
+    microduck_mdp.velocity_command_ranges_curriculum(
+        env,
+        torch.tensor([0]),
+        command_name="twist",
+        velocity_stages=OBSTACLE_VELOCITY_STAGES,
+        forward_only=True,
+        min_lin_vel=OBSTACLE_MIN_FORWARD_SPEED_MPS,
+    )
+    assert ranges.lin_vel_x == (OBSTACLE_MIN_FORWARD_SPEED_MPS, 0.50)
 
 
 def test_obstacle_reward_and_collision_contract_is_registered():

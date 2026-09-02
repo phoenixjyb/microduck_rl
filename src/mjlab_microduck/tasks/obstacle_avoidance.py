@@ -29,6 +29,7 @@ OBSTACLE_HEIGHT_M = 0.10
 ROBOT_COLLISION_RADIUS_M = 0.12
 OBSTACLE_COLLISION_RADIUS_M = OBSTACLE_WIDTH_M / 2.0
 OBSTACLE_CLEARANCE_MARGIN_M = 0.15
+OBSTACLE_MIN_FORWARD_SPEED_MPS = 0.25
 OBSTACLE_RESUME_ITERATION = 7998
 
 
@@ -192,9 +193,13 @@ def make_obstacle_avoidance_variant(
     velocity = cfg.curriculum["velocity_command_ranges"].params
     velocity["velocity_stages"] = deepcopy(OBSTACLE_VELOCITY_STAGES)
     velocity["forward_only"] = True
+    velocity["min_lin_vel"] = OBSTACLE_MIN_FORWARD_SPEED_MPS
     velocity["update_lin_vel_y"] = False
     velocity["update_ang_vel_z"] = True
-    cfg.commands["twist"].ranges.lin_vel_x = (0.0, 0.50)
+    cfg.commands["twist"].ranges.lin_vel_x = (
+        OBSTACLE_MIN_FORWARD_SPEED_MPS,
+        0.50,
+    )
     cfg.commands["twist"].ranges.lin_vel_y = (0.0, 0.0)
     cfg.commands["twist"].ranges.ang_vel_z = (0.0, 0.0)
     return cfg

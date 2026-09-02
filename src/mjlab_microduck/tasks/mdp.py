@@ -5856,6 +5856,47 @@ def obstacle_passed_reward(
     return passed.float()
 
 
+def obstacle_route_progress_reward(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+    command_threshold: float = 0.01,
+) -> torch.Tensor:
+    """Reward commanded forward progress along the episode's reset heading.
+
+    Velocity tracking is body-relative, so a policy can reduce its obstacle
+    cost by turning or braking even when that stalls progress along the route.
+    This bounded term rewards reaching, but never exceeding, the requested
+    forward speed projected onto the fixed reset heading.  Exact standing
+    commands remain unrewarded.
+    """
+    if command_threshold < 0.0:
+        raise ValueError("command_threshold must be non-negative")
+    if not hasattr(env, "_obstacle_path_dir_w"):
+        env._obstacle_path_dir_w = torch.zeros(env.num_envs, 2, device=env.device)
+        env._obstacle_path_dir_w[:, 0] = 1.0
+
+    robot: Entity = env.scene[asset_cfg.name]
+    route_speed = (
+        robot.data.root_link_lin_vel_w[:, :2] * env._obstacle_path_dir_w
+    ).sum(dim=-1)
+    commanded_speed = env.command_manager.get_command(command_name)[:, 0].clamp_min(0.0)
+    moving = commanded_speed > command_threshold
+    reward = torch.where(
+        moving,
+        (route_speed / commanded_speed.clamp_min(command_threshold)).clamp(0.0, 1.0),
+        torch.zeros_like(route_speed),
+    )
+    reward = torch.nan_to_num(reward, nan=0.0, posinf=0.0, neginf=0.0)
+    if hasattr(env, "extras"):
+        log = env.extras.setdefault("log", {})
+        log["Metrics/obstacle_route_speed_mean_mps"] = torch.nan_to_num(
+            route_speed, nan=0.0
+        ).mean()
+        log["Metrics/obstacle_route_progress_reward_mean"] = reward.mean()
+    return reward
+
+
 def obstacle_geometry_observation(
     env: ManagerBasedRlEnv,
     asset_name: str = "obstacle",

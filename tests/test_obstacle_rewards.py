@@ -73,6 +73,36 @@ def test_passed_reward_uses_fixed_reset_heading_and_requires_clearance():
     assert "Metrics/obstacle_passed_fraction" in env.extras["log"]
 
 
+def test_route_progress_tracks_command_without_rewarding_standing_or_overspeed():
+    env = _env(
+        [(0.0, 0.0)] * 4,
+        [(1.0, 0.0)] * 4,
+    )
+    env.scene["robot"].data.root_link_lin_vel_w = torch.tensor(
+        [[0.25, 0.0, 0.0], [0.10, 0.0, 0.0], [0.50, 0.0, 0.0], [-0.10, 0.0, 0.0]]
+    )
+    commands = torch.tensor(
+        [[0.50, 0.0, 0.0], [0.20, 0.0, 0.0], [0.00, 0.0, 0.0], [0.20, 0.0, 0.0]]
+    )
+    env.command_manager = SimpleNamespace(get_command=lambda name: commands)
+    reward = microduck_mdp.obstacle_route_progress_reward(env)
+    torch.testing.assert_close(
+        reward,
+        torch.tensor([0.5, 0.5, 0.0, 0.0]),
+        atol=1e-6,
+        rtol=0.0,
+    )
+    assert "Metrics/obstacle_route_speed_mean_mps" in env.extras["log"]
+
+
+def test_route_progress_rejects_negative_command_threshold():
+    with pytest.raises(ValueError, match="command_threshold"):
+        microduck_mdp.obstacle_route_progress_reward(
+            _env([(0.0, 0.0)], [(1.0, 0.0)]),
+            command_threshold=-0.01,
+        )
+
+
 @pytest.mark.parametrize(
     "function, kwargs, message",
     [

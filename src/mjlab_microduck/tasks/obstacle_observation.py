@@ -46,6 +46,36 @@ class ObstacleObservationLimits:
 DEFAULT_OBSTACLE_OBSERVATION_LIMITS = ObstacleObservationLimits()
 
 
+@dataclass(frozen=True)
+class ObstacleSensorModel:
+    """Bounded simulation perturbations for an external obstacle estimate.
+
+    Defaults are exact/no-dropout on purpose.  A task must opt into values that
+    are justified by the intended perception stack or a documented stress
+    envelope instead of silently inventing sensor performance.
+    """
+
+    range_noise_m: float = 0.0
+    bearing_noise_rad: float = 0.0
+    width_noise_m: float = 0.0
+    height_noise_m: float = 0.0
+    closing_rate_noise_mps: float = 0.0
+    dropout_probability: float = 0.0
+
+    def __post_init__(self) -> None:
+        noise_bounds = (
+            self.range_noise_m,
+            self.bearing_noise_rad,
+            self.width_noise_m,
+            self.height_noise_m,
+            self.closing_rate_noise_mps,
+        )
+        if any(bound < 0.0 for bound in noise_bounds):
+            raise ValueError("obstacle sensor noise bounds must be non-negative")
+        if not 0.0 <= self.dropout_probability <= 1.0:
+            raise ValueError("obstacle sensor dropout_probability must be in [0, 1]")
+
+
 def encode_obstacle_observation(
     range_m: torch.Tensor,
     bearing_rad: torch.Tensor,
@@ -98,6 +128,98 @@ def encode_obstacle_observation(
     )
     encoded = torch.where(valid.unsqueeze(-1), encoded, torch.zeros_like(encoded))
     return torch.cat((encoded, valid.to(dtype=encoded.dtype).unsqueeze(-1)), dim=-1)
+
+
+def encode_perturbed_obstacle_observation(
+    range_m: torch.Tensor,
+    bearing_rad: torch.Tensor,
+    width_m: torch.Tensor,
+    height_m: torch.Tensor,
+    closing_rate_mps: torch.Tensor,
+    valid: torch.Tensor,
+    *,
+    sensor_model: ObstacleSensorModel,
+    limits: ObstacleObservationLimits = DEFAULT_OBSTACLE_OBSERVATION_LIMITS,
+    uniform_noise_samples: torch.Tensor | None = None,
+    dropout_samples: torch.Tensor | None = None,
+) -> torch.Tensor:
+    """Apply bounded measurement noise/dropout, then encode the v1 contract.
+
+    The five noise samples correspond to range, bearing, width, height, and
+    closing rate, in that order. Samples are in ``[0, 1]`` and map linearly to
+    each configured symmetric noise interval. Supplying samples makes tests
+    and retained evaluations exactly reproducible; otherwise Torch's active
+    random generator is used.
+    """
+    range_m, bearing_rad, width_m, height_m, closing_rate_mps = (
+        torch.broadcast_tensors(
+            range_m,
+            bearing_rad,
+            width_m,
+            height_m,
+            closing_rate_mps,
+        )
+    )
+    batch_shape = range_m.shape
+    sample_shape = (*batch_shape, 5)
+    if uniform_noise_samples is None:
+        uniform_noise_samples = torch.rand(
+            sample_shape, device=range_m.device, dtype=range_m.dtype
+        )
+    else:
+        uniform_noise_samples = uniform_noise_samples.to(
+            device=range_m.device, dtype=range_m.dtype
+        )
+        if uniform_noise_samples.shape != sample_shape:
+            raise ValueError(
+                f"uniform_noise_samples must have shape {sample_shape}, "
+                f"got {tuple(uniform_noise_samples.shape)}"
+            )
+        if not torch.all((uniform_noise_samples >= 0.0) & (uniform_noise_samples <= 1.0)):
+            raise ValueError("uniform_noise_samples must be in [0, 1]")
+
+    if dropout_samples is None:
+        dropout_samples = torch.rand(
+            batch_shape, device=range_m.device, dtype=range_m.dtype
+        )
+    else:
+        dropout_samples = dropout_samples.to(
+            device=range_m.device, dtype=range_m.dtype
+        )
+        if dropout_samples.shape != batch_shape:
+            raise ValueError(
+                f"dropout_samples must have shape {tuple(batch_shape)}, "
+                f"got {tuple(dropout_samples.shape)}"
+            )
+        if not torch.all((dropout_samples >= 0.0) & (dropout_samples <= 1.0)):
+            raise ValueError("dropout_samples must be in [0, 1]")
+
+    symmetric_noise = 2.0 * uniform_noise_samples - 1.0
+    noise_bounds = range_m.new_tensor(
+        (
+            sensor_model.range_noise_m,
+            sensor_model.bearing_noise_rad,
+            sensor_model.width_noise_m,
+            sensor_model.height_noise_m,
+            sensor_model.closing_rate_noise_mps,
+        )
+    )
+    noisy = torch.stack(
+        (range_m, bearing_rad, width_m, height_m, closing_rate_mps), dim=-1
+    ) + symmetric_noise * noise_bounds
+    detected = valid.to(device=range_m.device, dtype=torch.bool) & (
+        dropout_samples >= sensor_model.dropout_probability
+    )
+
+    return encode_obstacle_observation(
+        range_m=noisy[..., 0],
+        bearing_rad=noisy[..., 1],
+        width_m=noisy[..., 2],
+        height_m=noisy[..., 3],
+        closing_rate_mps=noisy[..., 4],
+        valid=detected,
+        limits=limits,
+    )
 
 
 def encode_relative_obstacle_observation(

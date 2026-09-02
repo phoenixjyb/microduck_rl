@@ -40,6 +40,17 @@ velocity into the robot base frame, and masks it by range and horizontal field
 of view. It is intentionally not registered in an actor configuration until a
 tested obstacle entity and sensor-perturbation model are present.
 
+`ObstacleSensorModel` and `encode_perturbed_obstacle_observation` provide the
+sensor-perturbation boundary. They apply bounded symmetric noise independently
+to the five physical fields and whole-estimate dropout before normalization.
+Their defaults are exact and dropout-free: task-specific values must be
+explicitly justified by perception measurements or a documented stress test.
+Optional noise and dropout samples make retained evaluations reproducible.
+
+Observation latency is not implemented inside this encoder. The eventual
+actor term must use MJLab's reset-aware observation delay buffer; this avoids
+state leaking across environment resets.
+
 ## Training boundary
 
 Simulation should derive the physical fields from ground-truth geometry, then

@@ -14,6 +14,26 @@ MAX_BASELINE_STEPS = 1000
 MAX_BASELINE_SEEDS = 5
 
 
+def _mean_or_none(total: float, count: int) -> float | None:
+    return total / count if count else None
+
+
+def _weighted_case_mean(
+    cases: list[dict], value_key: str, count_key: str
+) -> float | None:
+    count = sum(case[count_key] for case in cases)
+    if count == 0:
+        return None
+    return (
+        sum(
+            case[value_key] * case[count_key]
+            for case in cases
+            if case[count_key]
+        )
+        / count
+    )
+
+
 def validate_baseline_bounds(num_envs: int, steps: int, seeds: tuple[int, ...]) -> None:
     if not 1 <= num_envs <= MAX_BASELINE_ENVS:
         raise ValueError(f"num_envs must be in [1, {MAX_BASELINE_ENVS}]")
@@ -91,10 +111,36 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
         clearance_sum = 0.0
         forward_speed_sum = 0.0
         sample_count = 0
+        pre_obstacle_speed_sum = 0.0
+        pre_obstacle_samples = 0
+        pass_time_sum_s = 0.0
+        collision_time_sum_s = 0.0
+        pass_lateral_sum_m = 0.0
+        collision_lateral_sum_m = 0.0
+        episode_steps = torch.zeros(num_envs, dtype=torch.long, device=device)
+        episode_lateral_max = torch.zeros(num_envs, device=device)
+        robot = env.scene["robot"]
+        obstacle = env.scene["obstacle"]
+        episode_start_xy = robot.data.root_link_pos_w[:, :2].clone()
         for _ in range(steps):
+            path_dir = env._obstacle_path_dir_w
+            robot_xy = robot.data.root_link_pos_w[:, :2]
+            obstacle_xy = obstacle.data.root_link_pos_w[:, :2]
+            lateral_dir = torch.stack((-path_dir[:, 1], path_dir[:, 0]), dim=-1)
+            lateral = ((robot_xy - episode_start_xy) * lateral_dir).sum(dim=-1).abs()
+            episode_lateral_max = torch.maximum(episode_lateral_max, lateral)
+            route_speed = (robot.data.root_link_lin_vel_w[:, :2] * path_dir).sum(dim=-1)
+            before_obstacle = ((robot_xy - obstacle_xy) * path_dir).sum(dim=-1) < 0.0
+            pre_obstacle_speed_sum += float(
+                torch.nan_to_num(route_speed[before_obstacle], nan=0.0).sum()
+            )
+            pre_obstacle_samples += int(before_obstacle.sum())
+
             with torch.inference_mode():
                 actions = policy(obs)
                 obs, rewards, _dones, _ = wrapped.step(actions)
+
+            episode_steps += 1
 
             collision = env.termination_manager.get_term("obstacle_collision")
             fell = env.termination_manager.get_term("fell_over")
@@ -107,6 +153,11 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
 
             passed = env.termination_manager.get_term("obstacle_passed")
             pass_events += int(passed.sum())
+            elapsed_s = episode_steps.float() * env.step_dt
+            pass_time_sum_s += float(elapsed_s[passed].sum())
+            collision_time_sum_s += float(elapsed_s[collision].sum())
+            pass_lateral_sum_m += float(episode_lateral_max[passed].sum())
+            collision_lateral_sum_m += float(episode_lateral_max[collision].sum())
 
             robot = env.scene["robot"]
             obstacle = env.scene["obstacle"]
@@ -127,6 +178,11 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
             finite &= all(torch.isfinite(value).all() for value in obs.values())
             nonfinite_steps += int(not bool(finite))
 
+            done = _dones.bool()
+            episode_steps[done] = 0
+            episode_lateral_max[done] = 0.0
+            episode_start_xy[done] = robot.data.root_link_pos_w[done, :2]
+
         return {
             "seed": seed,
             "num_envs": num_envs,
@@ -140,6 +196,20 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
             "nonfinite_steps": nonfinite_steps,
             "mean_clearance_m": clearance_sum / sample_count,
             "mean_forward_speed_mps": forward_speed_sum / sample_count,
+            "pre_obstacle_samples": pre_obstacle_samples,
+            "pre_obstacle_route_speed_mps": _mean_or_none(
+                pre_obstacle_speed_sum, pre_obstacle_samples
+            ),
+            "mean_passage_time_s": _mean_or_none(pass_time_sum_s, pass_events),
+            "mean_collision_time_s": _mean_or_none(
+                collision_time_sum_s, collision_events
+            ),
+            "mean_pass_lateral_excursion_m": _mean_or_none(
+                pass_lateral_sum_m, pass_events
+            ),
+            "mean_collision_lateral_excursion_m": _mean_or_none(
+                collision_lateral_sum_m, collision_events
+            ),
         }
     finally:
         env.close()
@@ -187,6 +257,21 @@ def run_baseline(
         "mean_clearance_m": sum(c["mean_clearance_m"] for c in cases) / len(cases),
         "mean_forward_speed_mps": sum(c["mean_forward_speed_mps"] for c in cases)
         / len(cases),
+        "pre_obstacle_route_speed_mps": _weighted_case_mean(
+            cases, "pre_obstacle_route_speed_mps", "pre_obstacle_samples"
+        ),
+        "mean_passage_time_s": _weighted_case_mean(
+            cases, "mean_passage_time_s", "clean_pass_events"
+        ),
+        "mean_collision_time_s": _weighted_case_mean(
+            cases, "mean_collision_time_s", "collision_events"
+        ),
+        "mean_pass_lateral_excursion_m": _weighted_case_mean(
+            cases, "mean_pass_lateral_excursion_m", "clean_pass_events"
+        ),
+        "mean_collision_lateral_excursion_m": _weighted_case_mean(
+            cases, "mean_collision_lateral_excursion_m", "collision_events"
+        ),
     }
     output_path = output_dir / "obstacle_baseline.json"
     output_path.write_text(json.dumps(summary, indent=2) + "\n")

@@ -7,6 +7,8 @@ from mjlab_microduck.obstacle_baseline import (
     MAX_BASELINE_ENVS,
     MAX_BASELINE_SEEDS,
     MAX_BASELINE_STEPS,
+    _mean_or_none,
+    _weighted_case_mean,
     prepare_baseline_configs,
     run_baseline,
     validate_baseline_bounds,
@@ -53,3 +55,16 @@ def test_baseline_rejects_nonpositive_speed():
 def test_baseline_rejects_empty_purpose_before_resolving_checkpoint(tmp_path: Path):
     with pytest.raises(ValueError, match="purpose"):
         run_baseline(tmp_path / "missing.pt", tmp_path / "out", purpose="  ")
+
+
+def test_diagnostic_means_are_count_weighted_and_empty_safe():
+    cases = [
+        {"events": 2, "time": 1.0},
+        {"events": 1, "time": 4.0},
+    ]
+    assert _mean_or_none(3.0, 2) == 1.5
+    assert _mean_or_none(0.0, 0) is None
+    assert _weighted_case_mean(cases, "time", "events") == 2.0
+    assert _weighted_case_mean(
+        [{"events": 0, "time": None}], "time", "events"
+    ) is None

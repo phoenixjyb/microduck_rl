@@ -90,6 +90,7 @@ from .microduck_velocity_hostile_env_cfg import (
 )
 from .backlash import make_backlash_variant
 from .run import make_run_variant, MicroduckRunRlCfg
+from .motor_aware import make_motor_aware_run_variant, MicroduckMotorAwareRunRlCfg
 from .sprung import SWEEP_ARMS, make_sprung_variant, sprung_rl_cfg, ARM_TASK_SUFFIX
 from .hop import HOP_ARMS, HOP_ARM_SUFFIX, hop_rl_cfg, make_hop_variant
 from mjlab_microduck.robot.sprung_foot import H_ADD
@@ -134,6 +135,21 @@ register_mjlab_task(
     runner_cls=MicroduckOnPolicyRunner,
 )
 print("✓ Run task registered: Mjlab-Run-Rough-MicroDuck")
+
+# Motor-aware Stage 2 fine-tune.  Observation/action dimensions are unchanged
+# from Run, so the retained Stage 1 checkpoint can be resumed directly.
+register_mjlab_task(
+    task_id="Mjlab-Run-MotorAware-Flat-MicroDuck",
+    env_cfg=make_motor_aware_run_variant(
+        make_run_variant(make_microduck_velocity_env_cfg())
+    ),
+    play_env_cfg=make_motor_aware_run_variant(
+        make_run_variant(make_microduck_velocity_env_cfg(play=True))
+    ),
+    rl_cfg=MicroduckMotorAwareRunRlCfg,
+    runner_cls=MicroduckOnPolicyRunner,
+)
+print("✓ Motor-aware Run task registered: Mjlab-Run-MotorAware-Flat-MicroDuck")
 
 # Sprung-foot stiffness sweep — Phase 2. See
 # docs/superpowers/specs/2026-08-20-sprung-foot-design.md

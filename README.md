@@ -37,6 +37,7 @@ uv run train Mjlab-Velocity-Flat-MicroDuck --env.scene.num-envs 4096 --hf-jobs
 |---|---|---|
 | `Mjlab-Velocity-{Flat,Rough}-MicroDuck` | flat/rough | Walking with velocity commands (main task) + head-pose commands |
 | `Mjlab-Velocity2-{Flat,Rough}-MicroDuck` | flat/rough | Velocity walking with the microban reward/regularization recipe |
+| `Mjlab-Run-MotorAware-Flat-MicroDuck` | flat | Stage 2 Run fine-tune with a 0.5-0.8 m/s command ladder and rated-motor-load cost |
 | `Mjlab-VelStand-{Flat,Rough}-MicroDuck` | flat/rough | Walking + fall recovery + body-pose control in one policy |
 | `Mjlab-VelStandTipToe-{Flat,Rough}-MicroDuck` | flat/rough | VelStand + tiptoe feet-alignment reward |
 | `Mjlab-StandUp-{Flat,Rough}-MicroDuck` | flat/rough | Stand up from face-down/face-up/sitting, then hold the stand |

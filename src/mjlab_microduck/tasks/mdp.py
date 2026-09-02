@@ -6319,6 +6319,65 @@ def motor_envelope_monitor(
     return zeros
 
 
+def motor_torque_load_cost(
+    env: ManagerBasedRlEnv,
+    rated_stall_torque_nm: float,
+    soft_limit_fraction: float = 0.70,
+    over_limit_gain: float = 4.0,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Penalize sustained motor load and excursions toward rated stall torque.
+
+    The base term, ``mean((tau / tau_stall)^2)``, is an I-squared thermal-load
+    proxy because motor current is proportional to torque.  A squared hinge
+    above ``soft_limit_fraction`` adds urgency near the momentary stall rating
+    without introducing a discontinuity or treating that rating as a safe
+    continuous operating point.
+
+    This is deliberately a reward cost rather than a hard simulator clamp: the
+    BAM actuator continues to model the available dynamics, while the policy is
+    asked to find a less demanding gait.  Physical current and temperature
+    telemetry are still required before declaring a real-robot safe limit.
+
+    Returns:
+        A non-negative cost tensor of shape ``(num_envs,)``.
+    """
+    zeros = torch.zeros(env.num_envs, device=env.device)
+    if rated_stall_torque_nm <= 0.0:
+        return zeros
+    if not 0.0 < soft_limit_fraction < 1.0 or over_limit_gain < 0.0:
+        return zeros
+
+    asset: Entity = env.scene[asset_cfg.name]
+    actuator_force = asset.data.actuator_force
+    if actuator_force is None or actuator_force.numel() == 0:
+        return zeros
+
+    # Bound corrupted/impulsive samples so one bad physics frame cannot inject
+    # an unbounded reward and poison PPO, while still treating +inf as severe
+    # overload rather than making it free. The separate nan-state termination
+    # remains responsible for resetting numerically invalid environments.
+    torque_util = torch.nan_to_num(
+        actuator_force.abs().float() / rated_stall_torque_nm,
+        nan=0.0,
+        posinf=2.0,
+        neginf=0.0,
+    ).clamp(max=2.0)
+    thermal = torch.square(torque_util)
+    overload = torch.square(torch.relu(torque_util - soft_limit_fraction))
+    cost = torch.mean(thermal + over_limit_gain * overload, dim=1)
+
+    log = env.extras.get("log") if hasattr(env, "extras") else None
+    if log is not None:
+        log["Metrics/motor_training_cost_mean"] = cost.mean()
+        log["Metrics/motor_training_thermal_proxy_mean"] = thermal.mean()
+        log["Metrics/motor_training_soft_limit_exceed_fraction"] = (
+            torque_util > soft_limit_fraction
+        ).float().mean()
+
+    return cost
+
+
 def spring_compression_monitor(
     env: ManagerBasedRlEnv,
     joint_names: tuple,

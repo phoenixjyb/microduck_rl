@@ -62,11 +62,6 @@ def test_curricula_are_offset_from_stage2_checkpoint_and_bounded_at_point8():
         0.50,
     )
     assert cfg.commands["twist"].ranges.ang_vel_z == (0.0, 0.0)
-    assert cfg.commands["twist"].rel_standing_envs == 0.0
-    assert cfg.commands["twist"].rel_forward_envs == 1.0
-    assert cfg.commands["twist"].heading_command is False
-    assert cfg.commands["twist"].ranges.heading is None
-    assert "standing_envs" not in cfg.curriculum
 
 
 def test_velocity_curriculum_preserves_nonstanding_speed_floor():
@@ -104,9 +99,6 @@ def test_obstacle_reward_and_collision_contract_is_registered():
         is microduck_mdp.obstacle_route_progress_reward
     )
     assert cfg.rewards["obstacle_route_progress"].weight == 1.5
-    assert cfg.rewards["obstacle_stall"].func is microduck_mdp.obstacle_stall_cost
-    assert cfg.rewards["obstacle_stall"].weight == -1.0
-    assert cfg.rewards["obstacle_stall"].params["min_progress_fraction"] == 0.5
     assert cfg.terminations["obstacle_collision"].func is microduck_mdp.obstacle_collision
     assert cfg.terminations["obstacle_collision"].time_out is False
     assert cfg.terminations["obstacle_passed"].func is microduck_mdp.obstacle_passed

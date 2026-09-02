@@ -103,34 +103,6 @@ def test_route_progress_rejects_negative_command_threshold():
         )
 
 
-def test_stall_cost_penalizes_only_subfloor_progress_for_moving_commands():
-    env = _env([(0.0, 0.0)] * 4, [(1.0, 0.0)] * 4)
-    env.scene["robot"].data.root_link_lin_vel_w = torch.tensor(
-        [[0.10, 0.0, 0.0], [0.25, 0.0, 0.0], [-0.10, 0.0, 0.0], [0.00, 0.0, 0.0]]
-    )
-    commands = torch.tensor(
-        [[0.50, 0.0, 0.0], [0.50, 0.0, 0.0], [0.20, 0.0, 0.0], [0.00, 0.0, 0.0]]
-    )
-    env.command_manager = SimpleNamespace(get_command=lambda name: commands)
-    cost = microduck_mdp.obstacle_stall_cost(env)
-    torch.testing.assert_close(
-        cost,
-        torch.tensor([0.6, 0.0, 1.0, 0.0]),
-        atol=1e-6,
-        rtol=0.0,
-    )
-    assert env.extras["log"]["Metrics/obstacle_stall_fraction"] == 0.5
-
-
-@pytest.mark.parametrize("fraction", [0.0, 1.01])
-def test_stall_cost_rejects_invalid_progress_fraction(fraction):
-    with pytest.raises(ValueError, match="min_progress_fraction"):
-        microduck_mdp.obstacle_stall_cost(
-            _env([(0.0, 0.0)], [(1.0, 0.0)]),
-            min_progress_fraction=fraction,
-        )
-
-
 @pytest.mark.parametrize(
     "function, kwargs, message",
     [

@@ -5913,46 +5913,6 @@ def obstacle_route_progress_reward(
     return reward
 
 
-def obstacle_stall_cost(
-    env: ManagerBasedRlEnv,
-    command_name: str = "twist",
-    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
-    min_progress_fraction: float = 0.5,
-    command_threshold: float = 0.01,
-) -> torch.Tensor:
-    """Penalize moving episodes that fall below a bounded route-speed floor.
-
-    The floor is relative to the sampled command, so it does not demand full
-    speed or push beyond the motor-aware envelope.  Standing commands are
-    excluded, and the cost saturates at one for zero or backward progress.
-    """
-    if not 0.0 < min_progress_fraction <= 1.0:
-        raise ValueError("min_progress_fraction must be in (0, 1]")
-    if command_threshold < 0.0:
-        raise ValueError("command_threshold must be non-negative")
-    if not hasattr(env, "_obstacle_path_dir_w"):
-        env._obstacle_path_dir_w = torch.zeros(env.num_envs, 2, device=env.device)
-        env._obstacle_path_dir_w[:, 0] = 1.0
-
-    robot: Entity = env.scene[asset_cfg.name]
-    route_speed = (
-        robot.data.root_link_lin_vel_w[:, :2] * env._obstacle_path_dir_w
-    ).sum(dim=-1)
-    commanded_speed = env.command_manager.get_command(command_name)[:, 0].clamp_min(0.0)
-    moving = commanded_speed > command_threshold
-    required_speed = commanded_speed * min_progress_fraction
-    shortfall = (
-        (required_speed - route_speed) / required_speed.clamp_min(command_threshold)
-    ).clamp(0.0, 1.0)
-    cost = torch.where(moving, shortfall, torch.zeros_like(route_speed))
-    cost = torch.nan_to_num(cost, nan=1.0, posinf=1.0, neginf=0.0)
-    if hasattr(env, "extras"):
-        env.extras.setdefault("log", {})[
-            "Metrics/obstacle_stall_fraction"
-        ] = (cost > 0.0).float().mean()
-    return cost
-
-
 def obstacle_geometry_observation(
     env: ManagerBasedRlEnv,
     asset_name: str = "obstacle",

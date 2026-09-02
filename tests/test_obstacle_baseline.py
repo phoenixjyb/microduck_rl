@@ -25,6 +25,7 @@ def test_baseline_config_uses_deterministic_straight_command():
     assert twist.ranges.heading is None
     assert twist.rel_standing_envs == 0.0
     assert "push_robot" not in env_cfg.events
+    assert env_cfg.curriculum == {}
     assert agent_cfg.upload_model is False
 
 

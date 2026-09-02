@@ -43,6 +43,10 @@ def prepare_baseline_configs(num_envs: int, speed_mps: float):
     twist.rel_forward_envs = 1.0
     twist.resampling_time_range = (1000.0, 1000.0)
     env_cfg.events.pop("push_robot", None)
+    # A collision resets the command term.  Leaving the training curricula
+    # active would then replace the fixed command range (and may re-enable
+    # standing commands), so retained cases would no longer be fixed-speed.
+    env_cfg.curriculum.clear()
 
     agent_cfg = load_rl_cfg(TASK_ID)
     agent_cfg.logger = "tensorboard"

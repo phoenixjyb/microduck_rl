@@ -11,6 +11,7 @@ from mjlab_microduck.tasks.motor_aware import (
     MOTOR_COST_WEIGHT_STAGES,
     MOTOR_OVER_LIMIT_GAIN,
     MOTOR_SOFT_LIMIT_FRACTION,
+    STAGE1_CHECKPOINT_ITERATION,
     make_motor_aware_run_variant,
 )
 from mjlab_microduck.tasks.run import make_run_variant
@@ -105,6 +106,22 @@ def test_motor_aware_velocity_ladder_is_forward_only_and_capped():
     assert params["forward_only"] is True
     assert params["update_lin_vel_y"] is False
     assert params["velocity_stages"][-1]["lin_vel_range"] == 0.80
+
+
+def test_stage2_transitions_are_offset_from_resumed_checkpoint_iteration():
+    velocity_steps = [stage["step"] for stage in MOTOR_AWARE_VELOCITY_STAGES]
+    weight_steps = [stage["step"] for stage in MOTOR_COST_WEIGHT_STAGES]
+    assert velocity_steps == [
+        0,
+        (STAGE1_CHECKPOINT_ITERATION + 750) * 24,
+        (STAGE1_CHECKPOINT_ITERATION + 1500) * 24,
+    ]
+    assert weight_steps == [
+        0,
+        (STAGE1_CHECKPOINT_ITERATION + 250) * 24,
+        (STAGE1_CHECKPOINT_ITERATION + 750) * 24,
+        (STAGE1_CHECKPOINT_ITERATION + 1500) * 24,
+    ]
 
 
 def test_other_step_curricula_are_frozen_at_their_final_stage():

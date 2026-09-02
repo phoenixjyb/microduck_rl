@@ -21,19 +21,29 @@ from mjlab_microduck.tasks.run import (
 
 MOTOR_SOFT_LIMIT_FRACTION = 0.70
 MOTOR_OVER_LIMIT_GAIN = 4.0
+STAGE1_CHECKPOINT_ITERATION = 4999
 
-# Fine-tuning steps are environment steps (iteration * 24).
+
+def _resume_step(stage2_iteration: int) -> int:
+    """Translate a Stage 2-relative iteration into the resumed global step."""
+    return (STAGE1_CHECKPOINT_ITERATION + stage2_iteration) * 24
+
+# RSL restores the checkpoint's iteration counter, and mjlab derives its common
+# environment-step counter from it.  Later stages must therefore be offset from
+# model_4999.pt; otherwise every short Stage 2 threshold is already elapsed on
+# the first resumed rollout.  The initial stage stays at zero because it is the
+# config default and must also make sense for play/config inspection.
 MOTOR_AWARE_VELOCITY_STAGES = [
     {"step": 0, "lin_vel_range": 0.50, "ang_vel_range": 1.0},
-    {"step": 750 * 24, "lin_vel_range": 0.65, "ang_vel_range": 1.0},
-    {"step": 1500 * 24, "lin_vel_range": 0.80, "ang_vel_range": 1.0},
+    {"step": _resume_step(750), "lin_vel_range": 0.65, "ang_vel_range": 1.0},
+    {"step": _resume_step(1500), "lin_vel_range": 0.80, "ang_vel_range": 1.0},
 ]
 
 MOTOR_COST_WEIGHT_STAGES = [
     {"step": 0, "weight": -0.25},
-    {"step": 250 * 24, "weight": -0.75},
-    {"step": 750 * 24, "weight": -1.25},
-    {"step": 1500 * 24, "weight": -2.00},
+    {"step": _resume_step(250), "weight": -0.75},
+    {"step": _resume_step(750), "weight": -1.25},
+    {"step": _resume_step(1500), "weight": -2.00},
 ]
 
 

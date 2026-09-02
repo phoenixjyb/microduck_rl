@@ -37,9 +37,11 @@ def prepare_baseline_configs(num_envs: int, speed_mps: float):
     twist.ranges.lin_vel_y = (0.0, 0.0)
     twist.ranges.ang_vel_z = (0.0, 0.0)
     twist.heading_command = False
+    twist.ranges.heading = None
     twist.rel_standing_envs = 0.0
     twist.rel_forward_envs = 1.0
     twist.resampling_time_range = (1000.0, 1000.0)
+    env_cfg.events.pop("push_robot", None)
 
     agent_cfg = load_rl_cfg(TASK_ID)
     agent_cfg.logger = "tensorboard"

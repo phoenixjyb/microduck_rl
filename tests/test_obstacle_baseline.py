@@ -20,7 +20,9 @@ def test_baseline_config_uses_deterministic_straight_command():
     assert twist.ranges.lin_vel_y == (0.0, 0.0)
     assert twist.ranges.ang_vel_z == (0.0, 0.0)
     assert twist.heading_command is False
+    assert twist.ranges.heading is None
     assert twist.rel_standing_envs == 0.0
+    assert "push_robot" not in env_cfg.events
     assert agent_cfg.upload_model is False
 
 

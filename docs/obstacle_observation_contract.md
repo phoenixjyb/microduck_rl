@@ -69,8 +69,12 @@ remain a separate project and acceptance gate.
 
 ## Next integration gate
 
-Before obstacle-policy training, add a simulated obstacle entity and an adapter
-that computes these fields in the robot base frame. Unit-test geometry and
-sensor perturbations, register a short flat-terrain curriculum, and run a
-CPU-only configuration smoke test. GPU training starts only after those checks
-pass and after an idle-GPU gate.
+The first entity is a 100 x 200 x 100 mm, 2 kg free-moving box described by
+`robot/microduck/obstacle.xml`. `reset_obstacle_ahead` places it in the robot's
+reset-yaw frame and clears its velocity. Its 200 mm lateral dimension matches
+the width passed to the observation adapter.
+
+Before obstacle-policy training, register a short flat-terrain curriculum that
+starts with this single stationary box and adds sensor perturbations only in
+later stages. Run a CPU-only configuration smoke test first. GPU training
+starts only after those checks pass and after an idle-GPU gate.

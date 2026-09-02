@@ -5691,6 +5691,57 @@ def ball_vel_in_base(
 # --------------------------------------------------------------------------- #
 
 
+def reset_obstacle_ahead(
+    env: ManagerBasedRlEnv,
+    env_ids: torch.Tensor,
+    forward_range_m: tuple[float, float] = (0.6, 1.2),
+    lateral_range_m: tuple[float, float] = (-0.3, 0.3),
+    obstacle_height_m: float = 0.10,
+    asset_name: str = "obstacle",
+) -> None:
+    """Place one box obstacle ahead of the robot in its reset-yaw frame.
+
+    Register this event after the robot base-reset event. The obstacle's yaw is
+    aligned with the robot, preserving the v1 box width semantics; velocity is
+    zeroed so closing rate initially comes only from robot motion.
+    """
+    if env_ids is None or len(env_ids) == 0:
+        return
+    if forward_range_m[0] < 0.0 or forward_range_m[0] > forward_range_m[1]:
+        raise ValueError("forward_range_m must be ordered and non-negative")
+    if lateral_range_m[0] > lateral_range_m[1]:
+        raise ValueError("lateral_range_m must be ordered")
+    if obstacle_height_m <= 0.0:
+        raise ValueError("obstacle_height_m must be positive")
+
+    env_ids = env_ids.to(env.device)
+    robot: Entity = env.scene["robot"]
+    obstacle: Entity = env.scene[asset_name]
+    root = env.sim.data.qpos[env_ids][:, robot.indexing.free_joint_q_adr]
+    qw, qx, qy, qz = root[:, 3], root[:, 4], root[:, 5], root[:, 6]
+    yaw = torch.atan2(
+        2.0 * (qw * qz + qx * qy),
+        1.0 - 2.0 * (qy * qy + qz * qz),
+    )
+    cos_yaw, sin_yaw = torch.cos(yaw), torch.sin(yaw)
+
+    count = len(env_ids)
+    forward = torch.empty(count, device=env.device).uniform_(*forward_range_m)
+    lateral = torch.empty(count, device=env.device).uniform_(*lateral_range_m)
+    pose = torch.zeros(count, 7, device=env.device)
+    pose[:, 0] = root[:, 0] + cos_yaw * forward - sin_yaw * lateral
+    pose[:, 1] = root[:, 1] + sin_yaw * forward + cos_yaw * lateral
+    pose[:, 2] = (
+        env.scene.terrain.env_origins[env_ids, 2] + obstacle_height_m / 2.0
+    )
+    pose[:, 3] = torch.cos(yaw / 2.0)
+    pose[:, 6] = torch.sin(yaw / 2.0)
+    obstacle.write_root_link_pose_to_sim(pose, env_ids)
+    obstacle.write_root_link_velocity_to_sim(
+        torch.zeros(count, 6, device=env.device), env_ids
+    )
+
+
 def obstacle_geometry_observation(
     env: ManagerBasedRlEnv,
     asset_name: str = "obstacle",

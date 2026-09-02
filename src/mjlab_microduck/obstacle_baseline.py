@@ -59,7 +59,6 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
-    from mjlab_microduck.tasks import mdp as microduck_mdp
 
     env_cfg, agent_cfg = prepare_baseline_configs(num_envs, speed_mps)
     env_cfg.seed = seed
@@ -92,12 +91,10 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
         clearance_sum = 0.0
         forward_speed_sum = 0.0
         sample_count = 0
-        passed_latched = torch.zeros(num_envs, dtype=torch.bool, device=device)
-
         for _ in range(steps):
             with torch.inference_mode():
                 actions = policy(obs)
-                obs, rewards, dones, _ = wrapped.step(actions)
+                obs, rewards, _dones, _ = wrapped.step(actions)
 
             collision = env.termination_manager.get_term("obstacle_collision")
             fell = env.termination_manager.get_term("fell_over")
@@ -108,10 +105,8 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
             timeout_events += int(timed_out.sum())
             nan_events += int(nan_state.sum())
 
-            passed = microduck_mdp.obstacle_passed_reward(env).bool()
-            pass_events += int((passed & ~passed_latched).sum())
-            passed_latched |= passed
-            passed_latched[dones.bool()] = False
+            passed = env.termination_manager.get_term("obstacle_passed")
+            pass_events += int(passed.sum())
 
             robot = env.scene["robot"]
             obstacle = env.scene["obstacle"]

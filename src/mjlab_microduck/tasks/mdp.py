@@ -5826,13 +5826,13 @@ def obstacle_clearance_cost(
     return cost
 
 
-def obstacle_passed_reward(
+def obstacle_passed(
     env: ManagerBasedRlEnv,
     asset_name: str = "obstacle",
     robot_radius_m: float = 0.12,
     obstacle_radius_m: float = 0.10,
 ) -> torch.Tensor:
-    """Reward cleanly passing the obstacle along the episode's reset heading."""
+    """Return whether the robot cleanly passed along the reset heading."""
     if not hasattr(env, "_obstacle_path_dir_w"):
         env._obstacle_path_dir_w = torch.zeros(env.num_envs, 2, device=env.device)
         env._obstacle_path_dir_w[:, 0] = 1.0
@@ -5844,6 +5844,22 @@ def obstacle_passed_reward(
     progress = (robot_from_obstacle * env._obstacle_path_dir_w).sum(dim=-1)
     passed = progress > robot_radius_m + obstacle_radius_m
     passed &= ~obstacle_collision(
+        env,
+        asset_name=asset_name,
+        robot_radius_m=robot_radius_m,
+        obstacle_radius_m=obstacle_radius_m,
+    )
+    return passed
+
+
+def obstacle_passed_reward(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    robot_radius_m: float = 0.12,
+    obstacle_radius_m: float = 0.10,
+) -> torch.Tensor:
+    """Reward a clean pass on the same step as its terminal success event."""
+    passed = obstacle_passed(
         env,
         asset_name=asset_name,
         robot_radius_m=robot_radius_m,

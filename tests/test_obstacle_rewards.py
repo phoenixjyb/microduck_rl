@@ -67,9 +67,9 @@ def test_passed_reward_uses_fixed_reset_heading_and_requires_clearance():
     )
     # First passed cleanly, second has insufficient progress, third also passed
     # because the fixed +x path direction ignores lateral sign.
-    assert torch.equal(
-        microduck_mdp.obstacle_passed_reward(env), torch.tensor([1.0, 0.0, 1.0])
-    )
+    expected = torch.tensor([True, False, True])
+    assert torch.equal(microduck_mdp.obstacle_passed(env), expected)
+    assert torch.equal(microduck_mdp.obstacle_passed_reward(env), expected.float())
     assert "Metrics/obstacle_passed_fraction" in env.extras["log"]
 
 

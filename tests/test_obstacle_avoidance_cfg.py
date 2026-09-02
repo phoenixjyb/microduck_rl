@@ -93,6 +93,7 @@ def test_obstacle_reward_and_collision_contract_is_registered():
     assert cfg.rewards["obstacle_clearance"].func is microduck_mdp.obstacle_clearance_cost
     assert cfg.rewards["obstacle_collision"].func is microduck_mdp.obstacle_collision
     assert cfg.rewards["obstacle_passed"].func is microduck_mdp.obstacle_passed_reward
+    assert cfg.rewards["obstacle_passed"].weight == 10.0
     assert (
         cfg.rewards["obstacle_route_progress"].func
         is microduck_mdp.obstacle_route_progress_reward
@@ -100,6 +101,8 @@ def test_obstacle_reward_and_collision_contract_is_registered():
     assert cfg.rewards["obstacle_route_progress"].weight == 1.5
     assert cfg.terminations["obstacle_collision"].func is microduck_mdp.obstacle_collision
     assert cfg.terminations["obstacle_collision"].time_out is False
+    assert cfg.terminations["obstacle_passed"].func is microduck_mdp.obstacle_passed
+    assert cfg.terminations["obstacle_passed"].time_out is False
 
 
 def test_play_cfg_is_deterministic_and_has_no_sensor_curriculum():

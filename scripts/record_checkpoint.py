@@ -90,6 +90,11 @@ def main() -> None:
     env_cfg.viewer.azimuth = 115.0
     env_cfg.viewer.elevation = -18.0
     env_cfg.viewer.lookat = (0.0, 0.0, 0.12)
+    # MuJoCo Warp's off-screen renderer can leave triangular shadow/reflection
+    # artifacts on Blackwell under WSL. These are cosmetic and disabling both
+    # produces a clean, deterministic evidence replay without changing physics.
+    env_cfg.viewer.enable_reflections = False
+    env_cfg.viewer.enable_shadows = False
 
     # Keep the replay command fixed. Curricula would otherwise overwrite it,
     # and interval pushes make a poor first visual baseline.

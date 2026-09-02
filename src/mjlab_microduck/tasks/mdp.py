@@ -5761,6 +5761,94 @@ def reset_obstacle_ahead(
     obstacle.write_root_link_velocity_to_sim(
         torch.zeros(count, 6, device=env.device), env_ids
     )
+    if not hasattr(env, "_obstacle_path_dir_w"):
+        env._obstacle_path_dir_w = torch.zeros(env.num_envs, 2, device=env.device)
+        env._obstacle_path_dir_w[:, 0] = 1.0
+    env._obstacle_path_dir_w[env_ids, 0] = cos_yaw
+    env._obstacle_path_dir_w[env_ids, 1] = sin_yaw
+
+
+def _obstacle_center_distance(
+    env: ManagerBasedRlEnv,
+    asset_name: str,
+) -> torch.Tensor:
+    robot: Entity = env.scene["robot"]
+    obstacle: Entity = env.scene[asset_name]
+    relative_xy = (
+        obstacle.data.root_link_pos_w[:, :2] - robot.data.root_link_pos_w[:, :2]
+    )
+    return torch.linalg.vector_norm(relative_xy, dim=-1)
+
+
+def obstacle_collision(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    robot_radius_m: float = 0.12,
+    obstacle_radius_m: float = 0.10,
+) -> torch.Tensor:
+    """Conservative planar collision envelope for the first avoidance task."""
+    if robot_radius_m <= 0.0 or obstacle_radius_m <= 0.0:
+        raise ValueError("obstacle collision radii must be positive")
+    distance = _obstacle_center_distance(env, asset_name)
+    return torch.isfinite(distance) & (distance <= robot_radius_m + obstacle_radius_m)
+
+
+def obstacle_clearance_cost(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    robot_radius_m: float = 0.12,
+    obstacle_radius_m: float = 0.10,
+    margin_m: float = 0.15,
+) -> torch.Tensor:
+    """Dense cost that ramps from zero at the safety margin to one at contact."""
+    if margin_m <= 0.0:
+        raise ValueError("obstacle clearance margin_m must be positive")
+    distance = _obstacle_center_distance(env, asset_name)
+    clearance = distance - robot_radius_m - obstacle_radius_m
+    cost = ((margin_m - clearance) / margin_m).clamp(0.0, 1.0)
+    cost = torch.nan_to_num(cost, nan=1.0, posinf=0.0, neginf=1.0)
+    if hasattr(env, "extras"):
+        log = env.extras.setdefault("log", {})
+        log["Metrics/obstacle_clearance_mean_m"] = torch.nan_to_num(
+            clearance, nan=0.0
+        ).mean()
+        log["Metrics/obstacle_collision_fraction"] = obstacle_collision(
+            env,
+            asset_name=asset_name,
+            robot_radius_m=robot_radius_m,
+            obstacle_radius_m=obstacle_radius_m,
+        ).float().mean()
+    return cost
+
+
+def obstacle_passed_reward(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    robot_radius_m: float = 0.12,
+    obstacle_radius_m: float = 0.10,
+) -> torch.Tensor:
+    """Reward cleanly passing the obstacle along the episode's reset heading."""
+    if not hasattr(env, "_obstacle_path_dir_w"):
+        env._obstacle_path_dir_w = torch.zeros(env.num_envs, 2, device=env.device)
+        env._obstacle_path_dir_w[:, 0] = 1.0
+    robot: Entity = env.scene["robot"]
+    obstacle: Entity = env.scene[asset_name]
+    robot_from_obstacle = (
+        robot.data.root_link_pos_w[:, :2] - obstacle.data.root_link_pos_w[:, :2]
+    )
+    progress = (robot_from_obstacle * env._obstacle_path_dir_w).sum(dim=-1)
+    passed = progress > robot_radius_m + obstacle_radius_m
+    passed &= ~obstacle_collision(
+        env,
+        asset_name=asset_name,
+        robot_radius_m=robot_radius_m,
+        obstacle_radius_m=obstacle_radius_m,
+    )
+    if hasattr(env, "extras"):
+        env.extras.setdefault("log", {})[
+            "Metrics/obstacle_passed_fraction"
+        ] = passed.float().mean()
+    return passed.float()
 
 
 def obstacle_geometry_observation(

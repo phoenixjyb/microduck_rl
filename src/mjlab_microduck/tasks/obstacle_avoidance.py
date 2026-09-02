@@ -11,7 +11,13 @@ from copy import deepcopy
 from dataclasses import replace
 
 from mjlab.envs import ManagerBasedRlEnvCfg
-from mjlab.managers import CurriculumTermCfg, EventTermCfg, ObservationTermCfg
+from mjlab.managers import (
+    CurriculumTermCfg,
+    EventTermCfg,
+    ObservationTermCfg,
+    RewardTermCfg,
+    TerminationTermCfg,
+)
 
 from mjlab_microduck.robot.microduck_constants import MICRODUCK_OBSTACLE_CFG
 from mjlab_microduck.tasks import mdp as microduck_mdp
@@ -20,6 +26,9 @@ from mjlab_microduck.tasks.motor_aware import MicroduckMotorAwareRunRlCfg
 
 OBSTACLE_WIDTH_M = 0.20
 OBSTACLE_HEIGHT_M = 0.10
+ROBOT_COLLISION_RADIUS_M = 0.12
+OBSTACLE_COLLISION_RADIUS_M = OBSTACLE_WIDTH_M / 2.0
+OBSTACLE_CLEARANCE_MARGIN_M = 0.15
 OBSTACLE_RESUME_ITERATION = 7998
 
 
@@ -88,9 +97,9 @@ OBSTACLE_SENSOR_STAGES = [
 ]
 
 OBSTACLE_VELOCITY_STAGES = [
-    {"step": 0, "lin_vel_range": 0.50, "ang_vel_range": 1.0},
-    {"step": _resume_step(500), "lin_vel_range": 0.65, "ang_vel_range": 1.0},
-    {"step": _resume_step(1000), "lin_vel_range": 0.80, "ang_vel_range": 1.0},
+    {"step": 0, "lin_vel_range": 0.50, "ang_vel_range": 0.0},
+    {"step": _resume_step(500), "lin_vel_range": 0.65, "ang_vel_range": 0.0},
+    {"step": _resume_step(1000), "lin_vel_range": 0.80, "ang_vel_range": 0.0},
 ]
 
 
@@ -138,6 +147,31 @@ def make_obstacle_avoidance_variant(
         params=critic_params,
     )
 
+    envelope_params = {
+        "asset_name": "obstacle",
+        "robot_radius_m": ROBOT_COLLISION_RADIUS_M,
+        "obstacle_radius_m": OBSTACLE_COLLISION_RADIUS_M,
+    }
+    cfg.rewards["obstacle_clearance"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_clearance_cost,
+        weight=-2.0,
+        params={**envelope_params, "margin_m": OBSTACLE_CLEARANCE_MARGIN_M},
+    )
+    cfg.rewards["obstacle_collision"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_collision,
+        weight=-10.0,
+        params=dict(envelope_params),
+    )
+    cfg.rewards["obstacle_passed"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_passed_reward,
+        weight=2.0,
+        params=dict(envelope_params),
+    )
+    cfg.terminations["obstacle_collision"] = TerminationTermCfg(
+        func=microduck_mdp.obstacle_collision,
+        params=dict(envelope_params),
+    )
+
     cfg.curriculum["obstacle_placement"] = CurriculumTermCfg(
         func=microduck_mdp.event_param_curriculum,
         params={
@@ -159,6 +193,10 @@ def make_obstacle_avoidance_variant(
     velocity["velocity_stages"] = deepcopy(OBSTACLE_VELOCITY_STAGES)
     velocity["forward_only"] = True
     velocity["update_lin_vel_y"] = False
+    velocity["update_ang_vel_z"] = True
+    cfg.commands["twist"].ranges.lin_vel_x = (0.0, 0.50)
+    cfg.commands["twist"].ranges.lin_vel_y = (0.0, 0.0)
+    cfg.commands["twist"].ranges.ang_vel_z = (0.0, 0.0)
     return cfg
 
 

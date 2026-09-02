@@ -85,6 +85,14 @@ and sensor perturbations from exact measurements to the documented stress
 envelope. The actor receives delayed/perturbed observations; the asymmetric
 critic receives exact ground truth. Play mode remains deterministic.
 
+The first task commands straight forward motion only: lateral and yaw commands
+are zero, so avoidance cannot be confused with an unrelated turning command.
+A conservative planar envelope uses a 0.12 m robot radius and 0.10 m obstacle
+radius. Clearance cost begins 0.15 m outside that envelope, collision incurs a
+penalty and terminates the episode, and clean passage is measured along the
+fixed reset heading. Logged metrics include mean clearance, collision fraction,
+and passed fraction.
+
 This task is **not yet cleared for GPU training**. Adding the seven obstacle
 channels changes the first actor layer from the retained Stage 2 checkpoint.
 A reviewed warm-start migration must copy the old columns exactly, initialize

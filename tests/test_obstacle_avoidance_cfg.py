@@ -52,6 +52,19 @@ def test_curricula_are_offset_from_stage2_checkpoint_and_bounded_at_point8():
     assert velocity["velocity_stages"] == OBSTACLE_VELOCITY_STAGES
     assert velocity["forward_only"] is True
     assert velocity["update_lin_vel_y"] is False
+    assert velocity["update_ang_vel_z"] is True
+    assert all(stage["ang_vel_range"] == 0.0 for stage in OBSTACLE_VELOCITY_STAGES)
+    assert cfg.commands["twist"].ranges.lin_vel_y == (0.0, 0.0)
+    assert cfg.commands["twist"].ranges.ang_vel_z == (0.0, 0.0)
+
+
+def test_obstacle_reward_and_collision_contract_is_registered():
+    cfg = _cfg()
+    assert cfg.rewards["obstacle_clearance"].func is microduck_mdp.obstacle_clearance_cost
+    assert cfg.rewards["obstacle_collision"].func is microduck_mdp.obstacle_collision
+    assert cfg.rewards["obstacle_passed"].func is microduck_mdp.obstacle_passed_reward
+    assert cfg.terminations["obstacle_collision"].func is microduck_mdp.obstacle_collision
+    assert cfg.terminations["obstacle_collision"].time_out is False
 
 
 def test_play_cfg_is_deterministic_and_has_no_sensor_curriculum():

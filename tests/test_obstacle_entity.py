@@ -56,6 +56,7 @@ def _reset_env():
     )
     env = SimpleNamespace(
         device="cpu",
+        num_envs=2,
         scene=_Scene(robot, obstacle),
         sim=SimpleNamespace(data=SimpleNamespace(qpos=qpos)),
     )
@@ -83,6 +84,12 @@ def test_reset_places_obstacle_in_robot_yaw_frame_and_zeros_velocity():
     )
     assert torch.equal(obstacle.velocity, torch.zeros(2, 6))
     assert torch.equal(obstacle.pose_env_ids, torch.tensor([0, 1]))
+    torch.testing.assert_close(
+        env._obstacle_path_dir_w,
+        torch.tensor([[1.0, 0.0], [0.0, 1.0]]),
+        atol=1e-6,
+        rtol=0.0,
+    )
 
 
 @pytest.mark.parametrize(

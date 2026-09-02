@@ -7,6 +7,7 @@ import pytest
 from mjlab_microduck.obstacle_pilot import (
     MAX_PILOT_ENVS,
     MAX_PILOT_ITERATIONS,
+    PILOT_CHECKPOINT_INTERVAL,
     prepare_pilot_configs,
     run_pilot,
 )
@@ -19,6 +20,7 @@ def test_pilot_config_is_local_only_and_uses_requested_shape_and_seed():
     assert agent_cfg.seed == 17
     assert agent_cfg.logger == "tensorboard"
     assert agent_cfg.upload_model is False
+    assert agent_cfg.save_interval == PILOT_CHECKPOINT_INTERVAL
 
 
 @pytest.mark.parametrize("num_envs", [0, MAX_PILOT_ENVS + 1])

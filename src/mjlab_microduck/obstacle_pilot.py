@@ -11,6 +11,7 @@ from pathlib import Path
 TASK_ID = "Mjlab-Run-Obstacle-Flat-MicroDuck"
 MAX_PILOT_ENVS = 2048
 MAX_PILOT_ITERATIONS = 256
+PILOT_CHECKPOINT_INTERVAL = 16
 
 
 def _sha256(path: Path) -> str:
@@ -36,6 +37,7 @@ def prepare_pilot_configs(num_envs: int, seed: int):
     agent_cfg.seed = seed
     agent_cfg.logger = "tensorboard"
     agent_cfg.upload_model = False
+    agent_cfg.save_interval = PILOT_CHECKPOINT_INTERVAL
     return env_cfg, agent_cfg
 
 
@@ -99,6 +101,7 @@ def run_pilot(
             "device": device,
             "num_envs": num_envs,
             "iterations": iterations,
+            "checkpoint_interval": PILOT_CHECKPOINT_INTERVAL,
             "seed": seed,
             "start_iteration": start_iteration,
             "end_iteration": runner.current_learning_iteration,

@@ -62,6 +62,11 @@ def test_curricula_are_offset_from_stage2_checkpoint_and_bounded_at_point8():
         0.50,
     )
     assert cfg.commands["twist"].ranges.ang_vel_z == (0.0, 0.0)
+    assert cfg.commands["twist"].rel_standing_envs == 0.0
+    assert cfg.commands["twist"].rel_forward_envs == 1.0
+    assert cfg.commands["twist"].heading_command is False
+    assert cfg.commands["twist"].ranges.heading is None
+    assert "standing_envs" not in cfg.curriculum
 
 
 def test_velocity_curriculum_preserves_nonstanding_speed_floor():

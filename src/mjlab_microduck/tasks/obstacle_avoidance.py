@@ -205,12 +205,23 @@ def make_obstacle_avoidance_variant(
     velocity["min_lin_vel"] = OBSTACLE_MIN_FORWARD_SPEED_MPS
     velocity["update_lin_vel_y"] = False
     velocity["update_ang_vel_z"] = True
-    cfg.commands["twist"].ranges.lin_vel_x = (
+    # Obstacle episodes train one unambiguous behavior: move along the reset
+    # heading and pass the obstacle.  The inherited velocity task otherwise
+    # turns 25% of resumed environments into standing cases and gives most of
+    # the rest random heading targets, which does not match fixed-speed
+    # avoidance evaluation.
+    cfg.curriculum.pop("standing_envs", None)
+    twist = cfg.commands["twist"]
+    twist.rel_standing_envs = 0.0
+    twist.rel_forward_envs = 1.0
+    twist.heading_command = False
+    twist.ranges.heading = None
+    twist.ranges.lin_vel_x = (
         OBSTACLE_MIN_FORWARD_SPEED_MPS,
         0.50,
     )
-    cfg.commands["twist"].ranges.lin_vel_y = (0.0, 0.0)
-    cfg.commands["twist"].ranges.ang_vel_z = (0.0, 0.0)
+    twist.ranges.lin_vel_y = (0.0, 0.0)
+    twist.ranges.ang_vel_z = (0.0, 0.0)
     return cfg
 
 

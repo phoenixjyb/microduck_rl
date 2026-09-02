@@ -88,5 +88,13 @@ critic receives exact ground truth. Play mode remains deterministic.
 This task is **not yet cleared for GPU training**. Adding the seven obstacle
 channels changes the first actor layer from the retained Stage 2 checkpoint.
 A reviewed warm-start migration must copy the old columns exactly, initialize
-only the seven new columns, and prove identical outputs when those channels are
-zero before any long run starts.
+only the seven new columns, and prove numerically equivalent outputs within
+floating-point tolerance when those channels are zero before any long run
+starts.
+
+`python -m mjlab_microduck.checkpoint_migration SOURCE DESTINATION` performs
+that migration without overwriting either file. It expands actor 61→68 and
+critic 76→83, preserves every old first-layer column, initializes only new
+columns to zero, gives new normalizer channels mean 0 and variance/std 1, and
+expands Adam moments with zero new columns. The output records the source
+SHA-256 and migration contract under `infos.obstacle_warm_start`.

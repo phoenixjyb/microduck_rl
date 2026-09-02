@@ -19,6 +19,11 @@ from mjlab.managers.event_manager import requires_model_fields
 from mjlab.utils.lab_api.math import matrix_from_quat, wrap_to_pi, quat_apply, quat_from_angle_axis
 from rsl_rl.algorithms.ppo import PPO as _PPO
 
+from mjlab_microduck.tasks.obstacle_observation import (
+    ObstacleObservationLimits,
+    encode_relative_obstacle_observation,
+)
+
 # ---------------------------------------------------------------------------
 # Patch 1: RewardManager.compute — sanitize NaN rewards before they enter the
 # PPO buffer.  mjlab computes rewards BEFORE resetting environments, so any
@@ -5677,6 +5682,80 @@ def ball_vel_in_base(
     rot = matrix_from_quat(robot.data.root_link_quat_w)
     vel = ball.data.root_link_lin_vel_w
     return torch.bmm(rot.transpose(1, 2), vel.unsqueeze(-1)).squeeze(-1)
+
+
+# --------------------------------------------------------------------------- #
+# Obstacle avoidance — simulator geometry adapter for the external contract
+# --------------------------------------------------------------------------- #
+
+
+def obstacle_geometry_observation(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    width_m: float = 0.20,
+    height_m: float = 0.10,
+    horizontal_fov_rad: float = math.pi,
+    max_range_m: float = 2.0,
+    max_width_m: float = 0.50,
+    max_height_m: float = 0.25,
+    max_closing_rate_mps: float = 2.0,
+) -> torch.Tensor:
+    """Encode one simulated obstacle using the policy's external-sensor contract.
+
+    The adapter reads only simulator geometry: it transforms relative root
+    position and velocity into the robot base frame, applies range and
+    horizontal field-of-view visibility, then calls the perception-independent
+    v1 encoder.  It does not process images or train a perception model.
+
+    Noise and dropout should be attached as an explicit observation sensor
+    model.  Delay should use MJLab's observation-term delay buffer so its state
+    resets with the environment.
+    """
+    if not 0.0 < horizontal_fov_rad <= 2.0 * math.pi:
+        raise ValueError("horizontal_fov_rad must be in (0, 2*pi]")
+    if width_m < 0.0 or height_m < 0.0:
+        raise ValueError("obstacle width and height must be non-negative")
+
+    robot: Entity = env.scene["robot"]
+    obstacle: Entity = env.scene[asset_name]
+    rotation_w_from_b = matrix_from_quat(robot.data.root_link_quat_w)
+
+    relative_position_w = (
+        obstacle.data.root_link_pos_w - robot.data.root_link_pos_w
+    )
+    relative_velocity_w = (
+        obstacle.data.root_link_lin_vel_w - robot.data.root_link_lin_vel_w
+    )
+    relative_position_b = torch.bmm(
+        rotation_w_from_b.transpose(1, 2), relative_position_w.unsqueeze(-1)
+    ).squeeze(-1)
+    relative_velocity_b = torch.bmm(
+        rotation_w_from_b.transpose(1, 2), relative_velocity_w.unsqueeze(-1)
+    ).squeeze(-1)
+
+    center_range_m = torch.linalg.vector_norm(relative_position_b[:, :2], dim=-1)
+    bearing_rad = torch.atan2(
+        relative_position_b[:, 1], relative_position_b[:, 0]
+    )
+    valid = (center_range_m <= max_range_m) & (
+        bearing_rad.abs() <= horizontal_fov_rad / 2.0
+    )
+    obstacle_width_m = torch.full_like(center_range_m, width_m)
+    obstacle_height_m = torch.full_like(center_range_m, height_m)
+
+    return encode_relative_obstacle_observation(
+        relative_position_m=relative_position_b,
+        relative_velocity_mps=relative_velocity_b,
+        width_m=obstacle_width_m,
+        height_m=obstacle_height_m,
+        valid=valid,
+        limits=ObstacleObservationLimits(
+            max_range_m=max_range_m,
+            max_width_m=max_width_m,
+            max_height_m=max_height_m,
+            max_closing_rate_mps=max_closing_rate_mps,
+        ),
+    )
 
 
 # --------------------------------------------------------------------------- #

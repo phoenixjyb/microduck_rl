@@ -34,6 +34,12 @@ Its conservative surface-range approximation treats `width / 2` as a planar
 footprint radius. A later scene adapter remains responsible for transforming
 world state into the base frame and selecting the nearest relevant obstacle.
 
+`mjlab_microduck.tasks.mdp.obstacle_geometry_observation` is the first scene
+adapter. It reads a named simulator entity, transforms its position and
+velocity into the robot base frame, and masks it by range and horizontal field
+of view. It is intentionally not registered in an actor configuration until a
+tested obstacle entity and sensor-perturbation model are present.
+
 ## Training boundary
 
 Simulation should derive the physical fields from ground-truth geometry, then

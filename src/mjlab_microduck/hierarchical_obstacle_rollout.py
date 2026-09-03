@@ -10,7 +10,11 @@ import os
 from dataclasses import asdict
 from pathlib import Path
 
-from mjlab_microduck.evaluation import parse_float_list, parse_int_list
+from mjlab_microduck.evaluation import (
+    parse_float_list,
+    parse_int_list,
+    valid_action_deltas,
+)
 from mjlab_microduck.hierarchical_obstacle import (
     ObstaclePhase,
     ObstacleTeacherCfg,
@@ -20,6 +24,11 @@ from mjlab_microduck.hierarchical_obstacle import (
 )
 from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
 from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
+from mjlab_microduck.tasks.run import (
+    MOTOR_NEAR_LIMIT_FRACTION,
+    XL330_M288_RATED_NO_LOAD_SPEED_RAD_S,
+    XL330_M288_RATED_STALL_TORQUE_NM_6V,
+)
 
 
 BASE_TASK_ID = "Mjlab-Run-MotorAware-Flat-MicroDuck"
@@ -212,6 +221,14 @@ def _run_case(
         pass_time_sum_s = 0.0
         representative_trace: list[dict] = []
         representative_attempt_done = False
+        robot = env.scene["robot"]
+        joint_ids, _ = robot.find_joints(r"^(?!passive_).*")
+        joint_speed_samples = []
+        torque_samples = []
+        action_samples = []
+        action_rate_samples = []
+        previous_actions = env.action_manager.action.detach().clone()
+        previous_dones = torch.zeros(num_envs, dtype=torch.bool, device=device)
 
         with torch.inference_mode():
             for step in range(steps):
@@ -280,6 +297,22 @@ def _run_case(
                 actions = policy(observations)
                 observations, rewards, dones, _ = wrapped.step(actions)
                 episode_steps += 1
+                applied_actions = env.action_manager.action.detach()
+                joint_speed = robot.data.joint_vel[:, joint_ids].abs().float()
+                torque = robot.data.actuator_force.abs().float()
+                if joint_speed.shape != torque.shape:
+                    raise RuntimeError(
+                        f"joint speed shape {joint_speed.shape} does not match "
+                        f"actuator torque shape {torque.shape}"
+                    )
+                joint_speed_samples.append(joint_speed)
+                torque_samples.append(torque)
+                action_samples.append(applied_actions.abs().float())
+                action_deltas = valid_action_deltas(
+                    applied_actions, previous_actions, previous_dones
+                )
+                if action_deltas.numel():
+                    action_rate_samples.append(action_deltas.float())
                 collision = env.termination_manager.get_term("obstacle_collision")
                 passed = env.termination_manager.get_term("obstacle_passed")
                 attempted_out = env.termination_manager.get_term(
@@ -316,6 +349,15 @@ def _run_case(
                 )
                 lateral_abs_max[dones.bool()] = 0.0
                 episode_steps[dones.bool()] = 0
+                previous_actions = applied_actions.clone()
+                previous_dones = dones.bool().clone()
+
+        joint_speed = torch.cat(joint_speed_samples).flatten()
+        torque = torch.cat(torque_samples).flatten()
+        actions = torch.cat(action_samples).flatten()
+        action_rates = torch.cat(action_rate_samples)
+        speed_util = joint_speed / XL330_M288_RATED_NO_LOAD_SPEED_RAD_S
+        torque_util = torque / XL330_M288_RATED_STALL_TORQUE_NM_6V
 
         result = {
             "nominal_speed_mps": nominal_speed_mps,
@@ -339,6 +381,19 @@ def _run_case(
             "command_speed_min_mps": command_speed_min,
             "command_speed_max_mps": command_speed_max,
             "command_yaw_abs_max_rps": command_yaw_abs_max,
+            "motor_speed_utilization_p99": float(torch.quantile(speed_util, 0.99)),
+            "motor_speed_rated_exceed_fraction": float(
+                (speed_util > 1.0).float().mean()
+            ),
+            "motor_torque_utilization_p99": float(
+                torch.quantile(torque_util, 0.99)
+            ),
+            "motor_torque_near_stall_fraction": float(
+                (torque_util >= MOTOR_NEAR_LIMIT_FRACTION).float().mean()
+            ),
+            "motor_thermal_load_proxy_mean": float(torch.square(torque_util).mean()),
+            "action_abs_p99": float(torch.quantile(actions, 0.99)),
+            "action_rate_abs_p99": float(torch.quantile(action_rates, 0.99)),
             "representative_first_attempt_trace": representative_trace,
         }
         for phase in ObstaclePhase:

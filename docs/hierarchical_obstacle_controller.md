@@ -112,6 +112,33 @@ The first supervisor therefore clamps interaction commands to 0.30 m/s and
 3-second time-to-contact trigger, computed from the external range and closing
 rate fields, begins braking and steering earlier at high approach speeds.
 
+## HC1 and HC2 retained results
+
+The three-seed HC1 matrix at forward placements 1.15 and 1.40 m retained
+1,147 clean passes, 15 collisions, and 16 timeouts across 1,178 resolved
+attempts (97.37% pooled). Successful teacher data came only from these cells:
+
+- 0.30 m/s at 1.15 m: zero collisions and one timeout across three seeds;
+- 0.50 m/s at 1.15 and 1.40 m: 100% clean passes across three seeds;
+- 0.80 m/s at 1.40 m: 100% clean passes across three seeds.
+
+Successful episodes from those cells produced 69,441 HC2 samples from 765
+episodes. The 17D behavioral-cloning supervisor reached held-out mean absolute
+errors of 0.0039 m/s for forward speed and 0.0226 rad/s for yaw. This was an
+offline gate only.
+
+Closed-loop HC2 evaluation across the same four cells and three seeds retained
+819 clean passes, one collision, and eight timeouts across 828 resolved
+attempts (98.91%). There were zero falls, NaNs, non-finite steps, or rated motor
+speed exceedances. The highest per-cell torque-utilization p99 was about 0.745;
+the highest near-stall exposure was about 0.20%.
+
+HC2 is accepted only as a simulation supervisor for this bounded envelope. It
+is not accepted for 0.8 m/s at 1.15 m, the 0.90 m near-obstacle stress case,
+general O1/O2, sensor degradation, physical motion, or the 4.5-second O1
+passage-time target. HC3 should improve passage time and residual failures
+without changing the frozen gait or reinstating interaction speed pressure.
+
 ## Replay matrix contract
 
 Numerical evaluation precedes video. The first centered-box matrix crosses
@@ -129,11 +156,15 @@ set to false.
    applied-command, tracking, stability, and motor evidence.
 2. [x] Implement and unit-test the stateful, two-output deterministic teacher
    while keeping the 61D locomotion actor frozen.
-3. [ ] Complete the HC1 speed-by-position matrix across held-out seeds and
-   accept only collision-free command-bounded teacher traces.
-4. [ ] Train the 17D HC2 supervisor by imitation on accepted HC1 trajectories,
+3. [x] Complete the HC1 speed-by-position matrix across held-out seeds and
+   retain only successful, command-bounded teacher episodes for imitation.
+4. [x] Train the 17D HC2 supervisor by imitation on accepted HC1 trajectories,
    then evaluate it without teacher intervention.
-5. [ ] Record the numeric survivors; MP4 inspection never substitutes for the
-   matrix gate.
+5. [x] Record representative numeric survivors with duck and obstacle visible.
+6. [ ] Fine-tune HC3 on passage time and residual failure outcomes without
+   allowing interaction speed tracking to fight collision avoidance.
+7. [ ] Expand placement only after HC3 retains the accepted HC2 envelope.
+
+MP4 inspection never substitutes for the numeric matrix gate.
 
 No GPU supervisor training starts until HC0 and the adapter tests pass.

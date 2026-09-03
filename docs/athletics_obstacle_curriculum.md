@@ -152,3 +152,16 @@ command. A lower-rate obstacle supervisor consumes compact obstacle geometry
 plus route state and produces only a forward-speed scale and yaw-rate command.
 It cannot write joint targets. See `hierarchical_obstacle_controller.md` for
 the contract and staged gates.
+
+HC0 then established a measured command envelope, HC1 supplied successful
+deterministic teacher trajectories, and HC2 trained a 17D behavioral-cloning
+supervisor while keeping the 61D motor-aware actor frozen. On the bounded cells
+0.3x1.15, 0.5x1.15/1.40, and 0.8x1.40 m, three-seed HC2 closed-loop evaluation
+retained 819 clean passes, one collision, and eight timeouts (98.91% pooled),
+with zero falls, NaNs, non-finite steps, or rated motor-speed exceedance.
+
+This does not retroactively pass the rejected direct-joint O1 campaign. HC2 is
+accepted only for its named simulation envelope, and still misses the 4.5 s O1
+passage-time target. The next single-axis stage is HC3 supervisor-only
+fine-tuning for passage time and residual outcomes. Nominal speed tracking
+remains active in approach and recovery but is not imposed during interaction.

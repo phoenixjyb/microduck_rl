@@ -35,7 +35,7 @@ def _step(observation, state, nominal=0.5, lateral=0.0, heading=0.0):
 
 def test_teacher_tracks_nominal_speed_before_obstacle():
     state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.5)
-    command = _step(_observation(1.0), state)
+    command = _step(_observation(1.2), state)
     assert state.phase.item() == ObstaclePhase.APPROACH
     assert torch.allclose(command, torch.tensor([[0.5, 0.0]]))
 

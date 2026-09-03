@@ -227,3 +227,13 @@ rejected, HC4-LH remains selected, and 0.90 m remains outside the accepted
 controller envelope. The next near-range design must address student-state
 covariate shift before another training candidate is launched. See
 `experiments/2026-09-03-hc4r-near-range.md`.
+
+HC4-R2 is the next bounded attempt. It keeps the rejected HC4-R student in
+simulation and asks the deterministic teacher to label states reached under
+that student's execution. Resolved clean, collision, and timeout episodes are
+retained with student commands and outcome codes; partial and hard-failure
+episodes are excluded. Training keeps the HC4-R architecture, optimizer, and
+seed fixed and adds three correction-data seeds, so student-state coverage is
+the only intended change. See
+`experiments/2026-09-04-hc4r2-student-state-correction.md` for the immutable
+collection seeds and closed-loop gates.

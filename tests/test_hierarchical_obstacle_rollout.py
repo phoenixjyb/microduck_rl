@@ -177,6 +177,31 @@ def test_load_hc4l_accepts_explicit_lateral_bc_stage(tmp_path):
     assert isinstance(loaded, ObstacleSupervisor)
 
 
+def test_load_hc4r_accepts_explicit_near_range_bc_stage(tmp_path):
+    base_checkpoint = tmp_path / "locomotion.pt"
+    base_checkpoint.write_bytes(b"frozen locomotion")
+    actor = ObstacleSupervisor()
+    supervisor_checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": "HC4R-near-range-behavioral-cloning",
+            "decision": "offline-imitation-pass",
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(SupervisorBcCfg()),
+            "model_state_dict": actor.state_dict(),
+        },
+        supervisor_checkpoint,
+    )
+
+    loaded = load_learned_supervisor(
+        supervisor_checkpoint, base_checkpoint, "cpu"
+    )
+
+    assert isinstance(loaded, ObstacleSupervisor)
+
+
 def test_load_hc4lh_wraps_center_and_lateral_supervisors(tmp_path):
     base_checkpoint = tmp_path / "locomotion.pt"
     base_checkpoint.write_bytes(b"frozen locomotion")

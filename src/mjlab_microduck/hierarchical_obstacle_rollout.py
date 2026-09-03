@@ -35,6 +35,7 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC2_STAGE,
     HC4L_STAGE,
     HC4LH_STAGE,
+    HC4R_STAGE,
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
@@ -59,6 +60,7 @@ _RECORDING_STAGE_SLUGS = {
     HC2_STAGE: "hc2",
     HC4L_STAGE: "hc4l",
     HC4LH_STAGE: "hc4lh",
+    HC4R_STAGE: "hc4r",
     "HC3-supervisor-PPO": "hc3",
     HC3E_STAGE: "hc3e",
     HC3F_STAGE: "hc3f",
@@ -116,7 +118,10 @@ def load_learned_supervisor(
     stage = payload.get("stage")
     decision = payload.get("decision")
     allowed = (
-        (stage in {HC2_STAGE, HC4L_STAGE} and decision == "offline-imitation-pass")
+        (
+            stage in {HC2_STAGE, HC4L_STAGE, HC4R_STAGE}
+            and decision == "offline-imitation-pass"
+        )
         or (
             stage == HC4LH_STAGE
             and decision
@@ -721,6 +726,7 @@ def run_rollout(
             HC2_STAGE: "HC2-behavioral-cloning-rollout",
             HC4L_STAGE: "HC4L-lateral-behavioral-cloning-rollout",
             HC4LH_STAGE: "HC4LH-lateral-gated-supervisor-rollout",
+            HC4R_STAGE: "HC4R-near-range-behavioral-cloning-rollout",
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
             HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
             HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",

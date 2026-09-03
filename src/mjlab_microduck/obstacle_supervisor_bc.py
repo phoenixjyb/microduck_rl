@@ -22,8 +22,9 @@ from mjlab_microduck.tasks.obstacle_observation import (
 
 HC2_STAGE = "HC2-behavioral-cloning"
 HC4L_STAGE = "HC4L-lateral-behavioral-cloning"
+HC4R_STAGE = "HC4R-near-range-behavioral-cloning"
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
-SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE)
+SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE, HC4R_STAGE)
 
 
 @dataclass(frozen=True)

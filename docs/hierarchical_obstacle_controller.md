@@ -165,8 +165,11 @@ set to false.
    without allowing interaction speed tracking to fight collision avoidance.
    HC3-A/B/C and balanced-cell HC3-D were implemented and measured but rejected:
    no snapshot improved time while preserving the HC2 collision budget. The
-   next bounded candidate freezes HC2 yaw and learns only an interaction-speed
-   reduction.
+   HC3-E then froze HC2 yaw and non-interaction speed while learning only an
+   interaction-speed reduction. Its best seed repeated a small safe time gain,
+   but one of three training seeds failed the pre-screen collision budget. The
+   next bounded candidate averages only those speed-head updates before
+   re-evaluation.
 7. [ ] Expand placement only after HC3 retains the accepted HC2 envelope.
 
 MP4 inspection never substitutes for the numeric matrix gate.

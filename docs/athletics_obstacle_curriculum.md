@@ -175,4 +175,10 @@ See `experiments/2026-09-03-hc3-supervisor-ppo.md` and
 `experiments/2026-09-03-hc3d-balanced-supervisor-ppo.md` for the retained HC3
 configurations, hashes, measurements, and next design gate. The next experiment
 freezes HC2 yaw and may learn only a bounded interaction-speed reduction; it
-does not expand placement.
+does not expand placement. HC3-E implemented that boundary. Its seed-109
+checkpoint matched HC2's collision count across six evaluation seeds, removed
+one timeout, and improved weighted passage by 0.027 seconds. However, only two
+of three independent training seeds passed the sensitive-cell pre-screen; seed
+113 recorded three collisions. HC3-E is therefore not promoted and no new MP4
+is recorded. The next bounded candidate averages only the three seed-specific
+speed-head updates while preserving the HC2 anchor exactly.

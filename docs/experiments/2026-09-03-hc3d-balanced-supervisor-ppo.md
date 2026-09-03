@@ -111,15 +111,11 @@ Full-matrix JSON SHA-256 values for 0.30 / 0.50 / 0.80 are:
   / `08d0ea07a0e68478b8a7ebfd30805263c67d2980d6700408975974a7afabe605`
   / `7f49b3f3e1a11de6b0066aa6b4530d13077e556967e735f97a25df86aeefa8c6`
 
-## Next design gate
+## Subsequent gate
 
-Do not continue unconstrained two-output PPO tuning or expand obstacle placement.
-The passage gain arrived with small yaw changes that consumed collision safety.
-The next bounded experiment should preserve HC2's yaw command exactly and train
-only a one-dimensional interaction-speed residual. Approach and recovery remain
-pass-through nominal speed, and the learned residual may only reduce interaction
-speed within the existing command and slew limits.
-
-That candidate must first pass the same two-cell seed-41 pre-screen and then the
-unchanged four-cell, three-seed matrix. Only a survivor may advance to placement
-expansion or new MP4 recording.
+HC3-E implemented the one-dimensional interaction-speed authority and corrected
+its execution boundary so HC2 remains authoritative outside interaction. The
+candidate repeated a small passage-time gain, but one of three training seeds
+failed the sensitive-cell collision budget. See
+`2026-09-03-hc3e-interaction-speed-only.md` for retained evidence and the next
+seed-aggregation gate.

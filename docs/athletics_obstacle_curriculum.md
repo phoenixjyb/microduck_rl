@@ -162,6 +162,11 @@ with zero falls, NaNs, non-finite steps, or rated motor-speed exceedance.
 
 This does not retroactively pass the rejected direct-joint O1 campaign. HC2 is
 accepted only for its named simulation envelope, and still misses the 4.5 s O1
-passage-time target. The next single-axis stage is HC3 supervisor-only
-fine-tuning for passage time and residual outcomes. Nominal speed tracking
-remains active in approach and recovery but is not imposed during interaction.
+passage-time target. HC3-A/B/C then fine-tuned only the supervisor for passage
+time and residual outcomes. All three candidates were rejected by the retained
+HC2 safety-regression gate, so HC2 remains the accepted controller. Nominal
+speed tracking remains active in approach and recovery but is not imposed
+during interaction.
+
+See `experiments/2026-09-03-hc3-supervisor-ppo.md` for the retained HC3
+configurations, hashes, measurements, and next design gate.

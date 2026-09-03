@@ -161,8 +161,10 @@ set to false.
 4. [x] Train the 17D HC2 supervisor by imitation on accepted HC1 trajectories,
    then evaluate it without teacher intervention.
 5. [x] Record representative numeric survivors with duck and obstacle visible.
-6. [ ] Fine-tune HC3 on passage time and residual failure outcomes without
-   allowing interaction speed tracking to fight collision avoidance.
+6. [ ] Accept an HC3 fine-tune on passage time and residual failure outcomes
+   without allowing interaction speed tracking to fight collision avoidance.
+   HC3-A/B/C were implemented and measured but rejected for collision/timeout
+   regression.
 7. [ ] Expand placement only after HC3 retains the accepted HC2 envelope.
 
 MP4 inspection never substitutes for the numeric matrix gate.

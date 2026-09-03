@@ -20,6 +20,7 @@ from mjlab_microduck.hierarchical_obstacle import (
     ObstacleTeacherCfg,
     make_teacher_state,
     reset_teacher_state,
+    supervisor_observation,
     teacher_command,
 )
 from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
@@ -168,6 +169,8 @@ def _run_case(
     obstacle_forward_m: float,
     obstacle_lateral_m: float,
     seed: int,
+    collect_success_samples: bool = False,
+    case_index: int = 0,
 ) -> dict:
     import torch
     from mjlab.envs import ManagerBasedRlEnv
@@ -229,6 +232,14 @@ def _run_case(
         action_rate_samples = []
         previous_actions = env.action_manager.action.detach().clone()
         previous_dones = torch.zeros(num_envs, dtype=torch.bool, device=device)
+        episode_generation = torch.zeros(
+            num_envs, dtype=torch.long, device=device
+        )
+        environment_index = torch.arange(num_envs, device=device)
+        dataset_observations = []
+        dataset_commands = []
+        dataset_episode_keys = []
+        successful_episode_keys: set[int] = set()
 
         with torch.inference_mode():
             for step in range(steps):
@@ -243,6 +254,7 @@ def _run_case(
                         horizontal_fov_rad=2.0 * math.pi,
                         max_range_m=2.0,
                     )
+                    previous_supervisor_command = state.previous_command.clone()
                     supervisor_command = teacher_command(
                         obstacle_observation,
                         nominal,
@@ -251,6 +263,25 @@ def _run_case(
                         state,
                         cfg=ObstacleTeacherCfg(),
                     )
+                    if collect_success_samples:
+                        dataset_observations.append(
+                            supervisor_observation(
+                                obstacle_observation,
+                                nominal,
+                                route_lateral,
+                                route_heading,
+                                route_speed,
+                                state,
+                                previous_command=previous_supervisor_command,
+                            ).cpu()
+                        )
+                        dataset_commands.append(supervisor_command.cpu())
+                        episode_key = (
+                            case_index * 1_000_000
+                            + episode_generation * num_envs
+                            + environment_index
+                        )
+                        dataset_episode_keys.append(episode_key.cpu())
                     command[:, 0] = supervisor_command[:, 0]
                     command[:, 1] = 0.0
                     command[:, 2] = supervisor_command[:, 1]
@@ -330,6 +361,15 @@ def _run_case(
                 nan_events += int(nan_state.sum())
                 pass_lateral_sum += float(lateral_abs_max[passed].sum())
                 pass_lateral_count += int(passed.sum())
+                if collect_success_samples and bool(passed.any()):
+                    episode_key = (
+                        case_index * 1_000_000
+                        + episode_generation * num_envs
+                        + environment_index
+                    )
+                    successful_episode_keys.update(
+                        int(value) for value in episode_key[passed].tolist()
+                    )
                 finite = torch.isfinite(actions).all() & torch.isfinite(rewards).all()
                 finite &= all(
                     torch.isfinite(value).all() for value in observations.values()
@@ -349,6 +389,7 @@ def _run_case(
                 )
                 lateral_abs_max[dones.bool()] = 0.0
                 episode_steps[dones.bool()] = 0
+                episode_generation[dones.bool()] += 1
                 previous_actions = applied_actions.clone()
                 previous_dones = dones.bool().clone()
 
@@ -407,6 +448,20 @@ def _run_case(
                 collision_events, clean_pass_events, attempt_timeout_events
             )
         )
+        if collect_success_samples:
+            all_keys = torch.cat(dataset_episode_keys)
+            successful_keys = torch.tensor(
+                sorted(successful_episode_keys), dtype=all_keys.dtype
+            )
+            if successful_keys.numel():
+                keep = torch.isin(all_keys, successful_keys)
+            else:
+                keep = torch.zeros_like(all_keys, dtype=torch.bool)
+            result["_success_dataset"] = {
+                "observations": torch.cat(dataset_observations)[keep],
+                "commands": torch.cat(dataset_commands)[keep],
+                "episode_keys": all_keys[keep],
+            }
         return result
     finally:
         env.close()
@@ -424,6 +479,7 @@ def run_rollout(
     forward_positions: tuple[float, ...],
     lateral_positions: tuple[float, ...],
     seeds: tuple[int, ...],
+    collect_success_dataset: bool = False,
 ) -> Path:
     validate_rollout_bounds(
         num_envs, steps, speeds, forward_positions, lateral_positions, seeds
@@ -433,8 +489,17 @@ def run_rollout(
     if output_dir.exists():
         raise FileExistsError(output_dir)
     output_dir.mkdir(parents=True)
-    cases = [
-        _run_case(
+    cases = []
+    datasets = []
+    case_arguments = [
+        (speed, forward, lateral, seed)
+        for speed in speeds
+        for forward in forward_positions
+        for lateral in lateral_positions
+        for seed in seeds
+    ]
+    for case_index, (speed, forward, lateral, seed) in enumerate(case_arguments):
+        case = _run_case(
             checkpoint,
             num_envs=num_envs,
             steps=steps,
@@ -442,12 +507,13 @@ def run_rollout(
             obstacle_forward_m=forward,
             obstacle_lateral_m=lateral,
             seed=seed,
+            collect_success_samples=collect_success_dataset,
+            case_index=case_index,
         )
-        for speed in speeds
-        for forward in forward_positions
-        for lateral in lateral_positions
-        for seed in seeds
-    ]
+        dataset = case.pop("_success_dataset", None)
+        if dataset is not None:
+            datasets.append(dataset)
+        cases.append(case)
     totals = {
         key: sum(case[key] for case in cases)
         for key in (
@@ -481,6 +547,38 @@ def run_rollout(
         "cases": cases,
         "totals": totals,
     }
+    if collect_success_dataset:
+        if not datasets or not any(
+            dataset["observations"].shape[0] for dataset in datasets
+        ):
+            raise RuntimeError("HC1 produced no successful teacher samples")
+        import torch
+
+        dataset_path = output_dir / "hc1-success-dataset.pt"
+        dataset_payload = {
+            "schema_version": 1,
+            "stage": "HC1-successful-teacher-trajectories",
+            "checkpoint": str(checkpoint),
+            "checkpoint_sha256": _sha256(checkpoint),
+            "teacher_config": asdict(ObstacleTeacherCfg()),
+            "observation_dim": 17,
+            "command_fields": ["forward_speed_mps", "yaw_rate_rps"],
+            "observations": torch.cat(
+                [dataset["observations"] for dataset in datasets]
+            ),
+            "commands": torch.cat([dataset["commands"] for dataset in datasets]),
+            "episode_keys": torch.cat(
+                [dataset["episode_keys"] for dataset in datasets]
+            ),
+        }
+        torch.save(dataset_payload, dataset_path)
+        report["success_dataset"] = str(dataset_path)
+        report["success_dataset_samples"] = int(
+            dataset_payload["observations"].shape[0]
+        )
+        report["success_dataset_episodes"] = int(
+            torch.unique(dataset_payload["episode_keys"]).numel()
+        )
     output_path = output_dir / "hierarchical-teacher-evaluation.json"
     output_path.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(totals, sort_keys=True))
@@ -498,6 +596,7 @@ def main() -> None:
     parser.add_argument("--obstacle-forward", default="1.15")
     parser.add_argument("--obstacle-lateral", default="-0.27,0.27")
     parser.add_argument("--seeds", default="41")
+    parser.add_argument("--collect-success-dataset", action="store_true")
     args = parser.parse_args()
     run_rollout(
         args.checkpoint,
@@ -508,6 +607,7 @@ def main() -> None:
         forward_positions=parse_float_list(args.obstacle_forward),
         lateral_positions=parse_float_list(args.obstacle_lateral),
         seeds=parse_int_list(args.seeds),
+        collect_success_dataset=args.collect_success_dataset,
     )
 
 

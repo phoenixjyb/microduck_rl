@@ -289,6 +289,7 @@ def supervisor_observation(
     state: ObstacleTeacherState,
     *,
     cfg: ObstacleTeacherCfg = ObstacleTeacherCfg(),
+    previous_command: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """Build the normalized HC2 imitation/RL supervisor observation."""
     num_envs = obstacle_observation.shape[0]
@@ -297,6 +298,9 @@ def supervisor_observation(
     phase_one_hot = torch.nn.functional.one_hot(
         state.phase, num_classes=SUPERVISOR_PHASE_DIM
     ).to(dtype=obstacle_observation.dtype)
+    previous = state.previous_command if previous_command is None else previous_command
+    if previous.shape != (num_envs, 2):
+        raise ValueError("previous supervisor command must have shape (N, 2)")
     result = torch.cat(
         (
             (nominal_speed_mps / cfg.max_forward_speed_mps).clamp(0.0, 1.0).unsqueeze(-1),
@@ -306,10 +310,10 @@ def supervisor_observation(
             (measured_forward_speed_mps / cfg.max_forward_speed_mps)
             .clamp(-1.0, 1.0)
             .unsqueeze(-1),
-            (state.previous_command[:, 0] / cfg.max_forward_speed_mps)
+            (previous[:, 0] / cfg.max_forward_speed_mps)
             .clamp(0.0, 1.0)
             .unsqueeze(-1),
-            (state.previous_command[:, 1] / cfg.max_yaw_rate_rps)
+            (previous[:, 1] / cfg.max_yaw_rate_rps)
             .clamp(-1.0, 1.0)
             .unsqueeze(-1),
             phase_one_hot,

@@ -115,6 +115,22 @@ def test_supervisor_observation_includes_phase_and_bypass_state():
     assert torch.equal(observation[0, -4:-1], torch.tensor([1.0, 0.0, 0.0]))
 
 
+def test_supervisor_observation_can_retain_pre_action_command():
+    state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.5)
+    previous = torch.tensor([[0.4, -0.3]])
+    state.previous_command[:] = torch.tensor([[0.2, 0.6]])
+    observation = supervisor_observation(
+        _observation(1.0),
+        torch.tensor([0.5]),
+        torch.tensor([0.0]),
+        torch.tensor([0.0]),
+        torch.tensor([0.4]),
+        state,
+        previous_command=previous,
+    )
+    assert torch.allclose(observation[0, 11:13], torch.tensor([0.5, -0.5]))
+
+
 def test_reset_teacher_state_restores_approach_and_nominal_command():
     state = make_teacher_state(2, device="cpu", nominal_speed_mps=0.5)
     state.phase[:] = int(ObstaclePhase.RECOVERY)

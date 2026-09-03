@@ -8,9 +8,11 @@ import torch
 from mjlab_microduck.obstacle_supervisor_average import (
     HC3E_STAGE,
     HC3F_STAGE,
+    HC3G_STAGE,
     SPEED_HEAD_BIAS,
     SPEED_HEAD_WEIGHT,
     average_interaction_speed_checkpoints,
+    consensus_interaction_speed_checkpoints,
 )
 from mjlab_microduck.obstacle_supervisor_bc import (
     ObstacleSupervisor,
@@ -76,8 +78,7 @@ def test_average_changes_only_speed_head_and_writes_manifest(tmp_path):
     assert payload["aggregation"]["parameter_count"] == 65
     assert payload["ppo_config"]["iterations"] == 1
     assert [
-        source["configured_iterations"]
-        for source in payload["aggregation"]["sources"]
+        source["configured_iterations"] for source in payload["aggregation"]["sources"]
     ] == [4, 1, 1]
     assert [
         source["training_seed"] for source in payload["aggregation"]["sources"]
@@ -105,6 +106,32 @@ def test_average_changes_only_speed_head_and_writes_manifest(tmp_path):
     assert manifest["physical_motion_authorized"] is False
 
 
+def test_consensus_keeps_only_unanimous_update_coordinates(tmp_path):
+    anchor, inputs = _write_inputs(tmp_path)
+    payload = torch.load(inputs[2], map_location="cpu", weights_only=False)
+    payload["model_state_dict"][SPEED_HEAD_WEIGHT][0, 0] = (
+        anchor[SPEED_HEAD_WEIGHT][0, 0] - 3.0
+    )
+    torch.save(payload, inputs[2])
+    output = tmp_path / "consensus" / "supervisor.pt"
+
+    consensus_interaction_speed_checkpoints(inputs, output)
+
+    result = torch.load(output, map_location="cpu", weights_only=False)
+    assert result["stage"] == HC3G_STAGE
+    assert result["aggregation"]["method"] == "unanimous-sign-arithmetic-mean"
+    assert result["aggregation"]["retained_parameter_count"] == 64
+    assert result["aggregation"]["anchor_parameter_count"] == 1
+    assert torch.equal(
+        result["model_state_dict"][SPEED_HEAD_WEIGHT][0, 0],
+        anchor[SPEED_HEAD_WEIGHT][0, 0],
+    )
+    torch.testing.assert_close(
+        result["model_state_dict"][SPEED_HEAD_WEIGHT][0, 1],
+        anchor[SPEED_HEAD_WEIGHT][0, 1] + 2.0,
+    )
+
+
 def test_average_requires_three_unique_seeds(tmp_path):
     _, inputs = _write_inputs(tmp_path)
     with pytest.raises(ValueError, match="at least three"):
@@ -117,9 +144,7 @@ def test_average_requires_three_unique_seeds(tmp_path):
         average_interaction_speed_checkpoints(inputs, tmp_path / "duplicate.pt")
 
 
-@pytest.mark.parametrize(
-    "corruption", ["yaw", "frozen", "iteration", "optimizer"]
-)
+@pytest.mark.parametrize("corruption", ["yaw", "frozen", "iteration", "optimizer"])
 def test_average_rejects_incompatible_input(tmp_path, corruption):
     _, inputs = _write_inputs(tmp_path)
     payload = torch.load(inputs[1], map_location="cpu", weights_only=False)

@@ -49,6 +49,7 @@ MAX_CASES = 48
 HC1_ATTEMPT_TIMEOUT_S = 12.0
 HC3E_STAGE = "HC3E-interaction-speed-PPO"
 HC3F_STAGE = "HC3F-seed-averaged-speed-head"
+HC3G_STAGE = "HC3G-seed-consensus-speed-head"
 
 
 def recording_stem(
@@ -99,7 +100,7 @@ def load_learned_supervisor(
             and decision in {"training-complete-pending-rollout", "accepted-simulation"}
         )
         or (
-            stage == HC3F_STAGE
+            stage in {HC3F_STAGE, HC3G_STAGE}
             and decision
             in {"aggregation-complete-pending-rollout", "accepted-simulation"}
         )
@@ -115,7 +116,7 @@ def load_learned_supervisor(
     model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
-    if stage in {HC3E_STAGE, HC3F_STAGE}:
+    if stage in {HC3E_STAGE, HC3F_STAGE, HC3G_STAGE}:
         action_authority = payload.get("action_authority")
         if action_authority != "interaction-speed-only":
             raise ValueError(f"{stage} checkpoint has invalid action authority")
@@ -678,6 +679,7 @@ def run_rollout(
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
             HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
             HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",
+            HC3G_STAGE: "HC3G-seed-consensus-speed-head-rollout",
         }
         report["stage"] = report_stage[supervisor_payload.get("stage")]
         report["supervisor_checkpoint"] = str(supervisor_checkpoint)

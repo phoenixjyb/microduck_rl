@@ -12,6 +12,7 @@ import torch
 
 HC3E_STAGE = "HC3E-interaction-speed-PPO"
 HC3F_STAGE = "HC3F-seed-averaged-speed-head"
+HC3G_STAGE = "HC3G-seed-consensus-speed-head"
 SPEED_HEAD_WEIGHT = "network.4.weight"
 SPEED_HEAD_BIAS = "network.4.bias"
 
@@ -51,10 +52,10 @@ def _validate_speed_only_state(payload: dict, anchor: dict[str, torch.Tensor]) -
         raise ValueError("HC3-E modified the frozen yaw bias")
 
 
-def average_interaction_speed_checkpoints(
-    checkpoint_paths: tuple[Path, ...], output_path: Path
+def _aggregate_interaction_speed_checkpoints(
+    checkpoint_paths: tuple[Path, ...], output_path: Path, *, consensus_only: bool
 ) -> Path:
-    """Average three or more compatible HC3-E speed heads into one checkpoint."""
+    """Aggregate three or more compatible HC3-E speed heads."""
     if len(checkpoint_paths) < 3:
         raise ValueError("HC3-F requires at least three training-seed checkpoints")
     checkpoint_paths = tuple(path.resolve(strict=True) for path in checkpoint_paths)
@@ -122,19 +123,46 @@ def average_interaction_speed_checkpoints(
     for payload in payloads:
         _validate_speed_only_state(payload, anchor)
 
+    speed_updates = torch.stack(
+        [
+            torch.cat(
+                (
+                    payload["model_state_dict"][SPEED_HEAD_WEIGHT][0].flatten()
+                    - anchor[SPEED_HEAD_WEIGHT][0].flatten(),
+                    payload["model_state_dict"][SPEED_HEAD_BIAS][0].reshape(1)
+                    - anchor[SPEED_HEAD_BIAS][0].reshape(1),
+                )
+            )
+            for payload in payloads
+        ]
+    )
+    mean_update = speed_updates.mean(dim=0)
+    consensus_mask = torch.logical_or(
+        torch.all(speed_updates > 0.0, dim=0),
+        torch.all(speed_updates < 0.0, dim=0),
+    )
     averaged_model = copy.deepcopy(anchor)
-    averaged_model[SPEED_HEAD_WEIGHT][0] = torch.stack(
-        [payload["model_state_dict"][SPEED_HEAD_WEIGHT][0] for payload in payloads]
-    ).mean(dim=0)
-    averaged_model[SPEED_HEAD_BIAS][0] = torch.stack(
-        [payload["model_state_dict"][SPEED_HEAD_BIAS][0] for payload in payloads]
-    ).mean(dim=0)
+    if consensus_only:
+        mean_update = torch.where(
+            consensus_mask, mean_update, torch.zeros_like(mean_update)
+        )
+        averaged_model[SPEED_HEAD_WEIGHT][0] += mean_update[:-1].reshape_as(
+            averaged_model[SPEED_HEAD_WEIGHT][0]
+        )
+        averaged_model[SPEED_HEAD_BIAS][0] += mean_update[-1]
+    else:
+        averaged_model[SPEED_HEAD_WEIGHT][0] = torch.stack(
+            [payload["model_state_dict"][SPEED_HEAD_WEIGHT][0] for payload in payloads]
+        ).mean(dim=0)
+        averaged_model[SPEED_HEAD_BIAS][0] = torch.stack(
+            [payload["model_state_dict"][SPEED_HEAD_BIAS][0] for payload in payloads]
+        ).mean(dim=0)
     _validate_speed_only_state({"model_state_dict": averaged_model}, anchor)
     parameter_count = averaged_model[SPEED_HEAD_WEIGHT][0].numel() + 1
 
     checkpoint = {
         "schema_version": 1,
-        "stage": HC3F_STAGE,
+        "stage": HC3G_STAGE if consensus_only else HC3F_STAGE,
         "decision": "aggregation-complete-pending-rollout",
         "rollout_acceptance_required": True,
         "action_authority": "interaction-speed-only",
@@ -155,7 +183,11 @@ def average_interaction_speed_checkpoints(
             "source_locomotion_checkpoint_sha256"
         ],
         "aggregation": {
-            "method": "arithmetic-mean",
+            "method": (
+                "unanimous-sign-arithmetic-mean"
+                if consensus_only
+                else "arithmetic-mean"
+            ),
             "fields": [f"{SPEED_HEAD_WEIGHT}[0]", f"{SPEED_HEAD_BIAS}[0]"],
             "parameter_count": parameter_count,
             "sources": [
@@ -171,6 +203,12 @@ def average_interaction_speed_checkpoints(
         },
         "physical_motion_authorized": False,
     }
+    if consensus_only:
+        retained_count = int(consensus_mask.sum())
+        checkpoint["aggregation"]["retained_parameter_count"] = retained_count
+        checkpoint["aggregation"]["anchor_parameter_count"] = (
+            parameter_count - retained_count
+        )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint, output_path)
     manifest = {
@@ -183,12 +221,40 @@ def average_interaction_speed_checkpoints(
     return output_path
 
 
+def average_interaction_speed_checkpoints(
+    checkpoint_paths: tuple[Path, ...], output_path: Path
+) -> Path:
+    """Average all compatible HC3-E speed-head parameters into HC3-F."""
+    return _aggregate_interaction_speed_checkpoints(
+        checkpoint_paths, output_path, consensus_only=False
+    )
+
+
+def consensus_interaction_speed_checkpoints(
+    checkpoint_paths: tuple[Path, ...], output_path: Path
+) -> Path:
+    """Average only unanimous-sign HC3-E speed updates into HC3-G."""
+    return _aggregate_interaction_speed_checkpoints(
+        checkpoint_paths, output_path, consensus_only=True
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("checkpoints", nargs="+", type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument(
+        "--method",
+        choices=("mean", "sign-consensus"),
+        default="mean",
+    )
     args = parser.parse_args()
-    average_interaction_speed_checkpoints(tuple(args.checkpoints), args.output)
+    aggregate = (
+        consensus_interaction_speed_checkpoints
+        if args.method == "sign-consensus"
+        else average_interaction_speed_checkpoints
+    )
+    aggregate(tuple(args.checkpoints), args.output)
 
 
 if __name__ == "__main__":

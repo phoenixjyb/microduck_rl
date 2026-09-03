@@ -38,7 +38,7 @@ class ObstacleTeacherCfg:
     max_yaw_rate_rps: float = 0.6
     interaction_entry_m: float = 0.90
     passed_margin_m: float = 0.22
-    bypass_clearance_m: float = 0.34
+    bypass_clearance_m: float = 0.42
     bypass_lookahead_m: float = 0.30
     route_lookahead_m: float = 0.60
     interaction_speed_scale: float = 1.0

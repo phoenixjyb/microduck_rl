@@ -46,11 +46,17 @@ HC1_ATTEMPT_TIMEOUT_S = 12.0
 
 
 def recording_stem(
-    speed: float, obstacle_forward: float, obstacle_lateral: float
+    speed: float,
+    obstacle_forward: float,
+    obstacle_lateral: float,
+    *,
+    controller_stage: str = "hc1",
 ) -> str:
     """Return a deterministic replay basename for one geometry cell."""
+    if controller_stage not in {"hc1", "hc2"}:
+        raise ValueError("controller_stage must be hc1 or hc2")
     return (
-        f"microduck-hc1-{speed:.2f}mps-"
+        f"microduck-{controller_stage}-{speed:.2f}mps-"
         f"x{obstacle_forward:.2f}m-y{obstacle_lateral:+.2f}m"
     )
 
@@ -61,6 +67,31 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def load_learned_supervisor(
+    supervisor_checkpoint: Path,
+    base_checkpoint: Path,
+    device: str,
+) -> ObstacleSupervisor:
+    """Load HC2 only when offline evidence and frozen-gait identity match."""
+    import torch
+
+    payload = torch.load(
+        supervisor_checkpoint, map_location=device, weights_only=False
+    )
+    if payload.get("decision") != "offline-imitation-pass":
+        raise ValueError("supervisor checkpoint did not pass offline imitation")
+    if payload.get("source_locomotion_checkpoint_sha256") != _sha256(
+        base_checkpoint
+    ):
+        raise ValueError("supervisor was trained for another locomotion checkpoint")
+    model_cfg = dict(payload["model_config"])
+    model_cfg["hidden_dims"] = tuple(model_cfg["hidden_dims"])
+    model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
+    model.load_state_dict(payload["model_state_dict"], strict=True)
+    model.eval()
+    return model
 
 
 def validate_rollout_bounds(
@@ -207,25 +238,9 @@ def _run_case(
 
         learned_supervisor = None
         if supervisor_checkpoint is not None:
-            supervisor_payload = torch.load(
-                supervisor_checkpoint, map_location=device, weights_only=False
+            learned_supervisor = load_learned_supervisor(
+                supervisor_checkpoint, checkpoint, device
             )
-            if supervisor_payload.get("decision") != "offline-imitation-pass":
-                raise ValueError("supervisor checkpoint did not pass offline imitation")
-            if (
-                supervisor_payload.get("source_locomotion_checkpoint_sha256")
-                != _sha256(checkpoint)
-            ):
-                raise ValueError("supervisor was trained for another locomotion checkpoint")
-            model_cfg = dict(supervisor_payload["model_config"])
-            model_cfg["hidden_dims"] = tuple(model_cfg["hidden_dims"])
-            learned_supervisor = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(
-                device
-            )
-            learned_supervisor.load_state_dict(
-                supervisor_payload["model_state_dict"], strict=True
-            )
-            learned_supervisor.eval()
 
         state = make_teacher_state(
             num_envs, device=device, nominal_speed_mps=nominal_speed_mps

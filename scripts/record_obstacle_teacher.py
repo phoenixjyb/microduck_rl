@@ -21,13 +21,17 @@ from rsl_rl.runners import OnPolicyRunner
 from mjlab_microduck.hierarchical_obstacle import (
     ObstaclePhase,
     ObstacleTeacherCfg,
+    advance_obstacle_state,
+    apply_bounded_supervisor_command,
     make_teacher_state,
     reset_teacher_state,
+    supervisor_observation,
     teacher_command,
 )
 from mjlab_microduck.hierarchical_obstacle_rollout import (
     BASE_TASK_ID,
     _route_state,
+    load_learned_supervisor,
     prepare_rollout_configs,
     recording_stem,
 )
@@ -54,12 +58,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--height", type=int, default=540)
     parser.add_argument("--seed", type=int, default=41)
     parser.add_argument("--device", default="cuda:0")
+    parser.add_argument("--supervisor-checkpoint", type=Path)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     checkpoint = args.checkpoint.expanduser().resolve(strict=True)
+    supervisor_checkpoint = (
+        args.supervisor_checkpoint.expanduser().resolve(strict=True)
+        if args.supervisor_checkpoint is not None
+        else None
+    )
     output_dir = args.output_dir.expanduser().resolve()
     if not 0.0 < args.speed <= 0.8:
         raise ValueError("speed must be in (0, 0.8]")
@@ -95,7 +105,10 @@ def main() -> None:
 
     output_dir.mkdir(parents=True, exist_ok=True)
     stem = recording_stem(
-        args.speed, args.obstacle_forward, args.obstacle_lateral
+        args.speed,
+        args.obstacle_forward,
+        args.obstacle_lateral,
+        controller_stage="hc2" if supervisor_checkpoint is not None else "hc1",
     )
     expected_video = output_dir / f"{stem}-step-0.mp4"
     if expected_video.exists():
@@ -135,6 +148,13 @@ def main() -> None:
         runner = runner_cls(env, asdict(agent_cfg), device=args.device)
         runner.load(str(checkpoint), map_location=args.device)
         policy = runner.get_inference_policy(device=args.device)
+        learned_supervisor = (
+            load_learned_supervisor(
+                supervisor_checkpoint, checkpoint, args.device
+            )
+            if supervisor_checkpoint is not None
+            else None
+        )
         observations = env.get_observations()
 
         with torch.inference_mode():
@@ -149,13 +169,49 @@ def main() -> None:
                         horizontal_fov_rad=2.0 * math.pi,
                         max_range_m=2.0,
                     )
-                    supervisor_command = teacher_command(
-                        obstacle_observation,
-                        nominal,
-                        route_lateral,
-                        route_heading,
-                        state,
-                    )
+                    previous_command = state.previous_command.clone()
+                    if learned_supervisor is None:
+                        supervisor_command = teacher_command(
+                            obstacle_observation,
+                            nominal,
+                            route_lateral,
+                            route_heading,
+                            state,
+                        )
+                    else:
+                        advance_obstacle_state(
+                            obstacle_observation,
+                            route_lateral,
+                            route_heading,
+                            state,
+                        )
+                        learned_observation = supervisor_observation(
+                            obstacle_observation,
+                            nominal,
+                            route_lateral,
+                            route_heading,
+                            route_speed,
+                            state,
+                            previous_command=previous_command,
+                        )
+                        normalized_command = learned_supervisor(
+                            learned_observation
+                        )
+                        limits = ObstacleTeacherCfg()
+                        desired_command = torch.stack(
+                            (
+                                normalized_command[:, 0]
+                                * limits.max_forward_speed_mps,
+                                normalized_command[:, 1]
+                                * limits.max_yaw_rate_rps,
+                            ),
+                            dim=-1,
+                        )
+                        supervisor_command = apply_bounded_supervisor_command(
+                            desired_command,
+                            obstacle_observation,
+                            state,
+                        )
                     command[:, 0] = supervisor_command[:, 0]
                     command[:, 1] = 0.0
                     command[:, 2] = supervisor_command[:, 1]
@@ -204,7 +260,11 @@ def main() -> None:
             float(phase_speed_sum[int(phase)] / count) if count else None
         )
     manifest = {
-        "stage": "HC1-deterministic-teacher-replay",
+        "stage": (
+            "HC1-deterministic-teacher-replay"
+            if supervisor_checkpoint is None
+            else "HC2-behavioral-cloning-replay"
+        ),
         "evidence_status": (
             "representative-success" if passed_once and collision_events == 0 else "diagnostic"
         ),
@@ -233,6 +293,11 @@ def main() -> None:
         "perception": "exact structured geometry; no raw camera perception",
         "physical_motion_authorized": False,
     }
+    if supervisor_checkpoint is not None:
+        manifest["supervisor_checkpoint"] = str(supervisor_checkpoint)
+        manifest["supervisor_checkpoint_sha256"] = _sha256(
+            supervisor_checkpoint
+        )
     manifest_path = expected_video.with_suffix(".json")
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest, indent=2))

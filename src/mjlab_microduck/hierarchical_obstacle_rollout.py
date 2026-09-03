@@ -194,6 +194,8 @@ def _run_case(
         command_speed_min = math.inf
         command_speed_max = -math.inf
         command_yaw_abs_max = 0.0
+        representative_trace: list[dict] = []
+        representative_attempt_done = False
 
         with torch.inference_mode():
             for step in range(steps):
@@ -219,6 +221,33 @@ def _run_case(
                     command[:, 0] = supervisor_command[:, 0]
                     command[:, 1] = 0.0
                     command[:, 2] = supervisor_command[:, 1]
+
+                    if not representative_attempt_done:
+                        robot_xy = env.scene["robot"].data.root_link_pos_w[:, :2]
+                        obstacle_xy = env.scene["obstacle"].data.root_link_pos_w[:, :2]
+                        path_dir = env._obstacle_path_dir_w
+                        obstacle_delta = obstacle_xy - robot_xy
+                        route_progress = (
+                            (robot_xy - env._obstacle_route_origin_w) * path_dir
+                        ).sum(dim=-1)
+                        obstacle_ahead = (obstacle_delta * path_dir).sum(dim=-1)
+                        center_distance = torch.linalg.vector_norm(
+                            obstacle_delta, dim=-1
+                        )
+                        representative_trace.append(
+                            {
+                                "time_s": step * env.step_dt,
+                                "route_progress_m": float(route_progress[0]),
+                                "route_lateral_error_m": float(route_lateral[0]),
+                                "route_heading_error_rad": float(route_heading[0]),
+                                "route_speed_mps": float(route_speed[0]),
+                                "obstacle_ahead_m": float(obstacle_ahead[0]),
+                                "obstacle_clearance_m": float(center_distance[0] - 0.22),
+                                "phase": ObstaclePhase(int(state.phase[0])).name.lower(),
+                                "command_speed_mps": float(command[0, 0]),
+                                "command_yaw_rate_rps": float(command[0, 2]),
+                            }
+                        )
 
                 for phase in ObstaclePhase:
                     mask = state.phase == int(phase)
@@ -253,6 +282,15 @@ def _run_case(
                     torch.isfinite(value).all() for value in observations.values()
                 )
                 nonfinite_steps += int(not bool(finite))
+                if not representative_attempt_done and bool(dones[0]):
+                    representative_attempt_done = True
+                    representative_trace[-1]["terminal"] = {
+                        "collision": bool(collision[0]),
+                        "clean_pass": bool(passed[0]),
+                        "attempt_timeout": bool(attempted_out[0]),
+                        "fell": bool(fell[0]),
+                        "nan_state": bool(nan_state[0]),
+                    }
                 reset_teacher_state(
                     state, dones.bool(), nominal_speed_mps=nominal_speed_mps
                 )
@@ -277,6 +315,7 @@ def _run_case(
             "command_speed_min_mps": command_speed_min,
             "command_speed_max_mps": command_speed_max,
             "command_yaw_abs_max_rps": command_yaw_abs_max,
+            "representative_first_attempt_trace": representative_trace,
         }
         for phase in ObstaclePhase:
             count = int(phase_samples[int(phase)])

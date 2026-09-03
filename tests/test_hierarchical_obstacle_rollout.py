@@ -1,10 +1,20 @@
+import hashlib
+from dataclasses import asdict
+
 import pytest
+import torch
 
 from mjlab_microduck.hierarchical_obstacle_rollout import (
     HC1_ATTEMPT_TIMEOUT_S,
     MAX_CASES,
+    load_learned_supervisor,
     prepare_rollout_configs,
     validate_rollout_bounds,
+)
+from mjlab_microduck.obstacle_supervisor_bc import (
+    InteractionSpeedOnlySupervisor,
+    ObstacleSupervisor,
+    SupervisorBcCfg,
 )
 
 
@@ -54,3 +64,34 @@ def test_rollout_bounds_reject_too_many_cases():
     speeds = tuple(0.1 for _ in range(MAX_CASES + 1))
     with pytest.raises(ValueError, match="case count"):
         validate_rollout_bounds(1, 1, speeds, (1.0,), (0.0,), (1,))
+
+
+def test_load_hc3e_wraps_checkpoint_with_speed_only_authority(tmp_path):
+    base_checkpoint = tmp_path / "locomotion.pt"
+    base_checkpoint.write_bytes(b"frozen locomotion")
+    actor = ObstacleSupervisor()
+    supervisor_checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": "HC3E-interaction-speed-PPO",
+            "decision": "training-complete-pending-rollout",
+            "action_authority": "interaction-speed-only",
+            "min_interaction_speed_mps": 0.30,
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(SupervisorBcCfg()),
+            "model_state_dict": actor.state_dict(),
+        },
+        supervisor_checkpoint,
+    )
+    loaded = load_learned_supervisor(
+        supervisor_checkpoint, base_checkpoint, "cpu"
+    )
+    assert isinstance(loaded, InteractionSpeedOnlySupervisor)
+    observation = torch.zeros(1, 17)
+    observation[:, 0] = 0.625
+    observation[:, -4] = 1.0
+    command = loaded(observation)
+    torch.testing.assert_close(command[:, 0], torch.tensor([0.625]))
+    torch.testing.assert_close(command[:, 1], actor(observation)[:, 1])

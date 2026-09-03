@@ -28,6 +28,7 @@ from mjlab_microduck.hierarchical_obstacle import (
 from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
 from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
 from mjlab_microduck.obstacle_supervisor_bc import (
+    InteractionSpeedOnlySupervisor,
     ObstacleSupervisor,
     SupervisorBcCfg,
 )
@@ -73,8 +74,8 @@ def load_learned_supervisor(
     supervisor_checkpoint: Path,
     base_checkpoint: Path,
     device: str,
-) -> ObstacleSupervisor:
-    """Load HC2 only when offline evidence and frozen-gait identity match."""
+) -> torch.nn.Module:
+    """Load an eligible supervisor when frozen-gait identity matches."""
     import torch
 
     payload = torch.load(
@@ -86,6 +87,10 @@ def load_learned_supervisor(
         (stage == "HC2-behavioral-cloning" and decision == "offline-imitation-pass")
         or (
             stage == "HC3-supervisor-PPO"
+            and decision in {"training-complete-pending-rollout", "accepted-simulation"}
+        )
+        or (
+            stage == "HC3E-interaction-speed-PPO"
             and decision in {"training-complete-pending-rollout", "accepted-simulation"}
         )
     )
@@ -100,6 +105,15 @@ def load_learned_supervisor(
     model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
+    if stage == "HC3E-interaction-speed-PPO":
+        action_authority = payload.get("action_authority")
+        if action_authority != "interaction-speed-only":
+            raise ValueError("HC3-E checkpoint has invalid action authority")
+        model = InteractionSpeedOnlySupervisor(
+            model,
+            min_interaction_speed_mps=payload["min_interaction_speed_mps"],
+        ).to(device)
+        model.eval()
     return model
 
 
@@ -645,11 +659,12 @@ def run_rollout(
         supervisor_payload = torch.load(
             supervisor_checkpoint, map_location="cpu", weights_only=False
         )
-        report["stage"] = (
-            "HC3-supervisor-PPO-rollout"
-            if supervisor_payload.get("stage") == "HC3-supervisor-PPO"
-            else "HC2-behavioral-cloning-rollout"
-        )
+        report_stage = {
+            "HC2-behavioral-cloning": "HC2-behavioral-cloning-rollout",
+            "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
+            "HC3E-interaction-speed-PPO": "HC3E-interaction-speed-PPO-rollout",
+        }
+        report["stage"] = report_stage[supervisor_payload.get("stage")]
         report["supervisor_checkpoint"] = str(supervisor_checkpoint)
         report["supervisor_checkpoint_sha256"] = _sha256(supervisor_checkpoint)
     if collect_success_dataset:

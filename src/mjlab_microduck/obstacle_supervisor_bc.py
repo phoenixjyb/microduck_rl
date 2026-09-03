@@ -13,6 +13,7 @@ import torch
 
 from mjlab_microduck.hierarchical_obstacle import (
     SUPERVISOR_OBSERVATION_DIM,
+    ObstaclePhase,
     ObstacleTeacherCfg,
 )
 
@@ -56,6 +57,70 @@ class ObstacleSupervisor(torch.nn.Module):
     def forward(self, observation: torch.Tensor) -> torch.Tensor:
         raw = self.raw_action(observation)
         return torch.stack((torch.sigmoid(raw[:, 0]), torch.tanh(raw[:, 1])), dim=-1)
+
+
+def interaction_speed_only_command(
+    observation: torch.Tensor,
+    speed_latent: torch.Tensor,
+    hc2_command: torch.Tensor,
+    *,
+    min_interaction_speed_mps: float = 0.30,
+) -> torch.Tensor:
+    """Compose a normalized command with speed-only interaction authority.
+
+    The caller supplies the frozen HC2 command for yaw. Approach and recovery
+    pass through the normalized nominal-speed observation. During interaction,
+    the learned speed is bounded between the measured minimum and nominal.
+    """
+    if observation.ndim != 2 or observation.shape[1] != SUPERVISOR_OBSERVATION_DIM:
+        raise ValueError(
+            f"observation must have shape (N, {SUPERVISOR_OBSERVATION_DIM})"
+        )
+    if speed_latent.shape != (observation.shape[0], 1):
+        raise ValueError("speed_latent must have shape (N, 1)")
+    if hc2_command.shape != (observation.shape[0], 2):
+        raise ValueError("hc2_command must have shape (N, 2)")
+    limits = ObstacleTeacherCfg()
+    if not 0.0 <= min_interaction_speed_mps <= limits.max_forward_speed_mps:
+        raise ValueError("minimum interaction speed is outside the command envelope")
+
+    nominal_normalized = observation[:, 0].clamp(0.0, 1.0)
+    minimum_normalized = min_interaction_speed_mps / limits.max_forward_speed_mps
+    learned_speed = torch.sigmoid(speed_latent[:, 0])
+    learned_speed = torch.maximum(
+        learned_speed, torch.full_like(learned_speed, minimum_normalized)
+    )
+    learned_speed = torch.minimum(learned_speed, nominal_normalized)
+    interaction_index = -4 + int(ObstaclePhase.INTERACTION)
+    interaction = observation[:, interaction_index] > 0.5
+    speed = torch.where(interaction, learned_speed, nominal_normalized)
+    return torch.stack((speed, hc2_command[:, 1]), dim=-1)
+
+
+class InteractionSpeedOnlySupervisor(torch.nn.Module):
+    """Execution wrapper that fixes HC2 yaw and bounds speed authority by phase."""
+
+    def __init__(
+        self,
+        supervisor: ObstacleSupervisor,
+        *,
+        min_interaction_speed_mps: float = 0.30,
+    ) -> None:
+        super().__init__()
+        self.supervisor = supervisor
+        self.min_interaction_speed_mps = min_interaction_speed_mps
+
+    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+        raw = self.supervisor.raw_action(observation)
+        hc2_command = torch.stack(
+            (torch.sigmoid(raw[:, 0]), torch.tanh(raw[:, 1])), dim=-1
+        )
+        return interaction_speed_only_command(
+            observation,
+            raw[:, :1],
+            hc2_command,
+            min_interaction_speed_mps=self.min_interaction_speed_mps,
+        )
 
 
 def _sha256(path: Path) -> str:

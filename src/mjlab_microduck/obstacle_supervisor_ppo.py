@@ -33,7 +33,11 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
     load_learned_supervisor,
     prepare_rollout_configs,
 )
-from mjlab_microduck.obstacle_supervisor_bc import ObstacleSupervisor, SupervisorBcCfg
+from mjlab_microduck.obstacle_supervisor_bc import (
+    ObstacleSupervisor,
+    SupervisorBcCfg,
+    interaction_speed_only_command,
+)
 
 
 HC3D_BALANCED_CELLS: tuple[tuple[float, float], ...] = (
@@ -131,6 +135,53 @@ def normalized_command_from_latent(latent: torch.Tensor) -> torch.Tensor:
         raise ValueError("HC3 latent command must have shape (N, 2)")
     return torch.stack(
         (torch.sigmoid(latent[:, 0]), torch.tanh(latent[:, 1])), dim=-1
+    )
+
+
+def configure_interaction_speed_only_actor(
+    actor: ObstacleSupervisor,
+) -> tuple[torch.nn.Parameter, torch.nn.Parameter]:
+    """Freeze HC2 features/yaw and expose only the final speed-output row."""
+    for parameter in actor.parameters():
+        parameter.requires_grad_(False)
+    output_layer = actor.network[-1]
+    if not isinstance(output_layer, torch.nn.Linear) or output_layer.out_features != 2:
+        raise ValueError("HC3-E requires the two-output HC2 supervisor head")
+    output_layer.weight.requires_grad_(True)
+    output_layer.bias.requires_grad_(True)
+    return output_layer.weight, output_layer.bias
+
+
+def restore_frozen_hc2_yaw(
+    actor: ObstacleSupervisor, anchor: ObstacleSupervisor
+) -> None:
+    """Keep the shared final-layer yaw row byte-identical to HC2."""
+    output_layer = actor.network[-1]
+    anchor_output_layer = anchor.network[-1]
+    assert isinstance(output_layer, torch.nn.Linear)
+    assert isinstance(anchor_output_layer, torch.nn.Linear)
+    with torch.no_grad():
+        output_layer.weight[1].copy_(anchor_output_layer.weight[1])
+        output_layer.bias[1].copy_(anchor_output_layer.bias[1])
+
+
+def frozen_hc2_authority_is_exact(
+    actor: ObstacleSupervisor, anchor: ObstacleSupervisor
+) -> bool:
+    """Return whether all non-speed-output HC2 parameters remain exact."""
+    actor_hidden = actor.network[:-1].state_dict()
+    anchor_hidden = anchor.network[:-1].state_dict()
+    hidden_exact = all(
+        torch.equal(actor_hidden[name], anchor_hidden[name]) for name in actor_hidden
+    )
+    output_layer = actor.network[-1]
+    anchor_output_layer = anchor.network[-1]
+    assert isinstance(output_layer, torch.nn.Linear)
+    assert isinstance(anchor_output_layer, torch.nn.Linear)
+    return (
+        hidden_exact
+        and torch.equal(output_layer.weight[1], anchor_output_layer.weight[1])
+        and torch.equal(output_layer.bias[1], anchor_output_layer.bias[1])
     )
 
 
@@ -270,6 +321,7 @@ def train_hc3_supervisor(
     obstacle_lateral_m: float = 0.0,
     training_cells: tuple[tuple[float, float], ...] | None = None,
     retain_iteration_checkpoints: bool = False,
+    interaction_speed_only: bool = False,
     seed: int = 73,
     ppo_cfg: Hc3PpoCfg = Hc3PpoCfg(),
     reward_cfg: Hc3RewardCfg = Hc3RewardCfg(),
@@ -334,11 +386,20 @@ def train_hc3_supervisor(
         model_cfg = dict(hc2_payload["model_config"])
         hidden_dims = tuple(model_cfg["hidden_dims"])
         value_function = SupervisorValue(hidden_dims).to(device)
-        log_std = torch.nn.Parameter(
-            torch.tensor(ppo_cfg.initial_log_std, device=device)
-        )
+        if interaction_speed_only:
+            actor_parameters = list(configure_interaction_speed_only_actor(actor))
+            initial_log_std = (ppo_cfg.initial_log_std[0],)
+        else:
+            actor_parameters = list(actor.parameters())
+            initial_log_std = ppo_cfg.initial_log_std
+        log_std = torch.nn.Parameter(torch.tensor(initial_log_std, device=device))
+        optimized_parameters = [
+            *actor_parameters,
+            *value_function.parameters(),
+            log_std,
+        ]
         optimizer = torch.optim.Adam(
-            [*actor.parameters(), *value_function.parameters(), log_std],
+            optimized_parameters,
             lr=ppo_cfg.learning_rate,
         )
 
@@ -418,14 +479,24 @@ def train_hc3_supervisor(
 
             for _ in range(ppo_cfg.rollout_steps):
                 with torch.no_grad():
-                    latent_mean = actor.raw_action(current_supervisor_observation)
+                    raw_action = actor.raw_action(current_supervisor_observation)
+                    latent_mean = (
+                        raw_action[:, :1] if interaction_speed_only else raw_action
+                    )
                     distribution = torch.distributions.Normal(
                         latent_mean, log_std.exp().expand_as(latent_mean)
                     )
                     latent = distribution.sample()
                     old_log_prob = distribution.log_prob(latent).sum(dim=-1)
                     value = value_function(current_supervisor_observation)
-                    normalized_command = normalized_command_from_latent(latent)
+                    if interaction_speed_only:
+                        normalized_command = interaction_speed_only_command(
+                            current_supervisor_observation,
+                            latent,
+                            anchor(current_supervisor_observation),
+                        )
+                    else:
+                        normalized_command = normalized_command_from_latent(latent)
 
                 desired_command = torch.stack(
                     (
@@ -567,7 +638,10 @@ def train_hc3_supervisor(
                 for start in range(0, batch_size, minibatch_size):
                     indices = permutation[start : start + minibatch_size]
                     obs = flat_observations[indices]
-                    latent_mean = actor.raw_action(obs)
+                    raw_action = actor.raw_action(obs)
+                    latent_mean = (
+                        raw_action[:, :1] if interaction_speed_only else raw_action
+                    )
                     distribution = torch.distributions.Normal(
                         latent_mean, log_std.exp().expand_as(latent_mean)
                     )
@@ -585,10 +659,23 @@ def train_hc3_supervisor(
                     )
                     with torch.no_grad():
                         anchor_command = anchor(obs)
-                    actor_command = normalized_command_from_latent(latent_mean)
-                    anchor_loss = torch.nn.functional.mse_loss(
-                        actor_command, anchor_command
-                    )
+                    if interaction_speed_only:
+                        actor_command = interaction_speed_only_command(
+                            obs, latent_mean, anchor_command
+                        )
+                        anchor_speed_command = interaction_speed_only_command(
+                            obs,
+                            anchor.raw_action(obs)[:, :1],
+                            anchor_command,
+                        )
+                        anchor_loss = torch.nn.functional.mse_loss(
+                            actor_command[:, 0], anchor_speed_command[:, 0]
+                        )
+                    else:
+                        actor_command = normalized_command_from_latent(latent_mean)
+                        anchor_loss = torch.nn.functional.mse_loss(
+                            actor_command, anchor_command
+                        )
                     entropy = distribution.entropy().sum(dim=-1).mean()
                     loss = (
                         policy_loss
@@ -599,10 +686,12 @@ def train_hc3_supervisor(
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(
-                        [*actor.parameters(), *value_function.parameters(), log_std],
+                        optimized_parameters,
                         ppo_cfg.max_grad_norm,
                     )
                     optimizer.step()
+                    if interaction_speed_only:
+                        restore_frozen_hc2_yaw(actor, anchor)
                     log_std.data.clamp_(-3.0, -0.3)
                     update_metrics.append(
                         (
@@ -638,6 +727,10 @@ def train_hc3_supervisor(
             print(json.dumps(record, sort_keys=True), flush=True)
 
             if retain_iteration_checkpoints:
+                if interaction_speed_only and not frozen_hc2_authority_is_exact(
+                    actor, anchor
+                ):
+                    raise RuntimeError("HC3-E modified frozen HC2 authority")
                 snapshot_path = output_path.with_name(
                     f"{output_path.stem}-iter-{iteration:04d}{output_path.suffix}"
                 )
@@ -658,8 +751,13 @@ def train_hc3_supervisor(
                     device=device,
                     history=history,
                     completed_iterations=iteration,
+                    interaction_speed_only=interaction_speed_only,
                 )
 
+        if interaction_speed_only and not frozen_hc2_authority_is_exact(
+            actor, anchor
+        ):
+            raise RuntimeError("HC3-E modified frozen HC2 authority")
         _save_hc3_checkpoint(
             output_path,
             actor=actor,
@@ -677,6 +775,7 @@ def train_hc3_supervisor(
             device=device,
             history=history,
             completed_iterations=ppo_cfg.iterations,
+            interaction_speed_only=interaction_speed_only,
         )
         return output_path
     finally:
@@ -703,14 +802,23 @@ def _save_hc3_checkpoint(
     device: str,
     history: list[dict],
     completed_iterations: int,
+    interaction_speed_only: bool,
 ) -> None:
     if output_path.exists():
         raise FileExistsError(output_path)
     checkpoint = {
         "schema_version": 1,
-        "stage": "HC3-supervisor-PPO",
+        "stage": (
+            "HC3E-interaction-speed-PPO"
+            if interaction_speed_only
+            else "HC3-supervisor-PPO"
+        ),
         "decision": "training-complete-pending-rollout",
         "rollout_acceptance_required": True,
+        "action_authority": (
+            "interaction-speed-only" if interaction_speed_only else "speed-and-yaw"
+        ),
+        "min_interaction_speed_mps": ObstacleTeacherCfg().min_interaction_speed_mps,
         "model_state_dict": _cpu_state_dict(actor),
         "value_state_dict": _cpu_state_dict(value_function),
         "log_std": log_std.detach().cpu(),
@@ -770,6 +878,7 @@ def main() -> None:
     parser.add_argument("--collision-penalty", type=float, default=12.0)
     parser.add_argument("--balanced-hc2-cells", action="store_true")
     parser.add_argument("--retain-iteration-checkpoints", action="store_true")
+    parser.add_argument("--interaction-speed-only", action="store_true")
     parser.add_argument(
         "--initial-log-std",
         type=float,
@@ -788,6 +897,7 @@ def main() -> None:
         obstacle_lateral_m=args.obstacle_lateral,
         training_cells=HC3D_BALANCED_CELLS if args.balanced_hc2_cells else None,
         retain_iteration_checkpoints=args.retain_iteration_checkpoints,
+        interaction_speed_only=args.interaction_speed_only,
         seed=args.seed,
         ppo_cfg=Hc3PpoCfg(
             iterations=args.iterations,

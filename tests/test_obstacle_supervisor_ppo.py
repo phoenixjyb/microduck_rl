@@ -2,13 +2,20 @@ import pytest
 import torch
 
 from mjlab_microduck.hierarchical_obstacle import ObstaclePhase
+from mjlab_microduck.obstacle_supervisor_bc import (
+    ObstacleSupervisor,
+    interaction_speed_only_command,
+)
 from mjlab_microduck.obstacle_supervisor_ppo import (
     HC3D_BALANCED_CELLS,
     Hc3PpoCfg,
     balanced_cell_assignment,
+    configure_interaction_speed_only_actor,
+    frozen_hc2_authority_is_exact,
     generalized_advantage_estimate,
     hc3_reward,
     normalized_command_from_latent,
+    restore_frozen_hc2_yaw,
 )
 
 
@@ -70,6 +77,57 @@ def test_latent_transform_obeys_normalized_command_bounds():
     )
     assert torch.all((command[:, 0] >= 0.0) & (command[:, 0] <= 1.0))
     assert torch.all((command[:, 1] >= -1.0) & (command[:, 1] <= 1.0))
+
+
+def test_hc3e_command_has_only_bounded_interaction_speed_authority():
+    observation = torch.zeros(3, 17)
+    observation[:, 0] = torch.tensor([0.625, 1.0, 0.625])
+    observation[0, -4] = 1.0
+    observation[1, -3] = 1.0
+    observation[2, -2] = 1.0
+    hc2_command = torch.tensor([[0.2, -0.4], [0.3, 0.6], [0.4, -0.2]])
+    command = interaction_speed_only_command(
+        observation,
+        torch.tensor([[-100.0], [-100.0], [100.0]]),
+        hc2_command,
+    )
+    torch.testing.assert_close(command[:, 0], torch.tensor([0.625, 0.375, 0.625]))
+    torch.testing.assert_close(command[:, 1], hc2_command[:, 1])
+
+
+def test_hc3e_interaction_speed_cannot_exceed_nominal():
+    observation = torch.zeros(1, 17)
+    observation[:, 0] = 0.625
+    observation[:, -3] = 1.0
+    command = interaction_speed_only_command(
+        observation,
+        torch.tensor([[100.0]]),
+        torch.tensor([[0.4, 0.25]]),
+    )
+    torch.testing.assert_close(command, torch.tensor([[0.625, 0.25]]))
+
+
+def test_hc3e_restores_exact_hc2_yaw_head():
+    actor = ObstacleSupervisor()
+    anchor = ObstacleSupervisor()
+    anchor.load_state_dict(actor.state_dict())
+    assert frozen_hc2_authority_is_exact(actor, anchor)
+    trainable = configure_interaction_speed_only_actor(actor)
+    assert set(trainable) == {actor.network[-1].weight, actor.network[-1].bias}
+    assert all(
+        not parameter.requires_grad
+        for parameter in actor.network[:-1].parameters()
+    )
+    with torch.no_grad():
+        actor.network[-1].weight.add_(1.0)
+        actor.network[-1].bias.add_(1.0)
+    restore_frozen_hc2_yaw(actor, anchor)
+    assert frozen_hc2_authority_is_exact(actor, anchor)
+    torch.testing.assert_close(
+        actor.network[-1].weight[1], anchor.network[-1].weight[1]
+    )
+    torch.testing.assert_close(actor.network[-1].bias[1], anchor.network[-1].bias[1])
+    assert not torch.equal(actor.network[-1].weight[0], anchor.network[-1].weight[0])
 
 
 def test_hc3d_assignment_balances_all_retained_hc2_cells():

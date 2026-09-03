@@ -82,6 +82,62 @@ def aggregate_speed_cases(cases: Iterable[dict]) -> list[dict]:
     return aggregates
 
 
+def aggregate_command_cases(cases: Iterable[dict]) -> list[dict]:
+    """Aggregate command-matrix cases by forward speed and yaw rate."""
+    grouped: dict[tuple[float, float], list[dict]] = {}
+    for case in cases:
+        key = (
+            float(case["commanded_speed_mps"]),
+            float(case["commanded_yaw_rate_rps"]),
+        )
+        grouped.setdefault(key, []).append(case)
+
+    aggregates = []
+    for (speed, yaw_rate), group in sorted(grouped.items()):
+        aggregates.append(
+            {
+                "commanded_speed_mps": speed,
+                "commanded_yaw_rate_rps": yaw_rate,
+                "seed_count": len(group),
+                "observed_speed_mean_mps": _mean(
+                    case["observed_speed_mean_mps"] for case in group
+                ),
+                "speed_tracking_error_mean_mps": _mean(
+                    case["tracking_error_mean_mps"] for case in group
+                ),
+                "observed_yaw_rate_mean_rps": _mean(
+                    case["observed_yaw_rate_mean_rps"] for case in group
+                ),
+                "yaw_tracking_error_mean_rps": _mean(
+                    case["yaw_tracking_error_mean_rps"] for case in group
+                ),
+                "fall_events_total": sum(case["fall_events"] for case in group),
+                "nan_termination_events_total": sum(
+                    case["nan_termination_events"] for case in group
+                ),
+                "nonfinite_steps_total": sum(
+                    case["nonfinite_steps"] for case in group
+                ),
+                "motor_torque_utilization_p99_mean": _mean(
+                    case["motor_torque_utilization_p99"] for case in group
+                ),
+                "motor_torque_near_stall_fraction_mean": _mean(
+                    case["motor_torque_near_stall_fraction"] for case in group
+                ),
+                "motor_thermal_load_proxy_mean": _mean(
+                    case["motor_thermal_load_proxy_mean"] for case in group
+                ),
+                "action_abs_p99_mean": _mean(
+                    case["action_abs_p99"] for case in group
+                ),
+                "action_rate_abs_p99_mean": _mean(
+                    case["action_rate_abs_p99"] for case in group
+                ),
+            }
+        )
+    return aggregates
+
+
 def valid_action_deltas(
     current_actions: torch.Tensor,
     previous_actions: torch.Tensor,

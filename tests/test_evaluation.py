@@ -2,6 +2,7 @@ import pytest
 import torch
 
 from mjlab_microduck.evaluation import (
+    aggregate_command_cases,
     aggregate_speed_cases,
     parse_float_list,
     parse_int_list,
@@ -12,10 +13,16 @@ from mjlab_microduck.evaluation import (
 def _case(speed, observed, error, ends, scale=1.0):
     return {
         "commanded_speed_mps": speed,
+        "commanded_yaw_rate_rps": 0.3,
         "observed_speed_mean_mps": observed,
         "tracking_error_mean_mps": error,
+        "observed_yaw_rate_mean_rps": 0.25,
+        "yaw_tracking_error_mean_rps": 0.05,
         "episode_ends": ends,
         "non_timeout_ends": ends,
+        "fall_events": 0,
+        "nan_termination_events": 0,
+        "nonfinite_steps": 0,
         "motor_speed_utilization_p99": 0.5 * scale,
         "motor_speed_rated_exceed_fraction": 0.01 * scale,
         "motor_torque_utilization_p99": 0.4 * scale,
@@ -59,6 +66,23 @@ def test_aggregate_speed_cases_groups_seeds_and_preserves_speed_order():
     assert one_mps["motor_mechanical_power_abs_mean_w"] == pytest.approx(4.5)
     assert one_mps["action_abs_p99_mean"] == pytest.approx(1.2)
     assert one_mps["action_rate_abs_p99_mean"] == pytest.approx(0.15)
+
+
+def test_aggregate_command_cases_groups_speed_yaw_and_safety_metrics():
+    first = _case(0.3, 0.25, 0.05, 0, scale=1.0)
+    second = _case(0.3, 0.27, 0.03, 0, scale=2.0)
+    second["fall_events"] = 1
+    aggregates = aggregate_command_cases([first, second])
+
+    assert len(aggregates) == 1
+    item = aggregates[0]
+    assert item["commanded_speed_mps"] == 0.3
+    assert item["commanded_yaw_rate_rps"] == 0.3
+    assert item["seed_count"] == 2
+    assert item["observed_speed_mean_mps"] == pytest.approx(0.26)
+    assert item["observed_yaw_rate_mean_rps"] == pytest.approx(0.25)
+    assert item["fall_events_total"] == 1
+    assert item["motor_torque_utilization_p99_mean"] == pytest.approx(0.6)
 
 
 def test_valid_action_deltas_excludes_first_action_after_reset():

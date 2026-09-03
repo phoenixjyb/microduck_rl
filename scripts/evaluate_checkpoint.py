@@ -18,6 +18,7 @@ from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 from mjlab.utils.torch import configure_torch_backends
 
 from mjlab_microduck.evaluation import (
+    aggregate_command_cases,
     aggregate_speed_cases,
     parse_float_list,
     parse_int_list,
@@ -38,7 +39,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _fix_commands(env_cfg, speed: float) -> None:
+def _fix_commands(env_cfg, speed: float, yaw_rate: float = 0.0) -> None:
     commands = env_cfg.commands
     twist = commands["twist"]
     twist.resampling_time_range = (1.0e6, 1.0e6)
@@ -50,7 +51,7 @@ def _fix_commands(env_cfg, speed: float) -> None:
     twist.init_velocity_prob = 0.0
     twist.ranges.lin_vel_x = (speed, speed)
     twist.ranges.lin_vel_y = (0.0, 0.0)
-    twist.ranges.ang_vel_z = (0.0, 0.0)
+    twist.ranges.ang_vel_z = (yaw_rate, yaw_rate)
 
     for name in ("head_pose", "body_pose"):
         command = commands[name]
@@ -63,12 +64,12 @@ def _quantile(values: torch.Tensor, q: float) -> float:
     return float(torch.quantile(values, q).item())
 
 
-def _run_case(args, speed: float, seed: int) -> dict:
+def _run_case(args, speed: float, yaw_rate: float, seed: int) -> dict:
     env_cfg = load_env_cfg(args.task, play=True)
     agent_cfg = load_rl_cfg(args.task)
     env_cfg.seed = seed
     env_cfg.scene.num_envs = args.num_envs
-    _fix_commands(env_cfg, speed)
+    _fix_commands(env_cfg, speed, yaw_rate)
     env_cfg.curriculum = {}
     env_cfg.events.pop("push_robot", None)
 
@@ -84,6 +85,7 @@ def _run_case(args, speed: float, seed: int) -> dict:
         robot = raw_env.scene["robot"]
         joint_ids, _ = robot.find_joints(r"^(?!passive_).*")
         forward_samples = []
+        yaw_rate_samples = []
         joint_speed_samples = []
         torque_samples = []
         power_samples = []
@@ -91,6 +93,9 @@ def _run_case(args, speed: float, seed: int) -> dict:
         action_rate_samples = []
         episode_ends = 0
         timeouts = 0
+        fall_events = 0
+        nan_termination_events = 0
+        nonfinite_steps = 0
         previous_actions = raw_env.action_manager.action.detach().clone()
         previous_dones = torch.zeros(
             args.num_envs, dtype=torch.bool, device=args.device
@@ -99,7 +104,7 @@ def _run_case(args, speed: float, seed: int) -> dict:
         with torch.inference_mode():
             for step in range(args.warmup_steps + args.steps):
                 actions = policy(observations)
-                observations, _, dones, extras = env.step(actions)
+                observations, rewards, dones, extras = env.step(actions)
                 applied_actions = raw_env.action_manager.action.detach()
                 if step < args.warmup_steps:
                     previous_actions = applied_actions.clone()
@@ -107,6 +112,7 @@ def _run_case(args, speed: float, seed: int) -> dict:
                     continue
 
                 forward = robot.data.root_link_lin_vel_b[:, 0].float()
+                observed_yaw_rate = robot.data.root_link_ang_vel_b[:, 2].float()
                 joint_speed = robot.data.joint_vel[:, joint_ids].abs().float()
                 torque = robot.data.actuator_force.abs().float()
                 if joint_speed.shape != torque.shape:
@@ -115,6 +121,7 @@ def _run_case(args, speed: float, seed: int) -> dict:
                         f"actuator torque shape {torque.shape}"
                     )
                 forward_samples.append(forward)
+                yaw_rate_samples.append(observed_yaw_rate)
                 joint_speed_samples.append(joint_speed)
                 torque_samples.append(torque)
                 power_samples.append(torch.sum(joint_speed * torque, dim=1))
@@ -128,10 +135,24 @@ def _run_case(args, speed: float, seed: int) -> dict:
                 timeout_tensor = extras.get("time_outs")
                 if timeout_tensor is not None:
                     timeouts += int(timeout_tensor.sum().item())
+                fall_events += int(
+                    raw_env.termination_manager.get_term("fell_over").sum().item()
+                )
+                nan_termination_events += int(
+                    raw_env.termination_manager.get_term("nan_state").sum().item()
+                )
+                finite = torch.isfinite(actions).all()
+                finite &= torch.isfinite(applied_actions).all()
+                finite &= torch.isfinite(rewards).all()
+                finite &= all(
+                    torch.isfinite(value).all() for value in observations.values()
+                )
+                nonfinite_steps += int(not bool(finite))
                 previous_actions = applied_actions.clone()
                 previous_dones = dones.bool().clone()
 
         forward = torch.cat(forward_samples)
+        observed_yaw_rate = torch.cat(yaw_rate_samples)
         joint_speed = torch.cat(joint_speed_samples).flatten()
         torque = torch.cat(torque_samples).flatten()
         power = torch.cat(power_samples)
@@ -142,9 +163,11 @@ def _run_case(args, speed: float, seed: int) -> dict:
         speed_util = joint_speed / XL330_M288_RATED_NO_LOAD_SPEED_RAD_S
         torque_util = torque / XL330_M288_RATED_STALL_TORQUE_NM_6V
         tracking_error = (forward - speed).abs()
+        yaw_tracking_error = (observed_yaw_rate - yaw_rate).abs()
 
         return {
             "commanded_speed_mps": speed,
+            "commanded_yaw_rate_rps": yaw_rate,
             "seed": seed,
             "num_envs": args.num_envs,
             "steps": args.steps,
@@ -155,9 +178,17 @@ def _run_case(args, speed: float, seed: int) -> dict:
             "observed_speed_p95_mps": _quantile(forward, 0.95),
             "tracking_error_mean_mps": float(tracking_error.mean().item()),
             "tracking_error_p95_mps": _quantile(tracking_error, 0.95),
+            "observed_yaw_rate_mean_rps": float(observed_yaw_rate.mean().item()),
+            "observed_yaw_rate_p05_rps": _quantile(observed_yaw_rate, 0.05),
+            "observed_yaw_rate_p95_rps": _quantile(observed_yaw_rate, 0.95),
+            "yaw_tracking_error_mean_rps": float(yaw_tracking_error.mean().item()),
+            "yaw_tracking_error_p95_rps": _quantile(yaw_tracking_error, 0.95),
             "episode_ends": episode_ends,
             "timeouts": timeouts,
             "non_timeout_ends": episode_ends - timeouts,
+            "fall_events": fall_events,
+            "nan_termination_events": nan_termination_events,
+            "nonfinite_steps": nonfinite_steps,
             "motor_joint_speed_abs_max_rad_s": float(joint_speed.max().item()),
             "motor_joint_speed_abs_p99_rad_s": _quantile(joint_speed, 0.99),
             "motor_speed_utilization_p99": _quantile(speed_util, 0.99),
@@ -193,6 +224,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--task", default="Mjlab-Run-Flat-MicroDuck")
     parser.add_argument("--speeds", default="0.5,0.8,1.0,1.2,1.5")
+    parser.add_argument("--yaw-rates", default="0.0")
     parser.add_argument("--seeds", default="41,42,43")
     parser.add_argument("--num-envs", type=int, default=64)
     parser.add_argument("--steps", type=int, default=600)
@@ -202,6 +234,7 @@ def parse_args() -> argparse.Namespace:
     args.checkpoint = args.checkpoint.expanduser().resolve()
     args.output_dir = args.output_dir.expanduser().resolve()
     args.speeds = parse_float_list(args.speeds)
+    args.yaw_rates = parse_float_list(args.yaw_rates)
     args.seeds = parse_int_list(args.seeds)
     if not args.checkpoint.is_file():
         parser.error(f"checkpoint does not exist: {args.checkpoint}")
@@ -217,11 +250,16 @@ def main() -> None:
     configure_torch_backends()
     cases = []
     for speed in args.speeds:
-        for seed in args.seeds:
-            print(f"[EVAL] speed={speed:.2f} m/s seed={seed}", flush=True)
-            case = _run_case(args, speed, seed)
-            cases.append(case)
-            print(json.dumps(case, sort_keys=True), flush=True)
+        for yaw_rate in args.yaw_rates:
+            for seed in args.seeds:
+                print(
+                    f"[EVAL] speed={speed:.2f} m/s "
+                    f"yaw={yaw_rate:.2f} rad/s seed={seed}",
+                    flush=True,
+                )
+                case = _run_case(args, speed, yaw_rate, seed)
+                cases.append(case)
+                print(json.dumps(case, sort_keys=True), flush=True)
 
     result = {
         "schema_version": 1,
@@ -230,9 +268,11 @@ def main() -> None:
         "checkpoint_sha256": _sha256(args.checkpoint),
         "device": args.device,
         "speeds_mps": list(args.speeds),
+        "yaw_rates_rps": list(args.yaw_rates),
         "seeds": list(args.seeds),
         "cases": cases,
         "aggregates": aggregate_speed_cases(cases),
+        "command_aggregates": aggregate_command_cases(cases),
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
     json_path = args.output_dir / "checkpoint-evaluation.json"

@@ -190,3 +190,21 @@ next stage measures unchanged HC2 at lateral obstacle placements before any
 new policy training. See
 `experiments/2026-09-03-hc3f-seed-averaged-speed-head.md` and
 `experiments/2026-09-03-hc3g-seed-consensus-speed-head.md`.
+
+HC4-L then measured the placement gap and trained one lateral-placement BC
+specialist from deterministic teacher data at +/-0.12 m. The specialist cut
+shifted-placement collisions from 48 to zero on held-out seeds 61--63, but it
+recorded four centered collisions versus HC2's two and therefore could not
+replace HC2 wholesale. HC4-LH composes the byte-exact HC2 center model with the
+HC4-L specialist behind a 0.06 m reconstructed route-lateral gate. Its actual
+36-cell held-out matrix retained 2,408 clean passes, three collisions, and nine
+timeouts among 2,420 resolved attempts (99.504% clean), with zero falls, NaNs,
+non-finite steps, or rated motor-speed exceedances. Center collisions remained
+at two and shifted collisions fell from 48 to one, so HC4-LH is accepted only
+for the exact centered/+/-0.12 m simulation envelope.
+
+The next stage is a bounded diagnostic sweep at unseen offsets around the
+0.06 m selection boundary and beyond the trained +/-0.12 m points. It does not
+yet add sensor perturbation or start another training job. See
+`experiments/2026-09-03-hc4l-lateral-placement.md` for hashes, comparisons,
+assets, and the simulation-only decision boundary.

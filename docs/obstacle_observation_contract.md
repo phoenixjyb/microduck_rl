@@ -79,11 +79,12 @@ starts with this single stationary box and adds sensor perturbations only in
 later stages. Run a CPU-only configuration smoke test first. GPU training
 starts only after those checks pass and after an idle-GPU gate.
 
-`Mjlab-Run-Obstacle-Flat-MicroDuck` now provides that configuration. It stages
-placement from 1.0-1.3 m down to 0.6-1.0 m, command speed from 0.5 to 0.8 m/s,
-and sensor perturbations from exact measurements to the documented stress
-envelope. The actor receives delayed/perturbed observations; the asymmetric
-critic receives exact ground truth. Play mode remains deterministic.
+`Mjlab-Run-Obstacle-Flat-MicroDuck` is the exact centered O1 benchmark. It does
+not silently vary placement, speed stage, sensor quality, or latency. The actor
+receives the policy-facing obstacle estimate; the asymmetric critic receives
+exact ground truth. The complete staged training order is defined in
+`docs/athletics_obstacle_curriculum.md`, and each easier scaffold has a distinct
+identity rather than weakening O1 in place.
 
 The first task commands straight forward motion only: lateral and yaw commands
 are zero, so avoidance cannot be confused with an unrelated turning command.

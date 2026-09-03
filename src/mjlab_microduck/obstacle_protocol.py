@@ -17,6 +17,13 @@ O1_SENSOR_PARAMS = {
     "dropout_probability": 0.0,
 }
 
+OA0_PROTOCOL_NAME = "OA0-offset-assisted-exact-v1"
+OA0_OBSTACLE_FORWARD_M = O1_OBSTACLE_FORWARD_M
+OA0_OBSTACLE_LATERAL_ABS_RANGE_M = (0.24, 0.30)
+OA0_COMMAND_SPEED_MPS = 0.30
+OA0_ATTEMPT_TIMEOUT_S = 7.0
+OA0_ROUTE_RETURN_TOLERANCE_M = 0.15
+
 
 def o1_evaluation_protocol() -> dict:
     """Return a JSON-compatible copy of the exact O1 environment contract."""
@@ -30,4 +37,26 @@ def o1_evaluation_protocol() -> dict:
             O1_MIN_COMMAND_SPEED_MPS,
             O1_MAX_COMMAND_SPEED_MPS,
         ],
+    }
+
+
+def oa0_training_protocol() -> dict:
+    """Return the first offset-assisted bypass scaffold contract."""
+    return {
+        "name": OA0_PROTOCOL_NAME,
+        "obstacle_forward_range_m": [
+            OA0_OBSTACLE_FORWARD_M,
+            OA0_OBSTACLE_FORWARD_M,
+        ],
+        "obstacle_lateral_absolute_range_m": list(
+            OA0_OBSTACLE_LATERAL_ABS_RANGE_M
+        ),
+        "actor_delay_lag_steps": [0, 0],
+        "sensor": deepcopy(O1_SENSOR_PARAMS),
+        "commanded_speed_range_mps": [
+            OA0_COMMAND_SPEED_MPS,
+            OA0_COMMAND_SPEED_MPS,
+        ],
+        "attempt_timeout_s": OA0_ATTEMPT_TIMEOUT_S,
+        "route_return_tolerance_m": OA0_ROUTE_RETURN_TOLERANCE_M,
     }

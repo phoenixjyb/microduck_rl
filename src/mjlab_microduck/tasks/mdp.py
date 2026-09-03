@@ -5722,6 +5722,7 @@ def reset_obstacle_ahead(
     env_ids: torch.Tensor,
     forward_range_m: tuple[float, float] = (0.6, 1.2),
     lateral_range_m: tuple[float, float] = (-0.3, 0.3),
+    lateral_abs_range_m: tuple[float, float] | None = None,
     obstacle_height_m: float = 0.10,
     asset_name: str = "obstacle",
 ) -> None:
@@ -5737,6 +5738,13 @@ def reset_obstacle_ahead(
         raise ValueError("forward_range_m must be ordered and non-negative")
     if lateral_range_m[0] > lateral_range_m[1]:
         raise ValueError("lateral_range_m must be ordered")
+    if lateral_abs_range_m is not None and (
+        lateral_abs_range_m[0] < 0.0
+        or lateral_abs_range_m[0] > lateral_abs_range_m[1]
+    ):
+        raise ValueError(
+            "lateral_abs_range_m must be ordered and non-negative"
+        )
     if obstacle_height_m <= 0.0:
         raise ValueError("obstacle_height_m must be positive")
 
@@ -5753,7 +5761,18 @@ def reset_obstacle_ahead(
 
     count = len(env_ids)
     forward = torch.empty(count, device=env.device).uniform_(*forward_range_m)
-    lateral = torch.empty(count, device=env.device).uniform_(*lateral_range_m)
+    if lateral_abs_range_m is None:
+        lateral = torch.empty(count, device=env.device).uniform_(*lateral_range_m)
+    else:
+        magnitude = torch.empty(count, device=env.device).uniform_(
+            *lateral_abs_range_m
+        )
+        sign = torch.where(
+            torch.rand(count, device=env.device) < 0.5,
+            -torch.ones(count, device=env.device),
+            torch.ones(count, device=env.device),
+        )
+        lateral = magnitude * sign
     pose = torch.zeros(count, 7, device=env.device)
     pose[:, 0] = root[:, 0] + cos_yaw * forward - sin_yaw * lateral
     pose[:, 1] = root[:, 1] + sin_yaw * forward + cos_yaw * lateral
@@ -5771,6 +5790,11 @@ def reset_obstacle_ahead(
         env._obstacle_path_dir_w[:, 0] = 1.0
     env._obstacle_path_dir_w[env_ids, 0] = cos_yaw
     env._obstacle_path_dir_w[env_ids, 1] = sin_yaw
+    if not hasattr(env, "_obstacle_route_origin_w"):
+        env._obstacle_route_origin_w = torch.zeros(
+            env.num_envs, 2, device=env.device
+        )
+    env._obstacle_route_origin_w[env_ids] = root[:, :2]
 
 
 def _obstacle_center_distance(
@@ -5870,6 +5894,69 @@ def obstacle_passed_reward(
             "Metrics/obstacle_passed_fraction"
         ] = passed.float().mean()
     return passed.float()
+
+
+def obstacle_route_rejoined(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    robot_radius_m: float = 0.12,
+    obstacle_radius_m: float = 0.10,
+    return_tolerance_m: float = 0.15,
+) -> torch.Tensor:
+    """Return whether the robot passed the obstacle and rejoined its route."""
+    if return_tolerance_m < 0.0:
+        raise ValueError("return_tolerance_m must be non-negative")
+    passed = obstacle_passed(
+        env,
+        asset_name=asset_name,
+        robot_radius_m=robot_radius_m,
+        obstacle_radius_m=obstacle_radius_m,
+    )
+    robot: Entity = env.scene["robot"]
+    robot_xy = robot.data.root_link_pos_w[:, :2]
+    if not hasattr(env, "_obstacle_route_origin_w"):
+        env._obstacle_route_origin_w = robot_xy.clone()
+    lateral_dir = torch.stack(
+        (-env._obstacle_path_dir_w[:, 1], env._obstacle_path_dir_w[:, 0]),
+        dim=-1,
+    )
+    lateral = torch.abs(
+        ((robot_xy - env._obstacle_route_origin_w) * lateral_dir).sum(dim=-1)
+    )
+    return passed & (lateral <= return_tolerance_m)
+
+
+def obstacle_route_rejoined_reward(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    robot_radius_m: float = 0.12,
+    obstacle_radius_m: float = 0.10,
+    return_tolerance_m: float = 0.15,
+) -> torch.Tensor:
+    """Reward the terminal route-return success used by assisted bypass stages."""
+    rejoined = obstacle_route_rejoined(
+        env,
+        asset_name=asset_name,
+        robot_radius_m=robot_radius_m,
+        obstacle_radius_m=obstacle_radius_m,
+        return_tolerance_m=return_tolerance_m,
+    )
+    if hasattr(env, "extras"):
+        env.extras.setdefault("log", {})[
+            "Metrics/obstacle_route_rejoined_fraction"
+        ] = rejoined.float().mean()
+    return rejoined.float()
+
+
+def obstacle_attempt_timeout(
+    env: ManagerBasedRlEnv,
+    max_attempt_time_s: float = 7.0,
+) -> torch.Tensor:
+    """Fail an obstacle attempt that has not completed within a bounded time."""
+    if max_attempt_time_s <= 0.0:
+        raise ValueError("max_attempt_time_s must be positive")
+    elapsed_s = env.episode_length_buf.to(dtype=torch.float32) * env.step_dt
+    return elapsed_s >= max_attempt_time_s
 
 
 def obstacle_route_progress_reward(

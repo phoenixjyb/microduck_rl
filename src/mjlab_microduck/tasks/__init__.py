@@ -92,7 +92,9 @@ from .backlash import make_backlash_variant
 from .run import make_run_variant, MicroduckRunRlCfg
 from .motor_aware import make_motor_aware_run_variant, MicroduckMotorAwareRunRlCfg
 from .obstacle_avoidance import (
+    MicroduckObstacleAssistedRlCfg,
     MicroduckObstacleAvoidanceRlCfg,
+    make_obstacle_assisted_variant,
     make_obstacle_avoidance_variant,
 )
 from .sprung import SWEEP_ARMS, make_sprung_variant, sprung_rl_cfg, ARM_TASK_SUFFIX
@@ -174,6 +176,29 @@ register_mjlab_task(
     runner_cls=MicroduckOnPolicyRunner,
 )
 print("✓ Obstacle Run task registered: Mjlab-Run-Obstacle-Flat-MicroDuck")
+
+# OA0 scaffold keeps the O1 actor contract but supplies a signed lateral hint,
+# fixed 0.30 m/s command, route-return success, and bounded attempt horizon.
+register_mjlab_task(
+    task_id="Mjlab-Run-Obstacle-Assisted-Flat-MicroDuck",
+    env_cfg=make_obstacle_assisted_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg())
+        )
+    ),
+    play_env_cfg=make_obstacle_assisted_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg(play=True))
+        ),
+        play=True,
+    ),
+    rl_cfg=MicroduckObstacleAssistedRlCfg,
+    runner_cls=MicroduckOnPolicyRunner,
+)
+print(
+    "✓ Assisted obstacle Run task registered: "
+    "Mjlab-Run-Obstacle-Assisted-Flat-MicroDuck"
+)
 
 # Sprung-foot stiffness sweep — Phase 2. See
 # docs/superpowers/specs/2026-08-20-sprung-foot-design.md

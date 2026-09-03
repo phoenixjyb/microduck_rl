@@ -18,6 +18,11 @@ from mjlab.managers import (
 )
 
 from mjlab_microduck.obstacle_protocol import (
+    OA0_ATTEMPT_TIMEOUT_S,
+    OA0_COMMAND_SPEED_MPS,
+    OA0_OBSTACLE_FORWARD_M,
+    OA0_OBSTACLE_LATERAL_ABS_RANGE_M,
+    OA0_ROUTE_RETURN_TOLERANCE_M,
     O1_MAX_COMMAND_SPEED_MPS,
     O1_MIN_COMMAND_SPEED_MPS,
     O1_OBSTACLE_FORWARD_M,
@@ -158,6 +163,56 @@ def make_obstacle_avoidance_variant(
     return cfg
 
 
+def make_obstacle_assisted_variant(
+    cfg: ManagerBasedRlEnvCfg,
+    *,
+    play: bool = False,
+) -> ManagerBasedRlEnvCfg:
+    """Build OA0 without weakening the centered O1 benchmark."""
+    cfg = make_obstacle_avoidance_variant(cfg, play=play)
+    reset_params = cfg.events["reset_obstacle"].params
+    reset_params["forward_range_m"] = (
+        OA0_OBSTACLE_FORWARD_M,
+        OA0_OBSTACLE_FORWARD_M,
+    )
+    reset_params["lateral_abs_range_m"] = OA0_OBSTACLE_LATERAL_ABS_RANGE_M
+
+    velocity = cfg.curriculum["velocity_command_ranges"].params
+    velocity["velocity_stages"] = [
+        {
+            "step": 0,
+            "lin_vel_range": OA0_COMMAND_SPEED_MPS,
+            "ang_vel_range": 0.0,
+        }
+    ]
+    velocity["min_lin_vel"] = OA0_COMMAND_SPEED_MPS
+    cfg.commands["twist"].ranges.lin_vel_x = (
+        OA0_COMMAND_SPEED_MPS,
+        OA0_COMMAND_SPEED_MPS,
+    )
+
+    envelope_params = {
+        "asset_name": "obstacle",
+        "robot_radius_m": ROBOT_COLLISION_RADIUS_M,
+        "obstacle_radius_m": OBSTACLE_COLLISION_RADIUS_M,
+        "return_tolerance_m": OA0_ROUTE_RETURN_TOLERANCE_M,
+    }
+    cfg.rewards["obstacle_passed"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_route_rejoined_reward,
+        weight=10.0,
+        params=dict(envelope_params),
+    )
+    cfg.terminations["obstacle_passed"] = TerminationTermCfg(
+        func=microduck_mdp.obstacle_route_rejoined,
+        params=dict(envelope_params),
+    )
+    cfg.terminations["obstacle_attempt_timeout"] = TerminationTermCfg(
+        func=microduck_mdp.obstacle_attempt_timeout,
+        params={"max_attempt_time_s": OA0_ATTEMPT_TIMEOUT_S},
+    )
+    return cfg
+
+
 MicroduckObstacleAvoidanceRlCfg = replace(
     MicroduckMotorAwareRunRlCfg,
     actor=deepcopy(MicroduckMotorAwareRunRlCfg.actor),
@@ -165,4 +220,13 @@ MicroduckObstacleAvoidanceRlCfg = replace(
     algorithm=deepcopy(MicroduckMotorAwareRunRlCfg.algorithm),
     experiment_name="run_obstacle_avoidance",
     run_name="single_box_curriculum",
+)
+
+MicroduckObstacleAssistedRlCfg = replace(
+    MicroduckObstacleAvoidanceRlCfg,
+    actor=deepcopy(MicroduckObstacleAvoidanceRlCfg.actor),
+    critic=deepcopy(MicroduckObstacleAvoidanceRlCfg.critic),
+    algorithm=deepcopy(MicroduckObstacleAvoidanceRlCfg.algorithm),
+    experiment_name="run_obstacle_assisted",
+    run_name="oa0_signed_offset",
 )

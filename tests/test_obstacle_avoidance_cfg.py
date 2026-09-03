@@ -18,14 +18,32 @@ from mjlab_microduck.tasks.obstacle_avoidance import (
     O1_OBSTACLE_FORWARD_M,
     O1_OBSTACLE_LATERAL_M,
     O1_PROTOCOL_NAME,
+    make_obstacle_assisted_variant,
     make_obstacle_avoidance_variant,
     o1_evaluation_protocol,
+)
+from mjlab_microduck.obstacle_protocol import (
+    OA0_ATTEMPT_TIMEOUT_S,
+    OA0_COMMAND_SPEED_MPS,
+    OA0_OBSTACLE_LATERAL_ABS_RANGE_M,
+    OA0_PROTOCOL_NAME,
+    OA0_ROUTE_RETURN_TOLERANCE_M,
+    oa0_training_protocol,
 )
 from mjlab_microduck.tasks.run import make_run_variant
 
 
 def _cfg(play=False):
     return make_obstacle_avoidance_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg(play=play))
+        ),
+        play=play,
+    )
+
+
+def _assisted_cfg(play=False):
+    return make_obstacle_assisted_variant(
         make_motor_aware_run_variant(
             make_run_variant(make_microduck_velocity_env_cfg(play=play))
         ),
@@ -85,6 +103,43 @@ def test_o1_protocol_manifest_matches_environment_contract():
     assert protocol["obstacle_lateral_range_m"] == [0.0, 0.0]
     assert protocol["actor_delay_lag_steps"] == [0, 0]
     assert protocol["sensor"] == OBSTACLE_SENSOR_STAGES[0]["params"]
+
+
+def test_oa0_assisted_scaffold_changes_only_declared_task_axes():
+    cfg = _assisted_cfg()
+    reset = cfg.events["reset_obstacle"].params
+    assert reset["forward_range_m"] == (1.15, 1.15)
+    assert reset["lateral_abs_range_m"] == OA0_OBSTACLE_LATERAL_ABS_RANGE_M
+    assert cfg.commands["twist"].ranges.lin_vel_x == (
+        OA0_COMMAND_SPEED_MPS,
+        OA0_COMMAND_SPEED_MPS,
+    )
+    assert cfg.commands["twist"].ranges.lin_vel_y == (0.0, 0.0)
+    assert cfg.commands["twist"].ranges.ang_vel_z == (0.0, 0.0)
+    assert (
+        cfg.rewards["obstacle_passed"].func
+        is microduck_mdp.obstacle_route_rejoined_reward
+    )
+    assert cfg.rewards["obstacle_passed"].params["return_tolerance_m"] == (
+        OA0_ROUTE_RETURN_TOLERANCE_M
+    )
+    assert (
+        cfg.terminations["obstacle_passed"].func
+        is microduck_mdp.obstacle_route_rejoined
+    )
+    timeout = cfg.terminations["obstacle_attempt_timeout"]
+    assert timeout.func is microduck_mdp.obstacle_attempt_timeout
+    assert timeout.params["max_attempt_time_s"] == OA0_ATTEMPT_TIMEOUT_S
+    assert timeout.time_out is False
+
+
+def test_oa0_protocol_manifest_matches_assisted_contract():
+    protocol = oa0_training_protocol()
+    assert protocol["name"] == OA0_PROTOCOL_NAME
+    assert protocol["obstacle_lateral_absolute_range_m"] == [0.24, 0.30]
+    assert protocol["commanded_speed_range_mps"] == [0.30, 0.30]
+    assert protocol["attempt_timeout_s"] == 7.0
+    assert protocol["route_return_tolerance_m"] == 0.15
 
 
 def test_velocity_curriculum_preserves_nonstanding_speed_floor():
@@ -175,3 +230,14 @@ def test_obstacle_task_is_registered_with_distinct_identity():
     rl_cfg = load_rl_cfg(task_id)
     assert rl_cfg.experiment_name == "run_obstacle_avoidance"
     assert rl_cfg.run_name == "single_box_curriculum"
+
+
+def test_assisted_obstacle_task_is_registered_with_distinct_identity():
+    import mjlab_microduck.tasks  # noqa: F401
+    from mjlab.tasks.registry import list_tasks, load_rl_cfg
+
+    task_id = "Mjlab-Run-Obstacle-Assisted-Flat-MicroDuck"
+    assert task_id in list_tasks()
+    rl_cfg = load_rl_cfg(task_id)
+    assert rl_cfg.experiment_name == "run_obstacle_assisted"
+    assert rl_cfg.run_name == "oa0_signed_offset"

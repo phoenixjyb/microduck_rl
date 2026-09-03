@@ -73,6 +73,40 @@ def test_passed_reward_uses_fixed_reset_heading_and_requires_clearance():
     assert "Metrics/obstacle_passed_fraction" in env.extras["log"]
 
 
+def test_route_rejoined_requires_passage_and_return_to_centerline():
+    env = _env(
+        [(0.30, 0.10), (0.30, 0.20), (0.10, 0.05)],
+        [(0.0, 0.0)] * 3,
+    )
+    env._obstacle_route_origin_w = torch.zeros(3, 2)
+    expected = torch.tensor([True, False, False])
+    assert torch.equal(microduck_mdp.obstacle_route_rejoined(env), expected)
+    assert torch.equal(
+        microduck_mdp.obstacle_route_rejoined_reward(env), expected.float()
+    )
+    assert "Metrics/obstacle_route_rejoined_fraction" in env.extras["log"]
+
+
+def test_route_rejoined_rejects_negative_return_tolerance():
+    with pytest.raises(ValueError, match="return_tolerance_m"):
+        microduck_mdp.obstacle_route_rejoined(
+            _env([(0.3, 0.0)], [(0.0, 0.0)]), return_tolerance_m=-0.01
+        )
+
+
+def test_obstacle_attempt_timeout_uses_simulated_episode_time():
+    env = SimpleNamespace(
+        episode_length_buf=torch.tensor([34, 35, 36]),
+        step_dt=0.2,
+    )
+    assert torch.equal(
+        microduck_mdp.obstacle_attempt_timeout(env, max_attempt_time_s=7.0),
+        torch.tensor([False, True, True]),
+    )
+    with pytest.raises(ValueError, match="max_attempt_time_s"):
+        microduck_mdp.obstacle_attempt_timeout(env, max_attempt_time_s=0.0)
+
+
 def test_route_progress_tracks_command_without_rewarding_standing_or_overspeed():
     env = _env(
         [(0.0, 0.0)] * 4,

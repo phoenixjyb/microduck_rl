@@ -543,7 +543,11 @@ def train_hc3_supervisor(
                     optimizer.step()
                     log_std.data.clamp_(-3.0, -0.3)
                     update_metrics.append(
-                        (float(policy_loss), float(value_loss), float(anchor_loss))
+                        (
+                            float(policy_loss.detach()),
+                            float(value_loss.detach()),
+                            float(anchor_loss.detach()),
+                        )
                     )
 
             metrics = torch.tensor(update_metrics).mean(dim=0)

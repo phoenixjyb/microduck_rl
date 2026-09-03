@@ -158,6 +158,56 @@ def test_route_progress_rejects_negative_command_threshold():
         )
 
 
+def test_phase_speed_tracking_is_active_before_and_after_not_during():
+    env = _env(
+        [(0.0, 0.0), (0.0, 0.0), (0.2, 0.0)],
+        [(0.7, 0.0), (0.5, 0.0), (0.0, 0.0)],
+    )
+    env.scene["robot"].data.root_link_lin_vel_b = torch.tensor(
+        [[0.3, 0.0, 0.0]] * 3
+    )
+    env.scene["robot"].data.root_link_lin_vel_w = torch.tensor(
+        [[0.3, 0.0, 0.0]] * 3
+    )
+    commands = torch.tensor([[0.3, 0.0, 0.0]] * 3)
+    env.command_manager = SimpleNamespace(get_command=lambda name: commands)
+
+    linear = microduck_mdp.obstacle_phase_linear_velocity_reward(
+        env,
+        std=0.4,
+        command_name="twist",
+        interaction_entry_m=0.6,
+        recovery_entry_m=0.0,
+    )
+    progress = microduck_mdp.obstacle_phase_route_progress_reward(
+        env,
+        command_name="twist",
+        interaction_entry_m=0.6,
+        recovery_entry_m=0.0,
+    )
+    torch.testing.assert_close(linear, torch.tensor([1.0, 0.0, 1.0]))
+    torch.testing.assert_close(progress, torch.tensor([1.0, 0.0, 1.0]))
+    assert env.extras["log"]["Metrics/obstacle_speed_tracking_active_fraction"] == (
+        torch.tensor(2.0 / 3.0)
+    )
+
+
+def test_phase_speed_tracking_validates_zone_bounds():
+    env = _env([(0.0, 0.0)], [(1.0, 0.0)])
+    env.scene["robot"].data.root_link_lin_vel_b = torch.zeros(1, 3)
+    env.command_manager = SimpleNamespace(
+        get_command=lambda name: torch.zeros(1, 3)
+    )
+    with pytest.raises(ValueError, match="interaction_entry_m"):
+        microduck_mdp.obstacle_phase_linear_velocity_reward(
+            env, std=0.4, command_name="twist", interaction_entry_m=0.0
+        )
+    with pytest.raises(ValueError, match="recovery_entry_m"):
+        microduck_mdp.obstacle_phase_linear_velocity_reward(
+            env, std=0.4, command_name="twist", recovery_entry_m=-0.1
+        )
+
+
 def test_lateral_excursion_cost_uses_episode_origin_and_soft_corridor():
     env = _env(
         [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0)],

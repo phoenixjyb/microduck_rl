@@ -37,6 +37,7 @@ a time.
 | --- | --- | --- | --- | --- | --- |
 | OA0 | 1.15 m forward; signed absolute lateral offset 0.24–0.30 m | fixed 0.30 m/s | exact, zero lag | learn “move away, pass, return” | >=85% clean passes per train seed |
 | OA0R | unchanged | unchanged | unchanged | time-step-normalized terminal outcome only | same OA0 gates |
+| OA0P | unchanged | unchanged externally | unchanged | suspend speed shaping only in the avoidance zone | same OA0 gates |
 | OA1 | 1.15 m forward; signed absolute lateral offset 0.10–0.16 m | fixed 0.30 m/s | unchanged | smaller lateral hint | >=80% per seed |
 | O1a | 1.15 m forward; centered | fixed 0.30 m/s | unchanged | remove lateral hint | >=75% per seed |
 | O1b | unchanged | fixed 0.40 m/s | unchanged | speed only | >=72% per seed |
@@ -125,3 +126,14 @@ OA0R is therefore the next single-axis experiment. It leaves placement, speed,
 sensors, horizon, success geometry, and acceptance gates unchanged, and adds a
 time-step-normalized `+20` success / `-20` collision-or-timeout impulse. No
 later curriculum stage starts unless OA0R passes its retained three-seed sweep.
+
+OA0R also failed: its earliest common checkpoint reached 26.134% pooled clean
+passes, then regressed to 8.025%. The larger outcome signal modestly improved
+the inherited checkpoint but did not resolve the objective conflict. OA0P is
+the next single-axis experiment. The external command remains 0.30 m/s and
+normal linear-speed plus route-progress shaping remains active while the
+obstacle is at least 0.60 m ahead. Both are suspended while the obstacle is in
+the interaction zone and resume once its center is behind the robot. Collision,
+timeout, route-return, angular tracking, motor, and acceptance contracts do not
+change. Thus OA0P permits braking or slowing for safety without rewarding
+lingering.

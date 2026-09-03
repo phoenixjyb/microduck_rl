@@ -16,7 +16,11 @@ from mjlab_microduck.obstacle_baseline import (
     run_baseline,
     validate_baseline_bounds,
 )
-from mjlab_microduck.obstacle_protocol import OA0_TASK_ID, OA0R_TASK_ID
+from mjlab_microduck.obstacle_protocol import (
+    OA0P_TASK_ID,
+    OA0R_TASK_ID,
+    OA0_TASK_ID,
+)
 
 
 def test_baseline_config_uses_deterministic_straight_command():
@@ -48,6 +52,15 @@ def test_outcome_baseline_uses_oa0r_task():
     assert agent_cfg.experiment_name == "run_obstacle_assisted_outcome"
 
 
+def test_phase_speed_baseline_uses_oa0p_task():
+    env_cfg, agent_cfg = prepare_baseline_configs(8, 0.3, OA0P_TASK_ID)
+    assert (
+        env_cfg.rewards["track_linear_velocity"].func.__name__
+        == "obstacle_phase_linear_velocity_reward"
+    )
+    assert agent_cfg.experiment_name == "run_obstacle_assisted_phase_speed"
+
+
 def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):
     checkpoint = tmp_path / "checkpoint.pt"
     checkpoint.touch()
@@ -65,6 +78,12 @@ def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):
             "mean_forward_speed_mps": 0.3,
             "pre_obstacle_samples": 1,
             "pre_obstacle_route_speed_mps": 0.3,
+            "approach_samples": 1,
+            "approach_route_speed_mps": 0.3,
+            "interaction_samples": 0,
+            "interaction_route_speed_mps": None,
+            "recovery_samples": 1,
+            "recovery_route_speed_mps": 0.3,
             "mean_passage_time_s": 4.0,
             "mean_collision_time_s": 2.0,
             "mean_pass_lateral_excursion_m": 0.2,
@@ -98,6 +117,12 @@ def test_baseline_retains_exact_oa0_protocol(monkeypatch, tmp_path: Path):
             "mean_forward_speed_mps": 0.3,
             "pre_obstacle_samples": 1,
             "pre_obstacle_route_speed_mps": 0.3,
+            "approach_samples": 1,
+            "approach_route_speed_mps": 0.3,
+            "interaction_samples": 1,
+            "interaction_route_speed_mps": 0.2,
+            "recovery_samples": 1,
+            "recovery_route_speed_mps": 0.3,
             "mean_passage_time_s": 5.0,
             "mean_collision_time_s": None,
             "mean_pass_lateral_excursion_m": 0.3,

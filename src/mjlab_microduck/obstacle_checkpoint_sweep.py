@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from mjlab_microduck.obstacle_protocol import (
+    OA0P_TASK_ID,
     OA0R_TASK_ID,
     oa0_training_protocol,
     obstacle_protocol_for_task,
@@ -55,6 +56,17 @@ STAGE_PROFILES = {
         "max_pass_lateral_excursion_m": 0.45,
         "max_passage_time_s": 7.0,
         "max_success_route_return_error_m": 0.15,
+    },
+    "OA0P": {
+        "protocol": lambda: obstacle_protocol_for_task(OA0P_TASK_ID),
+        "commanded_speed_mps": 0.3,
+        "min_training_seed_pass_rate": 0.85,
+        "min_pooled_pass_rate": 0.85,
+        "min_pre_obstacle_speed_mps": 0.22,
+        "max_pass_lateral_excursion_m": 0.45,
+        "max_passage_time_s": 7.0,
+        "max_success_route_return_error_m": 0.15,
+        "phase_speed_gates": True,
     },
 }
 
@@ -171,6 +183,14 @@ def _summarize_candidate(
         evaluation.get("pre_obstacle_route_speed_mps"),
         "pre_obstacle_route_speed_mps",
     )
+    approach_speed = _optional_number(
+        evaluation.get("approach_route_speed_mps"),
+        "approach_route_speed_mps",
+    )
+    recovery_speed = _optional_number(
+        evaluation.get("recovery_route_speed_mps"),
+        "recovery_route_speed_mps",
+    )
     pass_lateral = _optional_number(
         evaluation.get("mean_pass_lateral_excursion_m"),
         "mean_pass_lateral_excursion_m",
@@ -241,13 +261,6 @@ def _summarize_candidate(
             "== 0",
         ),
         _gate(
-            "pre_obstacle_route_speed_mps",
-            pre_speed is not None
-            and pre_speed >= profile["min_pre_obstacle_speed_mps"],
-            pre_speed,
-            f">= {profile['min_pre_obstacle_speed_mps']}",
-        ),
-        _gate(
             "mean_pass_lateral_excursion_m",
             pass_lateral is not None
             and pass_lateral <= profile["max_pass_lateral_excursion_m"],
@@ -262,6 +275,30 @@ def _summarize_candidate(
             f"<= {profile['max_passage_time_s']}",
         ),
     ]
+    if profile.get("phase_speed_gates", False):
+        for name, value in (
+            ("approach_route_speed_mps", approach_speed),
+            ("recovery_route_speed_mps", recovery_speed),
+        ):
+            gates.append(
+                _gate(
+                    name,
+                    value is not None
+                    and value >= profile["min_pre_obstacle_speed_mps"],
+                    value,
+                    f">= {profile['min_pre_obstacle_speed_mps']}",
+                )
+            )
+    else:
+        gates.append(
+            _gate(
+                "pre_obstacle_route_speed_mps",
+                pre_speed is not None
+                and pre_speed >= profile["min_pre_obstacle_speed_mps"],
+                pre_speed,
+                f">= {profile['min_pre_obstacle_speed_mps']}",
+            )
+        )
     max_return_error = profile["max_success_route_return_error_m"]
     if max_return_error is not None:
         gates.append(
@@ -285,6 +322,8 @@ def _summarize_candidate(
         "resolved_attempts": resolved_attempts,
         "clean_pass_rate": clean_pass_rate,
         "pre_obstacle_route_speed_mps": pre_speed,
+        "approach_route_speed_mps": approach_speed,
+        "recovery_route_speed_mps": recovery_speed,
         "mean_pass_lateral_excursion_m": pass_lateral,
         "mean_passage_time_s": passage_time,
         "mean_success_route_return_error_m": return_error,
@@ -418,17 +457,19 @@ def render_markdown(summary: dict[str, Any]) -> str:
         selection_line,
         "" if selected is not None else "No iteration passed the obstacle gates.",
         "",
-        "| Train seed | Iteration | Pass rate | Pre-speed | Excursion | Passage | Gates |",
-        "| ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+        "| Train seed | Iteration | Pass rate | Pre-speed | Approach | Recovery | Excursion | Passage | Gates |",
+        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for candidate in summary["candidates"]:
         lines.append(
             "| {training_seed} | {checkpoint_iteration} | {rate} | "
-            "{pre} | {lateral} | {passage} | {status} |".format(
+            "{pre} | {approach} | {recovery} | {lateral} | {passage} | {status} |".format(
                 training_seed=candidate["training_seed"],
                 checkpoint_iteration=candidate["checkpoint_iteration"],
                 rate=_format_metric(candidate["clean_pass_rate"]),
                 pre=_format_metric(candidate["pre_obstacle_route_speed_mps"]),
+                approach=_format_metric(candidate["approach_route_speed_mps"]),
+                recovery=_format_metric(candidate["recovery_route_speed_mps"]),
                 lateral=_format_metric(
                     candidate["mean_pass_lateral_excursion_m"]
                 ),

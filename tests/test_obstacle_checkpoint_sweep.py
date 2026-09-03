@@ -11,6 +11,7 @@ from mjlab_microduck.obstacle_checkpoint_sweep import (
     write_checkpoint_sweep,
 )
 from mjlab_microduck.obstacle_protocol import (
+    OA0P_TASK_ID,
     OA0R_TASK_ID,
     oa0_training_protocol,
     obstacle_protocol_for_task,
@@ -215,8 +216,9 @@ def test_zero_pass_candidate_is_reported_as_failed_not_invalid(tmp_path: Path):
         "mean_pass_lateral_excursion_m",
         "mean_passage_time_s",
     ]
-    assert "| 42 | 8032 | 0.000 | 0.300 | n/a | n/a | fail |" in render_markdown(
-        summary
+    assert (
+        "| 42 | 8032 | 0.000 | 0.300 | n/a | n/a | n/a | n/a | fail |"
+        in render_markdown(summary)
     )
 
 
@@ -390,3 +392,59 @@ def test_oa0r_sweep_requires_its_distinct_protocol_identity(tmp_path: Path):
     evaluation.write_text(json.dumps(old) + "\n")
     candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
     assert "evaluation_protocol" in candidate["failed_gates"]
+
+
+def test_oa0p_sweep_gates_approach_and_recovery_not_interaction_speed(
+    tmp_path: Path,
+):
+    evaluation = tmp_path / "oa0p.json"
+    evaluation.write_text(
+        json.dumps(
+            {
+                "checkpoint": "/retained/model_8016.pt",
+                "evaluation_protocol": obstacle_protocol_for_task(OA0P_TASK_ID),
+                "cases": [
+                    {"seed": seed, "commanded_speed_mps": 0.3}
+                    for seed in (41, 42, 43)
+                ],
+                "totals": {
+                    "collision_events": 5,
+                    "attempt_timeout_events": 5,
+                    "fall_events": 0,
+                    "nan_termination_events": 0,
+                    "clean_pass_events": 90,
+                    "nonfinite_steps": 0,
+                },
+                "pre_obstacle_route_speed_mps": 0.10,
+                "approach_route_speed_mps": 0.25,
+                "interaction_route_speed_mps": 0.05,
+                "recovery_route_speed_mps": 0.24,
+                "mean_pass_lateral_excursion_m": 0.4,
+                "mean_passage_time_s": 6.0,
+                "mean_success_route_return_error_m": 0.1,
+            }
+        )
+        + "\n"
+    )
+    manifest = {
+        "schema_version": 1,
+        "campaign_id": "test-oa0p",
+        "stage": "OA0P",
+        "candidates": [
+            {
+                "training_seed": 42,
+                "checkpoint_iteration": 8016,
+                "obstacle_evaluation": evaluation.name,
+            }
+        ],
+    }
+    candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
+    assert "pre_obstacle_route_speed_mps" not in candidate["failed_gates"]
+    assert "approach_route_speed_mps" not in candidate["failed_gates"]
+    assert "recovery_route_speed_mps" not in candidate["failed_gates"]
+
+    failed = json.loads(evaluation.read_text())
+    failed["recovery_route_speed_mps"] = 0.21
+    evaluation.write_text(json.dumps(failed) + "\n")
+    candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
+    assert "recovery_route_speed_mps" in candidate["failed_gates"]

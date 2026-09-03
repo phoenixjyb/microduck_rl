@@ -121,6 +121,7 @@ def _run_case(
     from mjlab.tasks.registry import load_runner_cls
 
     env_cfg, agent_cfg = prepare_baseline_configs(num_envs, speed_mps, task_id)
+    phase_speed = obstacle_protocol_for_task(task_id).get("speed_tracking")
     env_cfg.seed = seed
     agent_cfg.seed = seed
     device = "cuda:0" if os.environ.get("CUDA_VISIBLE_DEVICES", "") else "cpu"
@@ -153,6 +154,12 @@ def _run_case(
         sample_count = 0
         pre_obstacle_speed_sum = 0.0
         pre_obstacle_samples = 0
+        approach_speed_sum = 0.0
+        approach_samples = 0
+        interaction_speed_sum = 0.0
+        interaction_samples = 0
+        recovery_speed_sum = 0.0
+        recovery_samples = 0
         pass_time_sum_s = 0.0
         collision_time_sum_s = 0.0
         pass_lateral_sum_m = 0.0
@@ -173,11 +180,33 @@ def _run_case(
             lateral = ((robot_xy - episode_start_xy) * lateral_dir).sum(dim=-1).abs()
             episode_lateral_max = torch.maximum(episode_lateral_max, lateral)
             route_speed = (robot.data.root_link_lin_vel_w[:, :2] * path_dir).sum(dim=-1)
-            before_obstacle = ((robot_xy - obstacle_xy) * path_dir).sum(dim=-1) < 0.0
+            obstacle_ahead_m = ((obstacle_xy - robot_xy) * path_dir).sum(dim=-1)
+            before_obstacle = obstacle_ahead_m > 0.0
             pre_obstacle_speed_sum += float(
                 torch.nan_to_num(route_speed[before_obstacle], nan=0.0).sum()
             )
             pre_obstacle_samples += int(before_obstacle.sum())
+            if phase_speed is None:
+                approach = before_obstacle
+                interaction = torch.zeros_like(before_obstacle)
+                recovery = ~before_obstacle
+            else:
+                entry_m = phase_speed[
+                    "approach_active_until_obstacle_ahead_m"
+                ]
+                recovery_m = phase_speed[
+                    "recovery_active_after_obstacle_behind_m"
+                ]
+                approach = obstacle_ahead_m >= entry_m
+                recovery = obstacle_ahead_m <= -recovery_m
+                interaction = ~(approach | recovery)
+            safe_route_speed = torch.nan_to_num(route_speed, nan=0.0)
+            approach_speed_sum += float(safe_route_speed[approach].sum())
+            approach_samples += int(approach.sum())
+            interaction_speed_sum += float(safe_route_speed[interaction].sum())
+            interaction_samples += int(interaction.sum())
+            recovery_speed_sum += float(safe_route_speed[recovery].sum())
+            recovery_samples += int(recovery.sum())
 
             with torch.inference_mode():
                 actions = policy(obs)
@@ -253,6 +282,18 @@ def _run_case(
             "pre_obstacle_samples": pre_obstacle_samples,
             "pre_obstacle_route_speed_mps": _mean_or_none(
                 pre_obstacle_speed_sum, pre_obstacle_samples
+            ),
+            "approach_samples": approach_samples,
+            "approach_route_speed_mps": _mean_or_none(
+                approach_speed_sum, approach_samples
+            ),
+            "interaction_samples": interaction_samples,
+            "interaction_route_speed_mps": _mean_or_none(
+                interaction_speed_sum, interaction_samples
+            ),
+            "recovery_samples": recovery_samples,
+            "recovery_route_speed_mps": _mean_or_none(
+                recovery_speed_sum, recovery_samples
             ),
             "mean_passage_time_s": _mean_or_none(pass_time_sum_s, pass_events),
             "mean_collision_time_s": _mean_or_none(
@@ -335,6 +376,15 @@ def run_baseline(
         / len(cases),
         "pre_obstacle_route_speed_mps": _weighted_case_mean(
             cases, "pre_obstacle_route_speed_mps", "pre_obstacle_samples"
+        ),
+        "approach_route_speed_mps": _weighted_case_mean(
+            cases, "approach_route_speed_mps", "approach_samples"
+        ),
+        "interaction_route_speed_mps": _weighted_case_mean(
+            cases, "interaction_route_speed_mps", "interaction_samples"
+        ),
+        "recovery_route_speed_mps": _weighted_case_mean(
+            cases, "recovery_route_speed_mps", "recovery_samples"
         ),
         "mean_passage_time_s": _weighted_case_mean(
             cases, "mean_passage_time_s", "clean_pass_events"

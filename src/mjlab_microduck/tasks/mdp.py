@@ -6032,6 +6032,105 @@ def obstacle_route_progress_reward(
     return reward
 
 
+def _obstacle_speed_tracking_active(
+    env: ManagerBasedRlEnv,
+    asset_name: str,
+    interaction_entry_m: float,
+    recovery_entry_m: float,
+) -> torch.Tensor:
+    """Return the approach/recovery mask around one obstacle.
+
+    ``interaction_entry_m`` is the signed route distance at which an obstacle
+    ahead stops normal speed shaping. ``recovery_entry_m`` is the distance the
+    obstacle must be behind the robot before normal speed shaping resumes.
+    The externally supplied velocity command is deliberately not modified.
+    """
+    if interaction_entry_m <= 0.0:
+        raise ValueError("interaction_entry_m must be positive")
+    if recovery_entry_m < 0.0:
+        raise ValueError("recovery_entry_m must be non-negative")
+    if not hasattr(env, "_obstacle_path_dir_w"):
+        env._obstacle_path_dir_w = torch.zeros(env.num_envs, 2, device=env.device)
+        env._obstacle_path_dir_w[:, 0] = 1.0
+    robot: Entity = env.scene["robot"]
+    obstacle: Entity = env.scene[asset_name]
+    obstacle_ahead_m = (
+        (obstacle.data.root_link_pos_w[:, :2] - robot.data.root_link_pos_w[:, :2])
+        * env._obstacle_path_dir_w
+    ).sum(dim=-1)
+    return (obstacle_ahead_m >= interaction_entry_m) | (
+        obstacle_ahead_m <= -recovery_entry_m
+    )
+
+
+def obstacle_phase_linear_velocity_reward(
+    env: ManagerBasedRlEnv,
+    std: float,
+    command_name: str,
+    asset_name: str = "obstacle",
+    interaction_entry_m: float = 0.60,
+    recovery_entry_m: float = 0.0,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Track commanded speed on approach/recovery, not during avoidance.
+
+    This preserves the original velocity-track reward exactly outside the
+    interaction zone. Inside it, collision avoidance may brake or slow without
+    fighting the nominal speed objective; timeout and terminal outcome terms
+    still make stopping indefinitely a failed strategy.
+    """
+    if std <= 0.0:
+        raise ValueError("std must be positive")
+    robot: Entity = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    actual = robot.data.root_link_lin_vel_b
+    xy_error = torch.sum(torch.square(command[:, :2] - actual[:, :2]), dim=1)
+    z_error = torch.square(actual[:, 2])
+    base_reward = torch.exp(-(xy_error + z_error) / std**2)
+    active = _obstacle_speed_tracking_active(
+        env,
+        asset_name=asset_name,
+        interaction_entry_m=interaction_entry_m,
+        recovery_entry_m=recovery_entry_m,
+    )
+    reward = base_reward * active.float()
+    if hasattr(env, "extras"):
+        log = env.extras.setdefault("log", {})
+        log["Metrics/obstacle_speed_tracking_active_fraction"] = active.float().mean()
+        log["Metrics/obstacle_phase_linear_velocity_reward_mean"] = reward.mean()
+    return reward
+
+
+def obstacle_phase_route_progress_reward(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    asset_name: str = "obstacle",
+    interaction_entry_m: float = 0.60,
+    recovery_entry_m: float = 0.0,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+    command_threshold: float = 0.01,
+) -> torch.Tensor:
+    """Apply route-speed shaping only before and after the avoidance zone."""
+    reward = obstacle_route_progress_reward(
+        env,
+        command_name=command_name,
+        asset_cfg=asset_cfg,
+        command_threshold=command_threshold,
+    )
+    active = _obstacle_speed_tracking_active(
+        env,
+        asset_name=asset_name,
+        interaction_entry_m=interaction_entry_m,
+        recovery_entry_m=recovery_entry_m,
+    )
+    reward = reward * active.float()
+    if hasattr(env, "extras"):
+        env.extras.setdefault("log", {})[
+            "Metrics/obstacle_phase_route_progress_reward_mean"
+        ] = reward.mean()
+    return reward
+
+
 def obstacle_lateral_excursion_cost(
     env: ManagerBasedRlEnv,
     asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,

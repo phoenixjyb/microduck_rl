@@ -20,6 +20,7 @@ from mjlab_microduck.tasks.obstacle_avoidance import (
     O1_PROTOCOL_NAME,
     make_obstacle_assisted_variant,
     make_obstacle_assisted_outcome_variant,
+    make_obstacle_assisted_phase_speed_variant,
     make_obstacle_avoidance_variant,
     o1_evaluation_protocol,
 )
@@ -32,6 +33,10 @@ from mjlab_microduck.obstacle_protocol import (
     OA0R_PROTOCOL_NAME,
     OA0R_TASK_ID,
     OA0R_TERMINAL_OUTCOME_REWARD,
+    OA0P_INTERACTION_ENTRY_M,
+    OA0P_PROTOCOL_NAME,
+    OA0P_RECOVERY_ENTRY_M,
+    OA0P_TASK_ID,
     obstacle_protocol_for_task,
     oa0_training_protocol,
 )
@@ -58,6 +63,15 @@ def _assisted_cfg(play=False):
 
 def _outcome_cfg(play=False):
     return make_obstacle_assisted_outcome_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg(play=play))
+        ),
+        play=play,
+    )
+
+
+def _phase_speed_cfg(play=False):
+    return make_obstacle_assisted_phase_speed_variant(
         make_motor_aware_run_variant(
             make_run_variant(make_microduck_velocity_env_cfg(play=play))
         ),
@@ -178,6 +192,42 @@ def test_oa0r_protocol_records_time_step_normalized_outcome():
         "success": 20.0,
         "collision_or_attempt_timeout": -20.0,
         "time_step_normalized": True,
+    }
+
+
+def test_oa0p_changes_only_the_two_speed_shaping_terms_from_oa0r():
+    outcome = _outcome_cfg()
+    phase = _phase_speed_cfg()
+    assert phase.events == outcome.events
+    assert phase.commands == outcome.commands
+    assert phase.terminations == outcome.terminations
+    assert phase.observations == outcome.observations
+    assert set(phase.rewards) == set(outcome.rewards)
+    for name in phase.rewards:
+        if name not in {"track_linear_velocity", "obstacle_route_progress"}:
+            assert phase.rewards[name] == outcome.rewards[name]
+
+    linear = phase.rewards["track_linear_velocity"]
+    assert linear.func is microduck_mdp.obstacle_phase_linear_velocity_reward
+    assert linear.weight == outcome.rewards["track_linear_velocity"].weight
+    progress = phase.rewards["obstacle_route_progress"]
+    assert progress.func is microduck_mdp.obstacle_phase_route_progress_reward
+    assert progress.weight == outcome.rewards["obstacle_route_progress"].weight
+    for term in (linear, progress):
+        assert term.params["interaction_entry_m"] == OA0P_INTERACTION_ENTRY_M
+        assert term.params["recovery_entry_m"] == OA0P_RECOVERY_ENTRY_M
+
+
+def test_oa0p_protocol_preserves_command_and_records_phase_gate():
+    protocol = obstacle_protocol_for_task(OA0P_TASK_ID)
+    assert protocol["name"] == OA0P_PROTOCOL_NAME
+    assert protocol["commanded_speed_range_mps"] == [0.30, 0.30]
+    assert protocol["speed_tracking"] == {
+        "command_unchanged_mps": 0.30,
+        "approach_active_until_obstacle_ahead_m": 0.60,
+        "interaction_zone_linear_speed_tracking": "disabled",
+        "recovery_active_after_obstacle_behind_m": 0.0,
+        "angular_velocity_tracking": "unchanged",
     }
 
 

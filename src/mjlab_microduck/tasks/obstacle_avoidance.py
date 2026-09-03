@@ -24,6 +24,8 @@ from mjlab_microduck.obstacle_protocol import (
     OA0_OBSTACLE_LATERAL_ABS_RANGE_M,
     OA0_ROUTE_RETURN_TOLERANCE_M,
     OA0R_TERMINAL_OUTCOME_REWARD,
+    OA0P_INTERACTION_ENTRY_M,
+    OA0P_RECOVERY_ENTRY_M,
     O1_MAX_COMMAND_SPEED_MPS,
     O1_MIN_COMMAND_SPEED_MPS,
     O1_OBSTACLE_FORWARD_M,
@@ -235,6 +237,38 @@ def make_obstacle_assisted_outcome_variant(
     return cfg
 
 
+def make_obstacle_assisted_phase_speed_variant(
+    cfg: ManagerBasedRlEnvCfg,
+    *,
+    play: bool = False,
+) -> ManagerBasedRlEnvCfg:
+    """Gate only speed shaping by obstacle phase on top of OA0R."""
+    cfg = make_obstacle_assisted_outcome_variant(cfg, play=play)
+    linear = cfg.rewards["track_linear_velocity"]
+    cfg.rewards["track_linear_velocity"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_phase_linear_velocity_reward,
+        weight=linear.weight,
+        params={
+            **linear.params,
+            "asset_name": "obstacle",
+            "interaction_entry_m": OA0P_INTERACTION_ENTRY_M,
+            "recovery_entry_m": OA0P_RECOVERY_ENTRY_M,
+        },
+    )
+    progress = cfg.rewards["obstacle_route_progress"]
+    cfg.rewards["obstacle_route_progress"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_phase_route_progress_reward,
+        weight=progress.weight,
+        params={
+            **progress.params,
+            "asset_name": "obstacle",
+            "interaction_entry_m": OA0P_INTERACTION_ENTRY_M,
+            "recovery_entry_m": OA0P_RECOVERY_ENTRY_M,
+        },
+    )
+    return cfg
+
+
 MicroduckObstacleAvoidanceRlCfg = replace(
     MicroduckMotorAwareRunRlCfg,
     actor=deepcopy(MicroduckMotorAwareRunRlCfg.actor),
@@ -260,4 +294,13 @@ MicroduckObstacleAssistedOutcomeRlCfg = replace(
     algorithm=deepcopy(MicroduckObstacleAssistedRlCfg.algorithm),
     experiment_name="run_obstacle_assisted_outcome",
     run_name="oa0_outcome_balanced",
+)
+
+MicroduckObstacleAssistedPhaseSpeedRlCfg = replace(
+    MicroduckObstacleAssistedOutcomeRlCfg,
+    actor=deepcopy(MicroduckObstacleAssistedOutcomeRlCfg.actor),
+    critic=deepcopy(MicroduckObstacleAssistedOutcomeRlCfg.critic),
+    algorithm=deepcopy(MicroduckObstacleAssistedOutcomeRlCfg.algorithm),
+    experiment_name="run_obstacle_assisted_phase_speed",
+    run_name="oa0_phase_aware_speed",
 )

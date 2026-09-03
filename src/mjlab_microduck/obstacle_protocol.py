@@ -30,6 +30,11 @@ OA0R_PROTOCOL_NAME = "OA0-outcome-balanced-exact-v1"
 OA0R_TASK_ID = "Mjlab-Run-Obstacle-Assisted-Outcome-Flat-MicroDuck"
 OA0R_TERMINAL_OUTCOME_REWARD = 20.0
 
+OA0P_PROTOCOL_NAME = "OA0-phase-aware-speed-exact-v1"
+OA0P_TASK_ID = "Mjlab-Run-Obstacle-Assisted-PhaseSpeed-Flat-MicroDuck"
+OA0P_INTERACTION_ENTRY_M = 0.60
+OA0P_RECOVERY_ENTRY_M = 0.0
+
 
 def o1_evaluation_protocol() -> dict:
     """Return a JSON-compatible copy of the exact O1 environment contract."""
@@ -74,7 +79,7 @@ def obstacle_protocol_for_task(task_id: str) -> dict:
         return o1_evaluation_protocol()
     if task_id == OA0_TASK_ID:
         return oa0_training_protocol()
-    if task_id == OA0R_TASK_ID:
+    if task_id in (OA0R_TASK_ID, OA0P_TASK_ID):
         protocol = oa0_training_protocol()
         protocol["name"] = OA0R_PROTOCOL_NAME
         protocol["terminal_outcome_reward"] = {
@@ -82,5 +87,16 @@ def obstacle_protocol_for_task(task_id: str) -> dict:
             "collision_or_attempt_timeout": -OA0R_TERMINAL_OUTCOME_REWARD,
             "time_step_normalized": True,
         }
+        if task_id == OA0P_TASK_ID:
+            protocol["name"] = OA0P_PROTOCOL_NAME
+            protocol["speed_tracking"] = {
+                "command_unchanged_mps": OA0_COMMAND_SPEED_MPS,
+                "approach_active_until_obstacle_ahead_m": (
+                    OA0P_INTERACTION_ENTRY_M
+                ),
+                "interaction_zone_linear_speed_tracking": "disabled",
+                "recovery_active_after_obstacle_behind_m": OA0P_RECOVERY_ENTRY_M,
+                "angular_velocity_tracking": "unchanged",
+            }
         return protocol
     raise ValueError(f"unsupported obstacle task: {task_id}")

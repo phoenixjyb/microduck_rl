@@ -127,3 +127,11 @@ obstacle gates, compares exact iterations shared across training seeds, and
 selects the earliest survivor rather than the final checkpoint. It is always
 marked `diagnostic-only` until motor-envelope and action-regression evidence are
 combined by the next acceptance step.
+
+`python -m mjlab_microduck.obstacle_acceptance MANIFEST OUTPUT_DIR` combines a
+retained sweep with per-training-seed motor evaluations and an explicit action
+regression review. Motor evaluation records action-magnitude p99 and a
+reset-safe action-rate p99; first actions after episode resets are excluded from
+the rate comparison. Missing evidence is `unverified`, a violated numerical or
+motor gate is `fail`, and only an all-pass record is `accepted`. Acceptance is
+still simulation-only and always records `physical_motion_authorized: false`.

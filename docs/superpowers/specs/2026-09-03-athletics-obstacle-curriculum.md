@@ -319,11 +319,11 @@ next.
    evaluator.
 2. [x] Produce a deterministic checkpoint-sweep summary that compares training
    seeds by iteration without choosing a winner from the final checkpoint.
-3. [ ] Combine obstacle outcomes and motor-envelope metrics into one acceptance
+3. [x] Combine obstacle outcomes and motor-envelope metrics into one acceptance
    record.
 4. [ ] Run a three-training-seed O1 campaign within a fixed 64-iteration budget.
-5. [ ] If O1 passes, proceed to O2.  Otherwise change exactly one reward or command
-   axis and repeat the bounded campaign.
+5. [ ] If O1 passes, proceed to O2.  Otherwise change exactly one reward or
+   command axis and repeat the bounded campaign.
 6. [ ] Start H0/H1 as a separate campaign; do not mix hop rewards into O1.
 
 ## Physical gate

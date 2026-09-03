@@ -87,6 +87,10 @@ critic receives exact ground truth. Play mode remains deterministic.
 
 The first task commands straight forward motion only: lateral and yaw commands
 are zero, so avoidance cannot be confused with an unrelated turning command.
+A valid O1 evaluation uses protocol `O1-centered-exact-v1`: the obstacle is
+fixed 1.15 m ahead on the route centerline, actor observation lag is zero, and
+all sensor-noise and dropout fields are zero. Placement variation belongs to O2
+and sensor degradation belongs to O3; neither is silently scheduled inside O1.
 A conservative planar envelope uses a 0.12 m robot radius and 0.10 m obstacle
 radius. Clearance cost begins 0.15 m outside that envelope, collision incurs a
 penalty and terminates the episode, and clean passage is measured along the
@@ -123,10 +127,11 @@ output explicitly remains untrained-policy evidence.
 compares retained O1 evaluations without running simulation. The manifest names
 each candidate's training seed, checkpoint iteration, and evaluation JSON
 explicitly; paths alone never decide provenance. The report checks the O1
-obstacle gates, compares exact iterations shared across training seeds, and
-selects the earliest survivor rather than the final checkpoint. It is always
-marked `diagnostic-only` until motor-envelope and action-regression evidence are
-combined by the next acceptance step.
+protocol identity and obstacle gates, compares exact iterations shared across
+training seeds, and selects the earliest survivor rather than the final
+checkpoint. Legacy evaluations without the exact O1 protocol are rejected. The
+report is always marked `diagnostic-only` until motor-envelope and
+action-regression evidence are combined by the next acceptance step.
 
 `python -m mjlab_microduck.obstacle_acceptance MANIFEST OUTPUT_DIR` combines a
 retained sweep with per-training-seed motor evaluations and an explicit action

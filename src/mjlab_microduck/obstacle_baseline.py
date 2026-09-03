@@ -6,6 +6,8 @@ import os
 from dataclasses import asdict
 from pathlib import Path
 
+from mjlab_microduck.obstacle_protocol import o1_evaluation_protocol
+
 
 TASK_ID = "Mjlab-Run-Obstacle-Flat-MicroDuck"
 DEFAULT_PURPOSE = "untrained obstacle warm-start baseline; not trained-policy evidence"
@@ -273,6 +275,7 @@ def run_baseline(
         "task_id": TASK_ID,
         "checkpoint": str(checkpoint),
         "purpose": purpose,
+        "evaluation_protocol": o1_evaluation_protocol(),
         "cases": cases,
         "totals": totals,
         "mean_clearance_m": sum(c["mean_clearance_m"] for c in cases) / len(cases),

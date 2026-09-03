@@ -13,10 +13,13 @@ from mjlab_microduck.tasks.motor_aware import make_motor_aware_run_variant
 from mjlab_microduck.tasks.obstacle_avoidance import (
     OBSTACLE_MIN_FORWARD_SPEED_MPS,
     OBSTACLE_PLACEMENT_STAGES,
-    OBSTACLE_RESUME_ITERATION,
     OBSTACLE_SENSOR_STAGES,
     OBSTACLE_VELOCITY_STAGES,
+    O1_OBSTACLE_FORWARD_M,
+    O1_OBSTACLE_LATERAL_M,
+    O1_PROTOCOL_NAME,
     make_obstacle_avoidance_variant,
+    o1_evaluation_protocol,
 )
 from mjlab_microduck.tasks.run import make_run_variant
 
@@ -38,17 +41,27 @@ def test_obstacle_entity_reset_and_observations_are_registered():
     critic = cfg.observations["critic"].terms["obstacle_ground_truth"]
     assert actor.func is microduck_mdp.obstacle_geometry_observation
     assert critic.func is microduck_mdp.obstacle_geometry_observation
-    assert actor.delay_min_lag == 0 and actor.delay_max_lag == 1
+    assert actor.delay_min_lag == 0 and actor.delay_max_lag == 0
     assert critic.delay_max_lag == 0
 
 
-def test_curricula_are_offset_from_stage2_checkpoint_and_bounded_at_point8():
-    assert OBSTACLE_PLACEMENT_STAGES[1]["step"] > OBSTACLE_RESUME_ITERATION * 24
-    assert OBSTACLE_SENSOR_STAGES[1]["step"] > OBSTACLE_RESUME_ITERATION * 24
-    assert OBSTACLE_VELOCITY_STAGES[-1]["lin_vel_range"] == 0.80
+def test_o1_environment_is_centered_exact_and_bounded_at_point5():
+    assert OBSTACLE_PLACEMENT_STAGES == [
+        {
+            "step": 0,
+            "params": {
+                "forward_range_m": (O1_OBSTACLE_FORWARD_M, O1_OBSTACLE_FORWARD_M),
+                "lateral_range_m": (O1_OBSTACLE_LATERAL_M, O1_OBSTACLE_LATERAL_M),
+            },
+        }
+    ]
+    assert len(OBSTACLE_SENSOR_STAGES) == 1
+    assert OBSTACLE_VELOCITY_STAGES == [
+        {"step": 0, "lin_vel_range": 0.50, "ang_vel_range": 0.0}
+    ]
     cfg = _cfg()
-    assert cfg.curriculum["obstacle_placement"].func is microduck_mdp.event_param_curriculum
-    assert cfg.curriculum["obstacle_sensor"].func is microduck_mdp.observation_param_curriculum
+    assert "obstacle_placement" not in cfg.curriculum
+    assert "obstacle_sensor" not in cfg.curriculum
     velocity = cfg.curriculum["velocity_command_ranges"].params
     assert velocity["velocity_stages"] == OBSTACLE_VELOCITY_STAGES
     assert velocity["forward_only"] is True
@@ -62,6 +75,16 @@ def test_curricula_are_offset_from_stage2_checkpoint_and_bounded_at_point8():
         0.50,
     )
     assert cfg.commands["twist"].ranges.ang_vel_z == (0.0, 0.0)
+    assert cfg.observations["actor"].terms["obstacle"].delay_max_lag == 0
+
+
+def test_o1_protocol_manifest_matches_environment_contract():
+    protocol = o1_evaluation_protocol()
+    assert protocol["name"] == O1_PROTOCOL_NAME
+    assert protocol["obstacle_forward_range_m"] == [1.15, 1.15]
+    assert protocol["obstacle_lateral_range_m"] == [0.0, 0.0]
+    assert protocol["actor_delay_lag_steps"] == [0, 0]
+    assert protocol["sensor"] == OBSTACLE_SENSOR_STAGES[0]["params"]
 
 
 def test_velocity_curriculum_preserves_nonstanding_speed_floor():
@@ -122,18 +145,22 @@ def test_play_cfg_is_deterministic_and_has_no_sensor_curriculum():
 
 
 def test_observation_param_curriculum_mutates_live_manager_term():
+    stages = [
+        {"step": 0, "params": {"range_noise_m": 0.0, "dropout_probability": 0.0}},
+        {"step": 24, "params": {"range_noise_m": 0.01, "dropout_probability": 0.01}},
+    ]
     term = SimpleNamespace(params={"range_noise_m": 99.0})
     manager = SimpleNamespace(get_term_cfg=lambda group, name: term)
     env = SimpleNamespace(
         observation_manager=manager,
-        common_step_counter=OBSTACLE_SENSOR_STAGES[1]["step"],
+        common_step_counter=stages[1]["step"],
     )
     microduck_mdp.observation_param_curriculum(
         env,
         torch.tensor([0]),
         group_name="actor",
         term_name="obstacle",
-        param_stages=OBSTACLE_SENSOR_STAGES,
+        param_stages=stages,
     )
     assert term.params["range_noise_m"] == 0.01
     assert term.params["dropout_probability"] == 0.01

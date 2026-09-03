@@ -9,6 +9,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from mjlab_microduck.obstacle_protocol import o1_evaluation_protocol
+
 
 MIN_TRAINING_SEEDS = 3
 MIN_HELD_OUT_SEEDS = 3
@@ -132,8 +134,16 @@ def _summarize_candidate(
     passage_time = _optional_number(
         evaluation.get("mean_passage_time_s"), "mean_passage_time_s"
     )
+    protocol = evaluation.get("evaluation_protocol")
+    expected_protocol = o1_evaluation_protocol()
 
     gates = [
+        _gate(
+            "evaluation_protocol",
+            protocol == expected_protocol,
+            protocol,
+            f"exactly matches {expected_protocol['name']}",
+        ),
         _gate(
             "held_out_seed_count",
             len(held_out_seeds) >= MIN_HELD_OUT_SEEDS,

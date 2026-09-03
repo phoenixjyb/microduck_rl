@@ -1,5 +1,6 @@
 """Static bounds and config tests for the obstacle baseline evaluator."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,36 @@ def test_baseline_config_uses_deterministic_straight_command():
     assert "push_robot" not in env_cfg.events
     assert env_cfg.curriculum == {}
     assert agent_cfg.upload_model is False
+
+
+def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):
+    checkpoint = tmp_path / "checkpoint.pt"
+    checkpoint.touch()
+    monkeypatch.setattr(
+        "mjlab_microduck.obstacle_baseline._run_case",
+        lambda *_args: {
+            "collision_events": 1,
+            "fall_events": 0,
+            "timeout_events": 0,
+            "nan_termination_events": 0,
+            "clean_pass_events": 1,
+            "nonfinite_steps": 0,
+            "mean_clearance_m": 0.1,
+            "mean_forward_speed_mps": 0.3,
+            "pre_obstacle_samples": 1,
+            "pre_obstacle_route_speed_mps": 0.3,
+            "mean_passage_time_s": 4.0,
+            "mean_collision_time_s": 2.0,
+            "mean_pass_lateral_excursion_m": 0.2,
+            "mean_collision_lateral_excursion_m": 0.1,
+        },
+    )
+
+    output = run_baseline(checkpoint, tmp_path / "output", seeds=(41,))
+    summary = json.loads(output.read_text())
+
+    assert summary["evaluation_protocol"]["name"] == "O1-centered-exact-v1"
+    assert summary["evaluation_protocol"]["obstacle_lateral_range_m"] == [0.0, 0.0]
 
 
 @pytest.mark.parametrize(

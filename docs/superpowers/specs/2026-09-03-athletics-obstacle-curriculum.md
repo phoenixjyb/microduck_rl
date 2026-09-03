@@ -235,6 +235,13 @@ No current obstacle checkpoint passes all of O1.  The collision-focused policy
 misses speed and corridor gates, while faster intermediate checkpoints miss the
 clean-pass-rate gate.
 
+Protocol audit: the pilots retained before this design used lateral placement
+randomization up to ±0.35 m and up to one step of actor-observation latency.
+They are therefore reclassified as pre-O1 diagnostic evidence, not O1
+acceptance attempts. `O1-centered-exact-v1` fixes the box 1.15 m ahead on the
+centerline with zero observation lag and zero sensor degradation. O2 and O3
+introduce those axes later through distinct task variants.
+
 ### O2 — lateral placement and geometry
 
 After O1, widen box lateral placement, then vary width and height independently.

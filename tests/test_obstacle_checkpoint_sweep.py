@@ -10,6 +10,7 @@ from mjlab_microduck.obstacle_checkpoint_sweep import (
     summarize_checkpoint_sweep,
     write_checkpoint_sweep,
 )
+from mjlab_microduck.obstacle_protocol import o1_evaluation_protocol
 
 
 def _evaluation(
@@ -26,6 +27,7 @@ def _evaluation(
         json.dumps(
             {
                 "checkpoint": f"/retained/model_{iteration}.pt",
+                "evaluation_protocol": o1_evaluation_protocol(),
                 "cases": [
                     {"seed": seed, "commanded_speed_mps": 0.5}
                     for seed in (41, 42, 43)
@@ -165,6 +167,17 @@ def test_sweep_rejects_checkpoint_iteration_mismatch(tmp_path: Path):
 
     with pytest.raises(ValueError, match="iteration mismatch"):
         summarize_checkpoint_sweep(manifest, tmp_path)
+
+
+def test_legacy_evaluation_without_o1_protocol_is_not_eligible(tmp_path: Path):
+    manifest = _manifest(tmp_path, {(42, 8032): (80, 20)})
+    evaluation_path = tmp_path / "seed-42-iter-8032.json"
+    evaluation = json.loads(evaluation_path.read_text())
+    evaluation.pop("evaluation_protocol")
+    evaluation_path.write_text(json.dumps(evaluation) + "\n")
+
+    candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
+    assert candidate["failed_gates"][0] == "evaluation_protocol"
 
 
 def test_zero_pass_candidate_is_reported_as_failed_not_invalid(tmp_path: Path):

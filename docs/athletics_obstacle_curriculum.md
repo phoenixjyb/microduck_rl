@@ -164,9 +164,15 @@ This does not retroactively pass the rejected direct-joint O1 campaign. HC2 is
 accepted only for its named simulation envelope, and still misses the 4.5 s O1
 passage-time target. HC3-A/B/C then fine-tuned only the supervisor for passage
 time and residual outcomes. All three candidates were rejected by the retained
-HC2 safety-regression gate, so HC2 remains the accepted controller. Nominal
-speed tracking remains active in approach and recovery but is not imposed
-during interaction.
+HC2 safety-regression gate. HC3-D balanced all four accepted HC2 cells during
+training and retained each iteration for selection. Its safety-neutral snapshot
+was 0.017 seconds slower than HC2; its faster snapshot improved weighted passage
+by 0.094 seconds but recorded four collisions. HC2 therefore remains the
+accepted controller. Nominal speed tracking remains active in approach and
+recovery but is not imposed during interaction.
 
-See `experiments/2026-09-03-hc3-supervisor-ppo.md` for the retained HC3
-configurations, hashes, measurements, and next design gate.
+See `experiments/2026-09-03-hc3-supervisor-ppo.md` and
+`experiments/2026-09-03-hc3d-balanced-supervisor-ppo.md` for the retained HC3
+configurations, hashes, measurements, and next design gate. The next experiment
+freezes HC2 yaw and may learn only a bounded interaction-speed reduction; it
+does not expand placement.

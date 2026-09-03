@@ -78,12 +78,10 @@ Mac paths:
 Remote paths use the corresponding directories below
 `/home/converge/work/microduck_rl-athletics-obstacle-curriculum/artifacts/`.
 
-## Next gate
+## Subsequent gate
 
-Do not continue the single-cell/final-checkpoint search. HC3-D should make one
-reviewable design change: train on a balanced mixture of all four accepted HC2
-cells and retain per-iteration candidates. Each candidate must pass the full
-three-seed matrix; promotion requires no more than one collision, no worse
-clean-pass rate than HC2, no fall/non-finite/rated-speed regression, and a
-measurable passage-time improvement. Only then should placement expand or new
-videos be recorded.
+HC3-D implemented the balanced-cell and per-iteration selection design. Its
+safe snapshot did not improve passage time, while its faster snapshot exceeded
+the collision budget. HC2 therefore remains accepted. See
+`2026-09-03-hc3d-balanced-supervisor-ppo.md` for the retained evidence and the
+next one-dimensional interaction-speed-residual gate.

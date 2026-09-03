@@ -163,8 +163,10 @@ set to false.
 5. [x] Record representative numeric survivors with duck and obstacle visible.
 6. [ ] Accept an HC3 fine-tune on passage time and residual failure outcomes
    without allowing interaction speed tracking to fight collision avoidance.
-   HC3-A/B/C were implemented and measured but rejected for collision/timeout
-   regression.
+   HC3-A/B/C and balanced-cell HC3-D were implemented and measured but rejected:
+   no snapshot improved time while preserving the HC2 collision budget. The
+   next bounded candidate freezes HC2 yaw and learns only an interaction-speed
+   reduction.
 7. [ ] Expand placement only after HC3 retains the accepted HC2 envelope.
 
 MP4 inspection never substitutes for the numeric matrix gate.

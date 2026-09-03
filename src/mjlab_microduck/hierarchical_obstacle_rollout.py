@@ -9,6 +9,10 @@ import math
 import os
 from dataclasses import asdict
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import torch
 
 from mjlab_microduck.evaluation import (
     parse_float_list,
@@ -38,12 +42,13 @@ from mjlab_microduck.tasks.run import (
     XL330_M288_RATED_STALL_TORQUE_NM_6V,
 )
 
-
 BASE_TASK_ID = "Mjlab-Run-MotorAware-Flat-MicroDuck"
 MAX_ENVS = 256
 MAX_STEPS = 1000
 MAX_CASES = 48
 HC1_ATTEMPT_TIMEOUT_S = 12.0
+HC3E_STAGE = "HC3E-interaction-speed-PPO"
+HC3F_STAGE = "HC3F-seed-averaged-speed-head"
 
 
 def recording_stem(
@@ -90,8 +95,13 @@ def load_learned_supervisor(
             and decision in {"training-complete-pending-rollout", "accepted-simulation"}
         )
         or (
-            stage == "HC3E-interaction-speed-PPO"
+            stage == HC3E_STAGE
             and decision in {"training-complete-pending-rollout", "accepted-simulation"}
+        )
+        or (
+            stage == HC3F_STAGE
+            and decision
+            in {"aggregation-complete-pending-rollout", "accepted-simulation"}
         )
     )
     if not allowed:
@@ -105,10 +115,10 @@ def load_learned_supervisor(
     model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
-    if stage == "HC3E-interaction-speed-PPO":
+    if stage in {HC3E_STAGE, HC3F_STAGE}:
         action_authority = payload.get("action_authority")
         if action_authority != "interaction-speed-only":
-            raise ValueError("HC3-E checkpoint has invalid action authority")
+            raise ValueError(f"{stage} checkpoint has invalid action authority")
         hc2_model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
         hc2_model.load_state_dict(payload["anchor_model_state_dict"], strict=True)
         hc2_model.eval()
@@ -666,7 +676,8 @@ def run_rollout(
         report_stage = {
             "HC2-behavioral-cloning": "HC2-behavioral-cloning-rollout",
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
-            "HC3E-interaction-speed-PPO": "HC3E-interaction-speed-PPO-rollout",
+            HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
+            HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",
         }
         report["stage"] = report_stage[supervisor_payload.get("stage")]
         report["supervisor_checkpoint"] = str(supervisor_checkpoint)

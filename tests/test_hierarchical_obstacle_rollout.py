@@ -95,3 +95,29 @@ def test_load_hc3e_wraps_checkpoint_with_speed_only_authority(tmp_path):
     observation[:, -4] = 1.0
     command = loaded(observation)
     torch.testing.assert_close(command, actor(observation))
+
+
+def test_load_hc3f_wraps_averaged_checkpoint_with_speed_only_authority(tmp_path):
+    base_checkpoint = tmp_path / "locomotion.pt"
+    base_checkpoint.write_bytes(b"frozen locomotion")
+    actor = ObstacleSupervisor()
+    supervisor_checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": "HC3F-seed-averaged-speed-head",
+            "decision": "aggregation-complete-pending-rollout",
+            "action_authority": "interaction-speed-only",
+            "min_interaction_speed_mps": 0.30,
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(SupervisorBcCfg()),
+            "model_state_dict": actor.state_dict(),
+            "anchor_model_state_dict": actor.state_dict(),
+        },
+        supervisor_checkpoint,
+    )
+
+    loaded = load_learned_supervisor(supervisor_checkpoint, base_checkpoint, "cpu")
+
+    assert isinstance(loaded, InteractionSpeedOnlySupervisor)

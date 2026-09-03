@@ -39,6 +39,15 @@ Inputs are normalized, timestamped values:
 - route lateral error and route heading error;
 - estimated forward speed;
 - previous supervisor action.
+- execution-layer maneuver phase (`approach`, `interaction`, or `recovery`);
+- the latched bypass side chosen from obstacle bearing (with a deterministic
+  tie-break for a centered obstacle).
+
+The phase and side are explicit because a memoryless actor cannot safely infer
+whether a temporarily invalid obstacle is already behind it, nor choose a
+repeatable side for a perfectly centered obstacle. They are route-controller
+state, not perception features or simulator entity identifiers. The resulting
+HC2 supervisor observation is 17-dimensional.
 
 The first bypass supervisor has two outputs:
 
@@ -54,8 +63,10 @@ the fail-safe stop path, outside learned policy authority.
 - **Approach:** pass through the nominal speed command and penalize tracking
   error.
 - **Interaction:** permit braking and any lower forward speed; optimize
-  clearance, bounded progress, and command smoothness. Timeout still fails the
-  attempt.
+  clearance, bounded progress, and command smoothness. There is no nominal
+  speed-tracking objective in this phase. The controller may keep speed when
+  the measured command envelope permits it, but is never penalized for slowing
+  to avoid contact. Timeout still fails the attempt.
 - **Recovery:** converge to the original route and restore nominal speed.
   Success requires route error within 0.15 m and speed at least 0.22 m/s for a
   retained 0.5-second window, rather than terminating at the first crossing.
@@ -78,15 +89,51 @@ interaction speed, 0.5-second recovery speed, route error, command slew, and
 the existing torque/power/thermal envelope. MP4s are recorded only after the
 numeric gate has a survivor.
 
+## HC0 measured command envelope
+
+HC0 was measured against the frozen motor-aware `model_7998.pt` checkpoint
+(SHA-256 `080f98ae4d5ce731d143c733181bb89d504cb4b51ff39532efccd0b5fdc09c54`).
+The evaluator records the actual command tensor as well as the requested
+command, preventing heading or forward-only sampling overrides from being
+mistaken for policy response.
+
+- At 0.30 m/s, requested yaw `-0.6, 0, +0.6` rad/s produced mean observed yaw
+  `-0.582, -0.058, +0.511` rad/s with no falls, NaNs, or motor-speed
+  exceedance. Torque-utilization p99 stayed at or below 0.535.
+- At 0.50 m/s, yaw response weakens but remains useful; torque-utilization p99
+  stayed at or below 0.720 and near-stall exposure below 0.073%.
+- At 0.80 m/s, hard yaw is not an interaction command: observed yaw undertracks
+  and torque-utilization p99 reaches about 0.928. Straight 0.80 m/s remains an
+  approach/recovery command inside the previously accepted locomotion envelope.
+- In-place `+/-0.3` rad/s is not a usable turn command for this checkpoint.
+
+The first supervisor therefore clamps interaction commands to 0.30 m/s and
+`+/-0.6` rad/s. Nominal approach/recovery commands may range to 0.80 m/s. A
+3-second time-to-contact trigger, computed from the external range and closing
+rate fields, begins braking and steering earlier at high approach speeds.
+
+## Replay matrix contract
+
+Numerical evaluation precedes video. The first centered-box matrix crosses
+nominal speeds `0.30, 0.50, 0.80` m/s with obstacle forward positions
+`0.90, 1.15, 1.40` m. Representative survivors are then recorded from an
+external tracking camera at 960x540, with both the duck and obstacle visible
+during negotiation. Filenames contain nominal speed and exact obstacle
+position, and each MP4 has a JSON sidecar containing checkpoint hash, teacher
+configuration, phase speeds, outcome events, and physical-motion authority
+set to false.
+
 ## Next bounded implementation slice
 
-1. Run HC0 in simulation against the frozen motor-aware checkpoint using a
-   fixed command matrix: forward commands `0.0, 0.15, 0.30` m/s crossed with
-   yaw commands `-0.6, -0.3, 0.0, 0.3, 0.6` rad/s.
-2. Reject command cells with falls, non-finite state, unstable tracking, or
-   motor-envelope violations; the surviving envelope becomes a hard clamp.
-3. Implement and unit-test the two-output supervisor action adapter with the
-   frozen actor hash pinned.
-4. Validate a deterministic OA0 teacher before training a supervisor.
+1. [x] Measure HC0 against the frozen motor-aware checkpoint and retain actual
+   applied-command, tracking, stability, and motor evidence.
+2. [x] Implement and unit-test the stateful, two-output deterministic teacher
+   while keeping the 61D locomotion actor frozen.
+3. [ ] Complete the HC1 speed-by-position matrix across held-out seeds and
+   accept only collision-free command-bounded teacher traces.
+4. [ ] Train the 17D HC2 supervisor by imitation on accepted HC1 trajectories,
+   then evaluate it without teacher intervention.
+5. [ ] Record the numeric survivors; MP4 inspection never substitutes for the
+   matrix gate.
 
 No GPU supervisor training starts until HC0 and the adapter tests pass.

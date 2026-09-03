@@ -80,8 +80,17 @@ def load_learned_supervisor(
     payload = torch.load(
         supervisor_checkpoint, map_location=device, weights_only=False
     )
-    if payload.get("decision") != "offline-imitation-pass":
-        raise ValueError("supervisor checkpoint did not pass offline imitation")
+    stage = payload.get("stage")
+    decision = payload.get("decision")
+    allowed = (
+        (stage == "HC2-behavioral-cloning" and decision == "offline-imitation-pass")
+        or (
+            stage == "HC3-supervisor-PPO"
+            and decision in {"training-complete-pending-rollout", "accepted-simulation"}
+        )
+    )
+    if not allowed:
+        raise ValueError("supervisor checkpoint is not eligible for diagnostic rollout")
     if payload.get("source_locomotion_checkpoint_sha256") != _sha256(
         base_checkpoint
     ):
@@ -617,11 +626,7 @@ def run_rollout(
     )
     report = {
         "schema_version": 1,
-        "stage": (
-            "HC1-deterministic-teacher"
-            if supervisor_checkpoint is None
-            else "HC2-behavioral-cloning-rollout"
-        ),
+        "stage": "HC1-deterministic-teacher",
         "decision": "diagnostic-only",
         "checkpoint": str(checkpoint),
         "checkpoint_sha256": _sha256(checkpoint),
@@ -635,6 +640,16 @@ def run_rollout(
         "totals": totals,
     }
     if supervisor_checkpoint is not None:
+        import torch
+
+        supervisor_payload = torch.load(
+            supervisor_checkpoint, map_location="cpu", weights_only=False
+        )
+        report["stage"] = (
+            "HC3-supervisor-PPO-rollout"
+            if supervisor_payload.get("stage") == "HC3-supervisor-PPO"
+            else "HC2-behavioral-cloning-rollout"
+        )
         report["supervisor_checkpoint"] = str(supervisor_checkpoint)
         report["supervisor_checkpoint_sha256"] = _sha256(supervisor_checkpoint)
     if collect_success_dataset:

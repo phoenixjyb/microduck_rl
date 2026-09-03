@@ -49,8 +49,12 @@ class ObstacleSupervisor(torch.nn.Module):
             torch.nn.Linear(h2, 2),
         )
 
+    def raw_action(self, observation: torch.Tensor) -> torch.Tensor:
+        """Return the unconstrained latent command used by BC and HC3 PPO."""
+        return self.network(observation)
+
     def forward(self, observation: torch.Tensor) -> torch.Tensor:
-        raw = self.network(observation)
+        raw = self.raw_action(observation)
         return torch.stack((torch.sigmoid(raw[:, 0]), torch.tanh(raw[:, 1])), dim=-1)
 
 

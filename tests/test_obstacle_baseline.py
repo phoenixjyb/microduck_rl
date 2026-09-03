@@ -1,13 +1,15 @@
 """Static bounds and config tests for the obstacle baseline evaluator."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from mjlab_microduck.obstacle_baseline import (
     MAX_BASELINE_ENVS,
     MAX_BASELINE_SEEDS,
     MAX_BASELINE_STEPS,
     _mean_or_none,
+    _resolved_attempt_metrics,
     _weighted_case_mean,
     prepare_baseline_configs,
     run_baseline,
@@ -68,3 +70,27 @@ def test_diagnostic_means_are_count_weighted_and_empty_safe():
     assert _weighted_case_mean(
         [{"events": 0, "time": None}], "time", "events"
     ) is None
+
+
+def test_resolved_attempt_metrics_report_pass_and_collision_rates():
+    assert _resolved_attempt_metrics(3, 7) == {
+        "resolved_attempts": 10,
+        "clean_pass_rate": 0.7,
+        "collision_rate": 0.3,
+    }
+
+
+def test_resolved_attempt_metrics_are_empty_safe():
+    assert _resolved_attempt_metrics(0, 0) == {
+        "resolved_attempts": 0,
+        "clean_pass_rate": None,
+        "collision_rate": None,
+    }
+
+
+@pytest.mark.parametrize("collision_events, clean_pass_events", [(-1, 0), (0, -1)])
+def test_resolved_attempt_metrics_reject_negative_counts(
+    collision_events, clean_pass_events
+):
+    with pytest.raises(ValueError, match="non-negative"):
+        _resolved_attempt_metrics(collision_events, clean_pass_events)

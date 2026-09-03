@@ -18,6 +18,20 @@ def _mean_or_none(total: float, count: int) -> float | None:
     return total / count if count else None
 
 
+def _resolved_attempt_metrics(
+    collision_events: int, clean_pass_events: int
+) -> dict[str, int | float | None]:
+    """Summarize mutually exclusive pass/collision obstacle outcomes."""
+    if collision_events < 0 or clean_pass_events < 0:
+        raise ValueError("obstacle event counts must be non-negative")
+    resolved_attempts = collision_events + clean_pass_events
+    return {
+        "resolved_attempts": resolved_attempts,
+        "clean_pass_rate": _mean_or_none(clean_pass_events, resolved_attempts),
+        "collision_rate": _mean_or_none(collision_events, resolved_attempts),
+    }
+
+
 def _weighted_case_mean(
     cases: list[dict], value_key: str, count_key: str
 ) -> float | None:
@@ -183,7 +197,7 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
             episode_lateral_max[done] = 0.0
             episode_start_xy[done] = robot.data.root_link_pos_w[done, :2]
 
-        return {
+        case = {
             "seed": seed,
             "num_envs": num_envs,
             "steps": steps,
@@ -211,6 +225,8 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
                 collision_lateral_sum_m, collision_events
             ),
         }
+        case.update(_resolved_attempt_metrics(collision_events, pass_events))
+        return case
     finally:
         env.close()
 
@@ -248,6 +264,11 @@ def run_baseline(
             "nonfinite_steps",
         )
     }
+    totals.update(
+        _resolved_attempt_metrics(
+            totals["collision_events"], totals["clean_pass_events"]
+        )
+    )
     summary = {
         "task_id": TASK_ID,
         "checkpoint": str(checkpoint),

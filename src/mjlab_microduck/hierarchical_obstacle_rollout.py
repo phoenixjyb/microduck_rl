@@ -20,10 +20,12 @@ from mjlab_microduck.evaluation import (
     valid_action_deltas,
 )
 from mjlab_microduck.hierarchical_obstacle import (
+    SUPERVISOR_OBSERVATION_DIM,
     ObstaclePhase,
     ObstacleTeacherCfg,
     advance_obstacle_state,
     apply_bounded_supervisor_command,
+    clone_teacher_state,
     make_teacher_state,
     reset_teacher_state,
     supervisor_observation,
@@ -35,6 +37,7 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC2_STAGE,
     HC4L_STAGE,
     HC4LH_STAGE,
+    HC4R2_STAGE,
     HC4R_STAGE,
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
@@ -61,6 +64,7 @@ _RECORDING_STAGE_SLUGS = {
     HC4L_STAGE: "hc4l",
     HC4LH_STAGE: "hc4lh",
     HC4R_STAGE: "hc4r",
+    HC4R2_STAGE: "hc4r2",
     "HC3-supervisor-PPO": "hc3",
     HC3E_STAGE: "hc3e",
     HC3F_STAGE: "hc3f",
@@ -119,7 +123,7 @@ def load_learned_supervisor(
     decision = payload.get("decision")
     allowed = (
         (
-            stage in {HC2_STAGE, HC4L_STAGE, HC4R_STAGE}
+            stage in {HC2_STAGE, HC4L_STAGE, HC4R_STAGE, HC4R2_STAGE}
             and decision == "offline-imitation-pass"
         )
         or (
@@ -204,6 +208,70 @@ def validate_rollout_bounds(
     )
     if case_count > MAX_CASES:
         raise ValueError(f"case count must not exceed {MAX_CASES}")
+
+
+def validate_dataset_collection_mode(
+    *,
+    collect_success_dataset: bool,
+    collect_teacher_corrections: bool,
+    supervisor_checkpoint: Path | None,
+) -> None:
+    """Validate mutually exclusive teacher and student-state collection modes."""
+    if collect_success_dataset and collect_teacher_corrections:
+        raise ValueError("dataset collection modes are mutually exclusive")
+    if collect_success_dataset and supervisor_checkpoint is not None:
+        raise ValueError("success datasets may be collected only from the teacher")
+    if collect_teacher_corrections and supervisor_checkpoint is None:
+        raise ValueError(
+            "teacher-correction datasets require a student supervisor checkpoint"
+        )
+
+
+def resolved_correction_samples(
+    observations: torch.Tensor,
+    teacher_commands: torch.Tensor,
+    student_commands: torch.Tensor,
+    episode_keys: torch.Tensor,
+    episode_outcomes: dict[int, int],
+) -> dict[str, torch.Tensor]:
+    """Keep labeled samples only from resolved, non-hard-failure episodes."""
+    import torch
+
+    sample_count = observations.shape[0]
+    if (
+        observations.ndim != 2
+        or observations.shape[1] != SUPERVISOR_OBSERVATION_DIM
+    ):
+        raise ValueError(
+            f"correction observations must have shape (N, {SUPERVISOR_OBSERVATION_DIM})"
+        )
+    if teacher_commands.shape != (sample_count, 2):
+        raise ValueError("teacher correction commands must have shape (N, 2)")
+    if student_commands.shape != (sample_count, 2):
+        raise ValueError("student commands must have shape (N, 2)")
+    if episode_keys.shape != (sample_count,):
+        raise ValueError("episode keys must have shape (N,)")
+    if any(code not in {1, 2, 3} for code in episode_outcomes.values()):
+        raise ValueError("correction outcome codes must be clean=1/collision=2/timeout=3")
+    if not episode_outcomes:
+        keep = torch.zeros(sample_count, dtype=torch.bool)
+        outcome_codes = torch.empty(0, dtype=torch.int8)
+    else:
+        resolved_keys = torch.tensor(
+            sorted(episode_outcomes), dtype=episode_keys.dtype
+        )
+        keep = torch.isin(episode_keys.cpu(), resolved_keys)
+        outcome_codes = torch.tensor(
+            [episode_outcomes[int(key)] for key in episode_keys.cpu()[keep]],
+            dtype=torch.int8,
+        )
+    return {
+        "observations": observations[keep],
+        "commands": teacher_commands[keep],
+        "student_commands": student_commands[keep],
+        "episode_keys": episode_keys[keep],
+        "outcome_codes": outcome_codes,
+    }
 
 
 def prepare_rollout_configs(
@@ -292,6 +360,7 @@ def _run_case(
     obstacle_lateral_m: float,
     seed: int,
     collect_success_samples: bool = False,
+    collect_teacher_corrections: bool = False,
     case_index: int = 0,
     supervisor_checkpoint: Path | None = None,
 ) -> dict:
@@ -368,8 +437,10 @@ def _run_case(
         environment_index = torch.arange(num_envs, device=device)
         dataset_observations = []
         dataset_commands = []
+        dataset_student_commands = []
         dataset_episode_keys = []
         successful_episode_keys: set[int] = set()
+        correction_episode_outcomes: dict[int, int] = {}
 
         with torch.inference_mode():
             for step in range(steps):
@@ -385,6 +456,8 @@ def _run_case(
                         max_range_m=2.0,
                     )
                     previous_supervisor_command = state.previous_command.clone()
+                    learned_observation = None
+                    teacher_correction = None
                     if learned_supervisor is None:
                         supervisor_command = teacher_command(
                             obstacle_observation,
@@ -410,6 +483,15 @@ def _run_case(
                             state,
                             previous_command=previous_supervisor_command,
                         )
+                        if collect_teacher_corrections:
+                            teacher_correction = teacher_command(
+                                obstacle_observation,
+                                nominal,
+                                route_lateral,
+                                route_heading,
+                                clone_teacher_state(state),
+                                cfg=ObstacleTeacherCfg(),
+                            )
                         normalized_command = learned_supervisor(learned_observation)
                         limits = ObstacleTeacherCfg()
                         desired_command = torch.stack(
@@ -439,6 +521,18 @@ def _run_case(
                             ).cpu()
                         )
                         dataset_commands.append(supervisor_command.cpu())
+                        episode_key = (
+                            case_index * 1_000_000
+                            + episode_generation * num_envs
+                            + environment_index
+                        )
+                        dataset_episode_keys.append(episode_key.cpu())
+                    if collect_teacher_corrections:
+                        assert learned_observation is not None
+                        assert teacher_correction is not None
+                        dataset_observations.append(learned_observation.cpu())
+                        dataset_commands.append(teacher_correction.cpu())
+                        dataset_student_commands.append(supervisor_command.cpu())
                         episode_key = (
                             case_index * 1_000_000
                             + episode_generation * num_envs
@@ -533,6 +627,32 @@ def _run_case(
                     successful_episode_keys.update(
                         int(value) for value in episode_key[passed].tolist()
                     )
+                if collect_teacher_corrections:
+                    terminal_count = (
+                        collision.to(torch.int8)
+                        + passed.to(torch.int8)
+                        + attempted_out.to(torch.int8)
+                    )
+                    if bool((terminal_count > 1).any()):
+                        raise RuntimeError("obstacle terminal outcomes overlap")
+                    hard_failure = fell.bool() | nan_state.bool()
+                    resolved = (terminal_count == 1) & ~hard_failure
+                    if bool(resolved.any()):
+                        episode_key = (
+                            case_index * 1_000_000
+                            + episode_generation * num_envs
+                            + environment_index
+                        )
+                        outcome_code = torch.zeros_like(terminal_count)
+                        outcome_code[passed] = 1
+                        outcome_code[collision] = 2
+                        outcome_code[attempted_out] = 3
+                        for key, code in zip(
+                            episode_key[resolved].tolist(),
+                            outcome_code[resolved].tolist(),
+                            strict=True,
+                        ):
+                            correction_episode_outcomes[int(key)] = int(code)
                 finite = torch.isfinite(actions).all() & torch.isfinite(rewards).all()
                 finite &= all(
                     torch.isfinite(value).all() for value in observations.values()
@@ -625,6 +745,14 @@ def _run_case(
                 "commands": torch.cat(dataset_commands)[keep],
                 "episode_keys": all_keys[keep],
             }
+        if collect_teacher_corrections:
+            result["_teacher_correction_dataset"] = resolved_correction_samples(
+                torch.cat(dataset_observations),
+                torch.cat(dataset_commands),
+                torch.cat(dataset_student_commands),
+                torch.cat(dataset_episode_keys),
+                correction_episode_outcomes,
+            )
         return result
     finally:
         env.close()
@@ -643,14 +771,18 @@ def run_rollout(
     lateral_positions: tuple[float, ...],
     seeds: tuple[int, ...],
     collect_success_dataset: bool = False,
+    collect_teacher_corrections: bool = False,
     supervisor_checkpoint: Path | None = None,
 ) -> Path:
     validate_rollout_bounds(
         num_envs, steps, speeds, forward_positions, lateral_positions, seeds
     )
     checkpoint = checkpoint.resolve(strict=True)
-    if collect_success_dataset and supervisor_checkpoint is not None:
-        raise ValueError("success datasets may be collected only from the teacher")
+    validate_dataset_collection_mode(
+        collect_success_dataset=collect_success_dataset,
+        collect_teacher_corrections=collect_teacher_corrections,
+        supervisor_checkpoint=supervisor_checkpoint,
+    )
     if supervisor_checkpoint is not None:
         supervisor_checkpoint = supervisor_checkpoint.resolve(strict=True)
     output_dir = output_dir.resolve()
@@ -676,12 +808,16 @@ def run_rollout(
             obstacle_lateral_m=lateral,
             seed=seed,
             collect_success_samples=collect_success_dataset,
+            collect_teacher_corrections=collect_teacher_corrections,
             case_index=case_index,
             supervisor_checkpoint=supervisor_checkpoint,
         )
         dataset = case.pop("_success_dataset", None)
         if dataset is not None:
             datasets.append(dataset)
+        correction_dataset = case.pop("_teacher_correction_dataset", None)
+        if correction_dataset is not None:
+            datasets.append(correction_dataset)
         cases.append(case)
     totals = {
         key: sum(case[key] for case in cases)
@@ -727,6 +863,7 @@ def run_rollout(
             HC4L_STAGE: "HC4L-lateral-behavioral-cloning-rollout",
             HC4LH_STAGE: "HC4LH-lateral-gated-supervisor-rollout",
             HC4R_STAGE: "HC4R-near-range-behavioral-cloning-rollout",
+            HC4R2_STAGE: "HC4R2-student-state-correction-BC-rollout",
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
             HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
             HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",
@@ -749,7 +886,7 @@ def run_rollout(
             "checkpoint": str(checkpoint),
             "checkpoint_sha256": _sha256(checkpoint),
             "teacher_config": asdict(ObstacleTeacherCfg()),
-            "observation_dim": 17,
+            "observation_dim": SUPERVISOR_OBSERVATION_DIM,
             "command_fields": ["forward_speed_mps", "yaw_rate_rps"],
             "observations": torch.cat(
                 [dataset["observations"] for dataset in datasets]
@@ -767,6 +904,59 @@ def run_rollout(
         report["success_dataset_episodes"] = int(
             torch.unique(dataset_payload["episode_keys"]).numel()
         )
+    if collect_teacher_corrections:
+        if not datasets or not any(
+            dataset["observations"].shape[0] for dataset in datasets
+        ):
+            raise RuntimeError("student rollout produced no resolved correction samples")
+        import torch
+
+        assert supervisor_checkpoint is not None
+        correction_path = output_dir / "teacher-correction-dataset.pt"
+        correction_payload = {
+            "schema_version": 1,
+            "stage": "HC4R2-student-state-teacher-corrections",
+            "checkpoint": str(checkpoint),
+            "checkpoint_sha256": _sha256(checkpoint),
+            "student_supervisor_checkpoint": str(supervisor_checkpoint),
+            "student_supervisor_checkpoint_sha256": _sha256(supervisor_checkpoint),
+            "teacher_config": asdict(ObstacleTeacherCfg()),
+            "observation_dim": SUPERVISOR_OBSERVATION_DIM,
+            "command_fields": ["forward_speed_mps", "yaw_rate_rps"],
+            "outcome_codes": {"clean_pass": 1, "collision": 2, "timeout": 3},
+            "observations": torch.cat(
+                [dataset["observations"] for dataset in datasets]
+            ),
+            "commands": torch.cat([dataset["commands"] for dataset in datasets]),
+            "student_commands": torch.cat(
+                [dataset["student_commands"] for dataset in datasets]
+            ),
+            "episode_keys": torch.cat(
+                [dataset["episode_keys"] for dataset in datasets]
+            ),
+            "sample_outcome_codes": torch.cat(
+                [dataset["outcome_codes"] for dataset in datasets]
+            ),
+        }
+        torch.save(correction_payload, correction_path)
+        unique_episode_keys = torch.unique(correction_payload["episode_keys"])
+        report["teacher_correction_dataset"] = str(correction_path)
+        report["teacher_correction_dataset_samples"] = int(
+            correction_payload["observations"].shape[0]
+        )
+        report["teacher_correction_dataset_episodes"] = int(
+            unique_episode_keys.numel()
+        )
+        report["teacher_correction_episode_outcomes"] = {
+            name: int(
+                torch.unique(
+                    correction_payload["episode_keys"][
+                        correction_payload["sample_outcome_codes"] == code
+                    ]
+                ).numel()
+            )
+            for name, code in correction_payload["outcome_codes"].items()
+        }
     output_path = output_dir / "hierarchical-teacher-evaluation.json"
     output_path.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(totals, sort_keys=True))
@@ -785,6 +975,7 @@ def main() -> None:
     parser.add_argument("--obstacle-lateral", default="-0.27,0.27")
     parser.add_argument("--seeds", default="41")
     parser.add_argument("--collect-success-dataset", action="store_true")
+    parser.add_argument("--collect-teacher-corrections", action="store_true")
     parser.add_argument("--supervisor-checkpoint", type=Path)
     args = parser.parse_args()
     run_rollout(
@@ -797,6 +988,7 @@ def main() -> None:
         lateral_positions=parse_float_list(args.obstacle_lateral),
         seeds=parse_int_list(args.seeds),
         collect_success_dataset=args.collect_success_dataset,
+        collect_teacher_corrections=args.collect_teacher_corrections,
         supervisor_checkpoint=args.supervisor_checkpoint,
     )
 

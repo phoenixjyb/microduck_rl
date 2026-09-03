@@ -3,6 +3,7 @@ import torch
 
 from mjlab_microduck.hierarchical_obstacle import SUPERVISOR_OBSERVATION_DIM
 from mjlab_microduck.obstacle_supervisor_bc import (
+    HC4R2_STAGE,
     LateralGatedSupervisor,
     ObstacleSupervisor,
     split_episode_keys,
@@ -34,6 +35,19 @@ def test_train_supervisor_rejects_unknown_stage_before_dataset_access(tmp_path):
             tmp_path / "supervisor.pt",
             epochs=1,
             stage="HC4L-unreviewed-stage",
+        )
+
+
+def test_hc4r2_training_requires_teacher_and_student_state_datasets(tmp_path):
+    teacher_dataset = tmp_path / "teacher.pt"
+    torch.save({"stage": "HC1-successful-teacher-trajectories"}, teacher_dataset)
+
+    with pytest.raises(ValueError, match="requires both HC1 teacher"):
+        train_supervisor(
+            (teacher_dataset,),
+            tmp_path / "supervisor.pt",
+            epochs=1,
+            stage=HC4R2_STAGE,
         )
 
 

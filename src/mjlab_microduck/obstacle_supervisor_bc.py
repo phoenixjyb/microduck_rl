@@ -23,8 +23,9 @@ from mjlab_microduck.tasks.obstacle_observation import (
 HC2_STAGE = "HC2-behavioral-cloning"
 HC4L_STAGE = "HC4L-lateral-behavioral-cloning"
 HC4R_STAGE = "HC4R-near-range-behavioral-cloning"
+HC4R2_STAGE = "HC4R2-student-state-correction-BC"
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
-SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE, HC4R_STAGE)
+SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE, HC4R_STAGE, HC4R2_STAGE)
 
 
 @dataclass(frozen=True)
@@ -254,6 +255,17 @@ def train_supervisor(
         torch.load(path, map_location="cpu", weights_only=False)
         for path in dataset_paths
     ]
+    if stage == HC4R2_STAGE:
+        dataset_stages = {payload.get("stage") for payload in payloads}
+        required_stages = {
+            "HC1-successful-teacher-trajectories",
+            "HC4R2-student-state-teacher-corrections",
+        }
+        if not required_stages.issubset(dataset_stages):
+            raise ValueError(
+                "HC4R2 training requires both HC1 teacher and student-state "
+                "correction datasets"
+            )
     source_hashes = {payload.get("checkpoint_sha256") for payload in payloads}
     if len(source_hashes) != 1 or None in source_hashes:
         raise ValueError("datasets do not share one frozen locomotion checkpoint")

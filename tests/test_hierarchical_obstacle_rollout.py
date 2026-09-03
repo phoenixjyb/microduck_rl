@@ -9,6 +9,8 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
     MAX_CASES,
     load_learned_supervisor,
     prepare_rollout_configs,
+    resolved_correction_samples,
+    validate_dataset_collection_mode,
     validate_rollout_bounds,
 )
 from mjlab_microduck.obstacle_supervisor_bc import (
@@ -65,6 +67,57 @@ def test_rollout_bounds_reject_too_many_cases():
     speeds = tuple(0.1 for _ in range(MAX_CASES + 1))
     with pytest.raises(ValueError, match="case count"):
         validate_rollout_bounds(1, 1, speeds, (1.0,), (0.0,), (1,))
+
+
+def test_dataset_collection_modes_require_the_matching_controller(tmp_path):
+    checkpoint = tmp_path / "student.pt"
+    validate_dataset_collection_mode(
+        collect_success_dataset=True,
+        collect_teacher_corrections=False,
+        supervisor_checkpoint=None,
+    )
+    validate_dataset_collection_mode(
+        collect_success_dataset=False,
+        collect_teacher_corrections=True,
+        supervisor_checkpoint=checkpoint,
+    )
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        validate_dataset_collection_mode(
+            collect_success_dataset=True,
+            collect_teacher_corrections=True,
+            supervisor_checkpoint=checkpoint,
+        )
+    with pytest.raises(ValueError, match="require a student"):
+        validate_dataset_collection_mode(
+            collect_success_dataset=False,
+            collect_teacher_corrections=True,
+            supervisor_checkpoint=None,
+        )
+
+
+def test_correction_dataset_keeps_only_resolved_episode_samples():
+    observations = torch.arange(5 * 17, dtype=torch.float32).reshape(5, 17)
+    teacher_commands = torch.arange(10, dtype=torch.float32).reshape(5, 2)
+    student_commands = teacher_commands + 0.1
+    episode_keys = torch.tensor([10, 10, 11, 12, 12])
+
+    selected = resolved_correction_samples(
+        observations,
+        teacher_commands,
+        student_commands,
+        episode_keys,
+        {10: 1, 12: 2},
+    )
+
+    assert selected["episode_keys"].tolist() == [10, 10, 12, 12]
+    assert selected["outcome_codes"].tolist() == [1, 1, 2, 2]
+    torch.testing.assert_close(
+        selected["observations"], observations[torch.tensor([0, 1, 3, 4])]
+    )
+    torch.testing.assert_close(
+        selected["student_commands"],
+        student_commands[torch.tensor([0, 1, 3, 4])],
+    )
 
 
 def test_load_hc3e_wraps_checkpoint_with_speed_only_authority(tmp_path):
@@ -185,6 +238,31 @@ def test_load_hc4r_accepts_explicit_near_range_bc_stage(tmp_path):
     torch.save(
         {
             "stage": "HC4R-near-range-behavioral-cloning",
+            "decision": "offline-imitation-pass",
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(SupervisorBcCfg()),
+            "model_state_dict": actor.state_dict(),
+        },
+        supervisor_checkpoint,
+    )
+
+    loaded = load_learned_supervisor(
+        supervisor_checkpoint, base_checkpoint, "cpu"
+    )
+
+    assert isinstance(loaded, ObstacleSupervisor)
+
+
+def test_load_hc4r2_accepts_student_state_correction_stage(tmp_path):
+    base_checkpoint = tmp_path / "locomotion.pt"
+    base_checkpoint.write_bytes(b"frozen locomotion")
+    actor = ObstacleSupervisor()
+    supervisor_checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": "HC4R2-student-state-correction-BC",
             "decision": "offline-imitation-pass",
             "source_locomotion_checkpoint_sha256": hashlib.sha256(
                 base_checkpoint.read_bytes()

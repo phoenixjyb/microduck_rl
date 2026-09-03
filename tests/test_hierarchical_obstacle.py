@@ -6,6 +6,7 @@ from mjlab_microduck.hierarchical_obstacle import (
     ObstacleTeacherCfg,
     SUPERVISOR_OBSERVATION_DIM,
     apply_bounded_supervisor_command,
+    clone_teacher_state,
     make_teacher_state,
     reset_teacher_state,
     supervisor_observation,
@@ -163,3 +164,15 @@ def test_teacher_state_accepts_per_environment_nominal_speeds():
     torch.testing.assert_close(
         state.previous_command[:, 0], torch.tensor([0.3, 0.0, 0.8])
     )
+
+
+def test_cloned_teacher_state_is_independent_for_counterfactual_labels():
+    state = make_teacher_state(2, device="cpu", nominal_speed_mps=0.4)
+    cloned = clone_teacher_state(state)
+    cloned.phase[0] = int(ObstaclePhase.RECOVERY)
+    cloned.bypass_side[0] = -cloned.bypass_side[0]
+    cloned.previous_command[0] = torch.tensor([0.1, 0.2])
+
+    assert state.phase[0] == int(ObstaclePhase.APPROACH)
+    assert cloned.bypass_side[0] != state.bypass_side[0]
+    torch.testing.assert_close(state.previous_command[0], torch.tensor([0.4, 0.0]))

@@ -88,6 +88,16 @@ class ObstacleTeacherState:
     previous_command: torch.Tensor
 
 
+def clone_teacher_state(state: ObstacleTeacherState) -> ObstacleTeacherState:
+    """Clone mutable supervisor state for side-effect-free counterfactual labels."""
+    return ObstacleTeacherState(
+        phase=state.phase.clone(),
+        bypass_side=state.bypass_side.clone(),
+        preferred_side=state.preferred_side.clone(),
+        previous_command=state.previous_command.clone(),
+    )
+
+
 def make_teacher_state(
     num_envs: int,
     *,

@@ -154,6 +154,92 @@ def _clamp_delta(
     return previous + (target - previous).clamp(-maximum_delta, maximum_delta)
 
 
+def advance_obstacle_state(
+    obstacle_observation: torch.Tensor,
+    route_lateral_error_m: torch.Tensor,
+    route_heading_error_rad: torch.Tensor,
+    state: ObstacleTeacherState,
+    *,
+    cfg: ObstacleTeacherCfg = ObstacleTeacherCfg(),
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Advance route-controller phase/side state without choosing a command."""
+    relative_x, relative_y, _, closing_rate, valid = _decoded_obstacle_geometry(
+        obstacle_observation
+    )
+    cos_heading = torch.cos(route_heading_error_rad)
+    sin_heading = torch.sin(route_heading_error_rad)
+    obstacle_route_x = cos_heading * relative_x - sin_heading * relative_y
+    obstacle_route_y = (
+        route_lateral_error_m
+        + sin_heading * relative_x
+        + cos_heading * relative_y
+    )
+
+    approach = state.phase == int(ObstaclePhase.APPROACH)
+    surface_range = obstacle_observation[:, 0] * (
+        DEFAULT_OBSTACLE_OBSERVATION_LIMITS.max_range_m
+    )
+    time_to_contact = surface_range / closing_rate.clamp_min(0.05)
+    imminent_contact = (closing_rate > 0.05) & (
+        time_to_contact <= cfg.interaction_time_to_contact_s
+    )
+    enter_interaction = approach & valid & (
+        (obstacle_route_x <= cfg.interaction_entry_m) | imminent_contact
+    )
+    obstacle_left = relative_y > cfg.centered_deadband_m
+    obstacle_right = relative_y < -cfg.centered_deadband_m
+    selected_side = torch.where(
+        obstacle_left,
+        -torch.ones_like(relative_y),
+        torch.where(obstacle_right, torch.ones_like(relative_y), state.preferred_side),
+    )
+    state.bypass_side[enter_interaction] = selected_side[enter_interaction]
+    state.phase[enter_interaction] = int(ObstaclePhase.INTERACTION)
+
+    interaction = state.phase == int(ObstaclePhase.INTERACTION)
+    enter_recovery = interaction & valid & (
+        obstacle_route_x <= -cfg.passed_margin_m
+    )
+    state.phase[enter_recovery] = int(ObstaclePhase.RECOVERY)
+    return relative_x, relative_y, obstacle_route_x, obstacle_route_y, valid
+
+
+def apply_bounded_supervisor_command(
+    desired_command: torch.Tensor,
+    obstacle_observation: torch.Tensor,
+    state: ObstacleTeacherState,
+    *,
+    cfg: ObstacleTeacherCfg = ObstacleTeacherCfg(),
+) -> torch.Tensor:
+    """Apply execution-layer limits and fail-safe behavior to any supervisor."""
+    if desired_command.shape != state.previous_command.shape:
+        raise ValueError("desired supervisor command must have shape (N, 2)")
+    desired_speed = desired_command[:, 0].clamp(0.0, cfg.max_forward_speed_mps)
+    desired_yaw = desired_command[:, 1].clamp(
+        -cfg.max_yaw_rate_rps, cfg.max_yaw_rate_rps
+    )
+    command = torch.stack(
+        (
+            _clamp_delta(
+                desired_speed,
+                state.previous_command[:, 0],
+                cfg.max_speed_delta_per_update_mps,
+            ),
+            _clamp_delta(
+                desired_yaw,
+                state.previous_command[:, 1],
+                cfg.max_yaw_delta_per_update_rps,
+            ),
+        ),
+        dim=-1,
+    )
+    valid = obstacle_observation[:, 6] > 0.5
+    unsafe_invalid = (state.phase != int(ObstaclePhase.RECOVERY)) & ~valid
+    command[unsafe_invalid] = 0.0
+    state.previous_command.copy_(command)
+    return command
+
+
 def teacher_command(
     obstacle_observation: torch.Tensor,
     nominal_speed_mps: torch.Tensor,
@@ -181,49 +267,13 @@ def teacher_command(
     if state.phase.shape != (num_envs,) or state.previous_command.shape != (num_envs, 2):
         raise ValueError("teacher state shape does not match observation batch")
 
-    relative_x, relative_y, _, closing_rate, valid = _decoded_obstacle_geometry(
-        obstacle_observation
+    _, _, obstacle_route_x, obstacle_route_y, _ = advance_obstacle_state(
+        obstacle_observation,
+        route_lateral_error_m,
+        route_heading_error_rad,
+        state,
+        cfg=cfg,
     )
-    # Transform the obstacle displacement from base axes into fixed route axes.
-    # Phase transitions are route-relative even while the duck itself is
-    # turning, which prevents a bypass arc from keeping an already-passed box
-    # spuriously "ahead" in body coordinates.
-    cos_heading = torch.cos(route_heading_error_rad)
-    sin_heading = torch.sin(route_heading_error_rad)
-    obstacle_route_x = cos_heading * relative_x - sin_heading * relative_y
-    obstacle_route_y = (
-        route_lateral_error_m
-        + sin_heading * relative_x
-        + cos_heading * relative_y
-    )
-
-    approach = state.phase == int(ObstaclePhase.APPROACH)
-    surface_range = obstacle_observation[:, 0] * (
-        DEFAULT_OBSTACLE_OBSERVATION_LIMITS.max_range_m
-    )
-    time_to_contact = surface_range / closing_rate.clamp_min(0.05)
-    imminent_contact = (closing_rate > 0.05) & (
-        time_to_contact <= cfg.interaction_time_to_contact_s
-    )
-    enter_interaction = approach & valid & (
-        (obstacle_route_x <= cfg.interaction_entry_m) | imminent_contact
-    )
-
-    obstacle_left = relative_y > cfg.centered_deadband_m
-    obstacle_right = relative_y < -cfg.centered_deadband_m
-    selected_side = torch.where(
-        obstacle_left,
-        -torch.ones_like(relative_y),
-        torch.where(obstacle_right, torch.ones_like(relative_y), state.preferred_side),
-    )
-    state.bypass_side[enter_interaction] = selected_side[enter_interaction]
-    state.phase[enter_interaction] = int(ObstaclePhase.INTERACTION)
-
-    interaction = state.phase == int(ObstaclePhase.INTERACTION)
-    enter_recovery = interaction & valid & (
-        obstacle_route_x <= -cfg.passed_margin_m
-    )
-    state.phase[enter_recovery] = int(ObstaclePhase.RECOVERY)
 
     phase = state.phase
     nominal = nominal_speed_mps.clamp(0.0, cfg.max_forward_speed_mps)
@@ -258,26 +308,13 @@ def teacher_command(
     )
     desired_yaw = desired_yaw.clamp(-cfg.max_yaw_rate_rps, cfg.max_yaw_rate_rps)
 
-    command = torch.stack(
-        (
-            _clamp_delta(
-                desired_speed,
-                state.previous_command[:, 0],
-                cfg.max_speed_delta_per_update_mps,
-            ),
-            _clamp_delta(
-                desired_yaw,
-                state.previous_command[:, 1],
-                cfg.max_yaw_delta_per_update_rps,
-            ),
-        ),
-        dim=-1,
+    desired_command = torch.stack((desired_speed, desired_yaw), dim=-1)
+    return apply_bounded_supervisor_command(
+        desired_command,
+        obstacle_observation,
+        state,
+        cfg=cfg,
     )
-
-    unsafe_invalid = (phase != int(ObstaclePhase.RECOVERY)) & ~valid
-    command[unsafe_invalid] = 0.0
-    state.previous_command.copy_(command)
-    return command
 
 
 def supervisor_observation(

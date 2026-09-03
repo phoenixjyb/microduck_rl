@@ -18,6 +18,8 @@ from mjlab_microduck.evaluation import (
 from mjlab_microduck.hierarchical_obstacle import (
     ObstaclePhase,
     ObstacleTeacherCfg,
+    advance_obstacle_state,
+    apply_bounded_supervisor_command,
     make_teacher_state,
     reset_teacher_state,
     supervisor_observation,
@@ -25,6 +27,10 @@ from mjlab_microduck.hierarchical_obstacle import (
 )
 from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
 from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
+from mjlab_microduck.obstacle_supervisor_bc import (
+    ObstacleSupervisor,
+    SupervisorBcCfg,
+)
 from mjlab_microduck.tasks.run import (
     MOTOR_NEAR_LIMIT_FRACTION,
     XL330_M288_RATED_NO_LOAD_SPEED_RAD_S,
@@ -171,6 +177,7 @@ def _run_case(
     seed: int,
     collect_success_samples: bool = False,
     case_index: int = 0,
+    supervisor_checkpoint: Path | None = None,
 ) -> dict:
     import torch
     from mjlab.envs import ManagerBasedRlEnv
@@ -197,6 +204,28 @@ def _run_case(
         runner.load(str(checkpoint), map_location=device)
         policy = runner.get_inference_policy(device=device)
         observations = wrapped.get_observations()
+
+        learned_supervisor = None
+        if supervisor_checkpoint is not None:
+            supervisor_payload = torch.load(
+                supervisor_checkpoint, map_location=device, weights_only=False
+            )
+            if supervisor_payload.get("decision") != "offline-imitation-pass":
+                raise ValueError("supervisor checkpoint did not pass offline imitation")
+            if (
+                supervisor_payload.get("source_locomotion_checkpoint_sha256")
+                != _sha256(checkpoint)
+            ):
+                raise ValueError("supervisor was trained for another locomotion checkpoint")
+            model_cfg = dict(supervisor_payload["model_config"])
+            model_cfg["hidden_dims"] = tuple(model_cfg["hidden_dims"])
+            learned_supervisor = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(
+                device
+            )
+            learned_supervisor.load_state_dict(
+                supervisor_payload["model_state_dict"], strict=True
+            )
+            learned_supervisor.eval()
 
         state = make_teacher_state(
             num_envs, device=device, nominal_speed_mps=nominal_speed_mps
@@ -255,14 +284,47 @@ def _run_case(
                         max_range_m=2.0,
                     )
                     previous_supervisor_command = state.previous_command.clone()
-                    supervisor_command = teacher_command(
-                        obstacle_observation,
-                        nominal,
-                        route_lateral,
-                        route_heading,
-                        state,
-                        cfg=ObstacleTeacherCfg(),
-                    )
+                    if learned_supervisor is None:
+                        supervisor_command = teacher_command(
+                            obstacle_observation,
+                            nominal,
+                            route_lateral,
+                            route_heading,
+                            state,
+                            cfg=ObstacleTeacherCfg(),
+                        )
+                    else:
+                        advance_obstacle_state(
+                            obstacle_observation,
+                            route_lateral,
+                            route_heading,
+                            state,
+                        )
+                        learned_observation = supervisor_observation(
+                            obstacle_observation,
+                            nominal,
+                            route_lateral,
+                            route_heading,
+                            route_speed,
+                            state,
+                            previous_command=previous_supervisor_command,
+                        )
+                        normalized_command = learned_supervisor(learned_observation)
+                        limits = ObstacleTeacherCfg()
+                        desired_command = torch.stack(
+                            (
+                                normalized_command[:, 0]
+                                * limits.max_forward_speed_mps,
+                                normalized_command[:, 1]
+                                * limits.max_yaw_rate_rps,
+                            ),
+                            dim=-1,
+                        )
+                        supervisor_command = apply_bounded_supervisor_command(
+                            desired_command,
+                            obstacle_observation,
+                            state,
+                        )
                     if collect_success_samples:
                         dataset_observations.append(
                             supervisor_observation(
@@ -480,11 +542,16 @@ def run_rollout(
     lateral_positions: tuple[float, ...],
     seeds: tuple[int, ...],
     collect_success_dataset: bool = False,
+    supervisor_checkpoint: Path | None = None,
 ) -> Path:
     validate_rollout_bounds(
         num_envs, steps, speeds, forward_positions, lateral_positions, seeds
     )
     checkpoint = checkpoint.resolve(strict=True)
+    if collect_success_dataset and supervisor_checkpoint is not None:
+        raise ValueError("success datasets may be collected only from the teacher")
+    if supervisor_checkpoint is not None:
+        supervisor_checkpoint = supervisor_checkpoint.resolve(strict=True)
     output_dir = output_dir.resolve()
     if output_dir.exists():
         raise FileExistsError(output_dir)
@@ -509,6 +576,7 @@ def run_rollout(
             seed=seed,
             collect_success_samples=collect_success_dataset,
             case_index=case_index,
+            supervisor_checkpoint=supervisor_checkpoint,
         )
         dataset = case.pop("_success_dataset", None)
         if dataset is not None:
@@ -534,7 +602,11 @@ def run_rollout(
     )
     report = {
         "schema_version": 1,
-        "stage": "HC1-deterministic-teacher",
+        "stage": (
+            "HC1-deterministic-teacher"
+            if supervisor_checkpoint is None
+            else "HC2-behavioral-cloning-rollout"
+        ),
         "decision": "diagnostic-only",
         "checkpoint": str(checkpoint),
         "checkpoint_sha256": _sha256(checkpoint),
@@ -547,6 +619,9 @@ def run_rollout(
         "cases": cases,
         "totals": totals,
     }
+    if supervisor_checkpoint is not None:
+        report["supervisor_checkpoint"] = str(supervisor_checkpoint)
+        report["supervisor_checkpoint_sha256"] = _sha256(supervisor_checkpoint)
     if collect_success_dataset:
         if not datasets or not any(
             dataset["observations"].shape[0] for dataset in datasets
@@ -597,6 +672,7 @@ def main() -> None:
     parser.add_argument("--obstacle-lateral", default="-0.27,0.27")
     parser.add_argument("--seeds", default="41")
     parser.add_argument("--collect-success-dataset", action="store_true")
+    parser.add_argument("--supervisor-checkpoint", type=Path)
     args = parser.parse_args()
     run_rollout(
         args.checkpoint,
@@ -608,6 +684,7 @@ def main() -> None:
         lateral_positions=parse_float_list(args.obstacle_lateral),
         seeds=parse_int_list(args.seeds),
         collect_success_dataset=args.collect_success_dataset,
+        supervisor_checkpoint=args.supervisor_checkpoint,
     )
 
 

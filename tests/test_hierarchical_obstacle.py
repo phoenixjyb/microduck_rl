@@ -5,6 +5,7 @@ from mjlab_microduck.hierarchical_obstacle import (
     ObstaclePhase,
     ObstacleTeacherCfg,
     SUPERVISOR_OBSERVATION_DIM,
+    apply_bounded_supervisor_command,
     make_teacher_state,
     reset_teacher_state,
     supervisor_observation,
@@ -84,6 +85,14 @@ def test_invalid_geometry_is_immediate_stop_until_recovery():
     state.previous_command.zero_()
     command = _step(_observation(0.4, valid=False), state)
     assert command[0, 0] > 0.0
+
+
+def test_execution_layer_clamps_arbitrary_supervisor_output():
+    state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.3)
+    command = apply_bounded_supervisor_command(
+        torch.tensor([[10.0, -10.0]]), _observation(1.0), state
+    )
+    assert torch.allclose(command, torch.tensor([[0.38, -0.2]]))
 
 
 def test_teacher_commands_obey_clamps_and_slew_limits():

@@ -134,6 +134,9 @@ parameter exactly. A deterministic seed-averaged head is a bounded way to test
 whether the common update direction keeps the repeated passage benefit while
 removing seed-specific collision variance.
 
-The averaged checkpoint must pass the sensitive-cell pre-screen and then the
-unchanged full matrix. Only after numeric acceptance should placement expand or
-new MP4s be recorded.
+HC3-F performed this exact average but recorded two collisions in the 0.80 m/s
+by 1.40 m seed-41 cell, so it stopped before the full matrix. See
+`2026-09-03-hc3f-seed-averaged-speed-head.md`. The final bounded speed-head
+candidate keeps only the parameter-update coordinates whose direction agrees
+across all three training seeds. Only after numeric acceptance should placement
+expand or new MP4s be recorded.

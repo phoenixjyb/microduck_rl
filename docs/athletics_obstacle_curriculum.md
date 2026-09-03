@@ -180,5 +180,9 @@ checkpoint matched HC2's collision count across six evaluation seeds, removed
 one timeout, and improved weighted passage by 0.027 seconds. However, only two
 of three independent training seeds passed the sensitive-cell pre-screen; seed
 113 recorded three collisions. HC3-E is therefore not promoted and no new MP4
-is recorded. The next bounded candidate averages only the three seed-specific
-speed-head updates while preserving the HC2 anchor exactly.
+is recorded. HC3-F averaged the three seed-specific speed-head updates while
+preserving the HC2 anchor exactly, but its 0.80 m/s by 1.40 m sensitive cell
+recorded two collisions and stopped before the full matrix. The final bounded
+speed-head candidate keeps only update coordinates whose direction agrees
+across all three training seeds. See
+`experiments/2026-09-03-hc3f-seed-averaged-speed-head.md`.

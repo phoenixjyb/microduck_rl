@@ -168,8 +168,10 @@ set to false.
    HC3-E then froze HC2 yaw and non-interaction speed while learning only an
    interaction-speed reduction. Its best seed repeated a small safe time gain,
    but one of three training seeds failed the pre-screen collision budget. The
-   next bounded candidate averages only those speed-head updates before
-   re-evaluation.
+   HC3-F averaged those updates but recorded two collisions in the high-speed
+   sensitive cell and stopped before the full matrix. HC3-G is the final
+   bounded speed-head candidate: it retains only update coordinates whose sign
+   agrees across all three training seeds, then repeats the same pre-screen.
 7. [ ] Expand placement only after HC3 retains the accepted HC2 envelope.
 
 MP4 inspection never substitutes for the numeric matrix gate.

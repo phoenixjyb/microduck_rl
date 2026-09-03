@@ -78,7 +78,6 @@ def average_interaction_speed_checkpoints(
         "completed_iterations",
         "min_interaction_speed_mps",
         "model_config",
-        "ppo_config",
         "reward_config",
         "source_locomotion_checkpoint_sha256",
         "source_supervisor_checkpoint_sha256",
@@ -97,6 +96,22 @@ def average_interaction_speed_checkpoints(
             payload.get(field) != reference.get(field) for field in invariant_fields
         ):
             raise ValueError("HC3-E inputs do not share aggregation invariants")
+
+    ppo_config = copy.deepcopy(reference["ppo_config"])
+    ppo_config["iterations"] = reference["completed_iterations"]
+    ppo_update_config = {
+        key: value for key, value in ppo_config.items() if key != "iterations"
+    }
+    if any(
+        {
+            key: value
+            for key, value in payload["ppo_config"].items()
+            if key != "iterations"
+        }
+        != ppo_update_config
+        for payload in payloads
+    ):
+        raise ValueError("HC3-E inputs do not share PPO update invariants")
 
     anchor = reference["anchor_model_state_dict"]
     if any(
@@ -127,6 +142,8 @@ def average_interaction_speed_checkpoints(
         "model_state_dict": averaged_model,
         "anchor_model_state_dict": copy.deepcopy(anchor),
         "model_config": copy.deepcopy(reference["model_config"]),
+        "ppo_config": ppo_config,
+        "reward_config": copy.deepcopy(reference["reward_config"]),
         "training_cells": copy.deepcopy(reference["training_cells"]),
         "completed_iterations": reference["completed_iterations"],
         "source_supervisor_checkpoint": reference["source_supervisor_checkpoint"],
@@ -147,6 +164,7 @@ def average_interaction_speed_checkpoints(
                     "sha256": _sha256(path),
                     "training_seed": payload["seed"],
                     "completed_iterations": payload["completed_iterations"],
+                    "configured_iterations": payload["ppo_config"]["iterations"],
                 }
                 for path, payload in zip(checkpoint_paths, payloads, strict=True)
             ],

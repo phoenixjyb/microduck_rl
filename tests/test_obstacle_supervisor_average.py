@@ -19,7 +19,7 @@ from mjlab_microduck.obstacle_supervisor_bc import (
 
 
 def _checkpoint_payload(
-    anchor: dict[str, torch.Tensor], seed: int, delta: float
+    anchor: dict[str, torch.Tensor], seed: int, delta: float, configured_iterations: int
 ) -> dict:
     model = deepcopy(anchor)
     model[SPEED_HEAD_WEIGHT][0] += delta
@@ -31,7 +31,10 @@ def _checkpoint_payload(
         "action_authority": "interaction-speed-only",
         "min_interaction_speed_mps": 0.30,
         "model_config": asdict(SupervisorBcCfg()),
-        "ppo_config": {"learning_rate": 1.0e-5},
+        "ppo_config": {
+            "iterations": configured_iterations,
+            "learning_rate": 1.0e-5,
+        },
         "reward_config": {"collision": -10.0},
         "completed_iterations": 1,
         "seed": seed,
@@ -49,9 +52,13 @@ def _checkpoint_payload(
 def _write_inputs(tmp_path):
     anchor = ObstacleSupervisor().state_dict()
     paths = []
-    for seed, delta in zip((109, 113, 127), (1.0, 2.0, 3.0), strict=True):
+    for seed, delta, configured_iterations in zip(
+        (109, 113, 127), (1.0, 2.0, 3.0), (4, 1, 1), strict=True
+    ):
         path = tmp_path / f"seed-{seed}.pt"
-        torch.save(_checkpoint_payload(anchor, seed, delta), path)
+        torch.save(
+            _checkpoint_payload(anchor, seed, delta, configured_iterations), path
+        )
         paths.append(path)
     return anchor, tuple(paths)
 
@@ -67,6 +74,11 @@ def test_average_changes_only_speed_head_and_writes_manifest(tmp_path):
     assert payload["stage"] == HC3F_STAGE
     assert payload["decision"] == "aggregation-complete-pending-rollout"
     assert payload["aggregation"]["parameter_count"] == 65
+    assert payload["ppo_config"]["iterations"] == 1
+    assert [
+        source["configured_iterations"]
+        for source in payload["aggregation"]["sources"]
+    ] == [4, 1, 1]
     assert [
         source["training_seed"] for source in payload["aggregation"]["sources"]
     ] == [
@@ -105,7 +117,9 @@ def test_average_requires_three_unique_seeds(tmp_path):
         average_interaction_speed_checkpoints(inputs, tmp_path / "duplicate.pt")
 
 
-@pytest.mark.parametrize("corruption", ["yaw", "frozen", "iteration"])
+@pytest.mark.parametrize(
+    "corruption", ["yaw", "frozen", "iteration", "optimizer"]
+)
 def test_average_rejects_incompatible_input(tmp_path, corruption):
     _, inputs = _write_inputs(tmp_path)
     payload = torch.load(inputs[1], map_location="cpu", weights_only=False)
@@ -113,8 +127,10 @@ def test_average_rejects_incompatible_input(tmp_path, corruption):
         payload["model_state_dict"][SPEED_HEAD_BIAS][1] += 1.0
     elif corruption == "frozen":
         payload["model_state_dict"]["network.0.bias"][0] += 1.0
-    else:
+    elif corruption == "iteration":
         payload["completed_iterations"] = 2
+    else:
+        payload["ppo_config"]["learning_rate"] = 2.0e-5
     torch.save(payload, inputs[1])
 
     with pytest.raises(ValueError):

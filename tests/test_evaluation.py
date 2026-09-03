@@ -1,9 +1,11 @@
 import pytest
+import torch
 
 from mjlab_microduck.evaluation import (
     aggregate_speed_cases,
     parse_float_list,
     parse_int_list,
+    valid_action_deltas,
 )
 
 
@@ -20,6 +22,8 @@ def _case(speed, observed, error, ends, scale=1.0):
         "motor_torque_near_stall_fraction": 0.02 * scale,
         "motor_mechanical_power_abs_mean_w": 3.0 * scale,
         "motor_thermal_load_proxy_mean": 0.2 * scale,
+        "action_abs_p99": 0.8 * scale,
+        "action_rate_abs_p99": 0.1 * scale,
     }
 
 
@@ -53,3 +57,28 @@ def test_aggregate_speed_cases_groups_seeds_and_preserves_speed_order():
     assert one_mps["non_timeout_ends_total"] == 5
     assert one_mps["motor_speed_utilization_p99_mean"] == pytest.approx(0.75)
     assert one_mps["motor_mechanical_power_abs_mean_w"] == pytest.approx(4.5)
+    assert one_mps["action_abs_p99_mean"] == pytest.approx(1.2)
+    assert one_mps["action_rate_abs_p99_mean"] == pytest.approx(0.15)
+
+
+def test_valid_action_deltas_excludes_first_action_after_reset():
+    current = torch.tensor([[0.5, -0.5], [0.4, 0.6], [0.1, 0.2]])
+    previous = torch.tensor([[0.2, -0.1], [0.9, 0.1], [0.0, 0.5]])
+    previous_dones = torch.tensor([False, True, False])
+
+    assert torch.allclose(
+        valid_action_deltas(current, previous, previous_dones),
+        torch.tensor([0.3, 0.4, 0.1, 0.3]),
+    )
+
+
+@pytest.mark.parametrize(
+    "current,previous,dones",
+    [
+        (torch.zeros(2, 3), torch.zeros(2, 4), torch.zeros(2, dtype=torch.bool)),
+        (torch.zeros(2, 3), torch.zeros(2, 3), torch.zeros(3, dtype=torch.bool)),
+    ],
+)
+def test_valid_action_deltas_rejects_shape_mismatch(current, previous, dones):
+    with pytest.raises(ValueError):
+        valid_action_deltas(current, previous, dones)

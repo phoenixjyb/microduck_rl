@@ -6,6 +6,8 @@ import math
 from collections.abc import Iterable
 from statistics import pstdev
 
+import torch
+
 
 def parse_float_list(value: str) -> tuple[float, ...]:
     values = tuple(float(item.strip()) for item in value.split(",") if item.strip())
@@ -69,9 +71,28 @@ def aggregate_speed_cases(cases: Iterable[dict]) -> list[dict]:
                 "motor_thermal_load_proxy_mean": _mean(
                     case["motor_thermal_load_proxy_mean"] for case in group
                 ),
+                "action_abs_p99_mean": _mean(
+                    case["action_abs_p99"] for case in group
+                ),
+                "action_rate_abs_p99_mean": _mean(
+                    case["action_rate_abs_p99"] for case in group
+                ),
             }
         )
     return aggregates
+
+
+def valid_action_deltas(
+    current_actions: torch.Tensor,
+    previous_actions: torch.Tensor,
+    previous_dones: torch.Tensor,
+) -> torch.Tensor:
+    """Return absolute action deltas, excluding first actions after resets."""
+    if current_actions.shape != previous_actions.shape:
+        raise ValueError("current and previous action shapes must match")
+    if previous_dones.shape != current_actions.shape[:1]:
+        raise ValueError("previous_dones must have one value per environment")
+    return (current_actions - previous_actions).abs()[~previous_dones].flatten()
 
 
 def _mean(values: Iterable[float]) -> float:

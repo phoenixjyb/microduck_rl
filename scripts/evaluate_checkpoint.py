@@ -21,6 +21,7 @@ from mjlab_microduck.evaluation import (
     aggregate_speed_cases,
     parse_float_list,
     parse_int_list,
+    valid_action_deltas,
 )
 from mjlab_microduck.tasks.run import (
     MOTOR_NEAR_LIMIT_FRACTION,
@@ -87,14 +88,22 @@ def _run_case(args, speed: float, seed: int) -> dict:
         torque_samples = []
         power_samples = []
         action_samples = []
+        action_rate_samples = []
         episode_ends = 0
         timeouts = 0
+        previous_actions = raw_env.action_manager.action.detach().clone()
+        previous_dones = torch.zeros(
+            args.num_envs, dtype=torch.bool, device=args.device
+        )
 
         with torch.inference_mode():
             for step in range(args.warmup_steps + args.steps):
                 actions = policy(observations)
                 observations, _, dones, extras = env.step(actions)
+                applied_actions = raw_env.action_manager.action.detach()
                 if step < args.warmup_steps:
+                    previous_actions = applied_actions.clone()
+                    previous_dones = dones.bool().clone()
                     continue
 
                 forward = robot.data.root_link_lin_vel_b[:, 0].float()
@@ -109,18 +118,27 @@ def _run_case(args, speed: float, seed: int) -> dict:
                 joint_speed_samples.append(joint_speed)
                 torque_samples.append(torque)
                 power_samples.append(torch.sum(joint_speed * torque, dim=1))
-                applied_actions = raw_env.action_manager.action
                 action_samples.append(applied_actions.abs().float())
+                action_deltas = valid_action_deltas(
+                    applied_actions, previous_actions, previous_dones
+                )
+                if action_deltas.numel():
+                    action_rate_samples.append(action_deltas.float())
                 episode_ends += int(dones.sum().item())
                 timeout_tensor = extras.get("time_outs")
                 if timeout_tensor is not None:
                     timeouts += int(timeout_tensor.sum().item())
+                previous_actions = applied_actions.clone()
+                previous_dones = dones.bool().clone()
 
         forward = torch.cat(forward_samples)
         joint_speed = torch.cat(joint_speed_samples).flatten()
         torque = torch.cat(torque_samples).flatten()
         power = torch.cat(power_samples)
         actions = torch.cat(action_samples).flatten()
+        if not action_rate_samples:
+            raise RuntimeError("evaluation produced no valid action-rate samples")
+        action_rates = torch.cat(action_rate_samples)
         speed_util = joint_speed / XL330_M288_RATED_NO_LOAD_SPEED_RAD_S
         torque_util = torque / XL330_M288_RATED_STALL_TORQUE_NM_6V
         tracking_error = (forward - speed).abs()
@@ -159,6 +177,9 @@ def _run_case(args, speed: float, seed: int) -> dict:
             ),
             "action_abs_max": float(actions.max().item()),
             "action_abs_p99": _quantile(actions, 0.99),
+            "action_rate_abs_max": float(action_rates.max().item()),
+            "action_rate_abs_mean": float(action_rates.mean().item()),
+            "action_rate_abs_p99": _quantile(action_rates, 0.99),
         }
     finally:
         env.close()

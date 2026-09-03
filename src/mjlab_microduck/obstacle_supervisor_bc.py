@@ -1,4 +1,4 @@
-"""Offline HC2 imitation training for the bounded obstacle supervisor."""
+"""Offline imitation training for bounded obstacle-supervisor stages."""
 
 from __future__ import annotations
 

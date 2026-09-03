@@ -214,3 +214,16 @@ for exact structured geometry only. The next single-axis stage varies forward
 range while keeping speed, lateral positions, box geometry, and sensor quality
 fixed. See `experiments/2026-09-03-hc4l-lateral-placement.md` for hashes,
 comparisons, assets, and the simulation-only decision boundary.
+
+HC4-R next tested the single-axis 0.90 m near-range boundary at only 0.30 and
+0.40 m/s. A deterministic-teacher corpus of 107,665 samples passed its data
+gate, and the seed-42 BC specialist passed the offline imitation thresholds.
+It did not pass paired closed-loop selection: across held-out seeds
+109/113/127 it recorded 1,433 clean passages, ten collisions, and zero
+timeouts among 1,443 resolved attempts, versus HC4-LH's 1,364 clean passages,
+seven collisions, and zero timeouts among 1,371. HC4-R was 0.177 seconds
+faster by weighted passage time but introduced three net collisions. It is
+rejected, HC4-LH remains selected, and 0.90 m remains outside the accepted
+controller envelope. The next near-range design must address student-state
+covariate shift before another training candidate is launched. See
+`experiments/2026-09-03-hc4r-near-range.md`.

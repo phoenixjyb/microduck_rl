@@ -29,6 +29,16 @@ MAX_CASES = 48
 HC1_ATTEMPT_TIMEOUT_S = 12.0
 
 
+def recording_stem(
+    speed: float, obstacle_forward: float, obstacle_lateral: float
+) -> str:
+    """Return a deterministic replay basename for one geometry cell."""
+    return (
+        f"microduck-hc1-{speed:.2f}mps-"
+        f"x{obstacle_forward:.2f}m-y{obstacle_lateral:+.2f}m"
+    )
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:

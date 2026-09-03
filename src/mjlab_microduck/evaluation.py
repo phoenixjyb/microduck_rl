@@ -17,7 +17,10 @@ def fix_velocity_commands(env_cfg, speed: float, yaw_rate: float = 0.0) -> None:
     twist.rel_standing_envs = 0.0
     twist.rel_heading_envs = 0.0
     twist.rel_world_envs = 0.0
-    twist.rel_forward_envs = 1.0
+    # Fixed ranges already select a positive forward command.  Enabling the
+    # upstream "forward-only" sampler would additionally clamp vx to 0.3 m/s
+    # and force both lateral velocity and yaw rate to zero.
+    twist.rel_forward_envs = 0.0
     twist.rel_turn_in_place_envs = 0.0
     twist.init_velocity_prob = 0.0
     twist.heading_command = False

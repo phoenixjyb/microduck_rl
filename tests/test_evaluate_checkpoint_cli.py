@@ -40,4 +40,4 @@ def test_fix_commands_disables_heading_override_and_pins_twist():
     assert twist.ranges.lin_vel_y == (0.0, 0.0)
     assert twist.ranges.ang_vel_z == (-0.6, -0.6)
     assert twist.rel_heading_envs == 0.0
-    assert twist.rel_forward_envs == 1.0
+    assert twist.rel_forward_envs == 0.0

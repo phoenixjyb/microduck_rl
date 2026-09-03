@@ -157,7 +157,7 @@ HC0 then established a measured command envelope, HC1 supplied successful
 deterministic teacher trajectories, and HC2 trained a 17D behavioral-cloning
 supervisor while keeping the 61D motor-aware actor frozen. On the bounded cells
 0.3x1.15, 0.5x1.15/1.40, and 0.8x1.40 m, three-seed HC2 closed-loop evaluation
-retained 819 clean passes, one collision, and eight timeouts (98.91% pooled),
+retained 759 clean passes, one collision, and eight timeouts (98.83% pooled),
 with zero falls, NaNs, non-finite steps, or rated motor-speed exceedance.
 
 This does not retroactively pass the rejected direct-joint O1 campaign. HC2 is

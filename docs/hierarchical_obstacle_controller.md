@@ -128,8 +128,8 @@ errors of 0.0039 m/s for forward speed and 0.0226 rad/s for yaw. This was an
 offline gate only.
 
 Closed-loop HC2 evaluation across the same four cells and three seeds retained
-819 clean passes, one collision, and eight timeouts across 828 resolved
-attempts (98.91%). There were zero falls, NaNs, non-finite steps, or rated motor
+759 clean passes, one collision, and eight timeouts across 768 resolved
+attempts (98.83%). There were zero falls, NaNs, non-finite steps, or rated motor
 speed exceedances. The highest per-cell torque-utilization p99 was about 0.745;
 the highest near-stall exposure was about 0.20%.
 

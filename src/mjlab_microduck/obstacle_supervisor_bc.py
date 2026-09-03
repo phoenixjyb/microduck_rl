@@ -101,7 +101,7 @@ def _error_metrics(prediction: torch.Tensor, target: torch.Tensor) -> dict:
 
 
 def train_supervisor(
-    dataset_path: Path,
+    dataset_paths: tuple[Path, ...],
     output_path: Path,
     *,
     epochs: int = 200,
@@ -111,14 +111,29 @@ def train_supervisor(
 ) -> Path:
     if epochs <= 0 or batch_size <= 0:
         raise ValueError("epochs and batch_size must be positive")
-    dataset_path = dataset_path.resolve(strict=True)
+    if not dataset_paths:
+        raise ValueError("at least one dataset is required")
+    dataset_paths = tuple(path.resolve(strict=True) for path in dataset_paths)
     output_path = output_path.resolve()
     if output_path.exists():
         raise FileExistsError(output_path)
-    payload = torch.load(dataset_path, map_location="cpu", weights_only=False)
-    observations = payload["observations"].float()
-    commands = payload["commands"].float()
-    episode_keys = payload["episode_keys"].long()
+    payloads = [
+        torch.load(path, map_location="cpu", weights_only=False)
+        for path in dataset_paths
+    ]
+    source_hashes = {payload.get("checkpoint_sha256") for payload in payloads}
+    if len(source_hashes) != 1 or None in source_hashes:
+        raise ValueError("datasets do not share one frozen locomotion checkpoint")
+    observations = torch.cat(
+        [payload["observations"].float() for payload in payloads]
+    )
+    commands = torch.cat([payload["commands"].float() for payload in payloads])
+    episode_keys = torch.cat(
+        [
+            payload["episode_keys"].long() + index * 1_000_000_000
+            for index, payload in enumerate(payloads)
+        ]
+    )
     if observations.ndim != 2 or observations.shape[1] != SUPERVISOR_OBSERVATION_DIM:
         raise ValueError("dataset has the wrong supervisor observation shape")
     if commands.shape != (observations.shape[0], 2):
@@ -199,9 +214,11 @@ def train_supervisor(
         "model_state_dict": best_state,
         "model_config": asdict(cfg),
         "teacher_config": asdict(ObstacleTeacherCfg()),
-        "dataset": str(dataset_path),
-        "dataset_sha256": _sha256(dataset_path),
-        "source_locomotion_checkpoint_sha256": payload.get("checkpoint_sha256"),
+        "datasets": [
+            {"path": str(path), "sha256": _sha256(path)}
+            for path in dataset_paths
+        ],
+        "source_locomotion_checkpoint_sha256": next(iter(source_hashes)),
         "samples": int(observations.shape[0]),
         "successful_episodes": int(torch.unique(episode_keys).numel()),
         "training_samples": int(training_mask.sum()),
@@ -226,14 +243,14 @@ def train_supervisor(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("dataset", type=Path)
-    parser.add_argument("output", type=Path)
+    parser.add_argument("datasets", type=Path, nargs="+")
+    parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     train_supervisor(
-        args.dataset,
+        tuple(args.datasets),
         args.output,
         epochs=args.epochs,
         batch_size=args.batch_size,

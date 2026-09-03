@@ -1,9 +1,11 @@
+import pytest
 import torch
 
 from mjlab_microduck.hierarchical_obstacle import SUPERVISOR_OBSERVATION_DIM
 from mjlab_microduck.obstacle_supervisor_bc import (
     ObstacleSupervisor,
     split_episode_keys,
+    train_supervisor,
 )
 
 
@@ -22,3 +24,13 @@ def test_episode_split_never_leaks_one_episode_between_partitions():
     train_keys = set(keys[train].tolist())
     validation_keys = set(keys[validation].tolist())
     assert train_keys.isdisjoint(validation_keys)
+
+
+def test_train_supervisor_rejects_unknown_stage_before_dataset_access(tmp_path):
+    with pytest.raises(ValueError, match="unsupported behavioral-cloning stage"):
+        train_supervisor(
+            (tmp_path / "missing.pt",),
+            tmp_path / "supervisor.pt",
+            epochs=1,
+            stage="HC4L-unreviewed-stage",
+        )

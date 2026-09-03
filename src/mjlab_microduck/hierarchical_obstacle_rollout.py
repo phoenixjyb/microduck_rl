@@ -32,6 +32,8 @@ from mjlab_microduck.hierarchical_obstacle import (
 from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
 from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
 from mjlab_microduck.obstacle_supervisor_bc import (
+    HC2_STAGE,
+    HC4L_STAGE,
     InteractionSpeedOnlySupervisor,
     ObstacleSupervisor,
     SupervisorBcCfg,
@@ -90,7 +92,7 @@ def load_learned_supervisor(
     stage = payload.get("stage")
     decision = payload.get("decision")
     allowed = (
-        (stage == "HC2-behavioral-cloning" and decision == "offline-imitation-pass")
+        (stage in {HC2_STAGE, HC4L_STAGE} and decision == "offline-imitation-pass")
         or (
             stage == "HC3-supervisor-PPO"
             and decision in {"training-complete-pending-rollout", "accepted-simulation"}
@@ -675,7 +677,8 @@ def run_rollout(
             supervisor_checkpoint, map_location="cpu", weights_only=False
         )
         report_stage = {
-            "HC2-behavioral-cloning": "HC2-behavioral-cloning-rollout",
+            HC2_STAGE: "HC2-behavioral-cloning-rollout",
+            HC4L_STAGE: "HC4L-lateral-behavioral-cloning-rollout",
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
             HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
             HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",

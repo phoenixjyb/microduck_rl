@@ -17,6 +17,10 @@ from mjlab_microduck.hierarchical_obstacle import (
     ObstacleTeacherCfg,
 )
 
+HC2_STAGE = "HC2-behavioral-cloning"
+HC4L_STAGE = "HC4L-lateral-behavioral-cloning"
+SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE)
+
 
 @dataclass(frozen=True)
 class SupervisorBcCfg:
@@ -177,9 +181,12 @@ def train_supervisor(
     batch_size: int = 1024,
     seed: int = 42,
     cfg: SupervisorBcCfg = SupervisorBcCfg(),
+    stage: str = HC2_STAGE,
 ) -> Path:
     if epochs <= 0 or batch_size <= 0:
         raise ValueError("epochs and batch_size must be positive")
+    if stage not in SUPPORTED_BC_STAGES:
+        raise ValueError(f"unsupported behavioral-cloning stage: {stage}")
     if not dataset_paths:
         raise ValueError("at least one dataset is required")
     dataset_paths = tuple(path.resolve(strict=True) for path in dataset_paths)
@@ -277,7 +284,7 @@ def train_supervisor(
     )
     checkpoint = {
         "schema_version": 1,
-        "stage": "HC2-behavioral-cloning",
+        "stage": stage,
         "decision": "offline-imitation-pass" if passed_offline_gate else "rejected",
         "rollout_acceptance_required": True,
         "model_state_dict": best_state,
@@ -317,6 +324,7 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--stage", choices=SUPPORTED_BC_STAGES, default=HC2_STAGE)
     args = parser.parse_args()
     train_supervisor(
         tuple(args.datasets),
@@ -324,6 +332,7 @@ def main() -> None:
         epochs=args.epochs,
         batch_size=args.batch_size,
         seed=args.seed,
+        stage=args.stage,
     )
 
 

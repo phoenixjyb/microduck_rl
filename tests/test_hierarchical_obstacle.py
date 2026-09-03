@@ -58,6 +58,17 @@ def test_teacher_recovers_nominal_speed_after_obstacle_passes():
     assert command[0, 1] < 0.0
 
 
+def test_teacher_phase_transition_uses_route_not_body_forward_axis():
+    state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.5)
+    state.phase[:] = int(ObstaclePhase.INTERACTION)
+    _step(
+        _observation(0.3, bearing_rad=torch.pi / 2),
+        state,
+        heading=torch.pi / 2,
+    )
+    assert state.phase.item() == ObstaclePhase.RECOVERY
+
+
 def test_invalid_geometry_is_immediate_stop_until_recovery():
     state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.5)
     command = _step(_observation(0.4, valid=False), state)

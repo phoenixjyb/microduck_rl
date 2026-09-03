@@ -41,8 +41,8 @@ class ObstacleTeacherCfg:
     bypass_clearance_m: float = 0.34
     bypass_lookahead_m: float = 0.30
     route_lookahead_m: float = 0.60
-    interaction_speed_scale: float = 0.65
-    min_interaction_speed_mps: float = 0.15
+    interaction_speed_scale: float = 1.0
+    min_interaction_speed_mps: float = 0.30
     max_interaction_speed_mps: float = 0.30
     yaw_gain: float = 2.0
     max_speed_delta_per_update_mps: float = 0.08
@@ -177,8 +177,23 @@ def teacher_command(
     relative_x, relative_y, _, valid = _decoded_obstacle_geometry(
         obstacle_observation
     )
+    # Transform the obstacle displacement from base axes into fixed route axes.
+    # Phase transitions are route-relative even while the duck itself is
+    # turning, which prevents a bypass arc from keeping an already-passed box
+    # spuriously "ahead" in body coordinates.
+    cos_heading = torch.cos(route_heading_error_rad)
+    sin_heading = torch.sin(route_heading_error_rad)
+    obstacle_route_x = cos_heading * relative_x - sin_heading * relative_y
+    obstacle_route_y = (
+        route_lateral_error_m
+        + sin_heading * relative_x
+        + cos_heading * relative_y
+    )
+
     approach = state.phase == int(ObstaclePhase.APPROACH)
-    enter_interaction = approach & valid & (relative_x <= cfg.interaction_entry_m)
+    enter_interaction = approach & valid & (
+        obstacle_route_x <= cfg.interaction_entry_m
+    )
 
     obstacle_left = relative_y > cfg.centered_deadband_m
     obstacle_right = relative_y < -cfg.centered_deadband_m
@@ -191,21 +206,14 @@ def teacher_command(
     state.phase[enter_interaction] = int(ObstaclePhase.INTERACTION)
 
     interaction = state.phase == int(ObstaclePhase.INTERACTION)
-    enter_recovery = interaction & valid & (relative_x <= -cfg.passed_margin_m)
+    enter_recovery = interaction & valid & (
+        obstacle_route_x <= -cfg.passed_margin_m
+    )
     state.phase[enter_recovery] = int(ObstaclePhase.RECOVERY)
 
     phase = state.phase
     nominal = nominal_speed_mps.clamp(0.0, cfg.max_forward_speed_mps)
 
-    # Transform the obstacle displacement from base axes into fixed route axes.
-    cos_heading = torch.cos(route_heading_error_rad)
-    sin_heading = torch.sin(route_heading_error_rad)
-    obstacle_route_x = cos_heading * relative_x - sin_heading * relative_y
-    obstacle_route_y = (
-        route_lateral_error_m
-        + sin_heading * relative_x
-        + cos_heading * relative_y
-    )
     bypass_target_y = obstacle_route_y + state.bypass_side * cfg.bypass_clearance_m
     bypass_target_x = (obstacle_route_x + cfg.bypass_lookahead_m).clamp_min(0.05)
     bypass_heading_route = torch.atan2(

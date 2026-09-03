@@ -16,9 +16,13 @@ from mjlab_microduck.hierarchical_obstacle import (
     ObstaclePhase,
     ObstacleTeacherCfg,
 )
+from mjlab_microduck.tasks.obstacle_observation import (
+    DEFAULT_OBSTACLE_OBSERVATION_LIMITS,
+)
 
 HC2_STAGE = "HC2-behavioral-cloning"
 HC4L_STAGE = "HC4L-lateral-behavioral-cloning"
+HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
 SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE)
 
 
@@ -125,6 +129,58 @@ class InteractionSpeedOnlySupervisor(torch.nn.Module):
             hc2_command,
             min_interaction_speed_mps=self.min_interaction_speed_mps,
         )
+
+
+def obstacle_route_lateral_from_supervisor_observation(
+    observation: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Recover obstacle route-lateral position and validity from compact input."""
+    if observation.ndim != 2 or observation.shape[1] != SUPERVISOR_OBSERVATION_DIM:
+        raise ValueError(
+            f"observation must have shape (N, {SUPERVISOR_OBSERVATION_DIM})"
+        )
+    limits = DEFAULT_OBSTACLE_OBSERVATION_LIMITS
+    surface_range = observation[:, 1] * limits.max_range_m
+    width = observation[:, 4] * limits.max_width_m
+    center_range = surface_range + width / 2.0
+    relative_x = center_range * observation[:, 3]
+    relative_y = center_range * observation[:, 2]
+    route_lateral = observation[:, 8] * 0.75
+    route_heading = observation[:, 9] * torch.pi
+    obstacle_route_lateral = (
+        route_lateral
+        + torch.sin(route_heading) * relative_x
+        + torch.cos(route_heading) * relative_y
+    )
+    valid = observation[:, 7] > 0.5
+    return obstacle_route_lateral, valid
+
+
+class LateralGatedSupervisor(torch.nn.Module):
+    """Use HC2 at center and an HC4-L specialist only for shifted obstacles."""
+
+    def __init__(
+        self,
+        center_supervisor: ObstacleSupervisor,
+        lateral_supervisor: ObstacleSupervisor,
+        *,
+        lateral_gate_m: float = 0.06,
+    ) -> None:
+        super().__init__()
+        if lateral_gate_m <= 0.0:
+            raise ValueError("lateral_gate_m must be positive")
+        self.center_supervisor = center_supervisor
+        self.lateral_supervisor = lateral_supervisor
+        self.lateral_gate_m = lateral_gate_m
+
+    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+        obstacle_lateral, valid = obstacle_route_lateral_from_supervisor_observation(
+            observation
+        )
+        use_lateral = valid & (obstacle_lateral.abs() >= self.lateral_gate_m)
+        center_command = self.center_supervisor(observation)
+        lateral_command = self.lateral_supervisor(observation)
+        return torch.where(use_lateral.unsqueeze(-1), lateral_command, center_command)
 
 
 def _sha256(path: Path) -> str:

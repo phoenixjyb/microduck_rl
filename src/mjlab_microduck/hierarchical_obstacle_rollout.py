@@ -33,8 +33,10 @@ from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
 from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
 from mjlab_microduck.obstacle_supervisor_bc import (
     HC2_STAGE,
+    HC4LH_STAGE,
     HC4L_STAGE,
     InteractionSpeedOnlySupervisor,
+    LateralGatedSupervisor,
     ObstacleSupervisor,
     SupervisorBcCfg,
 )
@@ -94,6 +96,11 @@ def load_learned_supervisor(
     allowed = (
         (stage in {HC2_STAGE, HC4L_STAGE} and decision == "offline-imitation-pass")
         or (
+            stage == HC4LH_STAGE
+            and decision
+            in {"composition-complete-pending-rollout", "accepted-simulation"}
+        )
+        or (
             stage == "HC3-supervisor-PPO"
             and decision in {"training-complete-pending-rollout", "accepted-simulation"}
         )
@@ -118,6 +125,16 @@ def load_learned_supervisor(
     model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
+    if stage == HC4LH_STAGE:
+        center_model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
+        center_model.load_state_dict(payload["center_model_state_dict"], strict=True)
+        center_model.eval()
+        model = LateralGatedSupervisor(
+            center_model,
+            model,
+            lateral_gate_m=payload["lateral_gate_m"],
+        ).to(device)
+        model.eval()
     if stage in {HC3E_STAGE, HC3F_STAGE, HC3G_STAGE}:
         action_authority = payload.get("action_authority")
         if action_authority != "interaction-speed-only":
@@ -679,6 +696,7 @@ def run_rollout(
         report_stage = {
             HC2_STAGE: "HC2-behavioral-cloning-rollout",
             HC4L_STAGE: "HC4L-lateral-behavioral-cloning-rollout",
+            HC4LH_STAGE: "HC4LH-lateral-gated-supervisor-rollout",
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
             HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
             HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",

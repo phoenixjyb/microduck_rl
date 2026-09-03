@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 from mjlab_microduck.hierarchical_obstacle import (
@@ -86,6 +87,11 @@ def test_teacher_commands_obey_clamps_and_slew_limits():
     assert 0.0 <= command[0, 0] <= cfg.max_forward_speed_mps
     assert command[0, 1].abs() <= cfg.max_yaw_delta_per_update_rps
     assert command[0, 1].abs() <= cfg.max_yaw_rate_rps
+
+
+def test_teacher_rejects_negative_recovery_margin():
+    with pytest.raises(ValueError, match="passed margin"):
+        ObstacleTeacherCfg(passed_margin_m=-0.01)
 
 
 def test_supervisor_observation_includes_phase_and_bypass_state():

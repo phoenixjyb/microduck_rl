@@ -630,6 +630,17 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=73)
     parser.add_argument("--iterations", type=int, default=40)
     parser.add_argument("--rollout-steps", type=int, default=64)
+    parser.add_argument("--learning-rate", type=float, default=1.0e-4)
+    parser.add_argument("--anchor-scale", type=float, default=0.05)
+    parser.add_argument("--entropy-scale", type=float, default=0.002)
+    parser.add_argument("--collision-penalty", type=float, default=12.0)
+    parser.add_argument(
+        "--initial-log-std",
+        type=float,
+        nargs=2,
+        default=(-1.5, -1.5),
+        metavar=("SPEED", "YAW"),
+    )
     args = parser.parse_args()
     train_hc3_supervisor(
         args.locomotion_checkpoint,
@@ -641,8 +652,14 @@ def main() -> None:
         obstacle_lateral_m=args.obstacle_lateral,
         seed=args.seed,
         ppo_cfg=Hc3PpoCfg(
-            iterations=args.iterations, rollout_steps=args.rollout_steps
+            iterations=args.iterations,
+            rollout_steps=args.rollout_steps,
+            learning_rate=args.learning_rate,
+            anchor_scale=args.anchor_scale,
+            entropy_scale=args.entropy_scale,
+            initial_log_std=tuple(args.initial_log_std),
         ),
+        reward_cfg=Hc3RewardCfg(collision_penalty=args.collision_penalty),
     )
 
 

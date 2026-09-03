@@ -26,6 +26,10 @@ OA0_COMMAND_SPEED_MPS = 0.30
 OA0_ATTEMPT_TIMEOUT_S = 7.0
 OA0_ROUTE_RETURN_TOLERANCE_M = 0.15
 
+OA0R_PROTOCOL_NAME = "OA0-outcome-balanced-exact-v1"
+OA0R_TASK_ID = "Mjlab-Run-Obstacle-Assisted-Outcome-Flat-MicroDuck"
+OA0R_TERMINAL_OUTCOME_REWARD = 20.0
+
 
 def o1_evaluation_protocol() -> dict:
     """Return a JSON-compatible copy of the exact O1 environment contract."""
@@ -70,4 +74,13 @@ def obstacle_protocol_for_task(task_id: str) -> dict:
         return o1_evaluation_protocol()
     if task_id == OA0_TASK_ID:
         return oa0_training_protocol()
+    if task_id == OA0R_TASK_ID:
+        protocol = oa0_training_protocol()
+        protocol["name"] = OA0R_PROTOCOL_NAME
+        protocol["terminal_outcome_reward"] = {
+            "success": OA0R_TERMINAL_OUTCOME_REWARD,
+            "collision_or_attempt_timeout": -OA0R_TERMINAL_OUTCOME_REWARD,
+            "time_step_normalized": True,
+        }
+        return protocol
     raise ValueError(f"unsupported obstacle task: {task_id}")

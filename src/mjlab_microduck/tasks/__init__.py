@@ -93,8 +93,10 @@ from .run import make_run_variant, MicroduckRunRlCfg
 from .motor_aware import make_motor_aware_run_variant, MicroduckMotorAwareRunRlCfg
 from .obstacle_avoidance import (
     MicroduckObstacleAssistedRlCfg,
+    MicroduckObstacleAssistedOutcomeRlCfg,
     MicroduckObstacleAvoidanceRlCfg,
     make_obstacle_assisted_variant,
+    make_obstacle_assisted_outcome_variant,
     make_obstacle_avoidance_variant,
 )
 from .sprung import SWEEP_ARMS, make_sprung_variant, sprung_rl_cfg, ARM_TASK_SUFFIX
@@ -198,6 +200,28 @@ register_mjlab_task(
 print(
     "✓ Assisted obstacle Run task registered: "
     "Mjlab-Run-Obstacle-Assisted-Flat-MicroDuck"
+)
+
+# OA0R changes one axis from OA0: a dt-normalized terminal outcome impulse.
+register_mjlab_task(
+    task_id="Mjlab-Run-Obstacle-Assisted-Outcome-Flat-MicroDuck",
+    env_cfg=make_obstacle_assisted_outcome_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg())
+        )
+    ),
+    play_env_cfg=make_obstacle_assisted_outcome_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg(play=True))
+        ),
+        play=True,
+    ),
+    rl_cfg=MicroduckObstacleAssistedOutcomeRlCfg,
+    runner_cls=MicroduckOnPolicyRunner,
+)
+print(
+    "✓ Outcome-balanced obstacle Run task registered: "
+    "Mjlab-Run-Obstacle-Assisted-Outcome-Flat-MicroDuck"
 )
 
 # Sprung-foot stiffness sweep — Phase 2. See

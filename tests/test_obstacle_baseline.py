@@ -16,7 +16,7 @@ from mjlab_microduck.obstacle_baseline import (
     run_baseline,
     validate_baseline_bounds,
 )
-from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
+from mjlab_microduck.obstacle_protocol import OA0_TASK_ID, OA0R_TASK_ID
 
 
 def test_baseline_config_uses_deterministic_straight_command():
@@ -40,6 +40,12 @@ def test_assisted_baseline_uses_oa0_task_and_keeps_attempt_termination():
     assert env_cfg.commands["twist"].ranges.lin_vel_x == (0.3, 0.3)
     assert "obstacle_attempt_timeout" in env_cfg.terminations
     assert agent_cfg.experiment_name == "run_obstacle_assisted"
+
+
+def test_outcome_baseline_uses_oa0r_task():
+    env_cfg, agent_cfg = prepare_baseline_configs(8, 0.3, OA0R_TASK_ID)
+    assert "obstacle_terminal_outcome" in env_cfg.rewards
+    assert agent_cfg.experiment_name == "run_obstacle_assisted_outcome"
 
 
 def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):

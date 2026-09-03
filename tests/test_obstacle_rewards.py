@@ -111,6 +111,23 @@ def test_obstacle_attempt_timeout_uses_simulated_episode_time():
         microduck_mdp.obstacle_attempt_timeout(env, max_attempt_time_s=0.0)
 
 
+def test_terminal_outcome_reward_is_an_episode_level_impulse():
+    env = _env(
+        [(0.30, 0.10), (0.10, 0.00), (0.30, 0.30)],
+        [(0.0, 0.0)] * 3,
+    )
+    env._obstacle_route_origin_w = torch.zeros(3, 2)
+    env.episode_length_buf = torch.tensor([100, 100, 350])
+    env.step_dt = 0.02
+    outcome = microduck_mdp.obstacle_terminal_outcome_reward(env)
+    torch.testing.assert_close(outcome, torch.tensor([50.0, -50.0, -50.0]))
+    # RewardManager multiplies by dt; with weight 20 these become +/-20.
+    torch.testing.assert_close(
+        outcome * env.step_dt * 20.0,
+        torch.tensor([20.0, -20.0, -20.0]),
+    )
+
+
 def test_route_progress_tracks_command_without_rewarding_standing_or_overspeed():
     env = _env(
         [(0.0, 0.0)] * 4,

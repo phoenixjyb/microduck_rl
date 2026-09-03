@@ -11,7 +11,9 @@ from mjlab_microduck.obstacle_checkpoint_sweep import (
     write_checkpoint_sweep,
 )
 from mjlab_microduck.obstacle_protocol import (
+    OA0R_TASK_ID,
     oa0_training_protocol,
+    obstacle_protocol_for_task,
     o1_evaluation_protocol,
 )
 
@@ -338,3 +340,53 @@ def test_oa0_sweep_fails_missing_route_return_metric(tmp_path: Path):
 
     candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
     assert "mean_success_route_return_error_m" in candidate["failed_gates"]
+
+
+def test_oa0r_sweep_requires_its_distinct_protocol_identity(tmp_path: Path):
+    evaluation = tmp_path / "oa0r.json"
+    evaluation.write_text(
+        json.dumps(
+            {
+                "checkpoint": "/retained/model_8016.pt",
+                "evaluation_protocol": obstacle_protocol_for_task(OA0R_TASK_ID),
+                "cases": [
+                    {"seed": seed, "commanded_speed_mps": 0.3}
+                    for seed in (41, 42, 43)
+                ],
+                "totals": {
+                    "collision_events": 5,
+                    "attempt_timeout_events": 5,
+                    "fall_events": 0,
+                    "nan_termination_events": 0,
+                    "clean_pass_events": 90,
+                    "nonfinite_steps": 0,
+                },
+                "pre_obstacle_route_speed_mps": 0.25,
+                "mean_pass_lateral_excursion_m": 0.4,
+                "mean_passage_time_s": 6.0,
+                "mean_success_route_return_error_m": 0.1,
+            }
+        )
+        + "\n"
+    )
+    manifest = {
+        "schema_version": 1,
+        "campaign_id": "test-oa0r",
+        "stage": "OA0R",
+        "candidates": [
+            {
+                "training_seed": 42,
+                "checkpoint_iteration": 8016,
+                "obstacle_evaluation": evaluation.name,
+            }
+        ],
+    }
+
+    candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
+    assert "evaluation_protocol" not in candidate["failed_gates"]
+
+    old = json.loads(evaluation.read_text())
+    old["evaluation_protocol"] = oa0_training_protocol()
+    evaluation.write_text(json.dumps(old) + "\n")
+    candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
+    assert "evaluation_protocol" in candidate["failed_gates"]

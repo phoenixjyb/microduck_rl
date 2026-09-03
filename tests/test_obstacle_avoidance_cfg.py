@@ -19,6 +19,7 @@ from mjlab_microduck.tasks.obstacle_avoidance import (
     O1_OBSTACLE_LATERAL_M,
     O1_PROTOCOL_NAME,
     make_obstacle_assisted_variant,
+    make_obstacle_assisted_outcome_variant,
     make_obstacle_avoidance_variant,
     o1_evaluation_protocol,
 )
@@ -28,6 +29,10 @@ from mjlab_microduck.obstacle_protocol import (
     OA0_OBSTACLE_LATERAL_ABS_RANGE_M,
     OA0_PROTOCOL_NAME,
     OA0_ROUTE_RETURN_TOLERANCE_M,
+    OA0R_PROTOCOL_NAME,
+    OA0R_TASK_ID,
+    OA0R_TERMINAL_OUTCOME_REWARD,
+    obstacle_protocol_for_task,
     oa0_training_protocol,
 )
 from mjlab_microduck.tasks.run import make_run_variant
@@ -44,6 +49,15 @@ def _cfg(play=False):
 
 def _assisted_cfg(play=False):
     return make_obstacle_assisted_variant(
+        make_motor_aware_run_variant(
+            make_run_variant(make_microduck_velocity_env_cfg(play=play))
+        ),
+        play=play,
+    )
+
+
+def _outcome_cfg(play=False):
+    return make_obstacle_assisted_outcome_variant(
         make_motor_aware_run_variant(
             make_run_variant(make_microduck_velocity_env_cfg(play=play))
         ),
@@ -140,6 +154,31 @@ def test_oa0_protocol_manifest_matches_assisted_contract():
     assert protocol["commanded_speed_range_mps"] == [0.30, 0.30]
     assert protocol["attempt_timeout_s"] == 7.0
     assert protocol["route_return_tolerance_m"] == 0.15
+
+
+def test_oa0r_changes_only_terminal_outcome_axis_from_oa0():
+    assisted = _assisted_cfg()
+    outcome = _outcome_cfg()
+    assert outcome.events == assisted.events
+    assert outcome.commands == assisted.commands
+    assert outcome.terminations == assisted.terminations
+    assert outcome.observations == assisted.observations
+    assert set(outcome.rewards) == set(assisted.rewards) | {
+        "obstacle_terminal_outcome"
+    }
+    term = outcome.rewards["obstacle_terminal_outcome"]
+    assert term.func is microduck_mdp.obstacle_terminal_outcome_reward
+    assert term.weight == OA0R_TERMINAL_OUTCOME_REWARD
+
+
+def test_oa0r_protocol_records_time_step_normalized_outcome():
+    protocol = obstacle_protocol_for_task(OA0R_TASK_ID)
+    assert protocol["name"] == OA0R_PROTOCOL_NAME
+    assert protocol["terminal_outcome_reward"] == {
+        "success": 20.0,
+        "collision_or_attempt_timeout": -20.0,
+        "time_step_normalized": True,
+    }
 
 
 def test_velocity_curriculum_preserves_nonstanding_speed_floor():
@@ -241,3 +280,13 @@ def test_assisted_obstacle_task_is_registered_with_distinct_identity():
     rl_cfg = load_rl_cfg(task_id)
     assert rl_cfg.experiment_name == "run_obstacle_assisted"
     assert rl_cfg.run_name == "oa0_signed_offset"
+
+
+def test_outcome_assisted_task_is_registered_with_distinct_identity():
+    import mjlab_microduck.tasks  # noqa: F401
+    from mjlab.tasks.registry import list_tasks, load_rl_cfg
+
+    assert OA0R_TASK_ID in list_tasks()
+    rl_cfg = load_rl_cfg(OA0R_TASK_ID)
+    assert rl_cfg.experiment_name == "run_obstacle_assisted_outcome"
+    assert rl_cfg.run_name == "oa0_outcome_balanced"

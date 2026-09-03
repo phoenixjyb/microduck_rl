@@ -23,6 +23,7 @@ from mjlab_microduck.obstacle_protocol import (
     OA0_OBSTACLE_FORWARD_M,
     OA0_OBSTACLE_LATERAL_ABS_RANGE_M,
     OA0_ROUTE_RETURN_TOLERANCE_M,
+    OA0R_TERMINAL_OUTCOME_REWARD,
     O1_MAX_COMMAND_SPEED_MPS,
     O1_MIN_COMMAND_SPEED_MPS,
     O1_OBSTACLE_FORWARD_M,
@@ -213,6 +214,27 @@ def make_obstacle_assisted_variant(
     return cfg
 
 
+def make_obstacle_assisted_outcome_variant(
+    cfg: ManagerBasedRlEnvCfg,
+    *,
+    play: bool = False,
+) -> ManagerBasedRlEnvCfg:
+    """Add one episode-level outcome impulse to OA0, changing no other axis."""
+    cfg = make_obstacle_assisted_variant(cfg, play=play)
+    cfg.rewards["obstacle_terminal_outcome"] = RewardTermCfg(
+        func=microduck_mdp.obstacle_terminal_outcome_reward,
+        weight=OA0R_TERMINAL_OUTCOME_REWARD,
+        params={
+            "asset_name": "obstacle",
+            "robot_radius_m": ROBOT_COLLISION_RADIUS_M,
+            "obstacle_radius_m": OBSTACLE_COLLISION_RADIUS_M,
+            "return_tolerance_m": OA0_ROUTE_RETURN_TOLERANCE_M,
+            "max_attempt_time_s": OA0_ATTEMPT_TIMEOUT_S,
+        },
+    )
+    return cfg
+
+
 MicroduckObstacleAvoidanceRlCfg = replace(
     MicroduckMotorAwareRunRlCfg,
     actor=deepcopy(MicroduckMotorAwareRunRlCfg.actor),
@@ -229,4 +251,13 @@ MicroduckObstacleAssistedRlCfg = replace(
     algorithm=deepcopy(MicroduckObstacleAvoidanceRlCfg.algorithm),
     experiment_name="run_obstacle_assisted",
     run_name="oa0_signed_offset",
+)
+
+MicroduckObstacleAssistedOutcomeRlCfg = replace(
+    MicroduckObstacleAssistedRlCfg,
+    actor=deepcopy(MicroduckObstacleAssistedRlCfg.actor),
+    critic=deepcopy(MicroduckObstacleAssistedRlCfg.critic),
+    algorithm=deepcopy(MicroduckObstacleAssistedRlCfg.algorithm),
+    experiment_name="run_obstacle_assisted_outcome",
+    run_name="oa0_outcome_balanced",
 )

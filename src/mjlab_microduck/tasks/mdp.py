@@ -5960,6 +5960,37 @@ def obstacle_attempt_timeout(
     return elapsed_s >= max_attempt_time_s
 
 
+def obstacle_terminal_outcome_reward(
+    env: ManagerBasedRlEnv,
+    asset_name: str = "obstacle",
+    robot_radius_m: float = 0.12,
+    obstacle_radius_m: float = 0.10,
+    return_tolerance_m: float = 0.15,
+    max_attempt_time_s: float = 7.0,
+) -> torch.Tensor:
+    """Return a dt-normalized success/failure impulse for one obstacle attempt.
+
+    RewardManager multiplies every term by ``step_dt``. Dividing the terminal
+    indicator here makes the configured weight an episode-level outcome value,
+    rather than an accidentally tiny one-step reward.
+    """
+    success = obstacle_route_rejoined(
+        env,
+        asset_name=asset_name,
+        robot_radius_m=robot_radius_m,
+        obstacle_radius_m=obstacle_radius_m,
+        return_tolerance_m=return_tolerance_m,
+    )
+    failed = obstacle_collision(
+        env,
+        asset_name=asset_name,
+        robot_radius_m=robot_radius_m,
+        obstacle_radius_m=obstacle_radius_m,
+    ) | obstacle_attempt_timeout(env, max_attempt_time_s=max_attempt_time_s)
+    outcome = success.to(dtype=torch.float32) - failed.to(dtype=torch.float32)
+    return outcome / env.step_dt
+
+
 def obstacle_route_progress_reward(
     env: ManagerBasedRlEnv,
     command_name: str = "twist",

@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Any
 
 from mjlab_microduck.obstacle_protocol import (
+    OA0R_TASK_ID,
     oa0_training_protocol,
+    obstacle_protocol_for_task,
     o1_evaluation_protocol,
 )
 
@@ -36,6 +38,16 @@ STAGE_PROFILES = {
     },
     "OA0": {
         "protocol": oa0_training_protocol,
+        "commanded_speed_mps": 0.3,
+        "min_training_seed_pass_rate": 0.85,
+        "min_pooled_pass_rate": 0.85,
+        "min_pre_obstacle_speed_mps": 0.22,
+        "max_pass_lateral_excursion_m": 0.45,
+        "max_passage_time_s": 7.0,
+        "max_success_route_return_error_m": 0.15,
+    },
+    "OA0R": {
+        "protocol": lambda: obstacle_protocol_for_task(OA0R_TASK_ID),
         "commanded_speed_mps": 0.3,
         "min_training_seed_pass_rate": 0.85,
         "min_pooled_pass_rate": 0.85,

@@ -82,6 +82,7 @@ def test_load_hc3e_wraps_checkpoint_with_speed_only_authority(tmp_path):
             ).hexdigest(),
             "model_config": asdict(SupervisorBcCfg()),
             "model_state_dict": actor.state_dict(),
+            "anchor_model_state_dict": actor.state_dict(),
         },
         supervisor_checkpoint,
     )
@@ -93,5 +94,4 @@ def test_load_hc3e_wraps_checkpoint_with_speed_only_authority(tmp_path):
     observation[:, 0] = 0.625
     observation[:, -4] = 1.0
     command = loaded(observation)
-    torch.testing.assert_close(command[:, 0], torch.tensor([0.625]))
-    torch.testing.assert_close(command[:, 1], actor(observation)[:, 1])
+    torch.testing.assert_close(command, actor(observation))

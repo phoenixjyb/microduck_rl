@@ -91,7 +91,7 @@ def test_hc3e_command_has_only_bounded_interaction_speed_authority():
         torch.tensor([[-100.0], [-100.0], [100.0]]),
         hc2_command,
     )
-    torch.testing.assert_close(command[:, 0], torch.tensor([0.625, 0.375, 0.625]))
+    torch.testing.assert_close(command[:, 0], torch.tensor([0.2, 0.375, 0.4]))
     torch.testing.assert_close(command[:, 1], hc2_command[:, 1])
 
 

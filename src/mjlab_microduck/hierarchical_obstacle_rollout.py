@@ -109,8 +109,12 @@ def load_learned_supervisor(
         action_authority = payload.get("action_authority")
         if action_authority != "interaction-speed-only":
             raise ValueError("HC3-E checkpoint has invalid action authority")
+        hc2_model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
+        hc2_model.load_state_dict(payload["anchor_model_state_dict"], strict=True)
+        hc2_model.eval()
         model = InteractionSpeedOnlySupervisor(
             model,
+            hc2_model,
             min_interaction_speed_mps=payload["min_interaction_speed_mps"],
         ).to(device)
         model.eval()

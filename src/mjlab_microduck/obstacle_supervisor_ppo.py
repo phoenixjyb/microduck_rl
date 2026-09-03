@@ -737,6 +737,7 @@ def train_hc3_supervisor(
                 _save_hc3_checkpoint(
                     snapshot_path,
                     actor=actor,
+                    anchor=anchor,
                     value_function=value_function,
                     log_std=log_std,
                     hc2_payload=hc2_payload,
@@ -761,6 +762,7 @@ def train_hc3_supervisor(
         _save_hc3_checkpoint(
             output_path,
             actor=actor,
+            anchor=anchor,
             value_function=value_function,
             log_std=log_std,
             hc2_payload=hc2_payload,
@@ -788,6 +790,7 @@ def _save_hc3_checkpoint(
     output_path: Path,
     *,
     actor: ObstacleSupervisor,
+    anchor: ObstacleSupervisor,
     value_function: SupervisorValue,
     log_std: torch.Tensor,
     hc2_payload: dict,
@@ -820,6 +823,9 @@ def _save_hc3_checkpoint(
         ),
         "min_interaction_speed_mps": ObstacleTeacherCfg().min_interaction_speed_mps,
         "model_state_dict": _cpu_state_dict(actor),
+        "anchor_model_state_dict": (
+            _cpu_state_dict(anchor) if interaction_speed_only else None
+        ),
         "value_state_dict": _cpu_state_dict(value_function),
         "log_std": log_std.detach().cpu(),
         "model_config": hc2_payload["model_config"],
@@ -853,7 +859,13 @@ def _save_hc3_checkpoint(
     manifest = {
         key: value
         for key, value in checkpoint.items()
-        if key not in {"model_state_dict", "value_state_dict", "log_std"}
+        if key
+        not in {
+            "model_state_dict",
+            "anchor_model_state_dict",
+            "value_state_dict",
+            "log_std",
+        }
     }
     output_path.with_suffix(".json").write_text(
         json.dumps(manifest, indent=2) + "\n"

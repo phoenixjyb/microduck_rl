@@ -68,9 +68,9 @@ def interaction_speed_only_command(
 ) -> torch.Tensor:
     """Compose a normalized command with speed-only interaction authority.
 
-    The caller supplies the frozen HC2 command for yaw. Approach and recovery
-    pass through the normalized nominal-speed observation. During interaction,
-    the learned speed is bounded between the measured minimum and nominal.
+    The caller supplies the frozen HC2 command for yaw and for speed outside
+    interaction. During interaction, the learned speed is bounded between the
+    measured minimum and nominal.
     """
     if observation.ndim != 2 or observation.shape[1] != SUPERVISOR_OBSERVATION_DIM:
         raise ValueError(
@@ -93,7 +93,7 @@ def interaction_speed_only_command(
     learned_speed = torch.minimum(learned_speed, nominal_normalized)
     interaction_index = -4 + int(ObstaclePhase.INTERACTION)
     interaction = observation[:, interaction_index] > 0.5
-    speed = torch.where(interaction, learned_speed, nominal_normalized)
+    speed = torch.where(interaction, learned_speed, hc2_command[:, 0])
     return torch.stack((speed, hc2_command[:, 1]), dim=-1)
 
 
@@ -103,18 +103,18 @@ class InteractionSpeedOnlySupervisor(torch.nn.Module):
     def __init__(
         self,
         supervisor: ObstacleSupervisor,
+        hc2_supervisor: ObstacleSupervisor,
         *,
         min_interaction_speed_mps: float = 0.30,
     ) -> None:
         super().__init__()
         self.supervisor = supervisor
+        self.hc2_supervisor = hc2_supervisor
         self.min_interaction_speed_mps = min_interaction_speed_mps
 
     def forward(self, observation: torch.Tensor) -> torch.Tensor:
         raw = self.supervisor.raw_action(observation)
-        hc2_command = torch.stack(
-            (torch.sigmoid(raw[:, 0]), torch.tanh(raw[:, 1])), dim=-1
-        )
+        hc2_command = self.hc2_supervisor(observation)
         return interaction_speed_only_command(
             observation,
             raw[:, :1],

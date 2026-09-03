@@ -137,3 +137,18 @@ the interaction zone and resume once its center is behind the robot. Collision,
 timeout, route-return, angular tracking, motor, and acceptance contracts do not
 change. Thus OA0P permits braking or slowing for safety without rewarding
 lingering.
+
+The bounded OA0P seed-42 pilot also failed. Its clean-pass rate fell from
+18.154% at iteration 8000 to 3.320% at iteration 8061. Approach speed fell from
+0.208 to 0.179 m/s and recovery speed stayed below 0.212 m/s. Because OA0P
+separately measures approach, interaction, and recovery, this is evidence that
+the shared 14-joint PPO policy is forgetting its locomotion skill, not merely
+choosing a legitimate low speed inside the maneuver. Seeds 43 and 44 are not
+started.
+
+The next implementation track is therefore hierarchical. The accepted
+motor-aware locomotion policy remains frozen and consumes a bounded velocity
+command. A lower-rate obstacle supervisor consumes compact obstacle geometry
+plus route state and produces only a forward-speed scale and yaw-rate command.
+It cannot write joint targets. See `hierarchical_obstacle_controller.md` for
+the contract and staged gates.

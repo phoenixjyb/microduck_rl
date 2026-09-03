@@ -1,6 +1,7 @@
 import pytest
 
 from mjlab_microduck.hierarchical_obstacle_rollout import (
+    HC1_ATTEMPT_TIMEOUT_S,
     MAX_CASES,
     prepare_rollout_configs,
     validate_rollout_bounds,
@@ -18,6 +19,12 @@ def test_rollout_config_keeps_obstacle_physics_but_restores_base_observation():
     assert env_cfg.events["reset_obstacle"].params["lateral_range_m"] == (-0.27, -0.27)
     assert "lateral_abs_range_m" not in env_cfg.events["reset_obstacle"].params
     assert env_cfg.commands["twist"].rel_forward_envs == 0.0
+    assert (
+        env_cfg.terminations["obstacle_attempt_timeout"].params[
+            "max_attempt_time_s"
+        ]
+        == HC1_ATTEMPT_TIMEOUT_S
+    )
     assert agent_cfg.experiment_name == "run_motor_aware"
 
 

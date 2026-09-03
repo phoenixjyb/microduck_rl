@@ -43,7 +43,7 @@ class ObstacleTeacherCfg:
     route_lookahead_m: float = 0.60
     interaction_speed_scale: float = 1.0
     min_interaction_speed_mps: float = 0.30
-    max_interaction_speed_mps: float = 0.50
+    max_interaction_speed_mps: float = 0.30
     yaw_gain: float = 2.0
     max_speed_delta_per_update_mps: float = 0.08
     max_yaw_delta_per_update_rps: float = 0.20

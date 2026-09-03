@@ -26,6 +26,7 @@ BASE_TASK_ID = "Mjlab-Run-MotorAware-Flat-MicroDuck"
 MAX_ENVS = 256
 MAX_STEPS = 1000
 MAX_CASES = 48
+HC1_ATTEMPT_TIMEOUT_S = 12.0
 
 
 def _sha256(path: Path) -> str:
@@ -106,6 +107,9 @@ def prepare_rollout_configs(
 
     env_cfg.curriculum.clear()
     env_cfg.events.pop("push_robot", None)
+    env_cfg.terminations["obstacle_attempt_timeout"].params[
+        "max_attempt_time_s"
+    ] = HC1_ATTEMPT_TIMEOUT_S
     agent_cfg = load_rl_cfg(BASE_TASK_ID)
     agent_cfg.logger = "tensorboard"
     agent_cfg.upload_model = False
@@ -194,6 +198,8 @@ def _run_case(
         command_speed_min = math.inf
         command_speed_max = -math.inf
         command_yaw_abs_max = 0.0
+        episode_steps = torch.zeros(num_envs, dtype=torch.long, device=device)
+        pass_time_sum_s = 0.0
         representative_trace: list[dict] = []
         representative_attempt_done = False
 
@@ -263,6 +269,7 @@ def _run_case(
 
                 actions = policy(observations)
                 observations, rewards, dones, _ = wrapped.step(actions)
+                episode_steps += 1
                 collision = env.termination_manager.get_term("obstacle_collision")
                 passed = env.termination_manager.get_term("obstacle_passed")
                 attempted_out = env.termination_manager.get_term(
@@ -272,6 +279,9 @@ def _run_case(
                 nan_state = env.termination_manager.get_term("nan_state")
                 collision_events += int(collision.sum())
                 clean_pass_events += int(passed.sum())
+                pass_time_sum_s += float(
+                    (episode_steps[passed].float() * env.step_dt).sum()
+                )
                 attempt_timeout_events += int(attempted_out.sum())
                 fall_events += int(fell.sum())
                 nan_events += int(nan_state.sum())
@@ -295,6 +305,7 @@ def _run_case(
                     state, dones.bool(), nominal_speed_mps=nominal_speed_mps
                 )
                 lateral_abs_max[dones.bool()] = 0.0
+                episode_steps[dones.bool()] = 0
 
         result = {
             "nominal_speed_mps": nominal_speed_mps,
@@ -311,6 +322,9 @@ def _run_case(
             "nonfinite_steps": nonfinite_steps,
             "mean_pass_lateral_excursion_m": (
                 pass_lateral_sum / pass_lateral_count if pass_lateral_count else None
+            ),
+            "mean_passage_time_s": (
+                pass_time_sum_s / clean_pass_events if clean_pass_events else None
             ),
             "command_speed_min_mps": command_speed_min,
             "command_speed_max_mps": command_speed_max,
@@ -396,6 +410,7 @@ def run_rollout(
         "base_task_id": BASE_TASK_ID,
         "obstacle_physics_task_id": OA0_TASK_ID,
         "teacher_config": asdict(ObstacleTeacherCfg()),
+        "attempt_timeout_s": HC1_ATTEMPT_TIMEOUT_S,
         "perception": "exact structured geometry; no raw camera perception",
         "physical_motion_authorized": False,
         "cases": cases,

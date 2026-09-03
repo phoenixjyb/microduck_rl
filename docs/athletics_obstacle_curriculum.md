@@ -203,8 +203,14 @@ non-finite steps, or rated motor-speed exceedances. Center collisions remained
 at two and shifted collisions fell from 48 to one, so HC4-LH is accepted only
 for the exact centered/+/-0.12 m simulation envelope.
 
-The next stage is a bounded diagnostic sweep at unseen offsets around the
-0.06 m selection boundary and beyond the trained +/-0.12 m points. It does not
-yet add sensor perturbation or start another training job. See
-`experiments/2026-09-03-hc4l-lateral-placement.md` for hashes, comparisons,
-assets, and the simulation-only decision boundary.
+The boundary diagnostic then showed that the HC4-L specialist generalizes to
+the previously unseen +/-0.04 m points much better than HC2. A threshold-only
+HC4-LH candidate reduced the exact-geometry center band from 0.06 to 0.02 m;
+no network was retrained. Across 42 held-out cells at lateral positions
+-0.18/-0.08/-0.04/0.00/+0.04/+0.08/+0.18 m, it retained 3,092 clean passes,
+six collisions, and ten timeouts among 3,108 resolved attempts (99.485%
+clean), with all hard safety counters clean. This supersedes the 0.06 m gate
+for exact structured geometry only. The next single-axis stage varies forward
+range while keeping speed, lateral positions, box geometry, and sensor quality
+fixed. See `experiments/2026-09-03-hc4l-lateral-placement.md` for hashes,
+comparisons, assets, and the simulation-only decision boundary.

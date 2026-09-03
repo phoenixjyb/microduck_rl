@@ -8,8 +8,8 @@ Source commits:
 - HC4-LH composition and runtime gate: `92b64d9e6bbcb733be01734598429d85d7a34138`
 - stage-aware replay metadata: `149828e7c276c6a21f08b3b8ffa4e19feccd5c33`
 
-Decision: **accept HC4-LH for its exact simulation envelope; do not replace HC2
-with the ungated HC4-L specialist**
+Decision: **accept the 0.02 m-gated HC4-LH for its tested exact-geometry
+simulation envelope; do not replace HC2 with the ungated HC4-L specialist**
 
 ## Scope and authority
 
@@ -115,7 +115,7 @@ They are retained under
 `../artifacts/hc4lh-92b64d9-full-s61-63/` and are byte-identical to the copies
 on 100.100.
 
-## Visual evidence and next gate
+## Visual evidence
 
 Representative 12-second, 960 x 540 replays cover 0.30, 0.50, and 0.80 m/s,
 both lateral signs, and forward positions 1.15 and 1.40 m. Each replay has a
@@ -130,9 +130,63 @@ retained under `../artifacts/hc4lh-149828e-heldout/`.
 | 0.50 m/s, x=1.40 m, y=-0.12 m | `494faae1521e9d169801d25af55cf9bfd3a84304ab9b9dd42300c3c1fcb1a8ce` | `66daf3a6320f82ae9f2ec40d8f4bedb04040b2a5719a551bef2302702c91c170` |
 | 0.80 m/s, x=1.40 m, y=+0.12 m | `86efb328d3754cc613b022f06db75072f0fd40044821798ecd8827ca6090559b` | `22edf6d0fd5737fb70c54b64815c4635366b2f46c4bc89e817f5c1c4dde54113` |
 
-The next stage is diagnostic, not another long training run: sweep unseen
-lateral offsets around the 0.06 m gate and just outside the trained +/-0.12 m
-placements. This measures interpolation, extrapolation, and gate-boundary
-behavior before expanding the accepted envelope. Sensor noise, latency,
-dropout, raw perception, low-obstacle jumping, and physical motion remain
-separate later gates.
+## Gate-boundary diagnostic and selected threshold
+
+The next diagnostic used unseen offsets `-0.18`, `-0.08`, `-0.04`, `0.00`,
+`+0.04`, `+0.08`, and `+0.18` m at 0.50 x 1.15 m and 0.80 x 1.40 m. Seed 71
+ran first; seeds 73 and 79 ran only after its safety counters stayed clean.
+
+With the original 0.06 m gate, the three-seed matrix recorded 3,081 clean
+passes, 21 collisions, and 16 timeouts among 3,118 resolved attempts. Its
+failure distribution was diagnostic: the HC4-L bins at +/-0.08 and +/-0.18 m
+recorded one collision total, while the HC2 bins at -0.04, 0.00, and +0.04 m
+recorded 20. A paired seed-71 HC2 run recorded 22 collisions versus HC4-LH's
+seven, confirming that the lateral specialist was beneficial rather than only
+moving failures between bins.
+
+Direct HC4-L evaluation at only +/-0.04 m then recorded 773 clean passes, one
+collision, and three timeouts among 777 resolved attempts across seeds 71, 73,
+and 79. The same cells under the 0.06 m hybrid gate had 753 clean passes, 18
+collisions, and six timeouts. This supported one threshold-only candidate; no
+new model was trained.
+
+The selected candidate preserves HC2 for route-lateral offsets below 0.02 m
+and uses the same byte-exact HC4-L model outside that band. Its checkpoint is
+`../artifacts/hc4lh-11002cc-center002/supervisor.pt`, SHA-256
+`0b2608080671c5df85d8c9f900d68b6a6f298ec820eb1c6ba75afc948337505a`.
+The immutable pre-rollout manifest SHA-256 is
+`9695e270c060022d45a222efab9b10d472307f689c2bb0c400bb8efa03af79fe`.
+
+Its actual 42-cell held-out result was:
+
+| Offset | Clean | Collision | Timeout | Resolved | Clean rate | Weighted passage |
+|---|---:|---:|---:|---:|---:|---:|
+| -0.18 m | 610 | 0 | 1 | 611 | 99.836% | 6.816 s |
+| -0.08 m | 405 | 0 | 2 | 407 | 99.509% | 7.788 s |
+| -0.04 m | 385 | 1 | 3 | 389 | 98.972% | 8.328 s |
+| 0.00 m | 383 | 2 | 1 | 386 | 99.223% | 8.730 s |
+| +0.04 m | 382 | 2 | 2 | 386 | 98.964% | 8.432 s |
+| +0.08 m | 389 | 1 | 1 | 391 | 99.488% | 8.054 s |
+| +0.18 m | 538 | 0 | 0 | 538 | 100.000% | 7.007 s |
+| **All** | **3,092** | **6** | **10** | **3,108** | **99.485%** | **7.757 s** |
+
+At 0.50 m/s the clean rate was 99.877%; at 0.80 m/s it was 99.052%. Maximum
+per-cell torque-utilization p99 was 0.7512 and maximum near-stall fraction was
+0.2417%. Falls, NaN terminations, non-finite steps, and rated motor-speed
+exceedance remained zero. Relative to the 0.06 m gate on the same matrix,
+collisions fell from 21 to six, timeouts from 16 to ten, and weighted passage
+improved from 7.809 to 7.757 seconds.
+
+The accepted report hashes are:
+
+- seed-71 0.50 m/s: `a51363eb9cae0c2358ee4f522a0a1ed99c1c6b567919ab10ab67954c8399e626`
+- seed-71 0.80 m/s: `8ab886861c95c01831ebcecc25ab3454c99cbde072f666816f4d42fe3e903a8c`
+- seeds-73/79 0.50 m/s: `64fb714e36d99c015fd79d1f9974a318fdd96a315cf4f31b3bbf3ffd1db84d9c`
+- seeds-73/79 0.80 m/s: `6b30a03758b2077559df80e43ddffaedca0927a94f0699f7247ee0fae582f19e`
+
+The next single-axis stage varies obstacle forward range while keeping speed,
+lateral positions, box geometry, and exact sensing within the retained
+envelope. Sensor noise, latency, dropout, raw perception, low-obstacle
+jumping, and physical motion remain separate later gates. The 0.02 m threshold
+is accepted only for exact structured geometry; it is not evidence that a real
+perception system can reliably classify a two-centimeter center band.

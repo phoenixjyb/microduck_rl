@@ -92,16 +92,21 @@ def make_teacher_state(
     num_envs: int,
     *,
     device: torch.device | str,
-    nominal_speed_mps: float,
+    nominal_speed_mps: float | torch.Tensor,
 ) -> ObstacleTeacherState:
     if num_envs <= 0:
         raise ValueError("num_envs must be positive")
-    if nominal_speed_mps < 0.0:
+    nominal = torch.as_tensor(nominal_speed_mps, device=device, dtype=torch.float32)
+    if nominal.ndim == 0:
+        nominal = nominal.expand(num_envs)
+    if nominal.shape != (num_envs,):
+        raise ValueError("nominal_speed_mps must be scalar or have shape (N,)")
+    if bool((nominal < 0.0).any()):
         raise ValueError("nominal_speed_mps must be non-negative")
     preferred_side = torch.ones(num_envs, device=device)
     preferred_side[1::2] = -1.0
     previous_command = torch.zeros(num_envs, 2, device=device)
-    previous_command[:, 0] = nominal_speed_mps
+    previous_command[:, 0] = nominal
     return ObstacleTeacherState(
         phase=torch.full(
             (num_envs,), int(ObstaclePhase.APPROACH), dtype=torch.long, device=device
@@ -116,12 +121,23 @@ def reset_teacher_state(
     state: ObstacleTeacherState,
     reset_mask: torch.Tensor,
     *,
-    nominal_speed_mps: float,
+    nominal_speed_mps: float | torch.Tensor,
 ) -> None:
     reset_mask = reset_mask.to(device=state.phase.device, dtype=torch.bool)
+    nominal = torch.as_tensor(
+        nominal_speed_mps,
+        device=state.phase.device,
+        dtype=state.previous_command.dtype,
+    )
+    if nominal.ndim == 0:
+        nominal = nominal.expand(state.phase.shape[0])
+    if nominal.shape != state.phase.shape:
+        raise ValueError("nominal_speed_mps must be scalar or match teacher state")
+    if bool((nominal < 0.0).any()):
+        raise ValueError("nominal_speed_mps must be non-negative")
     state.phase[reset_mask] = int(ObstaclePhase.APPROACH)
     state.bypass_side[reset_mask] = state.preferred_side[reset_mask]
-    state.previous_command[reset_mask, 0] = nominal_speed_mps
+    state.previous_command[reset_mask, 0] = nominal[reset_mask]
     state.previous_command[reset_mask, 1] = 0.0
 
 

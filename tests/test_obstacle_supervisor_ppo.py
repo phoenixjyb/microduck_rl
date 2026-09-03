@@ -3,7 +3,9 @@ import torch
 
 from mjlab_microduck.hierarchical_obstacle import ObstaclePhase
 from mjlab_microduck.obstacle_supervisor_ppo import (
+    HC3D_BALANCED_CELLS,
     Hc3PpoCfg,
+    balanced_cell_assignment,
     generalized_advantage_estimate,
     hc3_reward,
     normalized_command_from_latent,
@@ -68,6 +70,22 @@ def test_latent_transform_obeys_normalized_command_bounds():
     )
     assert torch.all((command[:, 0] >= 0.0) & (command[:, 0] <= 1.0))
     assert torch.all((command[:, 1] >= -1.0) & (command[:, 1] <= 1.0))
+
+
+def test_hc3d_assignment_balances_all_retained_hc2_cells():
+    cell_index, speed, forward = balanced_cell_assignment(
+        10, HC3D_BALANCED_CELLS, device="cpu"
+    )
+    assert torch.bincount(cell_index).tolist() == [3, 3, 2, 2]
+    torch.testing.assert_close(
+        torch.stack((speed[:4], forward[:4]), dim=-1),
+        torch.tensor(HC3D_BALANCED_CELLS),
+    )
+
+
+def test_hc3d_assignment_rejects_missing_cell_coverage():
+    with pytest.raises(ValueError, match="cover every"):
+        balanced_cell_assignment(3, HC3D_BALANCED_CELLS, device="cpu")
 
 
 def test_gae_stops_bootstrap_across_terminal_transition():

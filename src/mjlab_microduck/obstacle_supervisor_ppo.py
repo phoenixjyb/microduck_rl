@@ -36,6 +36,14 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
 from mjlab_microduck.obstacle_supervisor_bc import ObstacleSupervisor, SupervisorBcCfg
 
 
+HC3D_BALANCED_CELLS: tuple[tuple[float, float], ...] = (
+    (0.30, 1.15),
+    (0.50, 1.15),
+    (0.50, 1.40),
+    (0.80, 1.40),
+)
+
+
 @dataclass(frozen=True)
 class Hc3RewardCfg:
     progress_scale: float = 2.0
@@ -124,6 +132,31 @@ def normalized_command_from_latent(latent: torch.Tensor) -> torch.Tensor:
     return torch.stack(
         (torch.sigmoid(latent[:, 0]), torch.tanh(latent[:, 1])), dim=-1
     )
+
+
+def balanced_cell_assignment(
+    num_envs: int,
+    training_cells: tuple[tuple[float, float], ...],
+    *,
+    device: torch.device | str,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Assign deterministic round-robin speed/position cells to environments."""
+    if num_envs <= 0:
+        raise ValueError("num_envs must be positive")
+    if not training_cells:
+        raise ValueError("training_cells must be non-empty")
+    if num_envs < len(training_cells):
+        raise ValueError("num_envs must cover every training cell")
+    if any(
+        speed <= 0.0
+        or speed > ObstacleTeacherCfg().max_forward_speed_mps
+        or forward <= 0.0
+        for speed, forward in training_cells
+    ):
+        raise ValueError("training cells exceed the frozen gait/placement envelope")
+    cell_index = torch.arange(num_envs, device=device) % len(training_cells)
+    cell_values = torch.tensor(training_cells, device=device, dtype=torch.float32)
+    return cell_index, cell_values[cell_index, 0], cell_values[cell_index, 1]
 
 
 def hc3_reward(
@@ -235,6 +268,8 @@ def train_hc3_supervisor(
     nominal_speed_mps: float = 0.5,
     obstacle_forward_m: float = 1.15,
     obstacle_lateral_m: float = 0.0,
+    training_cells: tuple[tuple[float, float], ...] | None = None,
+    retain_iteration_checkpoints: bool = False,
     seed: int = 73,
     ppo_cfg: Hc3PpoCfg = Hc3PpoCfg(),
     reward_cfg: Hc3RewardCfg = Hc3RewardCfg(),
@@ -246,11 +281,19 @@ def train_hc3_supervisor(
         raise ValueError("nominal speed is outside the frozen gait envelope")
     if obstacle_forward_m <= 0.0:
         raise ValueError("obstacle forward position must be positive")
+    if obstacle_lateral_m != 0.0 and training_cells is not None:
+        raise ValueError("balanced HC3-D cells require centered obstacles")
+    if training_cells is None:
+        training_cells = ((nominal_speed_mps, obstacle_forward_m),)
+    balanced_cell_assignment(num_envs, training_cells, device="cpu")
     locomotion_checkpoint = locomotion_checkpoint.resolve(strict=True)
     hc2_checkpoint = hc2_checkpoint.resolve(strict=True)
     output_path = output_path.resolve()
     if output_path.exists():
         raise FileExistsError(output_path)
+    snapshot_pattern = f"{output_path.stem}-iter-*{output_path.suffix}"
+    if retain_iteration_checkpoints and any(output_path.parent.glob(snapshot_pattern)):
+        raise FileExistsError(f"iteration snapshots already exist beside {output_path}")
 
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
@@ -300,14 +343,31 @@ def train_hc3_supervisor(
         )
 
         observations = wrapped.get_observations()
-        state = make_teacher_state(
-            num_envs, device=device, nominal_speed_mps=nominal_speed_mps
+        cell_index, nominal, _ = balanced_cell_assignment(
+            num_envs, training_cells, device=device
         )
-        nominal = torch.full((num_envs,), nominal_speed_mps, device=device)
+        state = make_teacher_state(
+            num_envs, device=device, nominal_speed_mps=nominal
+        )
         command = env.command_manager.get_command("twist")
         command[:, 0] = nominal
         command[:, 1:] = 0.0
         limits = ObstacleTeacherCfg()
+
+        def place_training_cells(reset_mask: torch.Tensor) -> None:
+            for index, (_, forward_m) in enumerate(training_cells):
+                env_ids = torch.where(reset_mask & (cell_index == index))[0]
+                microduck_mdp.reset_obstacle_ahead(
+                    env,
+                    env_ids,
+                    forward_range_m=(forward_m, forward_m),
+                    lateral_range_m=(obstacle_lateral_m, obstacle_lateral_m),
+                    obstacle_height_m=0.10,
+                    asset_name="obstacle",
+                )
+
+        place_training_cells(torch.ones(num_envs, dtype=torch.bool, device=device))
+        observations = wrapped.get_observations()
 
         def policy_observation() -> tuple[torch.Tensor, torch.Tensor]:
             route_lateral, route_heading, route_speed = _route_state(env)
@@ -423,10 +483,12 @@ def train_hc3_supervisor(
                         reset_teacher_state(
                             state,
                             new_done,
-                            nominal_speed_mps=nominal_speed_mps,
+                            nominal_speed_mps=nominal,
                         )
-                        command[new_done, 0] = nominal_speed_mps
+                        place_training_cells(new_done)
+                        command[new_done, 0] = nominal[new_done]
                         command[new_done, 1:] = 0.0
+                        observations = wrapped.get_observations()
 
                 robot_xy = env.scene["robot"].data.root_link_pos_w[:, :2]
                 progress_after = (
@@ -575,47 +637,119 @@ def train_hc3_supervisor(
             history.append(record)
             print(json.dumps(record, sort_keys=True), flush=True)
 
-        checkpoint = {
-            "schema_version": 1,
-            "stage": "HC3-supervisor-PPO",
-            "decision": "training-complete-pending-rollout",
-            "rollout_acceptance_required": True,
-            "model_state_dict": _cpu_state_dict(actor),
-            "value_state_dict": _cpu_state_dict(value_function),
-            "log_std": log_std.detach().cpu(),
-            "model_config": hc2_payload["model_config"],
-            "ppo_config": asdict(ppo_cfg),
-            "reward_config": asdict(reward_cfg),
-            "training_cell": {
-                "nominal_speed_mps": nominal_speed_mps,
-                "obstacle_forward_m": obstacle_forward_m,
-                "obstacle_lateral_m": obstacle_lateral_m,
-                "num_envs": num_envs,
-            },
-            "source_supervisor_checkpoint": str(hc2_checkpoint),
-            "source_supervisor_checkpoint_sha256": _sha256(hc2_checkpoint),
-            "source_locomotion_checkpoint": str(locomotion_checkpoint),
-            "source_locomotion_checkpoint_sha256": _sha256(locomotion_checkpoint),
-            "seed": seed,
-            "device": device,
-            "history": history,
-            "physical_motion_authorized": False,
-        }
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(checkpoint, output_path)
-        manifest = {
-            key: value
-            for key, value in checkpoint.items()
-            if key not in {"model_state_dict", "value_state_dict", "log_std"}
-        }
-        output_path.with_suffix(".json").write_text(
-            json.dumps(manifest, indent=2) + "\n"
+            if retain_iteration_checkpoints:
+                snapshot_path = output_path.with_name(
+                    f"{output_path.stem}-iter-{iteration:04d}{output_path.suffix}"
+                )
+                _save_hc3_checkpoint(
+                    snapshot_path,
+                    actor=actor,
+                    value_function=value_function,
+                    log_std=log_std,
+                    hc2_payload=hc2_payload,
+                    ppo_cfg=ppo_cfg,
+                    reward_cfg=reward_cfg,
+                    training_cells=training_cells,
+                    obstacle_lateral_m=obstacle_lateral_m,
+                    num_envs=num_envs,
+                    source_supervisor_checkpoint=hc2_checkpoint,
+                    source_locomotion_checkpoint=locomotion_checkpoint,
+                    seed=seed,
+                    device=device,
+                    history=history,
+                    completed_iterations=iteration,
+                )
+
+        _save_hc3_checkpoint(
+            output_path,
+            actor=actor,
+            value_function=value_function,
+            log_std=log_std,
+            hc2_payload=hc2_payload,
+            ppo_cfg=ppo_cfg,
+            reward_cfg=reward_cfg,
+            training_cells=training_cells,
+            obstacle_lateral_m=obstacle_lateral_m,
+            num_envs=num_envs,
+            source_supervisor_checkpoint=hc2_checkpoint,
+            source_locomotion_checkpoint=locomotion_checkpoint,
+            seed=seed,
+            device=device,
+            history=history,
+            completed_iterations=ppo_cfg.iterations,
         )
         return output_path
     finally:
         env.close()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+
+
+def _save_hc3_checkpoint(
+    output_path: Path,
+    *,
+    actor: ObstacleSupervisor,
+    value_function: SupervisorValue,
+    log_std: torch.Tensor,
+    hc2_payload: dict,
+    ppo_cfg: Hc3PpoCfg,
+    reward_cfg: Hc3RewardCfg,
+    training_cells: tuple[tuple[float, float], ...],
+    obstacle_lateral_m: float,
+    num_envs: int,
+    source_supervisor_checkpoint: Path,
+    source_locomotion_checkpoint: Path,
+    seed: int,
+    device: str,
+    history: list[dict],
+    completed_iterations: int,
+) -> None:
+    if output_path.exists():
+        raise FileExistsError(output_path)
+    checkpoint = {
+        "schema_version": 1,
+        "stage": "HC3-supervisor-PPO",
+        "decision": "training-complete-pending-rollout",
+        "rollout_acceptance_required": True,
+        "model_state_dict": _cpu_state_dict(actor),
+        "value_state_dict": _cpu_state_dict(value_function),
+        "log_std": log_std.detach().cpu(),
+        "model_config": hc2_payload["model_config"],
+        "ppo_config": asdict(ppo_cfg),
+        "reward_config": asdict(reward_cfg),
+        "training_cells": [
+            {
+                "nominal_speed_mps": speed,
+                "obstacle_forward_m": forward,
+                "obstacle_lateral_m": obstacle_lateral_m,
+            }
+            for speed, forward in training_cells
+        ],
+        "num_envs": num_envs,
+        "completed_iterations": completed_iterations,
+        "source_supervisor_checkpoint": str(source_supervisor_checkpoint),
+        "source_supervisor_checkpoint_sha256": _sha256(
+            source_supervisor_checkpoint
+        ),
+        "source_locomotion_checkpoint": str(source_locomotion_checkpoint),
+        "source_locomotion_checkpoint_sha256": _sha256(
+            source_locomotion_checkpoint
+        ),
+        "seed": seed,
+        "device": device,
+        "history": copy.deepcopy(history),
+        "physical_motion_authorized": False,
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(checkpoint, output_path)
+    manifest = {
+        key: value
+        for key, value in checkpoint.items()
+        if key not in {"model_state_dict", "value_state_dict", "log_std"}
+    }
+    output_path.with_suffix(".json").write_text(
+        json.dumps(manifest, indent=2) + "\n"
+    )
 
 
 def main() -> None:
@@ -634,6 +768,8 @@ def main() -> None:
     parser.add_argument("--anchor-scale", type=float, default=0.05)
     parser.add_argument("--entropy-scale", type=float, default=0.002)
     parser.add_argument("--collision-penalty", type=float, default=12.0)
+    parser.add_argument("--balanced-hc2-cells", action="store_true")
+    parser.add_argument("--retain-iteration-checkpoints", action="store_true")
     parser.add_argument(
         "--initial-log-std",
         type=float,
@@ -650,6 +786,8 @@ def main() -> None:
         nominal_speed_mps=args.nominal_speed,
         obstacle_forward_m=args.obstacle_forward,
         obstacle_lateral_m=args.obstacle_lateral,
+        training_cells=HC3D_BALANCED_CELLS if args.balanced_hc2_cells else None,
+        retain_iteration_checkpoints=args.retain_iteration_checkpoints,
         seed=args.seed,
         ppo_cfg=Hc3PpoCfg(
             iterations=args.iterations,

@@ -148,3 +148,18 @@ def test_reset_teacher_state_restores_approach_and_nominal_command():
     assert state.phase.tolist() == [ObstaclePhase.APPROACH, ObstaclePhase.RECOVERY]
     assert torch.equal(state.previous_command[0], torch.tensor([0.3, 0.0]))
     assert torch.equal(state.previous_command[1], torch.tensor([0.0, 0.0]))
+
+
+def test_teacher_state_accepts_per_environment_nominal_speeds():
+    nominal = torch.tensor([0.3, 0.5, 0.8])
+    state = make_teacher_state(3, device="cpu", nominal_speed_mps=nominal)
+    torch.testing.assert_close(state.previous_command[:, 0], nominal)
+    state.previous_command.zero_()
+    reset_teacher_state(
+        state,
+        torch.tensor([True, False, True]),
+        nominal_speed_mps=nominal,
+    )
+    torch.testing.assert_close(
+        state.previous_command[:, 0], torch.tensor([0.3, 0.0, 0.8])
+    )

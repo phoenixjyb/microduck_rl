@@ -13,13 +13,13 @@ from mjlab_microduck.hierarchical_obstacle import (
 from mjlab_microduck.tasks.obstacle_observation import encode_obstacle_observation
 
 
-def _observation(range_m, bearing_rad=0.0, valid=True):
+def _observation(range_m, bearing_rad=0.0, closing_rate_mps=0.3, valid=True):
     return encode_obstacle_observation(
         range_m=torch.tensor([range_m]),
         bearing_rad=torch.tensor([bearing_rad]),
         width_m=torch.tensor([0.2]),
         height_m=torch.tensor([0.1]),
-        closing_rate_mps=torch.tensor([0.3]),
+        closing_rate_mps=torch.tensor([closing_rate_mps]),
         valid=torch.tensor([valid]),
     )
 
@@ -47,6 +47,12 @@ def test_teacher_can_slow_and_turn_only_inside_interaction():
     assert state.phase.item() == ObstaclePhase.INTERACTION
     assert command[0, 0] < 0.8
     assert command[0, 1] < 0.0
+
+
+def test_teacher_enters_early_when_time_to_contact_is_short():
+    state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.8)
+    _step(_observation(1.0, closing_rate_mps=0.5), state, nominal=0.8)
+    assert state.phase.item() == ObstaclePhase.INTERACTION
 
 
 def test_teacher_recovers_nominal_speed_after_obstacle_passes():

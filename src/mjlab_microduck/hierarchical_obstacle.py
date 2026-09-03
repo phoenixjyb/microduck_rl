@@ -37,6 +37,7 @@ class ObstacleTeacherCfg:
     max_forward_speed_mps: float = 0.8
     max_yaw_rate_rps: float = 0.6
     interaction_entry_m: float = 0.90
+    interaction_time_to_contact_s: float = 3.0
     passed_margin_m: float = 0.0
     bypass_clearance_m: float = 0.42
     bypass_lookahead_m: float = 0.30
@@ -54,6 +55,7 @@ class ObstacleTeacherCfg:
             self.max_forward_speed_mps,
             self.max_yaw_rate_rps,
             self.interaction_entry_m,
+            self.interaction_time_to_contact_s,
             self.bypass_clearance_m,
             self.bypass_lookahead_m,
             self.route_lookahead_m,
@@ -125,7 +127,7 @@ def reset_teacher_state(
 
 def _decoded_obstacle_geometry(
     obstacle_observation: torch.Tensor,
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     if obstacle_observation.ndim != 2 or obstacle_observation.shape[1] != OBSTACLE_OBSERVATION_DIM:
         raise ValueError(
             f"obstacle_observation must have shape (N, {OBSTACLE_OBSERVATION_DIM})"
@@ -138,8 +140,12 @@ def _decoded_obstacle_geometry(
     center_range = surface_range + width / 2.0
     relative_x = center_range * bearing_cos
     relative_y = center_range * bearing_sin
+    closing_rate = (
+        obstacle_observation[:, 5]
+        * DEFAULT_OBSTACLE_OBSERVATION_LIMITS.max_closing_rate_mps
+    )
     valid = obstacle_observation[:, 6] > 0.5
-    return relative_x, relative_y, width, valid
+    return relative_x, relative_y, width, closing_rate, valid
 
 
 def _clamp_delta(
@@ -175,7 +181,7 @@ def teacher_command(
     if state.phase.shape != (num_envs,) or state.previous_command.shape != (num_envs, 2):
         raise ValueError("teacher state shape does not match observation batch")
 
-    relative_x, relative_y, _, valid = _decoded_obstacle_geometry(
+    relative_x, relative_y, _, closing_rate, valid = _decoded_obstacle_geometry(
         obstacle_observation
     )
     # Transform the obstacle displacement from base axes into fixed route axes.
@@ -192,8 +198,15 @@ def teacher_command(
     )
 
     approach = state.phase == int(ObstaclePhase.APPROACH)
+    surface_range = obstacle_observation[:, 0] * (
+        DEFAULT_OBSTACLE_OBSERVATION_LIMITS.max_range_m
+    )
+    time_to_contact = surface_range / closing_rate.clamp_min(0.05)
+    imminent_contact = (closing_rate > 0.05) & (
+        time_to_contact <= cfg.interaction_time_to_contact_s
+    )
     enter_interaction = approach & valid & (
-        obstacle_route_x <= cfg.interaction_entry_m
+        (obstacle_route_x <= cfg.interaction_entry_m) | imminent_contact
     )
 
     obstacle_left = relative_y > cfg.centered_deadband_m

@@ -315,16 +315,16 @@ next.
 
 ## Immediate implementation order
 
-1. Add resolved-attempt and clean-pass-rate fields to the retained obstacle
+1. [x] Add resolved-attempt and clean-pass-rate fields to the retained obstacle
    evaluator.
-2. Produce a deterministic checkpoint-sweep summary that compares training
+2. [x] Produce a deterministic checkpoint-sweep summary that compares training
    seeds by iteration without choosing a winner from the final checkpoint.
-3. Combine obstacle outcomes and motor-envelope metrics into one acceptance
+3. [ ] Combine obstacle outcomes and motor-envelope metrics into one acceptance
    record.
-4. Run a three-training-seed O1 campaign within a fixed 64-iteration budget.
-5. If O1 passes, proceed to O2.  Otherwise change exactly one reward or command
+4. [ ] Run a three-training-seed O1 campaign within a fixed 64-iteration budget.
+5. [ ] If O1 passes, proceed to O2.  Otherwise change exactly one reward or command
    axis and repeat the bounded campaign.
-6. Start H0/H1 as a separate campaign; do not mix hop rewards into O1.
+6. [ ] Start H0/H1 as a separate campaign; do not mix hop rewards into O1.
 
 ## Physical gate
 

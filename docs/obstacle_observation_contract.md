@@ -90,15 +90,14 @@ are zero, so avoidance cannot be confused with an unrelated turning command.
 A conservative planar envelope uses a 0.12 m robot radius and 0.10 m obstacle
 radius. Clearance cost begins 0.15 m outside that envelope, collision incurs a
 penalty and terminates the episode, and clean passage is measured along the
-fixed reset heading. Logged metrics include mean clearance, collision fraction,
-and passed fraction.
+fixed reset heading. Logged metrics include mean clearance, resolved attempts,
+clean-pass and collision rates, and forward-speed diagnostics.
 
-This task is **not yet cleared for GPU training**. Adding the seven obstacle
-channels changes the first actor layer from the retained Stage 2 checkpoint.
-A reviewed warm-start migration must copy the old columns exactly, initialize
-only the seven new columns, and prove numerically equivalent outputs within
-floating-point tolerance when those channels are zero before any long run
-starts.
+The first GPU pilots were gated on a reviewed warm-start migration because
+adding the seven obstacle channels changes the first actor layer from the
+retained Stage 2 checkpoint. Every new campaign must still copy the old columns
+exactly, initialize only the seven new columns, and prove numerically equivalent
+outputs within floating-point tolerance when those channels are zero.
 
 `python -m mjlab_microduck.checkpoint_migration SOURCE DESTINATION` performs
 that migration without overwriting either file. It expands actor 61→68 and
@@ -119,3 +118,12 @@ five seeds). It fixes the command to straight 0.5 m/s, disables actor sensor
 noise through the deterministic play config, and retains collision, fall,
 timeout, clean-pass, non-finite, clearance, and forward-speed evidence. Its
 output explicitly remains untrained-policy evidence.
+
+`python -m mjlab_microduck.obstacle_checkpoint_sweep MANIFEST OUTPUT_DIR`
+compares retained O1 evaluations without running simulation. The manifest names
+each candidate's training seed, checkpoint iteration, and evaluation JSON
+explicitly; paths alone never decide provenance. The report checks the O1
+obstacle gates, compares exact iterations shared across training seeds, and
+selects the earliest survivor rather than the final checkpoint. It is always
+marked `diagnostic-only` until motor-envelope and action-regression evidence are
+combined by the next acceptance step.

@@ -33,8 +33,8 @@ from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
 from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
 from mjlab_microduck.obstacle_supervisor_bc import (
     HC2_STAGE,
-    HC4LH_STAGE,
     HC4L_STAGE,
+    HC4LH_STAGE,
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
@@ -55,6 +55,28 @@ HC3E_STAGE = "HC3E-interaction-speed-PPO"
 HC3F_STAGE = "HC3F-seed-averaged-speed-head"
 HC3G_STAGE = "HC3G-seed-consensus-speed-head"
 
+_RECORDING_STAGE_SLUGS = {
+    HC2_STAGE: "hc2",
+    HC4L_STAGE: "hc4l",
+    HC4LH_STAGE: "hc4lh",
+    "HC3-supervisor-PPO": "hc3",
+    HC3E_STAGE: "hc3e",
+    HC3F_STAGE: "hc3f",
+    HC3G_STAGE: "hc3g",
+}
+
+
+def recording_controller_stage(supervisor_stage: str | None) -> str:
+    """Return the filename slug for a teacher or learned supervisor replay."""
+    if supervisor_stage is None:
+        return "hc1"
+    try:
+        return _RECORDING_STAGE_SLUGS[supervisor_stage]
+    except KeyError as error:
+        raise ValueError(
+            f"unsupported supervisor stage for recording: {supervisor_stage!r}"
+        ) from error
+
 
 def recording_stem(
     speed: float,
@@ -64,8 +86,8 @@ def recording_stem(
     controller_stage: str = "hc1",
 ) -> str:
     """Return a deterministic replay basename for one geometry cell."""
-    if controller_stage not in {"hc1", "hc2"}:
-        raise ValueError("controller_stage must be hc1 or hc2")
+    if controller_stage not in {"hc1", *_RECORDING_STAGE_SLUGS.values()}:
+        raise ValueError("controller_stage is not a supported obstacle curriculum stage")
     return (
         f"microduck-{controller_stage}-{speed:.2f}mps-"
         f"x{obstacle_forward:.2f}m-y{obstacle_lateral:+.2f}m"
@@ -186,8 +208,9 @@ def prepare_rollout_configs(
     obstacle_lateral_m: float,
 ):
     """Build OA0 physics with the original 61D frozen-policy observation."""
-    import mjlab_microduck.tasks  # noqa: F401
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
+
+    import mjlab_microduck.tasks  # noqa: F401
 
     env_cfg = load_env_cfg(OA0_TASK_ID, play=True)
     env_cfg.scene.num_envs = num_envs
@@ -271,6 +294,7 @@ def _run_case(
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
+
     from mjlab_microduck.tasks import mdp as microduck_mdp
 
     env_cfg, agent_cfg = prepare_rollout_configs(

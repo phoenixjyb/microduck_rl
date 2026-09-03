@@ -33,6 +33,7 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
     _route_state,
     load_learned_supervisor,
     prepare_rollout_configs,
+    recording_controller_stage,
     recording_stem,
 )
 from mjlab_microduck.tasks import mdp as microduck_mdp
@@ -104,11 +105,18 @@ def main() -> None:
     env_cfg.viewer.enable_shadows = False
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    supervisor_stage = None
+    if supervisor_checkpoint is not None:
+        supervisor_payload = torch.load(
+            supervisor_checkpoint, map_location="cpu", weights_only=False
+        )
+        supervisor_stage = supervisor_payload.get("stage")
+    controller_stage = recording_controller_stage(supervisor_stage)
     stem = recording_stem(
         args.speed,
         args.obstacle_forward,
         args.obstacle_lateral,
-        controller_stage="hc2" if supervisor_checkpoint is not None else "hc1",
+        controller_stage=controller_stage,
     )
     expected_video = output_dir / f"{stem}-step-0.mp4"
     if expected_video.exists():
@@ -262,8 +270,8 @@ def main() -> None:
     manifest = {
         "stage": (
             "HC1-deterministic-teacher-replay"
-            if supervisor_checkpoint is None
-            else "HC2-behavioral-cloning-replay"
+            if supervisor_stage is None
+            else f"{supervisor_stage}-replay"
         ),
         "evidence_status": (
             "representative-success" if passed_once and collision_events == 0 else "diagnostic"
@@ -294,6 +302,7 @@ def main() -> None:
         "physical_motion_authorized": False,
     }
     if supervisor_checkpoint is not None:
+        manifest["supervisor_stage"] = supervisor_stage
         manifest["supervisor_checkpoint"] = str(supervisor_checkpoint)
         manifest["supervisor_checkpoint_sha256"] = _sha256(
             supervisor_checkpoint

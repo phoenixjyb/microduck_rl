@@ -20,6 +20,7 @@ from mjlab.utils.torch import configure_torch_backends
 from mjlab_microduck.evaluation import (
     aggregate_command_cases,
     aggregate_speed_cases,
+    fix_velocity_commands,
     parse_float_list,
     parse_int_list,
     valid_action_deltas,
@@ -39,27 +40,6 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _fix_commands(env_cfg, speed: float, yaw_rate: float = 0.0) -> None:
-    commands = env_cfg.commands
-    twist = commands["twist"]
-    twist.resampling_time_range = (1.0e6, 1.0e6)
-    twist.rel_standing_envs = 0.0
-    twist.rel_heading_envs = 0.0
-    twist.rel_world_envs = 0.0
-    twist.rel_forward_envs = 1.0
-    twist.rel_turn_in_place_envs = 0.0
-    twist.init_velocity_prob = 0.0
-    twist.ranges.lin_vel_x = (speed, speed)
-    twist.ranges.lin_vel_y = (0.0, 0.0)
-    twist.ranges.ang_vel_z = (yaw_rate, yaw_rate)
-
-    for name in ("head_pose", "body_pose"):
-        command = commands[name]
-        command.resampling_time_range = (1.0e6, 1.0e6)
-        command.ranges = tuple((0.0, 0.0) for _ in command.ranges)
-        command.zero_command_prob = 1.0
-
-
 def _quantile(values: torch.Tensor, q: float) -> float:
     return float(torch.quantile(values, q).item())
 
@@ -69,7 +49,7 @@ def _run_case(args, speed: float, yaw_rate: float, seed: int) -> dict:
     agent_cfg = load_rl_cfg(args.task)
     env_cfg.seed = seed
     env_cfg.scene.num_envs = args.num_envs
-    _fix_commands(env_cfg, speed, yaw_rate)
+    fix_velocity_commands(env_cfg, speed, yaw_rate)
     env_cfg.curriculum = {}
     env_cfg.events.pop("push_robot", None)
 
@@ -86,6 +66,8 @@ def _run_case(args, speed: float, yaw_rate: float, seed: int) -> dict:
         joint_ids, _ = robot.find_joints(r"^(?!passive_).*")
         forward_samples = []
         yaw_rate_samples = []
+        applied_command_speed_samples = []
+        applied_command_yaw_samples = []
         joint_speed_samples = []
         torque_samples = []
         power_samples = []
@@ -113,6 +95,7 @@ def _run_case(args, speed: float, yaw_rate: float, seed: int) -> dict:
 
                 forward = robot.data.root_link_lin_vel_b[:, 0].float()
                 observed_yaw_rate = robot.data.root_link_ang_vel_b[:, 2].float()
+                applied_command = raw_env.command_manager.get_command("twist")
                 joint_speed = robot.data.joint_vel[:, joint_ids].abs().float()
                 torque = robot.data.actuator_force.abs().float()
                 if joint_speed.shape != torque.shape:
@@ -122,6 +105,8 @@ def _run_case(args, speed: float, yaw_rate: float, seed: int) -> dict:
                     )
                 forward_samples.append(forward)
                 yaw_rate_samples.append(observed_yaw_rate)
+                applied_command_speed_samples.append(applied_command[:, 0].float())
+                applied_command_yaw_samples.append(applied_command[:, 2].float())
                 joint_speed_samples.append(joint_speed)
                 torque_samples.append(torque)
                 power_samples.append(torch.sum(joint_speed * torque, dim=1))
@@ -153,6 +138,8 @@ def _run_case(args, speed: float, yaw_rate: float, seed: int) -> dict:
 
         forward = torch.cat(forward_samples)
         observed_yaw_rate = torch.cat(yaw_rate_samples)
+        applied_command_speed = torch.cat(applied_command_speed_samples)
+        applied_command_yaw = torch.cat(applied_command_yaw_samples)
         joint_speed = torch.cat(joint_speed_samples).flatten()
         torque = torch.cat(torque_samples).flatten()
         power = torch.cat(power_samples)
@@ -168,6 +155,12 @@ def _run_case(args, speed: float, yaw_rate: float, seed: int) -> dict:
         return {
             "commanded_speed_mps": speed,
             "commanded_yaw_rate_rps": yaw_rate,
+            "applied_command_speed_mean_mps": float(
+                applied_command_speed.mean().item()
+            ),
+            "applied_command_yaw_rate_mean_rps": float(
+                applied_command_yaw.mean().item()
+            ),
             "seed": seed,
             "num_envs": args.num_envs,
             "steps": args.steps,

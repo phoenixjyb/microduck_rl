@@ -9,6 +9,30 @@ from statistics import pstdev
 import torch
 
 
+def fix_velocity_commands(env_cfg, speed: float, yaw_rate: float = 0.0) -> None:
+    """Pin deterministic body commands without a heading-controller override."""
+    commands = env_cfg.commands
+    twist = commands["twist"]
+    twist.resampling_time_range = (1.0e6, 1.0e6)
+    twist.rel_standing_envs = 0.0
+    twist.rel_heading_envs = 0.0
+    twist.rel_world_envs = 0.0
+    twist.rel_forward_envs = 1.0
+    twist.rel_turn_in_place_envs = 0.0
+    twist.init_velocity_prob = 0.0
+    twist.heading_command = False
+    twist.ranges.heading = None
+    twist.ranges.lin_vel_x = (speed, speed)
+    twist.ranges.lin_vel_y = (0.0, 0.0)
+    twist.ranges.ang_vel_z = (yaw_rate, yaw_rate)
+
+    for name in ("head_pose", "body_pose"):
+        command = commands[name]
+        command.resampling_time_range = (1.0e6, 1.0e6)
+        command.ranges = tuple((0.0, 0.0) for _ in command.ranges)
+        command.zero_command_prob = 1.0
+
+
 def parse_float_list(value: str) -> tuple[float, ...]:
     values = tuple(float(item.strip()) for item in value.split(",") if item.strip())
     if not values:

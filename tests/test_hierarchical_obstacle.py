@@ -41,10 +41,10 @@ def test_teacher_tracks_nominal_speed_before_obstacle():
 
 
 def test_teacher_can_slow_and_turn_only_inside_interaction():
-    state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.5)
-    command = _step(_observation(0.4, bearing_rad=0.2), state)
+    state = make_teacher_state(1, device="cpu", nominal_speed_mps=0.8)
+    command = _step(_observation(0.4, bearing_rad=0.2), state, nominal=0.8)
     assert state.phase.item() == ObstaclePhase.INTERACTION
-    assert command[0, 0] < 0.5
+    assert command[0, 0] < 0.8
     assert command[0, 1] < 0.0
 
 

@@ -183,6 +183,10 @@ of three independent training seeds passed the sensitive-cell pre-screen; seed
 is recorded. HC3-F averaged the three seed-specific speed-head updates while
 preserving the HC2 anchor exactly, but its 0.80 m/s by 1.40 m sensitive cell
 recorded two collisions and stopped before the full matrix. The final bounded
-speed-head candidate keeps only update coordinates whose direction agrees
-across all three training seeds. See
-`experiments/2026-09-03-hc3f-seed-averaged-speed-head.md`.
+speed-head candidate kept only update coordinates whose direction agreed
+across all three training seeds. HC3-G still recorded three pre-screen
+collisions, so the HC3 speed-head line is closed and HC2 remains accepted. The
+next stage measures unchanged HC2 at lateral obstacle placements before any
+new policy training. See
+`experiments/2026-09-03-hc3f-seed-averaged-speed-head.md` and
+`experiments/2026-09-03-hc3g-seed-consensus-speed-head.md`.

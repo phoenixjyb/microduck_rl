@@ -76,6 +76,8 @@ inputs, 26 of 65 coordinates meet that rule; the other 39 remain exactly at
 the HC2 anchor. This deterministic sign-consensus projection uses all three
 seeds and reduces seed-specific authority without selecting a favorable seed.
 
-HC3-G must pass the same two-cell pre-screen before any full matrix, placement
-expansion, or video. A failure ends this speed-head optimization line rather
-than triggering an unbounded parameter search.
+HC3-G kept the 26 unanimous-sign coordinates but recorded three pre-screen
+collisions. It therefore ended this speed-head optimization line without a full
+matrix or video. See `2026-09-03-hc3g-seed-consensus-speed-head.md`. HC2 remains
+the parent for a measured lateral-placement diagnostic; the rejected HC3
+checkpoints do not gain expanded authority.

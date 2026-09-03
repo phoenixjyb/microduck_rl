@@ -169,10 +169,12 @@ set to false.
    interaction-speed reduction. Its best seed repeated a small safe time gain,
    but one of three training seeds failed the pre-screen collision budget. The
    HC3-F averaged those updates but recorded two collisions in the high-speed
-   sensitive cell and stopped before the full matrix. HC3-G is the final
-   bounded speed-head candidate: it retains only update coordinates whose sign
-   agrees across all three training seeds, then repeats the same pre-screen.
-7. [ ] Expand placement only after HC3 retains the accepted HC2 envelope.
+   sensitive cell. Final bounded candidate HC3-G retained only the 26 update
+   coordinates whose sign agreed across all three training seeds, but it
+   recorded three pre-screen collisions. The HC3 optimization line is closed;
+   HC2 remains accepted.
+7. [ ] Measure unchanged HC2 at lateral placements before training or promoting
+   an expanded-placement controller. Rejected HC3 checkpoints are not used.
 
 MP4 inspection never substitutes for the numeric matrix gate.
 

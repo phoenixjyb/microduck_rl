@@ -7,8 +7,13 @@ import os
 from dataclasses import asdict
 from pathlib import Path
 
+from mjlab_microduck.obstacle_protocol import (
+    O1_TASK_ID,
+    obstacle_protocol_for_task,
+)
 
-TASK_ID = "Mjlab-Run-Obstacle-Flat-MicroDuck"
+
+TASK_ID = O1_TASK_ID
 MAX_PILOT_ENVS = 2048
 MAX_PILOT_ITERATIONS = 256
 PILOT_CHECKPOINT_INTERVAL = 16
@@ -45,7 +50,7 @@ def _stamp_intermediate_checkpoints(
     return retained
 
 
-def prepare_pilot_configs(num_envs: int, seed: int):
+def prepare_pilot_configs(num_envs: int, seed: int, task_id: str = TASK_ID):
     """Load an isolated training config with bounded local-only logging."""
     if not 1 <= num_envs <= MAX_PILOT_ENVS:
         raise ValueError(f"num_envs must be in [1, {MAX_PILOT_ENVS}]")
@@ -53,10 +58,11 @@ def prepare_pilot_configs(num_envs: int, seed: int):
     import mjlab_microduck.tasks  # noqa: F401
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
-    env_cfg = load_env_cfg(TASK_ID)
+    obstacle_protocol_for_task(task_id)
+    env_cfg = load_env_cfg(task_id)
     env_cfg.scene.num_envs = num_envs
     env_cfg.scene.terrain.num_envs = num_envs
-    agent_cfg = load_rl_cfg(TASK_ID)
+    agent_cfg = load_rl_cfg(task_id)
     agent_cfg.seed = seed
     agent_cfg.logger = "tensorboard"
     agent_cfg.upload_model = False
@@ -71,6 +77,7 @@ def run_pilot(
     num_envs: int = 1024,
     iterations: int = 128,
     seed: int = 42,
+    task_id: str = TASK_ID,
 ) -> Path:
     """Strict-load, train within fixed bounds, and retain a manifest and checkpoint."""
     if not 1 <= iterations <= MAX_PILOT_ITERATIONS:
@@ -87,19 +94,19 @@ def run_pilot(
     from mjlab.tasks.registry import load_runner_cls
     from mjlab.utils.torch import configure_torch_backends
 
-    env_cfg, agent_cfg = prepare_pilot_configs(num_envs, seed)
+    env_cfg, agent_cfg = prepare_pilot_configs(num_envs, seed, task_id)
     device = "cuda:0" if os.environ.get("CUDA_VISIBLE_DEVICES", "") else "cpu"
     configure_torch_backends()
     torch.manual_seed(seed)
     print(
-        f"obstacle_pilot task={TASK_ID} device={device} num_envs={num_envs} "
+        f"obstacle_pilot task={task_id} device={device} num_envs={num_envs} "
         f"iterations={iterations} seed={seed}"
     )
 
     env = ManagerBasedRlEnv(cfg=env_cfg, device=device)
     try:
         wrapped = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
-        runner_cls = load_runner_cls(TASK_ID)
+        runner_cls = load_runner_cls(task_id)
         assert runner_cls is not None
         runner = runner_cls(wrapped, asdict(agent_cfg), str(output_dir), device)
         infos = runner.load(str(checkpoint), strict=True, map_location=device)
@@ -118,7 +125,8 @@ def run_pilot(
         retained = output_dir / "model_obstacle_pilot.pt"
         runner.save(str(retained), infos=infos)
         manifest = {
-            "task_id": TASK_ID,
+            "task_id": task_id,
+            "training_protocol": obstacle_protocol_for_task(task_id),
             "purpose": "bounded first-stage obstacle curriculum training pilot",
             "input_checkpoint": str(checkpoint),
             "input_checkpoint_sha256": _sha256(checkpoint),
@@ -149,6 +157,7 @@ def main() -> None:
     parser.add_argument("--num-envs", type=int, default=1024)
     parser.add_argument("--iterations", type=int, default=128)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--task-id", default=TASK_ID)
     args = parser.parse_args()
     run_pilot(
         args.checkpoint,
@@ -156,6 +165,7 @@ def main() -> None:
         num_envs=args.num_envs,
         iterations=args.iterations,
         seed=args.seed,
+        task_id=args.task_id,
     )
 
 

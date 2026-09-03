@@ -16,6 +16,7 @@ from mjlab_microduck.obstacle_baseline import (
     run_baseline,
     validate_baseline_bounds,
 )
+from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
 
 
 def test_baseline_config_uses_deterministic_straight_command():
@@ -34,6 +35,13 @@ def test_baseline_config_uses_deterministic_straight_command():
     assert agent_cfg.upload_model is False
 
 
+def test_assisted_baseline_uses_oa0_task_and_keeps_attempt_termination():
+    env_cfg, agent_cfg = prepare_baseline_configs(8, 0.3, OA0_TASK_ID)
+    assert env_cfg.commands["twist"].ranges.lin_vel_x == (0.3, 0.3)
+    assert "obstacle_attempt_timeout" in env_cfg.terminations
+    assert agent_cfg.experiment_name == "run_obstacle_assisted"
+
+
 def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):
     checkpoint = tmp_path / "checkpoint.pt"
     checkpoint.touch()
@@ -43,6 +51,7 @@ def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):
             "collision_events": 1,
             "fall_events": 0,
             "timeout_events": 0,
+            "attempt_timeout_events": 0,
             "nan_termination_events": 0,
             "clean_pass_events": 1,
             "nonfinite_steps": 0,
@@ -54,6 +63,8 @@ def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):
             "mean_collision_time_s": 2.0,
             "mean_pass_lateral_excursion_m": 0.2,
             "mean_collision_lateral_excursion_m": 0.1,
+            "mean_success_route_return_error_m": 0.1,
+            "success_route_return_events": 1,
         },
     )
 
@@ -62,6 +73,54 @@ def test_baseline_retains_exact_o1_protocol(monkeypatch, tmp_path: Path):
 
     assert summary["evaluation_protocol"]["name"] == "O1-centered-exact-v1"
     assert summary["evaluation_protocol"]["obstacle_lateral_range_m"] == [0.0, 0.0]
+
+
+def test_baseline_retains_exact_oa0_protocol(monkeypatch, tmp_path: Path):
+    checkpoint = tmp_path / "checkpoint.pt"
+    checkpoint.touch()
+    monkeypatch.setattr(
+        "mjlab_microduck.obstacle_baseline._run_case",
+        lambda *_args: {
+            "collision_events": 0,
+            "fall_events": 0,
+            "timeout_events": 0,
+            "attempt_timeout_events": 1,
+            "nan_termination_events": 0,
+            "clean_pass_events": 1,
+            "nonfinite_steps": 0,
+            "mean_clearance_m": 0.2,
+            "mean_forward_speed_mps": 0.3,
+            "pre_obstacle_samples": 1,
+            "pre_obstacle_route_speed_mps": 0.3,
+            "mean_passage_time_s": 5.0,
+            "mean_collision_time_s": None,
+            "mean_pass_lateral_excursion_m": 0.3,
+            "mean_collision_lateral_excursion_m": None,
+            "mean_success_route_return_error_m": 0.1,
+            "success_route_return_events": 1,
+        },
+    )
+
+    output = run_baseline(
+        checkpoint,
+        tmp_path / "output",
+        seeds=(41,),
+        speed_mps=0.3,
+        task_id=OA0_TASK_ID,
+    )
+    summary = json.loads(output.read_text())
+
+    assert summary["task_id"] == OA0_TASK_ID
+    assert summary["evaluation_protocol"]["name"] == (
+        "OA0-offset-assisted-exact-v1"
+    )
+    assert summary["totals"]["attempt_timeout_events"] == 1
+    assert summary["mean_success_route_return_error_m"] == 0.1
+
+
+def test_baseline_rejects_unsupported_obstacle_task():
+    with pytest.raises(ValueError, match="unsupported obstacle task"):
+        prepare_baseline_configs(8, 0.3, "not-a-task")
 
 
 @pytest.mark.parametrize(
@@ -108,6 +167,7 @@ def test_resolved_attempt_metrics_report_pass_and_collision_rates():
         "resolved_attempts": 10,
         "clean_pass_rate": 0.7,
         "collision_rate": 0.3,
+        "attempt_timeout_rate": 0.0,
     }
 
 
@@ -116,12 +176,27 @@ def test_resolved_attempt_metrics_are_empty_safe():
         "resolved_attempts": 0,
         "clean_pass_rate": None,
         "collision_rate": None,
+        "attempt_timeout_rate": None,
     }
 
 
-@pytest.mark.parametrize("collision_events, clean_pass_events", [(-1, 0), (0, -1)])
+def test_resolved_attempt_metrics_count_attempt_timeouts_as_failures():
+    assert _resolved_attempt_metrics(1, 7, 2) == {
+        "resolved_attempts": 10,
+        "clean_pass_rate": 0.7,
+        "collision_rate": 0.1,
+        "attempt_timeout_rate": 0.2,
+    }
+
+
+@pytest.mark.parametrize(
+    "collision_events, clean_pass_events, attempt_timeout_events",
+    [(-1, 0, 0), (0, -1, 0), (0, 0, -1)],
+)
 def test_resolved_attempt_metrics_reject_negative_counts(
-    collision_events, clean_pass_events
+    collision_events, clean_pass_events, attempt_timeout_events
 ):
     with pytest.raises(ValueError, match="non-negative"):
-        _resolved_attempt_metrics(collision_events, clean_pass_events)
+        _resolved_attempt_metrics(
+            collision_events, clean_pass_events, attempt_timeout_events
+        )

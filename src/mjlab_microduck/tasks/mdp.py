@@ -5923,6 +5923,7 @@ def obstacle_route_rejoined(
     lateral = torch.abs(
         ((robot_xy - env._obstacle_route_origin_w) * lateral_dir).sum(dim=-1)
     )
+    env._obstacle_route_return_error_m = lateral.clone()
     return passed & (lateral <= return_tolerance_m)
 
 

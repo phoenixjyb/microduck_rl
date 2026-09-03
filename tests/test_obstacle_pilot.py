@@ -12,6 +12,7 @@ from mjlab_microduck.obstacle_pilot import (
     prepare_pilot_configs,
     run_pilot,
 )
+from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
 
 
 def test_pilot_config_is_local_only_and_uses_requested_shape_and_seed():
@@ -22,6 +23,18 @@ def test_pilot_config_is_local_only_and_uses_requested_shape_and_seed():
     assert agent_cfg.logger == "tensorboard"
     assert agent_cfg.upload_model is False
     assert agent_cfg.save_interval == PILOT_CHECKPOINT_INTERVAL
+
+
+def test_pilot_config_supports_the_assisted_stage():
+    env_cfg, agent_cfg = prepare_pilot_configs(16, 23, OA0_TASK_ID)
+    assert env_cfg.scene.num_envs == 16
+    assert agent_cfg.seed == 23
+    assert agent_cfg.experiment_name == "run_obstacle_assisted"
+
+
+def test_pilot_rejects_unsupported_obstacle_task():
+    with pytest.raises(ValueError, match="unsupported obstacle task"):
+        prepare_pilot_configs(8, 42, "not-a-task")
 
 
 @pytest.mark.parametrize("num_envs", [0, MAX_PILOT_ENVS + 1])

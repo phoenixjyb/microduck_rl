@@ -4,6 +4,7 @@ from copy import deepcopy
 
 
 O1_PROTOCOL_NAME = "O1-centered-exact-v1"
+O1_TASK_ID = "Mjlab-Run-Obstacle-Flat-MicroDuck"
 O1_OBSTACLE_FORWARD_M = 1.15
 O1_OBSTACLE_LATERAL_M = 0.0
 O1_MIN_COMMAND_SPEED_MPS = 0.25
@@ -18,6 +19,7 @@ O1_SENSOR_PARAMS = {
 }
 
 OA0_PROTOCOL_NAME = "OA0-offset-assisted-exact-v1"
+OA0_TASK_ID = "Mjlab-Run-Obstacle-Assisted-Flat-MicroDuck"
 OA0_OBSTACLE_FORWARD_M = O1_OBSTACLE_FORWARD_M
 OA0_OBSTACLE_LATERAL_ABS_RANGE_M = (0.24, 0.30)
 OA0_COMMAND_SPEED_MPS = 0.30
@@ -60,3 +62,12 @@ def oa0_training_protocol() -> dict:
         "attempt_timeout_s": OA0_ATTEMPT_TIMEOUT_S,
         "route_return_tolerance_m": OA0_ROUTE_RETURN_TOLERANCE_M,
     }
+
+
+def obstacle_protocol_for_task(task_id: str) -> dict:
+    """Return the retained protocol for a registered obstacle task."""
+    if task_id == O1_TASK_ID:
+        return o1_evaluation_protocol()
+    if task_id == OA0_TASK_ID:
+        return oa0_training_protocol()
+    raise ValueError(f"unsupported obstacle task: {task_id}")

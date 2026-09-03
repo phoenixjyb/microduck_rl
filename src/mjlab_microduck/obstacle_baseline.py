@@ -6,10 +6,13 @@ import os
 from dataclasses import asdict
 from pathlib import Path
 
-from mjlab_microduck.obstacle_protocol import o1_evaluation_protocol
+from mjlab_microduck.obstacle_protocol import (
+    O1_TASK_ID,
+    obstacle_protocol_for_task,
+)
 
 
-TASK_ID = "Mjlab-Run-Obstacle-Flat-MicroDuck"
+TASK_ID = O1_TASK_ID
 DEFAULT_PURPOSE = "untrained obstacle warm-start baseline; not trained-policy evidence"
 MAX_BASELINE_ENVS = 256
 MAX_BASELINE_STEPS = 1000
@@ -21,16 +24,27 @@ def _mean_or_none(total: float, count: int) -> float | None:
 
 
 def _resolved_attempt_metrics(
-    collision_events: int, clean_pass_events: int
+    collision_events: int,
+    clean_pass_events: int,
+    attempt_timeout_events: int = 0,
 ) -> dict[str, int | float | None]:
     """Summarize mutually exclusive pass/collision obstacle outcomes."""
-    if collision_events < 0 or clean_pass_events < 0:
+    if (
+        collision_events < 0
+        or clean_pass_events < 0
+        or attempt_timeout_events < 0
+    ):
         raise ValueError("obstacle event counts must be non-negative")
-    resolved_attempts = collision_events + clean_pass_events
+    resolved_attempts = (
+        collision_events + clean_pass_events + attempt_timeout_events
+    )
     return {
         "resolved_attempts": resolved_attempts,
         "clean_pass_rate": _mean_or_none(clean_pass_events, resolved_attempts),
         "collision_rate": _mean_or_none(collision_events, resolved_attempts),
+        "attempt_timeout_rate": _mean_or_none(
+            attempt_timeout_events, resolved_attempts
+        ),
     }
 
 
@@ -59,14 +73,17 @@ def validate_baseline_bounds(num_envs: int, steps: int, seeds: tuple[int, ...]) 
         raise ValueError(f"seed count must be in [1, {MAX_BASELINE_SEEDS}]")
 
 
-def prepare_baseline_configs(num_envs: int, speed_mps: float):
+def prepare_baseline_configs(
+    num_envs: int, speed_mps: float, task_id: str = TASK_ID
+):
     """Build a deterministic play config with one fixed straight command."""
     if speed_mps <= 0.0:
         raise ValueError("speed_mps must be positive")
     import mjlab_microduck.tasks  # noqa: F401
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
-    env_cfg = load_env_cfg(TASK_ID, play=True)
+    obstacle_protocol_for_task(task_id)
+    env_cfg = load_env_cfg(task_id, play=True)
     env_cfg.scene.num_envs = num_envs
     env_cfg.scene.terrain.num_envs = num_envs
     twist = env_cfg.commands["twist"]
@@ -84,19 +101,26 @@ def prepare_baseline_configs(num_envs: int, speed_mps: float):
     # standing commands), so retained cases would no longer be fixed-speed.
     env_cfg.curriculum.clear()
 
-    agent_cfg = load_rl_cfg(TASK_ID)
+    agent_cfg = load_rl_cfg(task_id)
     agent_cfg.logger = "tensorboard"
     agent_cfg.upload_model = False
     return env_cfg, agent_cfg
 
 
-def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, seed: int) -> dict:
+def _run_case(
+    checkpoint: Path,
+    num_envs: int,
+    steps: int,
+    speed_mps: float,
+    seed: int,
+    task_id: str,
+) -> dict:
     import torch
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
 
-    env_cfg, agent_cfg = prepare_baseline_configs(num_envs, speed_mps)
+    env_cfg, agent_cfg = prepare_baseline_configs(num_envs, speed_mps, task_id)
     env_cfg.seed = seed
     agent_cfg.seed = seed
     device = "cuda:0" if os.environ.get("CUDA_VISIBLE_DEVICES", "") else "cpu"
@@ -104,7 +128,7 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
     env = ManagerBasedRlEnv(cfg=env_cfg, device=device)
     try:
         wrapped = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
-        runner_cls = load_runner_cls(TASK_ID)
+        runner_cls = load_runner_cls(task_id)
         assert runner_cls is not None
         runner = runner_cls(wrapped, asdict(agent_cfg), device=device)
         infos = runner.load(
@@ -133,6 +157,9 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
         collision_time_sum_s = 0.0
         pass_lateral_sum_m = 0.0
         collision_lateral_sum_m = 0.0
+        success_return_error_sum_m = 0.0
+        success_route_return_events = 0
+        attempt_timeout_events = 0
         episode_steps = torch.zeros(num_envs, dtype=torch.long, device=device)
         episode_lateral_max = torch.zeros(num_envs, device=device)
         robot = env.scene["robot"]
@@ -169,10 +196,20 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
 
             passed = env.termination_manager.get_term("obstacle_passed")
             pass_events += int(passed.sum())
+            if "obstacle_attempt_timeout" in env.termination_manager.active_terms:
+                attempt_timeout = env.termination_manager.get_term(
+                    "obstacle_attempt_timeout"
+                )
+                attempt_timeout_events += int(attempt_timeout.sum())
             elapsed_s = episode_steps.float() * env.step_dt
             pass_time_sum_s += float(elapsed_s[passed].sum())
             collision_time_sum_s += float(elapsed_s[collision].sum())
             pass_lateral_sum_m += float(episode_lateral_max[passed].sum())
+            if hasattr(env, "_obstacle_route_return_error_m"):
+                success_return_error_sum_m += float(
+                    env._obstacle_route_return_error_m[passed].sum()
+                )
+                success_route_return_events += int(passed.sum())
             collision_lateral_sum_m += float(episode_lateral_max[collision].sum())
 
             robot = env.scene["robot"]
@@ -207,6 +244,7 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
             "collision_events": collision_events,
             "fall_events": fall_events,
             "timeout_events": timeout_events,
+            "attempt_timeout_events": attempt_timeout_events,
             "nan_termination_events": nan_events,
             "clean_pass_events": pass_events,
             "nonfinite_steps": nonfinite_steps,
@@ -226,8 +264,16 @@ def _run_case(checkpoint: Path, num_envs: int, steps: int, speed_mps: float, see
             "mean_collision_lateral_excursion_m": _mean_or_none(
                 collision_lateral_sum_m, collision_events
             ),
+            "mean_success_route_return_error_m": _mean_or_none(
+                success_return_error_sum_m, success_route_return_events
+            ),
+            "success_route_return_events": success_route_return_events,
         }
-        case.update(_resolved_attempt_metrics(collision_events, pass_events))
+        case.update(
+            _resolved_attempt_metrics(
+                collision_events, pass_events, attempt_timeout_events
+            )
+        )
         return case
     finally:
         env.close()
@@ -242,6 +288,7 @@ def run_baseline(
     speed_mps: float = 0.5,
     seeds: tuple[int, ...] = (41, 42, 43),
     purpose: str = DEFAULT_PURPOSE,
+    task_id: str = TASK_ID,
 ) -> Path:
     validate_baseline_bounds(num_envs, steps, seeds)
     if not purpose.strip():
@@ -252,8 +299,10 @@ def run_baseline(
         raise FileExistsError(output_dir)
     output_dir.mkdir(parents=True)
 
+    protocol = obstacle_protocol_for_task(task_id)
     cases = [
-        _run_case(checkpoint, num_envs, steps, speed_mps, seed) for seed in seeds
+        _run_case(checkpoint, num_envs, steps, speed_mps, seed, task_id)
+        for seed in seeds
     ]
     totals = {
         key: sum(case[key] for case in cases)
@@ -261,6 +310,7 @@ def run_baseline(
             "collision_events",
             "fall_events",
             "timeout_events",
+            "attempt_timeout_events",
             "nan_termination_events",
             "clean_pass_events",
             "nonfinite_steps",
@@ -268,14 +318,16 @@ def run_baseline(
     }
     totals.update(
         _resolved_attempt_metrics(
-            totals["collision_events"], totals["clean_pass_events"]
+            totals["collision_events"],
+            totals["clean_pass_events"],
+            totals["attempt_timeout_events"],
         )
     )
     summary = {
-        "task_id": TASK_ID,
+        "task_id": task_id,
         "checkpoint": str(checkpoint),
         "purpose": purpose,
-        "evaluation_protocol": o1_evaluation_protocol(),
+        "evaluation_protocol": protocol,
         "cases": cases,
         "totals": totals,
         "mean_clearance_m": sum(c["mean_clearance_m"] for c in cases) / len(cases),
@@ -296,6 +348,11 @@ def run_baseline(
         "mean_collision_lateral_excursion_m": _weighted_case_mean(
             cases, "mean_collision_lateral_excursion_m", "collision_events"
         ),
+        "mean_success_route_return_error_m": _weighted_case_mean(
+            cases,
+            "mean_success_route_return_error_m",
+            "success_route_return_events",
+        ),
     }
     output_path = output_dir / "obstacle_baseline.json"
     output_path.write_text(json.dumps(summary, indent=2) + "\n")
@@ -313,6 +370,7 @@ def main() -> None:
     parser.add_argument("--speed-mps", type=float, default=0.5)
     parser.add_argument("--seeds", default="41,42,43")
     parser.add_argument("--purpose", default=DEFAULT_PURPOSE)
+    parser.add_argument("--task-id", default=TASK_ID)
     args = parser.parse_args()
     seeds = tuple(int(value) for value in args.seeds.split(",") if value)
     run_baseline(
@@ -323,6 +381,7 @@ def main() -> None:
         speed_mps=args.speed_mps,
         seeds=seeds,
         purpose=args.purpose,
+        task_id=args.task_id,
     )
 
 

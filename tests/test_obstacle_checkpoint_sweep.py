@@ -10,7 +10,10 @@ from mjlab_microduck.obstacle_checkpoint_sweep import (
     summarize_checkpoint_sweep,
     write_checkpoint_sweep,
 )
-from mjlab_microduck.obstacle_protocol import o1_evaluation_protocol
+from mjlab_microduck.obstacle_protocol import (
+    oa0_training_protocol,
+    o1_evaluation_protocol,
+)
 
 
 def _evaluation(
@@ -237,3 +240,101 @@ def test_write_sweep_is_retained_and_marked_diagnostic_only(tmp_path: Path):
     assert render_markdown(summary) == markdown
     with pytest.raises(FileExistsError):
         write_checkpoint_sweep(manifest_path, output_dir)
+
+
+def test_oa0_sweep_counts_attempt_timeouts_and_checks_route_return(tmp_path: Path):
+    candidates = []
+    for training_seed in (42, 43, 44):
+        evaluation = tmp_path / f"oa0-seed-{training_seed}.json"
+        evaluation.write_text(
+            json.dumps(
+                {
+                    "checkpoint": "/retained/model_8016.pt",
+                    "evaluation_protocol": oa0_training_protocol(),
+                    "cases": [
+                        {"seed": seed, "commanded_speed_mps": 0.3}
+                        for seed in (41, 42, 43)
+                    ],
+                    "totals": {
+                        "collision_events": 5,
+                        "attempt_timeout_events": 5,
+                        "fall_events": 0,
+                        "nan_termination_events": 0,
+                        "clean_pass_events": 90,
+                        "nonfinite_steps": 0,
+                    },
+                    "pre_obstacle_route_speed_mps": 0.25,
+                    "mean_pass_lateral_excursion_m": 0.4,
+                    "mean_passage_time_s": 6.0,
+                    "mean_success_route_return_error_m": 0.1,
+                }
+            )
+            + "\n"
+        )
+        candidates.append(
+            {
+                "training_seed": training_seed,
+                "checkpoint_iteration": 8016,
+                "obstacle_evaluation": evaluation.name,
+            }
+        )
+    summary = summarize_checkpoint_sweep(
+        {
+            "schema_version": 1,
+            "campaign_id": "test-oa0",
+            "stage": "OA0",
+            "candidates": candidates,
+        },
+        tmp_path,
+    )
+
+    assert summary["stage"] == "OA0"
+    assert summary["selected_checkpoint_iteration"] == 8016
+    assert summary["iteration_summaries"][0]["pooled_clean_pass_rate"] == 0.9
+    assert all(
+        candidate["attempt_timeout_events"] == 5
+        for candidate in summary["candidates"]
+    )
+
+
+def test_oa0_sweep_fails_missing_route_return_metric(tmp_path: Path):
+    evaluation = tmp_path / "oa0.json"
+    evaluation.write_text(
+        json.dumps(
+            {
+                "checkpoint": "/retained/model_8016.pt",
+                "evaluation_protocol": oa0_training_protocol(),
+                "cases": [
+                    {"seed": seed, "commanded_speed_mps": 0.3}
+                    for seed in (41, 42, 43)
+                ],
+                "totals": {
+                    "collision_events": 10,
+                    "attempt_timeout_events": 0,
+                    "fall_events": 0,
+                    "nan_termination_events": 0,
+                    "clean_pass_events": 90,
+                    "nonfinite_steps": 0,
+                },
+                "pre_obstacle_route_speed_mps": 0.25,
+                "mean_pass_lateral_excursion_m": 0.4,
+                "mean_passage_time_s": 6.0,
+            }
+        )
+        + "\n"
+    )
+    manifest = {
+        "schema_version": 1,
+        "campaign_id": "missing-return",
+        "stage": "OA0",
+        "candidates": [
+            {
+                "training_seed": 42,
+                "checkpoint_iteration": 8016,
+                "obstacle_evaluation": evaluation.name,
+            }
+        ],
+    }
+
+    candidate = summarize_checkpoint_sweep(manifest, tmp_path)["candidates"][0]
+    assert "mean_success_route_return_error_m" in candidate["failed_gates"]

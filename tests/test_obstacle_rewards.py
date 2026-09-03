@@ -84,6 +84,10 @@ def test_route_rejoined_requires_passage_and_return_to_centerline():
     assert torch.equal(
         microduck_mdp.obstacle_route_rejoined_reward(env), expected.float()
     )
+    torch.testing.assert_close(
+        env._obstacle_route_return_error_m,
+        torch.tensor([0.10, 0.20, 0.05]),
+    )
     assert "Metrics/obstacle_route_rejoined_fraction" in env.extras["log"]
 
 

@@ -26,6 +26,7 @@ HC4R_STAGE = "HC4R-near-range-behavioral-cloning"
 HC4R2_STAGE = "HC4R2-student-state-correction-BC"
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
 HC4R2H_STAGE = "HC4R2H-range-speed-gated-supervisor"
+HC4R2L_STAGE = "HC4R2L-episode-latched-supervisor"
 SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE, HC4R_STAGE, HC4R2_STAGE)
 
 
@@ -229,21 +230,92 @@ class RangeSpeedGatedSupervisor(torch.nn.Module):
         self.near_range_gate_m = near_range_gate_m
         self.max_near_nominal_speed_mps = max_near_nominal_speed_mps
 
-    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+    def select_near(self, observation: torch.Tensor) -> torch.Tensor:
+        """Return the instantaneous valid range/speed eligibility mask."""
         obstacle_forward, _, valid = (
             obstacle_route_position_from_supervisor_observation(observation)
         )
         nominal_speed_mps = observation[:, 0].clamp(0.0, 1.0) * (
             ObstacleTeacherCfg().max_forward_speed_mps
         )
-        use_near = (
+        return (
             valid
             & (obstacle_forward <= self.near_range_gate_m)
             & (nominal_speed_mps <= self.max_near_nominal_speed_mps + 1.0e-6)
         )
+
+    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+        use_near = self.select_near(observation)
         far_command = self.far_supervisor(observation)
         near_command = self.near_supervisor(observation)
         return torch.where(use_near.unsqueeze(-1), near_command, far_command)
+
+
+class EpisodeLatchedRangeSpeedSupervisor(RangeSpeedGatedSupervisor):
+    """Choose a range/speed specialist once and retain it until episode reset."""
+
+    def __init__(
+        self,
+        far_supervisor: torch.nn.Module,
+        near_supervisor: torch.nn.Module,
+        *,
+        near_range_gate_m: float = 0.95,
+        max_near_nominal_speed_mps: float = 0.40,
+    ) -> None:
+        super().__init__(
+            far_supervisor,
+            near_supervisor,
+            near_range_gate_m=near_range_gate_m,
+            max_near_nominal_speed_mps=max_near_nominal_speed_mps,
+        )
+        self.register_buffer(
+            "_episode_initialized",
+            torch.empty(0, dtype=torch.bool),
+            persistent=False,
+        )
+        self.register_buffer(
+            "_episode_use_near",
+            torch.empty(0, dtype=torch.bool),
+            persistent=False,
+        )
+
+    def _ensure_episode_state(self, observation: torch.Tensor) -> None:
+        batch_size = observation.shape[0]
+        if (
+            self._episode_initialized.shape != (batch_size,)
+            or self._episode_initialized.device != observation.device
+        ):
+            self._episode_initialized = torch.zeros(
+                batch_size, dtype=torch.bool, device=observation.device
+            )
+            self._episode_use_near = torch.zeros_like(self._episode_initialized)
+
+    def reset_episodes(self, reset_mask: torch.Tensor) -> None:
+        """Clear routing decisions only for environments whose episode ended."""
+        if self._episode_initialized.numel() == 0:
+            raise RuntimeError("cannot reset episode routing before first observation")
+        reset_mask = reset_mask.to(
+            device=self._episode_initialized.device, dtype=torch.bool
+        )
+        if reset_mask.shape != self._episode_initialized.shape:
+            raise ValueError("reset mask does not match supervisor batch")
+        keep = ~reset_mask
+        self._episode_initialized = self._episode_initialized & keep
+        self._episode_use_near = self._episode_use_near & keep
+
+    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+        instantaneous_use_near = self.select_near(observation)
+        self._ensure_episode_state(observation)
+        new_episode = ~self._episode_initialized
+        self._episode_use_near = torch.where(
+            new_episode, instantaneous_use_near, self._episode_use_near
+        )
+        self._episode_initialized = self._episode_initialized | new_episode
+        far_command = self.far_supervisor(observation)
+        near_command = self.near_supervisor(observation)
+        return torch.where(
+            self._episode_use_near.unsqueeze(-1), near_command, far_command
+        )
 
 
 def _sha256(path: Path) -> str:

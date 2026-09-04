@@ -8,12 +8,14 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC4L_STAGE,
     HC4LH_STAGE,
     HC4R2H_STAGE,
+    HC4R2L_STAGE,
     HC4R2_STAGE,
     ObstacleSupervisor,
     SupervisorBcCfg,
 )
 from mjlab_microduck.obstacle_supervisor_hybrid import (
     compose_lateral_gated_supervisor,
+    compose_episode_latched_supervisor,
     compose_range_speed_gated_supervisor,
 )
 
@@ -96,3 +98,23 @@ def test_compose_range_speed_rejects_mismatched_locomotion_actor(tmp_path):
 
     with pytest.raises(ValueError, match="different locomotion actors"):
         compose_range_speed_gated_supervisor(far, near, tmp_path / "hybrid.pt")
+
+
+def test_compose_episode_latched_checkpoint(tmp_path):
+    center = tmp_path / "center.pt"
+    lateral = tmp_path / "lateral.pt"
+    far = tmp_path / "far.pt"
+    near = tmp_path / "near.pt"
+    output = tmp_path / "latched" / "supervisor.pt"
+    _write_checkpoint(center, HC2_STAGE)
+    _write_checkpoint(lateral, HC4L_STAGE)
+    _write_checkpoint(near, HC4R2_STAGE)
+    compose_lateral_gated_supervisor(center, lateral, far, lateral_gate_m=0.02)
+
+    compose_episode_latched_supervisor(far, near, output)
+
+    payload = torch.load(output, map_location="cpu", weights_only=False)
+    assert payload["stage"] == HC4R2L_STAGE
+    assert payload["selector_state"] == "latched-until-explicit-episode-reset"
+    assert payload["decision"] == "composition-complete-pending-rollout"
+    assert payload["physical_motion_authorized"] is False

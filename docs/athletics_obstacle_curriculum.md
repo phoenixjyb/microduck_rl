@@ -261,3 +261,11 @@ collision regression. The threshold diagnostic and MP4 were not run. HC4-LH
 therefore remains selected; the next design must latch one specialist for an
 entire episode rather than switching on instantaneous range. See
 `experiments/2026-09-04-hc4r2h-range-speed-composition.md`.
+
+HC4-R2L implements that single change with explicit per-environment reset
+state. Initial 0.90 m valid low-speed episodes choose HC4-R2; initial 1.15 m,
+high-speed, or invalid episodes choose HC4-LH. The choice cannot change until
+the execution layer reports that episode done. Its first gate reuses the
+HC4-R2H seeds only as a causal regression check; fresh seeds are separately
+predeclared for promotion. HC4-LH remains selected until both stages pass. See
+`experiments/2026-09-04-hc4r2l-episode-latched-composition.md`.

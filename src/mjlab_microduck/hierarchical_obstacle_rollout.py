@@ -38,8 +38,10 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC4L_STAGE,
     HC4LH_STAGE,
     HC4R2H_STAGE,
+    HC4R2L_STAGE,
     HC4R2_STAGE,
     HC4R_STAGE,
+    EpisodeLatchedRangeSpeedSupervisor,
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
@@ -68,6 +70,7 @@ _RECORDING_STAGE_SLUGS = {
     HC4R_STAGE: "hc4r",
     HC4R2_STAGE: "hc4r2",
     HC4R2H_STAGE: "hc4r2h",
+    HC4R2L_STAGE: "hc4r2l",
     "HC3-supervisor-PPO": "hc3",
     HC3E_STAGE: "hc3e",
     HC3F_STAGE: "hc3f",
@@ -130,7 +133,7 @@ def load_learned_supervisor(
             and decision == "offline-imitation-pass"
         )
         or (
-            stage in {HC4LH_STAGE, HC4R2H_STAGE}
+            stage in {HC4LH_STAGE, HC4R2H_STAGE, HC4R2L_STAGE}
             and decision
             in {"composition-complete-pending-rollout", "accepted-simulation"}
         )
@@ -150,6 +153,10 @@ def load_learned_supervisor(
     )
     if not allowed:
         raise ValueError("supervisor checkpoint is not eligible for diagnostic rollout")
+    if stage == HC4R2L_STAGE and payload.get("selector_state") != (
+        "latched-until-explicit-episode-reset"
+    ):
+        raise ValueError("HC4-R2L checkpoint has invalid selector state")
     if payload.get("source_locomotion_checkpoint_sha256") != _sha256(
         base_checkpoint
     ):
@@ -159,7 +166,7 @@ def load_learned_supervisor(
     model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
-    if stage in {HC4LH_STAGE, HC4R2H_STAGE}:
+    if stage in {HC4LH_STAGE, HC4R2H_STAGE, HC4R2L_STAGE}:
         center_model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
         center_model.load_state_dict(payload["center_model_state_dict"], strict=True)
         center_model.eval()
@@ -169,11 +176,16 @@ def load_learned_supervisor(
             lateral_gate_m=payload["lateral_gate_m"],
         ).to(device)
         model.eval()
-        if stage == HC4R2H_STAGE:
+        if stage in {HC4R2H_STAGE, HC4R2L_STAGE}:
             near_model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
             near_model.load_state_dict(payload["near_model_state_dict"], strict=True)
             near_model.eval()
-            model = RangeSpeedGatedSupervisor(
+            supervisor_type = (
+                EpisodeLatchedRangeSpeedSupervisor
+                if stage == HC4R2L_STAGE
+                else RangeSpeedGatedSupervisor
+            )
+            model = supervisor_type(
                 model,
                 near_model,
                 near_range_gate_m=payload["near_range_gate_m"],
@@ -686,6 +698,10 @@ def _run_case(
                 reset_teacher_state(
                     state, dones.bool(), nominal_speed_mps=nominal_speed_mps
                 )
+                if learned_supervisor is not None and hasattr(
+                    learned_supervisor, "reset_episodes"
+                ):
+                    learned_supervisor.reset_episodes(dones.bool())
                 lateral_abs_max[dones.bool()] = 0.0
                 episode_steps[dones.bool()] = 0
                 episode_generation[dones.bool()] += 1
@@ -881,6 +897,7 @@ def run_rollout(
             HC4R_STAGE: "HC4R-near-range-behavioral-cloning-rollout",
             HC4R2_STAGE: "HC4R2-student-state-correction-BC-rollout",
             HC4R2H_STAGE: "HC4R2H-range-speed-gated-supervisor-rollout",
+            HC4R2L_STAGE: "HC4R2L-episode-latched-supervisor-rollout",
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
             HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
             HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",

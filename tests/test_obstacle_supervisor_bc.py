@@ -4,6 +4,7 @@ import torch
 from mjlab_microduck.hierarchical_obstacle import SUPERVISOR_OBSERVATION_DIM
 from mjlab_microduck.obstacle_supervisor_bc import (
     HC4R2_STAGE,
+    EpisodeLatchedRangeSpeedSupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
     RangeSpeedGatedSupervisor,
@@ -114,3 +115,47 @@ def test_range_speed_gate_routes_only_valid_near_slow_observations():
     torch.testing.assert_close(command[2], torch.tensor((0.50, 0.10)))
     torch.testing.assert_close(command[3], torch.tensor((0.50, 0.10)))
     torch.testing.assert_close(command[4], torch.tensor((0.25, -0.20)))
+
+
+def test_episode_latched_gate_changes_route_only_after_explicit_reset():
+    class FixedSupervisor(torch.nn.Module):
+        def __init__(self, command):
+            super().__init__()
+            self.register_buffer("command", torch.tensor(command))
+
+        def forward(self, observation):
+            return self.command.expand(observation.shape[0], -1)
+
+    supervisor = EpisodeLatchedRangeSpeedSupervisor(
+        FixedSupervisor((0.50, 0.10)),
+        FixedSupervisor((0.25, -0.20)),
+    )
+    observation = torch.zeros(3, SUPERVISOR_OBSERVATION_DIM)
+    observation[:, 0] = 0.40 / 0.8
+    observation[:, 1] = torch.tensor((0.90, 1.15, 0.90)) / 2.0
+    observation[:, 3] = 1.0
+    observation[:, 7] = torch.tensor((1.0, 1.0, 0.0))
+
+    with torch.inference_mode():
+        initial = supervisor(observation)
+        observation[:, 1] = torch.tensor((1.15, 0.90, 0.90)) / 2.0
+        observation[:, 7] = 1.0
+        still_latched = supervisor(observation)
+    supervisor.reset_episodes(torch.tensor((True, False, True)))
+    after_reset = supervisor(observation)
+
+    near = torch.tensor((0.25, -0.20))
+    far = torch.tensor((0.50, 0.10))
+    torch.testing.assert_close(initial, torch.stack((near, far, far)))
+    torch.testing.assert_close(still_latched, torch.stack((near, far, far)))
+    torch.testing.assert_close(after_reset, torch.stack((far, far, near)))
+
+
+def test_episode_latched_gate_rejects_wrong_reset_shape():
+    supervisor = EpisodeLatchedRangeSpeedSupervisor(
+        ObstacleSupervisor(), ObstacleSupervisor()
+    )
+    supervisor(torch.zeros(2, SUPERVISOR_OBSERVATION_DIM))
+
+    with pytest.raises(ValueError, match="reset mask"):
+        supervisor.reset_episodes(torch.tensor((True,)))

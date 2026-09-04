@@ -14,6 +14,7 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC4L_STAGE,
     HC4LH_STAGE,
     HC4R2H_STAGE,
+    HC4R2L_STAGE,
     HC4R2_STAGE,
 )
 
@@ -96,15 +97,17 @@ def compose_lateral_gated_supervisor(
     return output_path
 
 
-def compose_range_speed_gated_supervisor(
+def _compose_range_speed_supervisor(
     far_checkpoint: Path,
     near_checkpoint: Path,
     output_path: Path,
     *,
     near_range_gate_m: float = 0.95,
     max_near_nominal_speed_mps: float = 0.40,
+    stage: str,
+    selector_state: str | None = None,
 ) -> Path:
-    """Write a fail-closed HC4-LH/HC4-R2 composition checkpoint."""
+    """Write a validated HC4-LH/HC4-R2 composition checkpoint."""
     if near_range_gate_m <= 0.0:
         raise ValueError("near_range_gate_m must be positive")
     if not 0.0 < max_near_nominal_speed_mps <= 0.8:
@@ -150,7 +153,7 @@ def compose_range_speed_gated_supervisor(
 
     checkpoint = {
         "schema_version": 1,
-        "stage": HC4R2H_STAGE,
+        "stage": stage,
         "decision": "composition-complete-pending-rollout",
         "rollout_acceptance_required": True,
         "near_range_gate_m": near_range_gate_m,
@@ -170,6 +173,8 @@ def compose_range_speed_gated_supervisor(
         "invalid_geometry_behavior": "execution-layer-immediate-stop",
         "physical_motion_authorized": False,
     }
+    if selector_state is not None:
+        checkpoint["selector_state"] = selector_state
     output_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint, output_path)
     manifest = {
@@ -182,10 +187,51 @@ def compose_range_speed_gated_supervisor(
     return output_path
 
 
+def compose_range_speed_gated_supervisor(
+    far_checkpoint: Path,
+    near_checkpoint: Path,
+    output_path: Path,
+    *,
+    near_range_gate_m: float = 0.95,
+    max_near_nominal_speed_mps: float = 0.40,
+) -> Path:
+    """Write a fail-closed stateless HC4-LH/HC4-R2 checkpoint."""
+    return _compose_range_speed_supervisor(
+        far_checkpoint,
+        near_checkpoint,
+        output_path,
+        near_range_gate_m=near_range_gate_m,
+        max_near_nominal_speed_mps=max_near_nominal_speed_mps,
+        stage=HC4R2H_STAGE,
+    )
+
+
+def compose_episode_latched_supervisor(
+    far_checkpoint: Path,
+    near_checkpoint: Path,
+    output_path: Path,
+    *,
+    near_range_gate_m: float = 0.95,
+    max_near_nominal_speed_mps: float = 0.40,
+) -> Path:
+    """Write an HC4-LH/HC4-R2 checkpoint with episode-latched routing."""
+    return _compose_range_speed_supervisor(
+        far_checkpoint,
+        near_checkpoint,
+        output_path,
+        near_range_gate_m=near_range_gate_m,
+        max_near_nominal_speed_mps=max_near_nominal_speed_mps,
+        stage=HC4R2L_STAGE,
+        selector_state="latched-until-explicit-episode-reset",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--mode", choices=("lateral", "range-speed"), default="lateral"
+        "--mode",
+        choices=("lateral", "range-speed", "episode-latched"),
+        default="lateral",
     )
     parser.add_argument("--center-checkpoint", type=Path)
     parser.add_argument("--lateral-checkpoint", type=Path)
@@ -207,12 +253,24 @@ def main() -> None:
             args.output,
             lateral_gate_m=args.lateral_gate_m,
         )
-    else:
+    elif args.mode == "range-speed":
         if args.far_checkpoint is None or args.near_checkpoint is None:
             parser.error(
                 "range-speed mode requires --far-checkpoint and --near-checkpoint"
             )
         compose_range_speed_gated_supervisor(
+            args.far_checkpoint,
+            args.near_checkpoint,
+            args.output,
+            near_range_gate_m=args.near_range_gate_m,
+            max_near_nominal_speed_mps=args.max_near_nominal_speed_mps,
+        )
+    else:
+        if args.far_checkpoint is None or args.near_checkpoint is None:
+            parser.error(
+                "episode-latched mode requires --far-checkpoint and --near-checkpoint"
+            )
+        compose_episode_latched_supervisor(
             args.far_checkpoint,
             args.near_checkpoint,
             args.output,

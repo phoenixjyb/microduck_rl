@@ -15,6 +15,7 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
 )
 from mjlab_microduck.obstacle_supervisor_bc import (
     InteractionSpeedOnlySupervisor,
+    EpisodeLatchedRangeSpeedSupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
     RangeSpeedGatedSupervisor,
@@ -337,3 +338,57 @@ def test_load_hc4r2h_wraps_far_and_near_supervisors(tmp_path):
 
     assert isinstance(loaded, RangeSpeedGatedSupervisor)
     assert isinstance(loaded.far_supervisor, LateralGatedSupervisor)
+
+
+def test_load_hc4r2l_wraps_episode_latched_supervisor(tmp_path):
+    base_checkpoint = tmp_path / "locomotion.pt"
+    base_checkpoint.write_bytes(b"frozen locomotion")
+    actor = ObstacleSupervisor()
+    supervisor_checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": "HC4R2L-episode-latched-supervisor",
+            "decision": "composition-complete-pending-rollout",
+            "selector_state": "latched-until-explicit-episode-reset",
+            "lateral_gate_m": 0.02,
+            "near_range_gate_m": 0.95,
+            "max_near_nominal_speed_mps": 0.40,
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(SupervisorBcCfg()),
+            "model_state_dict": actor.state_dict(),
+            "center_model_state_dict": actor.state_dict(),
+            "near_model_state_dict": actor.state_dict(),
+        },
+        supervisor_checkpoint,
+    )
+
+    loaded = load_learned_supervisor(
+        supervisor_checkpoint, base_checkpoint, "cpu"
+    )
+
+    assert isinstance(loaded, EpisodeLatchedRangeSpeedSupervisor)
+    assert isinstance(loaded.far_supervisor, LateralGatedSupervisor)
+
+
+def test_load_hc4r2l_rejects_missing_selector_state(tmp_path):
+    base_checkpoint = tmp_path / "locomotion.pt"
+    base_checkpoint.write_bytes(b"frozen locomotion")
+    actor = ObstacleSupervisor()
+    supervisor_checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": "HC4R2L-episode-latched-supervisor",
+            "decision": "composition-complete-pending-rollout",
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(SupervisorBcCfg()),
+            "model_state_dict": actor.state_dict(),
+        },
+        supervisor_checkpoint,
+    )
+
+    with pytest.raises(ValueError, match="invalid selector state"):
+        load_learned_supervisor(supervisor_checkpoint, base_checkpoint, "cpu")

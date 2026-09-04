@@ -2,8 +2,8 @@
 
 Date: 2026-09-04
 
-Decision: **implementation-ready; no hop policy accepted or trained in this
-campaign yet**
+Decision: **runtime smoke passed; matched-arm diagnostic pilot pending; no hop
+policy accepted**
 
 ## Current evidence
 
@@ -80,3 +80,49 @@ not authorized by this smoke; its budget and promotion matrix will be fixed
 only after the matched pilot demonstrates a real hop signal.
 
 No MP4 is recorded until a numerical H1 candidate survives held-out evaluation.
+
+## Runtime-smoke result
+
+The exact K3900 smoke completed all five iterations on the 100.100 RTX 4090
+Laptop GPU with seed 42 and 64 environments. It wrote `model_0.pt`,
+`model_4.pt`, ONNX, parameters, Git identity, and TensorBoard events under
+`logs/rsl_rl/hop_k3900/2026-09-04_16-48-33_h1-smoke-f209d75-k3900-s42/`.
+
+At the final logged iteration:
+
+- hop spring energy mean/peak was 0.0076/0.0611 J;
+- loaded spring compression mean was 0.0015 m and p95 compression was
+  0.0025 m;
+- bottomed fraction was zero;
+- airborne rise mean/peak was 0.0025/0.0094 m;
+- landing-force mean was 6.8620;
+- NaN termination was zero and every reported scalar was finite.
+
+The untrained five-iteration policy still fell frequently
+(`Episode_Termination/fell_over = 2.1667` in the final interval). That is
+expected smoke evidence, not H1 performance. The smoke proves that the spring
+stores measurable energy and that the logging path is live; it does not prove a
+repeatable hop.
+
+Retained artifact SHA-256 values:
+
+- `model_4.pt`:
+  `d2e59fe45a5dd66b95cd19ef527d75efeef90efd7c853c7105f5b5d0e365d412`;
+- TensorBoard event:
+  `f717f82b6e17f14357d01ee7287691b83d4b54d8c19b1c0cd44dbb01fd3de173`;
+- ONNX:
+  `44f06b9057d80406137fe957d23364dcc7e341aeeb1dad6ee0a02f0ddb08cb33`.
+
+## Predeclared matched-arm pilot
+
+The next bounded diagnostic uses the same seed 43 for Locked, K2500, and K3900,
+256 environments, 256 iterations, and a 16-iteration checkpoint interval.
+Every arm starts from scratch with identical PPO settings; no checkpoint is
+warm-started from the smoke or from another arm.
+
+Read retained checkpoints at common iterations 64, 128, 192, and 255. Stop the
+line before a long campaign if all three arms remain effectively stationary,
+if any scalar becomes non-finite, if a compliant arm has no measurable loaded
+compression/energy, or if bottoming is persistently at least 1%. The pilot is
+diagnostic only: a promising signal still requires a separately fixed
+three-training-seed budget and held-out H1 evaluation.

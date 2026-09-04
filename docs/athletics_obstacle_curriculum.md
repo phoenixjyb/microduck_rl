@@ -280,6 +280,8 @@ near-range specialist rather than a unified runtime replacement.
 
 The independent hop branch now follows the canonical H0--H3 naming above.
 H0 source/configuration checks are complete, but no retained hop training run
-exists on 100.100. The next authorized action is only the predeclared
-five-iteration K3900 runtime smoke in
-`experiments/2026-09-04-h0-h1-hop-campaign.md`; it is not H1 acceptance.
+previously existed on 100.100. The predeclared five-iteration K3900 runtime
+smoke now passes with finite spring, rise, landing, optimizer, and termination
+metrics and zero bottoming/NaN termination. It is not H1 acceptance. The next
+bounded step is the matched Locked/K2500/K3900 seed-43 diagnostic pilot fixed in
+`experiments/2026-09-04-h0-h1-hop-campaign.md`.

@@ -33,6 +33,7 @@ def test_recording_stem_identifies_lateral_gated_hybrid():
         ("HC4LH-lateral-gated-supervisor", "hc4lh"),
         ("HC4R-near-range-behavioral-cloning", "hc4r"),
         ("HC4R2-student-state-correction-BC", "hc4r2"),
+        ("HC4R2H-range-speed-gated-supervisor", "hc4r2h"),
     ],
 )
 def test_recording_controller_stage(supervisor_stage, expected):

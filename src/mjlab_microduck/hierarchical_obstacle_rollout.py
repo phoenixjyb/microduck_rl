@@ -37,11 +37,13 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC2_STAGE,
     HC4L_STAGE,
     HC4LH_STAGE,
+    HC4R2H_STAGE,
     HC4R2_STAGE,
     HC4R_STAGE,
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
+    RangeSpeedGatedSupervisor,
     SupervisorBcCfg,
 )
 from mjlab_microduck.tasks.run import (
@@ -65,6 +67,7 @@ _RECORDING_STAGE_SLUGS = {
     HC4LH_STAGE: "hc4lh",
     HC4R_STAGE: "hc4r",
     HC4R2_STAGE: "hc4r2",
+    HC4R2H_STAGE: "hc4r2h",
     "HC3-supervisor-PPO": "hc3",
     HC3E_STAGE: "hc3e",
     HC3F_STAGE: "hc3f",
@@ -127,7 +130,7 @@ def load_learned_supervisor(
             and decision == "offline-imitation-pass"
         )
         or (
-            stage == HC4LH_STAGE
+            stage in {HC4LH_STAGE, HC4R2H_STAGE}
             and decision
             in {"composition-complete-pending-rollout", "accepted-simulation"}
         )
@@ -156,7 +159,7 @@ def load_learned_supervisor(
     model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
-    if stage == HC4LH_STAGE:
+    if stage in {HC4LH_STAGE, HC4R2H_STAGE}:
         center_model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
         center_model.load_state_dict(payload["center_model_state_dict"], strict=True)
         center_model.eval()
@@ -166,6 +169,19 @@ def load_learned_supervisor(
             lateral_gate_m=payload["lateral_gate_m"],
         ).to(device)
         model.eval()
+        if stage == HC4R2H_STAGE:
+            near_model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
+            near_model.load_state_dict(payload["near_model_state_dict"], strict=True)
+            near_model.eval()
+            model = RangeSpeedGatedSupervisor(
+                model,
+                near_model,
+                near_range_gate_m=payload["near_range_gate_m"],
+                max_near_nominal_speed_mps=payload[
+                    "max_near_nominal_speed_mps"
+                ],
+            ).to(device)
+            model.eval()
     if stage in {HC3E_STAGE, HC3F_STAGE, HC3G_STAGE}:
         action_authority = payload.get("action_authority")
         if action_authority != "interaction-speed-only":
@@ -864,6 +880,7 @@ def run_rollout(
             HC4LH_STAGE: "HC4LH-lateral-gated-supervisor-rollout",
             HC4R_STAGE: "HC4R-near-range-behavioral-cloning-rollout",
             HC4R2_STAGE: "HC4R2-student-state-correction-BC-rollout",
+            HC4R2H_STAGE: "HC4R2H-range-speed-gated-supervisor-rollout",
             "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
             HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
             HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",

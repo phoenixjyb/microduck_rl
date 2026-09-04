@@ -6,6 +6,7 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC4R2_STAGE,
     LateralGatedSupervisor,
     ObstacleSupervisor,
+    RangeSpeedGatedSupervisor,
     split_episode_keys,
     train_supervisor,
 )
@@ -79,3 +80,37 @@ def test_lateral_gate_routes_center_shifted_and_invalid_observations():
     torch.testing.assert_close(command[1], torch.tensor((0.50, -0.20)))
     torch.testing.assert_close(command[2], torch.tensor((0.50, -0.20)))
     torch.testing.assert_close(command[3], torch.tensor((0.25, 0.10)))
+
+
+def test_range_speed_gate_routes_only_valid_near_slow_observations():
+    class FixedSupervisor(torch.nn.Module):
+        def __init__(self, command):
+            super().__init__()
+            self.register_buffer("command", torch.tensor(command))
+
+        def forward(self, observation):
+            return self.command.expand(observation.shape[0], -1)
+
+    supervisor = RangeSpeedGatedSupervisor(
+        FixedSupervisor((0.50, 0.10)),
+        FixedSupervisor((0.25, -0.20)),
+        near_range_gate_m=0.95,
+        max_near_nominal_speed_mps=0.40,
+    )
+    observation = torch.zeros(5, SUPERVISOR_OBSERVATION_DIM)
+    observation[:, 0] = torch.tensor((0.40, 0.40, 0.50, 0.40, 0.40)) / 0.8
+    observation[:, 1] = torch.tensor((0.90, 0.96, 0.90, 0.90, 0.90)) / 2.0
+    observation[:, 3] = 1.0
+    observation[:, 7] = 1.0
+    observation[3, 7] = 0.0
+    # The last row uses a rotated route frame: relative x=0.90 and a 60-degree
+    # route error reconstruct to route-forward 0.45 m, inside the gate.
+    observation[4, 9] = (torch.pi / 3.0) / torch.pi
+
+    command = supervisor(observation)
+
+    torch.testing.assert_close(command[0], torch.tensor((0.25, -0.20)))
+    torch.testing.assert_close(command[1], torch.tensor((0.50, 0.10)))
+    torch.testing.assert_close(command[2], torch.tensor((0.50, 0.10)))
+    torch.testing.assert_close(command[3], torch.tensor((0.50, 0.10)))
+    torch.testing.assert_close(command[4], torch.tensor((0.25, -0.20)))

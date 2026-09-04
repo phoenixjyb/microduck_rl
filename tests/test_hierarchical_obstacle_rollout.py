@@ -17,6 +17,7 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
+    RangeSpeedGatedSupervisor,
     SupervisorBcCfg,
 )
 
@@ -305,3 +306,34 @@ def test_load_hc4lh_wraps_center_and_lateral_supervisors(tmp_path):
     )
 
     assert isinstance(loaded, LateralGatedSupervisor)
+
+
+def test_load_hc4r2h_wraps_far_and_near_supervisors(tmp_path):
+    base_checkpoint = tmp_path / "locomotion.pt"
+    base_checkpoint.write_bytes(b"frozen locomotion")
+    actor = ObstacleSupervisor()
+    supervisor_checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": "HC4R2H-range-speed-gated-supervisor",
+            "decision": "composition-complete-pending-rollout",
+            "lateral_gate_m": 0.02,
+            "near_range_gate_m": 0.95,
+            "max_near_nominal_speed_mps": 0.40,
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(SupervisorBcCfg()),
+            "model_state_dict": actor.state_dict(),
+            "center_model_state_dict": actor.state_dict(),
+            "near_model_state_dict": actor.state_dict(),
+        },
+        supervisor_checkpoint,
+    )
+
+    loaded = load_learned_supervisor(
+        supervisor_checkpoint, base_checkpoint, "cpu"
+    )
+
+    assert isinstance(loaded, RangeSpeedGatedSupervisor)
+    assert isinstance(loaded.far_supervisor, LateralGatedSupervisor)

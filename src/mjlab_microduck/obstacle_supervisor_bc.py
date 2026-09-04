@@ -25,6 +25,7 @@ HC4L_STAGE = "HC4L-lateral-behavioral-cloning"
 HC4R_STAGE = "HC4R-near-range-behavioral-cloning"
 HC4R2_STAGE = "HC4R2-student-state-correction-BC"
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
+HC4R2H_STAGE = "HC4R2H-range-speed-gated-supervisor"
 SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE, HC4R_STAGE, HC4R2_STAGE)
 
 
@@ -133,10 +134,10 @@ class InteractionSpeedOnlySupervisor(torch.nn.Module):
         )
 
 
-def obstacle_route_lateral_from_supervisor_observation(
+def obstacle_route_position_from_supervisor_observation(
     observation: torch.Tensor,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Recover obstacle route-lateral position and validity from compact input."""
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Recover obstacle route-frame position and validity from compact input."""
     if observation.ndim != 2 or observation.shape[1] != SUPERVISOR_OBSERVATION_DIM:
         raise ValueError(
             f"observation must have shape (N, {SUPERVISOR_OBSERVATION_DIM})"
@@ -149,12 +150,26 @@ def obstacle_route_lateral_from_supervisor_observation(
     relative_y = center_range * observation[:, 2]
     route_lateral = observation[:, 8] * 0.75
     route_heading = observation[:, 9] * torch.pi
+    obstacle_route_forward = (
+        torch.cos(route_heading) * relative_x
+        - torch.sin(route_heading) * relative_y
+    )
     obstacle_route_lateral = (
         route_lateral
         + torch.sin(route_heading) * relative_x
         + torch.cos(route_heading) * relative_y
     )
     valid = observation[:, 7] > 0.5
+    return obstacle_route_forward, obstacle_route_lateral, valid
+
+
+def obstacle_route_lateral_from_supervisor_observation(
+    observation: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Recover obstacle route-lateral position and validity from compact input."""
+    _, obstacle_route_lateral, valid = (
+        obstacle_route_position_from_supervisor_observation(observation)
+    )
     return obstacle_route_lateral, valid
 
 
@@ -183,6 +198,52 @@ class LateralGatedSupervisor(torch.nn.Module):
         center_command = self.center_supervisor(observation)
         lateral_command = self.lateral_supervisor(observation)
         return torch.where(use_lateral.unsqueeze(-1), lateral_command, center_command)
+
+
+class RangeSpeedGatedSupervisor(torch.nn.Module):
+    """Delegate only the accepted near/slow envelope to an HC4-R2 specialist.
+
+    Invalid geometry and every out-of-envelope observation retain the far
+    supervisor's command. The execution layer remains responsible for its
+    immediate stop on invalid geometry.
+    """
+
+    def __init__(
+        self,
+        far_supervisor: torch.nn.Module,
+        near_supervisor: torch.nn.Module,
+        *,
+        near_range_gate_m: float = 0.95,
+        max_near_nominal_speed_mps: float = 0.40,
+    ) -> None:
+        super().__init__()
+        limits = ObstacleTeacherCfg()
+        if near_range_gate_m <= 0.0:
+            raise ValueError("near_range_gate_m must be positive")
+        if not 0.0 < max_near_nominal_speed_mps <= limits.max_forward_speed_mps:
+            raise ValueError(
+                "max_near_nominal_speed_mps is outside the command envelope"
+            )
+        self.far_supervisor = far_supervisor
+        self.near_supervisor = near_supervisor
+        self.near_range_gate_m = near_range_gate_m
+        self.max_near_nominal_speed_mps = max_near_nominal_speed_mps
+
+    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+        obstacle_forward, _, valid = (
+            obstacle_route_position_from_supervisor_observation(observation)
+        )
+        nominal_speed_mps = observation[:, 0].clamp(0.0, 1.0) * (
+            ObstacleTeacherCfg().max_forward_speed_mps
+        )
+        use_near = (
+            valid
+            & (obstacle_forward <= self.near_range_gate_m)
+            & (nominal_speed_mps <= self.max_near_nominal_speed_mps + 1.0e-6)
+        )
+        far_command = self.far_supervisor(observation)
+        near_command = self.near_supervisor(observation)
+        return torch.where(use_near.unsqueeze(-1), near_command, far_command)
 
 
 def _sha256(path: Path) -> str:

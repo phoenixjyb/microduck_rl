@@ -248,3 +248,13 @@ accepted only as an exact-geometry specialist at 0.30/0.40 x 0.90 m. HC4-LH
 remains selected for its existing farther-range envelope. The next gate is a
 bounded range/speed composition with an invalid-geometry fallback, followed by
 an actual closed-loop boundary matrix; no physical motion is authorized.
+
+HC4-R2H implements that composition without retraining. It selects HC4-R2 only
+for valid structured geometry at reconstructed route-forward range no greater
+than 0.95 m and nominal speed no greater than 0.40 m/s; every other observation
+preserves HC4-LH. Invalid geometry still triggers the execution-layer immediate
+stop outside recovery. The composed checkpoint has passed focused unit and
+actual-checkpoint CPU wiring checks but remains pending the predeclared
+three-seed closed-loop and threshold-boundary matrices. HC4-LH therefore
+remains selected. See
+`experiments/2026-09-04-hc4r2h-range-speed-composition.md`.

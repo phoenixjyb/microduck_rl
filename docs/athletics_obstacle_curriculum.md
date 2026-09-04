@@ -278,10 +278,17 @@ continuation floor. The fresh promotion and threshold matrices were therefore
 not run. HC4-LH remains the accepted composite, while HC4-R2 remains a retained
 near-range specialist rather than a unified runtime replacement.
 
-The independent hop branch now follows the canonical H0--H3 naming above.
-H0 source/configuration checks are complete, but no retained hop training run
-previously existed on 100.100. The predeclared five-iteration K3900 runtime
-smoke now passes with finite spring, rise, landing, optimizer, and termination
-metrics and zero bottoming/NaN termination. It is not H1 acceptance. The next
-bounded step is the matched Locked/K2500/K3900 seed-43 diagnostic pilot fixed in
+The independent hop branch now follows the canonical H0--H3 naming above. H0
+source/configuration checks and the first retained matched-arm runtime campaign
+are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at
+0.0010 m peak rise, K2500 at 0.0543 m, and K3900 at 0.0695 m. K3900 combined
+the largest peak with only 0.034% bottoming, versus 0.858% for K2500. This is a
+real compliance-dependent learning signal, but the interval fall counters are
+still high and no policy has passed H1.
+
+K3900 is therefore the sole next H1 training candidate. The next bounded work
+is a deterministic reset-aware held-out evaluator with explicit hop-cycle,
+rise, landing, stability, spring, action, and motor metrics. Only after its
+protocol and tests are retained will three fixed K3900 training seeds run for
+8,000 iterations with common checkpoint selection. See
 `experiments/2026-09-04-h0-h1-hop-campaign.md`.

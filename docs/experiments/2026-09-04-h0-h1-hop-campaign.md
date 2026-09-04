@@ -2,8 +2,8 @@
 
 Date: 2026-09-04
 
-Decision: **runtime smoke passed; matched-arm diagnostic pilot pending; no hop
-policy accepted**
+Decision: **runtime smoke and matched-arm diagnostic pilot passed; K3900 is the
+H1 training candidate; no hop policy accepted**
 
 ## Current evidence
 
@@ -126,3 +126,57 @@ if any scalar becomes non-finite, if a compliant arm has no measurable loaded
 compression/energy, or if bottoming is persistently at least 1%. The pilot is
 diagnostic only: a promising signal still requires a separately fixed
 three-training-seed budget and held-out H1 evaluation.
+
+## Matched-arm pilot result
+
+All three seed-43 runs completed the fixed 256-environment, 256-iteration
+budget successfully on the 100.100 RTX 4090 Laptop GPU. They used the exact
+`fe2ea3a612bec10f314436fd83e3952611c7a546` source snapshot, started from
+scratch, and wrote checkpoints at the common iterations 64, 128, 192, and 255.
+Every inspected scalar was finite and NaN termination stayed zero.
+
+The common iteration-255 comparison is:
+
+| Arm | Rise mean | Rise peak | Spring energy mean/peak | Loaded compression | Compression p95 | Bottomed | Landing force | Fall scalar |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Locked | 0.00005 m | 0.00101 m | 0 / 0 J | 0 m | 0 m | 0% | 9.179 | 10.208 |
+| K2500 | 0.01600 m | 0.05431 m | 0.0194 / 0.3633 J | 0.00354 m | 0.00578 m | 0.858% | 11.637 | 13.167 |
+| K3900 | 0.01443 m | 0.06947 m | 0.0136 / 0.2604 J | 0.00239 m | 0.00388 m | 0.034% | 12.817 | 13.333 |
+
+Locked remained effectively stationary while both compliant arms developed a
+centimetre-scale rise that grew across the common checkpoints. This passes the
+diagnostic signal gate: compliance stores measurable energy and enables a
+behaviour that the mass-matched locked control does not discover. K2500 stayed
+below the 1% bottoming stop line, but ended only 0.142 percentage points below
+it and its bottoming rose monotonically from zero at iteration 64 to 0.858% at
+iteration 255. K3900 produced the largest peak rise while retaining much more
+travel margin, so it is the sole candidate for the next H1 training gate.
+
+The reported `fell_over` values are interval logger scalars, not normalized
+episode failure rates. They remain high enough that this pilot cannot establish
+repeatable takeoff, landing survival, or H1 acceptance. No MP4 is recorded.
+
+Retained iteration-255 artifact SHA-256 values:
+
+| Arm | `model_255.pt` | TensorBoard event | ONNX |
+| --- | --- | --- | --- |
+| Locked | `f7e23c0ff6d44747f14fd9d47dd18745432ef7458f742bc88e46fc2a4caa3457` | `76890a9fd1163cc1589af2e416784568982f5c9385f6744321d6a853fa43adf2` | `c5aa0df2e39276118d9d15ce6dd393d5e43e78009d0e0045ff538fde0d0d961b` |
+| K2500 | `0eb128a3c8f3cca1dd25957cda28595099dfda600dede3002e9b5335fb333c3a` | `d70fd33123a1ec60651d4c8b23a2cc26d22726004036967502d069d236aa367d` | `e8217bdaaa278ae688328be6d8a5599889bafb941dacf50db4ad5fa1d113c01e` |
+| K3900 | `126ede4469c6258e8e4e90ba5060fa0a1a6f631219f5c591953aafd9f0af0872` | `57f851e02f1c0c1c843798e4d100187b0a27a7c88d13f84a2dcd96126fdd49dc` | `835c8860bbda0d8c07576bc5c58af84dabae4b35049cb22767389831161deaab` |
+
+## Next H1 gate
+
+Before a long training sweep, add a deterministic, reset-aware hop evaluator
+that reports per episode: completed command cycles, cycles with both feet
+airborne above 3 mm, rise mean/p50/p95/peak, in-place displacement, landing
+survival, falls, non-finite states, spring bottoming, landing-force p95, action
+rate, and the motor envelope. Evaluation seeds, attempt count, horizon, success
+thresholds, and exact checkpoint-selection rule must be fixed and tested before
+the first candidate run.
+
+After that evaluator exists, train K3900 with three independent seeds for a
+fixed 8,000 iterations, retain common checkpoints every 500 iterations, and
+select the earliest checkpoint that passes the held-out matrix. K2500 remains
+a documented mechanical sensitivity arm, not a co-candidate; revisit it only
+if K3900 cannot pass H1. This avoids spending a second long sweep on an arm
+already approaching its travel limit.

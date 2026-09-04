@@ -286,9 +286,11 @@ the largest peak with only 0.034% bottoming, versus 0.858% for K2500. This is a
 real compliance-dependent learning signal, but the interval fall counters are
 still high and no policy has passed H1.
 
-K3900 is therefore the sole next H1 training candidate. The next bounded work
-is a deterministic reset-aware held-out evaluator with explicit hop-cycle,
-rise, landing, stability, spring, action, and motor metrics. Only after its
-protocol and tests are retained will three fixed K3900 training seeds run for
-8,000 iterations with common checkpoint selection. See
+K3900 is therefore the sole next H1 training candidate. The deterministic,
+reset-aware `H1-periodic-hop-heldout-v1` evaluator is now implemented with
+explicit hop-cycle, rise, landing, stability, spring, action, and motor metrics.
+Its fixed matrix uses seeds 211/223/227, 128 first episodes per seed, and six
+cycles per episode; automatic-reset states are excluded. Only after a runtime
+smoke will three fixed K3900 training seeds run for 8,000 iterations with
+common checkpoint selection. See
 `experiments/2026-09-04-h0-h1-hop-campaign.md`.

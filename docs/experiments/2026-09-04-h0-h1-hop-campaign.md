@@ -164,17 +164,37 @@ Retained iteration-255 artifact SHA-256 values:
 | K2500 | `0eb128a3c8f3cca1dd25957cda28595099dfda600dede3002e9b5335fb333c3a` | `d70fd33123a1ec60651d4c8b23a2cc26d22726004036967502d069d236aa367d` | `e8217bdaaa278ae688328be6d8a5599889bafb941dacf50db4ad5fa1d113c01e` |
 | K3900 | `126ede4469c6258e8e4e90ba5060fa0a1a6f631219f5c591953aafd9f0af0872` | `57f851e02f1c0c1c843798e4d100187b0a27a7c88d13f84a2dcd96126fdd49dc` | `835c8860bbda0d8c07576bc5c58af84dabae4b35049cb22767389831161deaab` |
 
-## Next H1 gate
+## H1 held-out evaluation protocol
 
-Before a long training sweep, add a deterministic, reset-aware hop evaluator
-that reports per episode: completed command cycles, cycles with both feet
-airborne above 3 mm, rise mean/p50/p95/peak, in-place displacement, landing
-survival, falls, non-finite states, spring bottoming, landing-force p95, action
-rate, and the motor envelope. Evaluation seeds, attempt count, horizon, success
-thresholds, and exact checkpoint-selection rule must be fixed and tested before
-the first candidate run.
+`scripts/evaluate_hop_checkpoint.py` implements protocol
+`H1-periodic-hop-heldout-v1`. It uses held-out seeds 211/223/227, 128
+environments per seed, six one-second command cycles, phase zero at episode
+start, no push event, and zero auxiliary head/body commands. Only the first
+episode of each vectorized environment counts: all states after its first done
+are masked so an automatic reset cannot hide a fall.
 
-After that evaluator exists, train K3900 with three independent seeds for a
+The evaluator reports completed and successful cycles, both-feet-airborne rise
+mean/p50/p95/peak, qualified-hop landing fraction, per-episode maximum planar
+drift, falls, non-finite state, spring bottoming, touchdown-force p95/peak,
+action magnitude/rate, and the running campaign's full motor envelope. It has
+the following fixed all-seed promotion gates:
+
+- cycle success at least 90% per seed and qualified-hop landing at least 98%;
+- at least 80% of first episodes complete all six successful landed cycles;
+- median cycle rise at least 0.02 m and peak rise no greater than 0.10 m;
+- zero falls, NaN terminations, non-finite episodes, and rated motor-speed
+  exceedance;
+- planar-drift p95 no greater than 0.10 m;
+- spring bottoming no greater than 1%, torque-utilization p99 no greater than
+  0.90, and near-stall exposure no greater than 0.25%.
+
+Landing force and action metrics remain mandatory evidence but are not given an
+invented physical threshold in simulation. The current gates constrain their
+observable consequences through landing completion, no-fall, drift, spring,
+and motor limits. A later hardware phase must supply physical force/thermal
+limits before motion.
+
+After the evaluator passes a runtime smoke, train K3900 with three independent seeds for a
 fixed 8,000 iterations, retain common checkpoints every 500 iterations, and
 select the earliest checkpoint that passes the held-out matrix. K2500 remains
 a documented mechanical sensitivity arm, not a co-candidate; revisit it only

@@ -298,3 +298,12 @@ envelope violations. The next campaign is now fixed at K3900 training seeds
 iterations; only the earliest iteration passing every held-out gate across all
 three policies may advance. See
 `experiments/2026-09-04-h0-h1-hop-campaign.md`.
+
+That complete 16-iteration by three-training-seed matrix has now finished. None
+of its 48 checkpoints passed across all training seeds, so K3900 H1 is rejected
+and Locked, H2, and hop video remain gated. Mature checkpoints learned the
+cycle, but still failed whole-episode survival, drift, rated-speed, near-stall,
+and commonly fall/bottoming gates. The next predeclared H1-P revision adds the
+already-tested motor-torque cost and a time-staged 20/30/40 mm height envelope;
+it preserves the task mechanics and held-out evaluator. See
+`experiments/2026-09-04-h0-h1-hop-campaign.md`.

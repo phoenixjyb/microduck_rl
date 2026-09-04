@@ -2,8 +2,8 @@
 
 Date: 2026-09-04
 
-Decision: **runtime smoke and matched-arm diagnostic pilot passed; K3900 is the
-H1 training candidate; no hop policy accepted**
+Decision: **runtime smoke and matched-arm diagnostic pilot passed; the full
+K3900 H1 matrix was rejected; no hop policy accepted**
 
 ## Current evidence
 
@@ -237,7 +237,7 @@ disagree with recomputed gates, and any artifact that drops the no-motion
 boundary.
 
 `scripts/evaluate_h1_campaign.py` is the fail-fast campaign driver. It verifies
-that every one of the 51 predeclared checkpoints exists before allocating the
+that every one of the 48 predeclared checkpoints exists before allocating the
 GPU, evaluates in iteration-major three-training-seed blocks, reuses only JSON
 whose checkpoint hash and complete H1 protocol identity match, then writes the
 manifest and invokes the selector above. An interrupted evaluation therefore
@@ -247,3 +247,70 @@ all-seed iteration.
 K2500 remains a documented mechanical sensitivity arm, not a co-candidate;
 revisit it only if K3900 cannot pass H1. No MP4 is recorded until the numerical
 matrix accepts a representative checkpoint.
+
+## Full K3900 matrix result
+
+All three 8,000-iteration training runs completed and retained every common
+checkpoint at iterations 500, 1,000, ..., 7,500, and 7,999. The sequential
+campaign evaluator then completed all 16 iterations x 3 training seeds = 48
+checkpoint evaluations under held-out seeds 211/223/227. The deterministic
+selector rejected the matrix: no iteration had three independently accepted
+training-seed policies, `selected_checkpoint_iteration` is null, and physical
+motion remains unauthorized.
+
+Retained evidence on 100.100:
+
+- output directory:
+  `artifacts/evaluations/h1-k3900-6c4e470-full/`;
+- campaign manifest SHA-256:
+  `562e100c2b19b1c28024d435d2ab218c77a1a0c4cd06b07d04d9e99cbecc8dca`;
+- deterministic sweep SHA-256:
+  `5525c18052f584db540af0f46baea34e05e546566080670d907bc0aa8671677f`.
+
+The closest causal diagnostic was the seed-47 policy at iteration 6,000. Its
+minimum held-out cycle-success fraction was 98.828% and its maximum torque
+utilization p99 was 0.8735, so the policy learned the repeated launch/landing
+rhythm and passed the torque-p99 gate. It still had zero fully passing first
+episodes, five falls, 0.4995 m maximum held-out drift p95, 1.148% maximum spring
+bottoming, 0.0639% maximum rated-speed exceedance, and 0.5356% maximum near-stall
+exposure. Its retained evaluation JSON SHA-256 is
+`eaff48a912d08b7f488b6070dc46f8f3c23ecb5fe2dbd89b8ae6b776b8cc1a10`.
+
+The evidence separates discovery from acceptance: mature policies reached
+roughly 96--99% minimum cycle success, but none learned a stable, in-place,
+motor-envelope-compliant six-cycle episode across all held-out seeds. The base
+hop task instruments the motor envelope but does not put the existing
+`motor_torque_load_cost` on the reward path. A longer repeat of the same task is
+therefore not justified. Locked, H2, MP4 generation, and physical motion stay
+closed.
+
+## Predeclared H1-P revision
+
+The smallest next revision is one K3900-only, from-scratch H1-P task that keeps
+the same 61-D observation, 14-D action, one-second phase, simulator mechanics,
+PPO configuration, and immutable held-out evaluator. It changes only the
+training objective in two directly diagnosed ways:
+
+1. register the existing normalized motor-torque/thermal-load cost at the same
+   0.70 soft-limit fraction and 4.0 over-limit gain already tested by the
+   motor-aware Run stage, with fresh-run weights -0.25, -0.75, -1.25, and -2.00
+   at iterations 0, 1,000, 2,500, and 4,000;
+2. progress one coherent height envelope at iterations 0, 2,000, and 4,000:
+   `(target rise, Gaussian std, upward-velocity saturation)` =
+   `(0.020 m, 0.010 m, 0.70 m/s)`, `(0.030 m, 0.015 m, 0.85 m/s)`, then
+   `(0.040 m, 0.020 m, 1.00 m/s)`.
+
+Each height stage keeps `std = target_rise / 2`, preserving the original
+near-zero reward at zero rise, and keeps ballistic saturation above the target.
+This avoids weakening the anti-tuck shape while asking the policy to establish
+a lower-energy stable cycle before the final 40 mm objective. No task geometry,
+acceptance threshold, or perception input changes.
+
+Implementation must first pass focused curriculum/config tests and a five-
+iteration CPU/runtime smoke. Only then may a bounded seed-67 K3900 diagnostic be
+launched. Its predeclared checkpoints are iterations 500, 1,000, 2,000, 3,000,
+4,000, and 5,999; the unchanged H1 evaluator is applied to each in order. A
+three-seed promotion campaign is not authorized by that diagnostic and must use
+fresh seeds fixed in a later experiment document. If no diagnostic checkpoint
+improves episode survival while reducing drift and motor-envelope violations,
+stop rather than spending GPU time on Locked or H2.

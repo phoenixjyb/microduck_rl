@@ -237,3 +237,14 @@ seed fixed and adds three correction-data seeds, so student-state coverage is
 the only intended change. See
 `experiments/2026-09-04-hc4r2-student-state-correction.md` for the immutable
 collection seeds and closed-loop gates.
+
+HC4-R2 passed those gates. Across held-out seeds 149/151/157 it recorded 1,402
+clean passages, two collisions, and zero timeouts among 1,404 resolved
+attempts, versus four collisions for HC4-R and eight for HC4-LH on the same
+matrix. Every shifted cell was collision-free; one centered collision remained
+at each speed. Hard safety counters and rated motor-speed exceedance stayed
+zero, and maximum per-cell torque-utilization p99 was 0.5650. HC4-R2 is
+accepted only as an exact-geometry specialist at 0.30/0.40 x 0.90 m. HC4-LH
+remains selected for its existing farther-range envelope. The next gate is a
+bounded range/speed composition with an invalid-geometry fallback, followed by
+an actual closed-loop boundary matrix; no physical motion is authorized.

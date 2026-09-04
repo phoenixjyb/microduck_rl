@@ -314,3 +314,34 @@ three-seed promotion campaign is not authorized by that diagnostic and must use
 fresh seeds fixed in a later experiment document. If no diagnostic checkpoint
 improves episode survival while reducing drift and motor-envelope violations,
 stop rather than spending GPU time on Locked or H2.
+
+### H1-P source and runtime smoke
+
+Commit `6ed782233e1ad70224d57e3a632443a1d2d20059` implements the distinct
+`Mjlab-Hop-H1P-Flat-Sprung-K3900-MicroDuck` task. Focused H1-P configuration
+tests pass 6/6 on both the development Mac and 100.100; Python compilation and
+the repository diff check also pass. The registered task keeps the H1
+observation/action contract and K3900 scene while exposing both curricula at
+their predeclared initial values.
+
+The seed-66, 64-environment, five-iteration GPU runtime smoke completed with
+service result `success` in three seconds. It logged finite reward and optimizer
+scalars, `Curriculum/hop_height_envelope = 0.0200`,
+`Curriculum/motor_torque_load_weight = -0.2500`, the three motor-training
+metrics, zero NaN termination, and zero spring bottoming. Frequent falls are
+expected from an untrained five-iteration policy and are not H1 evidence.
+
+Retained smoke directory on 100.100:
+`logs/rsl_rl/hop_k3900_h1p/2026-09-05_00-17-31_h1p-smoke-6ed7822-s66/`.
+SHA-256 values:
+
+- `model_4.pt`:
+  `d78875671be30e5d5148afd36e81330a47701d036c04af13422d20e4588d646d`;
+- ONNX:
+  `a9f7e7e695492c4e375e3954015385e3e9e6db85191fe384a26c604bb09ee302`;
+- TensorBoard event:
+  `52f26b1d518b85e7ab0e123677e47d0895249eebe8305318ec066ec752828e66`.
+
+This passes the H1-P wiring gate only. It authorizes the already predeclared
+seed-67 diagnostic, not a multi-seed promotion campaign, Locked control, H2,
+video, or physical motion.

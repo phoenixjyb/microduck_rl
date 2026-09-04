@@ -1,6 +1,7 @@
 """Config-level assertions for the hop variant transform."""
 
 import math
+from types import SimpleNamespace
 
 import pytest
 
@@ -16,13 +17,20 @@ from mjlab_microduck.tasks.hop import (
     HOP_HEIGHT_STD,
     HOP_MAX_LAUNCH_VEL,
     HOP_PERIOD,
+    H1P_HEIGHT_ENVELOPE_STAGES,
+    H1P_MOTOR_COST_WEIGHT_STAGES,
     LOAD_FORCE_MAX_RATIO,
     LOAD_FORCE_WEIGHT,
     MIN_RISE,
     SENSOR_NAME,
     UNLOADED_RIGID_HEIGHT,
     UPWARD_VELOCITY_WEIGHT,
+    make_h1p_variant,
     make_hop_variant,
+)
+from mjlab_microduck.tasks.motor_aware import (
+    MOTOR_OVER_LIMIT_GAIN,
+    MOTOR_SOFT_LIMIT_FRACTION,
 )
 from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
     make_microduck_velocity_env_cfg,
@@ -32,6 +40,81 @@ from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
 @pytest.fixture
 def hop_cfg():
     return make_hop_variant(make_microduck_velocity_env_cfg())
+
+
+@pytest.fixture
+def h1p_cfg():
+    return make_h1p_variant(make_hop_variant(make_microduck_velocity_env_cfg()))
+
+
+def test_h1p_requires_the_hop_transform_first():
+    with pytest.raises(ValueError, match="requires make_hop_variant first"):
+        make_h1p_variant(make_microduck_velocity_env_cfg())
+
+
+def test_h1p_preserves_observation_action_and_mechanics_cfg(hop_cfg):
+    observations = hop_cfg.observations
+    actions = hop_cfg.actions
+    scene = hop_cfg.scene
+    revised = make_h1p_variant(hop_cfg)
+    assert revised.observations is observations
+    assert revised.actions is actions
+    assert revised.scene is scene
+
+
+def test_h1p_registers_the_predeclared_motor_cost(h1p_cfg):
+    reward = h1p_cfg.rewards["motor_torque_load"]
+    assert reward.func is microduck_mdp.motor_torque_load_cost
+    assert reward.weight == H1P_MOTOR_COST_WEIGHT_STAGES[0]["weight"]
+    assert reward.params["soft_limit_fraction"] == MOTOR_SOFT_LIMIT_FRACTION
+    assert reward.params["over_limit_gain"] == MOTOR_OVER_LIMIT_GAIN
+    curriculum = h1p_cfg.curriculum["motor_torque_load_weight"]
+    assert curriculum.func is microduck_mdp.reward_weight
+    assert curriculum.params["weight_stages"] == H1P_MOTOR_COST_WEIGHT_STAGES
+
+
+def test_h1p_height_envelope_is_coherent_and_finishes_at_h1_target(h1p_cfg):
+    stages = H1P_HEIGHT_ENVELOPE_STAGES
+    assert [stage["step"] for stage in stages] == [0, 2000 * 24, 4000 * 24]
+    assert [stage["target_rise"] for stage in stages] == pytest.approx(
+        [0.020, 0.030, HOP_HEIGHT_GAIN]
+    )
+    for stage in stages:
+        assert stage["std"] == pytest.approx(stage["target_rise"] / 2.0)
+        assert stage["max_vel"] ** 2 / (2 * 9.81) > stage["target_rise"]
+    assert stages[-1]["std"] == HOP_HEIGHT_STD
+    assert stages[-1]["max_vel"] == HOP_MAX_LAUNCH_VEL
+    assert h1p_cfg.rewards["hop_body_height"].params["target_rise"] == 0.020
+    assert h1p_cfg.rewards["hop_body_height"].params["std"] == 0.010
+    assert h1p_cfg.rewards["hop_upward_velocity"].params["max_vel"] == 0.70
+
+
+def test_h1p_height_curriculum_updates_all_three_reward_params_atomically():
+    height = SimpleNamespace(params={"target_rise": 0.020, "std": 0.010})
+    velocity = SimpleNamespace(params={"max_vel": 0.70})
+
+    class _Rewards:
+        def get_term_cfg(self, name):
+            return {"height": height, "velocity": velocity}[name]
+
+    env = SimpleNamespace(
+        common_step_counter=4000 * 24,
+        reward_manager=_Rewards(),
+        device="cpu",
+    )
+    out = microduck_mdp.hop_height_envelope_curriculum(
+        env,
+        None,
+        height_reward_name="height",
+        velocity_reward_name="velocity",
+        height_stages=H1P_HEIGHT_ENVELOPE_STAGES,
+    )
+    assert out.item() == pytest.approx(HOP_HEIGHT_GAIN)
+    assert height.params == {
+        "target_rise": HOP_HEIGHT_GAIN,
+        "std": HOP_HEIGHT_STD,
+    }
+    assert velocity.params == {"max_vel": HOP_MAX_LAUNCH_VEL}
 
 
 def test_command_is_the_cyclic_phase_command(hop_cfg):
@@ -189,6 +272,20 @@ def test_hop_task_ids_registered():
         "Mjlab-Hop-Flat-Sprung-K3900-MicroDuck",
     ):
         assert tid in tasks, f"{tid} not registered"
+    assert "Mjlab-Hop-H1P-Flat-Sprung-K3900-MicroDuck" in tasks
+
+
+def test_h1p_registered_cfg_and_run_identity():
+    import mjlab_microduck.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
+
+    task_id = "Mjlab-Hop-H1P-Flat-Sprung-K3900-MicroDuck"
+    cfg = load_env_cfg(task_id)
+    rl_cfg = load_rl_cfg(task_id)
+    assert "hop_height_envelope" in cfg.curriculum
+    assert "motor_torque_load" in cfg.rewards
+    assert rl_cfg.experiment_name == "hop_k3900_h1p"
+    assert rl_cfg.run_name == "h1p_k3900"
 
 
 def test_hop_arms_have_distinct_wandb_identities():

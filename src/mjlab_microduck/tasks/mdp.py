@@ -3453,6 +3453,36 @@ def reward_weight(
     return torch.tensor([term_cfg.weight])
 
 
+def hop_height_envelope_curriculum(
+    env: ManagerBasedRlEnv,
+    env_ids: torch.Tensor,
+    height_reward_name: str,
+    velocity_reward_name: str,
+    height_stages: list[dict],
+) -> torch.Tensor:
+    """Advance the periodic-hop height objective as one coherent envelope.
+
+    Each stage updates the rise target and Gaussian width together with the
+    upward-velocity saturation. Keeping those three values atomic prevents a
+    curriculum edit from making the dense velocity reward saturate below the
+    height target or from weakening the height reward's zero-rise rejection.
+    ``height_stages`` entries contain ``step``, ``target_rise``, ``std``, and
+    ``max_vel``.
+    """
+    del env_ids
+    current = height_stages[0]
+    for stage in height_stages:
+        if env.common_step_counter >= stage["step"]:
+            current = stage
+
+    height_cfg = env.reward_manager.get_term_cfg(height_reward_name)
+    velocity_cfg = env.reward_manager.get_term_cfg(velocity_reward_name)
+    height_cfg.params["target_rise"] = current["target_rise"]
+    height_cfg.params["std"] = current["std"]
+    velocity_cfg.params["max_vel"] = current["max_vel"]
+    return torch.tensor([current["target_rise"]], device=env.device)
+
+
 def com_range_curriculum(
     env: ManagerBasedRlEnv,
     env_ids: torch.Tensor,

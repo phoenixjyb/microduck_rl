@@ -31,10 +31,15 @@ rebalance that followed that null. See the budget comment beside the weights.
 import dataclasses
 
 from mjlab.envs import ManagerBasedRlEnvCfg
-from mjlab.managers import RewardTermCfg
+from mjlab.managers import CurriculumTermCfg, RewardTermCfg
 
 from mjlab_microduck.robot.sprung_foot import SPRING_JOINTS, SPRING_PRELOAD
 from mjlab_microduck.tasks import mdp as microduck_mdp
+from mjlab_microduck.tasks.motor_aware import (
+    MOTOR_OVER_LIMIT_GAIN,
+    MOTOR_SOFT_LIMIT_FRACTION,
+)
+from mjlab_microduck.tasks.run import XL330_M288_RATED_STALL_TORQUE_NM_6V
 
 # Seconds per hop cycle. The spring-mass period at k=3900 and 0.877 kg is
 # 2*pi*sqrt(m/k) = 94 ms, so this is deliberately well above it: the cycle must
@@ -148,6 +153,39 @@ MIN_RISE = 0.003
 # rather than 1.0 -- which is intended: a 0.5 m/s launch is a 13 mm hop, not a
 # finished behaviour.
 HOP_MAX_LAUNCH_VEL = 1.0
+
+
+def _h1p_step(iteration: int) -> int:
+    """Convert a fresh H1-P PPO iteration to mjlab's common-step clock."""
+    return iteration * 24
+
+
+# H1-P is a fresh-run revision after the full K3900 H1 matrix learned the hop
+# cycle but failed whole-episode stability and motor-envelope gates. The final
+# stage is byte-for-value identical to the original H1 height objective; only
+# the path to it changes.
+H1P_HEIGHT_ENVELOPE_STAGES = [
+    {"step": 0, "target_rise": 0.020, "std": 0.010, "max_vel": 0.70},
+    {
+        "step": _h1p_step(2000),
+        "target_rise": 0.030,
+        "std": 0.015,
+        "max_vel": 0.85,
+    },
+    {
+        "step": _h1p_step(4000),
+        "target_rise": HOP_HEIGHT_GAIN,
+        "std": HOP_HEIGHT_STD,
+        "max_vel": HOP_MAX_LAUNCH_VEL,
+    },
+]
+
+H1P_MOTOR_COST_WEIGHT_STAGES = [
+    {"step": 0, "weight": -0.25},
+    {"step": _h1p_step(1000), "weight": -0.75},
+    {"step": _h1p_step(2500), "weight": -1.25},
+    {"step": _h1p_step(4000), "weight": -2.00},
+]
 
 # Upper edge of `com_height_target`'s band, for the RIGID robot, in the hop task
 # only. See the in-place edit in make_hop_variant for the reasoning.
@@ -466,6 +504,58 @@ def make_hop_variant(
     return cfg
 
 
+def make_h1p_variant(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """Add the predeclared motor-aware progressive-height H1-P objective.
+
+    Apply this after ``make_hop_variant`` and before ``make_sprung_variant``.
+    It does not change observations, actions, mechanics, phase timing, or any
+    held-out acceptance threshold.
+    """
+    required_rewards = {"hop_body_height", "hop_upward_velocity"}
+    missing = required_rewards - set(cfg.rewards)
+    if missing:
+        raise ValueError(
+            "make_h1p_variant requires make_hop_variant first; missing rewards "
+            f"{sorted(missing)}"
+        )
+
+    initial_height = H1P_HEIGHT_ENVELOPE_STAGES[0]
+    cfg.rewards["hop_body_height"].params.update(
+        target_rise=initial_height["target_rise"], std=initial_height["std"]
+    )
+    cfg.rewards["hop_upward_velocity"].params["max_vel"] = initial_height[
+        "max_vel"
+    ]
+    cfg.curriculum["hop_height_envelope"] = CurriculumTermCfg(
+        func=microduck_mdp.hop_height_envelope_curriculum,
+        params={
+            "height_reward_name": "hop_body_height",
+            "velocity_reward_name": "hop_upward_velocity",
+            "height_stages": [dict(stage) for stage in H1P_HEIGHT_ENVELOPE_STAGES],
+        },
+    )
+
+    cfg.rewards["motor_torque_load"] = RewardTermCfg(
+        func=microduck_mdp.motor_torque_load_cost,
+        weight=H1P_MOTOR_COST_WEIGHT_STAGES[0]["weight"],
+        params={
+            "rated_stall_torque_nm": XL330_M288_RATED_STALL_TORQUE_NM_6V,
+            "soft_limit_fraction": MOTOR_SOFT_LIMIT_FRACTION,
+            "over_limit_gain": MOTOR_OVER_LIMIT_GAIN,
+        },
+    )
+    cfg.curriculum["motor_torque_load_weight"] = CurriculumTermCfg(
+        func=microduck_mdp.reward_weight,
+        params={
+            "reward_name": "motor_torque_load",
+            "weight_stages": [
+                dict(stage) for stage in H1P_MOTOR_COST_WEIGHT_STAGES
+            ],
+        },
+    )
+    return cfg
+
+
 from copy import deepcopy
 from dataclasses import replace
 
@@ -509,3 +599,9 @@ def hop_rl_cfg(label: str):
         experiment_name=f"hop_{label}",
         run_name=f"hop_{label}",
     )
+
+
+def h1p_rl_cfg():
+    """Distinct logging identity for the K3900 H1-P diagnostic."""
+    cfg = hop_rl_cfg("k3900")
+    return replace(cfg, experiment_name="hop_k3900_h1p", run_name="h1p_k3900")

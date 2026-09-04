@@ -230,6 +230,12 @@ episode-pass fraction, then highest minimum cycle-success fraction, then lower
 maximum torque-utilization p99, then lower training seed. No final-checkpoint
 default or visual selection is allowed.
 
+`src/mjlab_microduck/hop_checkpoint_sweep.py` enforces that rule from retained
+evaluation JSON. It rejects incomplete seed sets, unexpected held-out seeds or
+protocol identity, checkpoint/iteration mismatches, stored decisions that
+disagree with recomputed gates, and any artifact that drops the no-motion
+boundary.
+
 K2500 remains a documented mechanical sensitivity arm, not a co-candidate;
 revisit it only if K3900 cannot pass H1. No MP4 is recorded until the numerical
 matrix accepts a representative checkpoint.

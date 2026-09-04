@@ -106,8 +106,10 @@ from .hop import (
     HOP_ARMS,
     HOP_ARM_SUFFIX,
     h1p_rl_cfg,
+    h1s_rl_cfg,
     hop_rl_cfg,
     make_h1p_variant,
+    make_h1s_variant,
     make_hop_variant,
 )
 from mjlab_microduck.robot.sprung_foot import H_ADD, PAD_MASS, TRAVEL
@@ -343,6 +345,40 @@ register_mjlab_task(
     runner_cls=MicroduckOnPolicyRunner,
 )
 print(f"✓ H1-P hop task registered: {_h1p_tid}")
+
+# Source-only stability revision after H1-P: reactivate the inherited planar
+# stillness reward without changing observations, mechanics, or H1 gates.
+_h1s_tid = "Mjlab-Hop-H1S-Flat-Sprung-K3900-MicroDuck"
+register_mjlab_task(
+    task_id=_h1s_tid,
+    env_cfg=make_sprung_variant(
+        make_h1s_variant(
+            make_h1p_variant(
+                make_hop_variant(make_microduck_velocity_env_cfg(), stiffness=3900.0)
+            )
+        ),
+        stiffness=3900.0,
+        travel=TRAVEL,
+        pad_mass=PAD_MASS,
+        h_add=H_ADD,
+    ),
+    play_env_cfg=make_sprung_variant(
+        make_h1s_variant(
+            make_h1p_variant(
+                make_hop_variant(
+                    make_microduck_velocity_env_cfg(play=True), stiffness=3900.0
+                )
+            )
+        ),
+        stiffness=3900.0,
+        travel=TRAVEL,
+        pad_mass=PAD_MASS,
+        h_add=H_ADD,
+    ),
+    rl_cfg=h1s_rl_cfg(),
+    runner_cls=MicroduckOnPolicyRunner,
+)
+print(f"✓ H1-S hop task registered: {_h1s_tid}")
 
 # Velocity2 — microban reward/regularization recipe on the velocity task.
 register_mjlab_task(

@@ -26,6 +26,7 @@ from mjlab_microduck.tasks.hop import (
     UNLOADED_RIGID_HEIGHT,
     UPWARD_VELOCITY_WEIGHT,
     make_h1p_variant,
+    make_h1s_variant,
     make_hop_variant,
 )
 from mjlab_microduck.tasks.motor_aware import (
@@ -115,6 +116,25 @@ def test_h1p_height_curriculum_updates_all_three_reward_params_atomically():
         "std": HOP_HEIGHT_STD,
     }
     assert velocity.params == {"max_vel": HOP_MAX_LAUNCH_VEL}
+
+
+def test_h1s_requires_h1p_and_activates_existing_stillness_reward():
+    with pytest.raises(ValueError, match="requires make_h1p_variant first"):
+        make_h1s_variant(make_hop_variant(make_microduck_velocity_env_cfg()))
+
+    cfg = make_h1p_variant(make_hop_variant(make_microduck_velocity_env_cfg()))
+    observations = cfg.observations
+    actions = cfg.actions
+    scene = cfg.scene
+    original_weight = cfg.rewards["stillness_at_zero_command"].weight
+    revised = make_h1s_variant(cfg)
+    term = revised.rewards["stillness_at_zero_command"]
+    assert term.func is microduck_mdp.planar_stillness
+    assert term.weight == original_weight == 3.0
+    assert term.params == {"vel_std": 0.07}
+    assert revised.observations is observations
+    assert revised.actions is actions
+    assert revised.scene is scene
 
 
 def test_command_is_the_cyclic_phase_command(hop_cfg):
@@ -273,6 +293,7 @@ def test_hop_task_ids_registered():
     ):
         assert tid in tasks, f"{tid} not registered"
     assert "Mjlab-Hop-H1P-Flat-Sprung-K3900-MicroDuck" in tasks
+    assert "Mjlab-Hop-H1S-Flat-Sprung-K3900-MicroDuck" in tasks
 
 
 def test_h1p_registered_cfg_and_run_identity():
@@ -286,6 +307,18 @@ def test_h1p_registered_cfg_and_run_identity():
     assert "motor_torque_load" in cfg.rewards
     assert rl_cfg.experiment_name == "hop_k3900_h1p"
     assert rl_cfg.run_name == "h1p_k3900"
+
+
+def test_h1s_registered_cfg_and_run_identity():
+    import mjlab_microduck.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
+
+    task_id = "Mjlab-Hop-H1S-Flat-Sprung-K3900-MicroDuck"
+    cfg = load_env_cfg(task_id)
+    rl_cfg = load_rl_cfg(task_id)
+    assert cfg.rewards["stillness_at_zero_command"].func is microduck_mdp.planar_stillness
+    assert rl_cfg.experiment_name == "hop_k3900_h1s"
+    assert rl_cfg.run_name == "h1s_k3900"
 
 
 def test_hop_arms_have_distinct_wandb_identities():

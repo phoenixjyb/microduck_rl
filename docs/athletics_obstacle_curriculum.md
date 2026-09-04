@@ -315,3 +315,11 @@ The fixed stop condition therefore closes further H1-P GPU work: do not run a
 multi-seed promotion, Locked control, H2, or video. Any next hop revision must
 first diagnose lateral stability and fall causality in a separately reviewed
 source/design slice.
+
+That audit found the inherited planar-stillness reward was dead: the periodic
+phase command has unit magnitude, but the reward pays only below command norm
+0.01. With velocity tracking correctly removed, H1/H1-P had no direct planar-
+velocity objective despite the evaluator's drift gate. Source-only H1-S swaps
+that dead gate for the same always-active Gaussian stillness shape without
+changing observations, mechanics, curricula, or acceptance gates. No H1-S GPU
+run is authorized by the source slice. See the H0/H1 experiment document.

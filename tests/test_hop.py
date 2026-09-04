@@ -12,6 +12,7 @@ from mjlab_microduck.tasks.mdp import (
     hop_energy_monitor,
     hop_load_force,
     hop_upward_velocity,
+    planar_stillness,
 )
 
 _SENSOR = "feet_ground_contact"
@@ -117,6 +118,18 @@ def _airborne_term(env):
 
 def _height_term(env):
     return hop_body_height(cfg=None, env=env)
+
+
+def test_planar_stillness_is_ungated_and_monotone_in_planar_speed():
+    env = _Env(cmd=_LAUNCH)
+    stopped = planar_stillness(env, vel_std=0.07)
+    env.scene._asset.data.root_link_lin_vel_w[:, :2] = torch.tensor([[0.07, 0.0]])
+    moving = planar_stillness(env, vel_std=0.07)
+    assert stopped.item() == pytest.approx(1.0)
+    assert moving.item() == pytest.approx(math.exp(-1.0))
+    # A unit-magnitude phase command would zero stillness_at_zero_command;
+    # H1-S must remain active because phase is not a velocity target.
+    assert moving.item() > 0.0
 
 
 # --- hop_both_feet_airborne -------------------------------------------------

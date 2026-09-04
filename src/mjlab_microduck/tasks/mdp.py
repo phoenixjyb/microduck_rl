@@ -3891,6 +3891,23 @@ def stillness_at_zero_command(
     return is_standing_cmd * stillness
 
 
+def planar_stillness(
+    env: ManagerBasedRlEnv,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+    vel_std: float = 0.1,
+) -> torch.Tensor:
+    """Reward low planar body speed without consulting a command gate.
+
+    Periodic-hop tasks replace the velocity command with a unit-magnitude phase
+    vector, so ``stillness_at_zero_command`` is identically zero there. This
+    ungated form preserves the same Gaussian shape while making in-place motion
+    an actual training objective throughout load, launch, flight, and recovery.
+    """
+    asset: Entity = env.scene[asset_cfg.name]
+    body_vel = torch.norm(asset.data.root_link_lin_vel_w[:, :2], dim=1)
+    return torch.exp(-(body_vel**2) / vel_std**2)
+
+
 def joint_vel_l2_when_standing(
     env: ManagerBasedRlEnv,
     asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,

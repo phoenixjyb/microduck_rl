@@ -556,6 +556,25 @@ def make_h1p_variant(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def make_h1s_variant(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """Activate H1's existing planar-stillness objective for periodic hopping.
+
+    Apply after ``make_h1p_variant``. The inherited reward was gated on a zero
+    velocity command, but the periodic phase command has unit magnitude at all
+    times, making that reward identically zero. H1-S changes only that function
+    and removes its now-inapplicable command parameters.
+    """
+    if "motor_torque_load" not in cfg.rewards:
+        raise ValueError("make_h1s_variant requires make_h1p_variant first")
+    stillness = cfg.rewards.get("stillness_at_zero_command")
+    if stillness is None:
+        raise ValueError("make_h1s_variant requires stillness_at_zero_command")
+    stillness.func = microduck_mdp.planar_stillness
+    stillness.params.pop("command_name", None)
+    stillness.params.pop("command_threshold", None)
+    return cfg
+
+
 from copy import deepcopy
 from dataclasses import replace
 
@@ -605,3 +624,9 @@ def h1p_rl_cfg():
     """Distinct logging identity for the K3900 H1-P diagnostic."""
     cfg = hop_rl_cfg("k3900")
     return replace(cfg, experiment_name="hop_k3900_h1p", run_name="h1p_k3900")
+
+
+def h1s_rl_cfg():
+    """Distinct logging identity for the source-only H1-S revision."""
+    cfg = hop_rl_cfg("k3900")
+    return replace(cfg, experiment_name="hop_k3900_h1s", run_name="h1s_k3900")

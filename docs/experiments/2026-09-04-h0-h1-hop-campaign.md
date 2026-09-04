@@ -390,3 +390,37 @@ improve episode survival and drift together. Do not spend more GPU time on this
 objective, a Locked control, or H2. The next work is a separately reviewed
 stability diagnosis of lateral drift and falls; it is source/design work, not
 authorization for another training run, video, or physical motion.
+
+## Predeclared source-only H1-S stability revision
+
+The first stability audit found one direct training/evaluation mismatch. The
+periodic command is `[cos(2*pi*phase), sin(2*pi*phase), 0]`, whose planar norm
+is always one. The inherited `stillness_at_zero_command` term pays only when
+that norm is below 0.01, so its configured weight 3.0 contributes exactly zero
+throughout every H1 and H1-P episode. At the same time, hop construction removes
+both velocity-tracking rewards because they would interpret phase as desired
+translation. No remaining reward directly prices planar body velocity, while
+the held-out protocol rejects drift p95 above 0.10 m. This explains why the
+policy can optimize repeated hops without optimizing the in-place criterion.
+
+The actor also omits base linear velocity (the critic retains it as privileged
+state). Adding actor state or a world-position tether would be a larger policy-
+contract change and is explicitly out of scope for this first diagnosis.
+
+H1-S is therefore one source-only change on top of H1-P: replace the dead
+command-gated stillness function with the same Gaussian applied to planar body
+speed on every phase, retaining its existing weight 3.0 and `vel_std = 0.07`.
+It changes no observation, action, simulator mechanic, hop/motor curriculum, or
+held-out H1 gate. The distinct task is
+`Mjlab-Hop-H1S-Flat-Sprung-K3900-MicroDuck` so historical H1/H1-P configurations
+remain reproducible.
+
+This source slice does not authorize GPU use. If later approved, run a seed-68,
+64-environment, five-iteration wiring smoke first, then a paired seed-67,
+256-environment, 6,000-iteration diagnostic with the same checkpoint cadence
+and evaluator. Before any multi-seed promotion, its iteration-5,999 result must
+strictly improve H1-P's episode pass above zero, falls below 23, and drift p95
+below 0.594 m while not regressing cycle success, spring bottoming, rated-speed
+exposure, torque p99, or near-stall exposure. Full H1 acceptance thresholds do
+not change. Failure of that causal gate stops H1-S; it does not authorize an
+actor-observation change, Locked, H2, video, or physical motion.

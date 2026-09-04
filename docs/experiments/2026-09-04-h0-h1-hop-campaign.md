@@ -194,9 +194,42 @@ observable consequences through landing completion, no-fall, drift, spring,
 and motor limits. A later hardware phase must supply physical force/thermal
 limits before motion.
 
-After the evaluator passes a runtime smoke, train K3900 with three independent seeds for a
-fixed 8,000 iterations, retain common checkpoints every 500 iterations, and
-select the earliest checkpoint that passes the held-out matrix. K2500 remains
-a documented mechanical sensitivity arm, not a co-candidate; revisit it only
-if K3900 cannot pass H1. This avoids spending a second long sweep on an arm
-already approaching its travel limit.
+### Runtime-smoke result
+
+The evaluator ran its complete 3 x 128 x 6 matrix against the seed-43 K3900
+pilot checkpoint at iteration 255. It retained JSON and CSV successfully and
+rejected the checkpoint as expected. In every seed, all 128 first episodes
+performed one qualifying landed hop and then fell before completing the first
+cycle: cycle success was 16.67%, complete-episode success was zero, and the
+aggregate fall count was 384. Drift p95 was 0.900--0.964 m. Maximum observed
+rise was 0.1196 m, rated-speed exceedance was 0.981--1.135%, torque-utilization
+p99 was 1.0675, and near-stall exposure was 22.04--22.81%. Spring bottoming and
+non-finite counters remained zero.
+
+This confirms both the measurement path and the reason the short pilot was not
+accepted: it learned a single unstable launch, not periodic in-place hopping.
+The retained evaluator outputs are:
+
+- JSON SHA-256:
+  `58236d30d84357f9817fd09cb09a974b29e3694cb80d0bb25d355fac66993aca`;
+- CSV SHA-256:
+  `b054d4aed7759eeda015a595dd82b4f1b428abcccaf5c197287bb22d49714e95`.
+
+## Predeclared K3900 H1 training campaign
+
+Train K3900 from scratch with seeds 47, 53, and 59. Each run uses 256
+environments, 8,000 iterations, and a 500-iteration checkpoint interval under
+otherwise identical PPO/task settings. Runs are sequential on 100.100; the
+other two seeds do not share its GPU concurrently.
+
+Evaluate the common iterations 500, 1,000, ..., 7,500, and 7,999 using the
+immutable H1 protocol above. The earliest common iteration advances only when
+all three training-seed policies independently pass every held-out gate. At
+that iteration, choose the representative policy by highest minimum held-out
+episode-pass fraction, then highest minimum cycle-success fraction, then lower
+maximum torque-utilization p99, then lower training seed. No final-checkpoint
+default or visual selection is allowed.
+
+K2500 remains a documented mechanical sensitivity arm, not a co-candidate;
+revisit it only if K3900 cannot pass H1. No MP4 is recorded until the numerical
+matrix accepts a representative checkpoint.

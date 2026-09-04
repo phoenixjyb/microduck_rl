@@ -424,3 +424,16 @@ below 0.594 m while not regressing cycle success, spring bottoming, rated-speed
 exposure, torque p99, or near-stall exposure. Full H1 acceptance thresholds do
 not change. Failure of that causal gate stops H1-S; it does not authorize an
 actor-observation change, Locked, H2, video, or physical motion.
+
+The causal comparison is encoded by:
+
+```console
+python -m mjlab_microduck.hop_revision_gate BASELINE_JSON CANDIDATE_JSON \
+  --output OUTPUT_JSON
+```
+
+It accepts only the exact H1-P and H1-S task identities, final `model_5999.pt`
+evaluations, held-out seeds 211/223/227, 128 environments, six cycles, and the
+retained no-motion boundary. Its output records both input JSON hashes and every
+strict-improvement/non-regression comparison; only an `advance_to_multi_seed`
+decision satisfies this diagnostic gate.

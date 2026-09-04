@@ -3,7 +3,7 @@
 Date: 2026-09-04
 
 Decision: **runtime smoke and matched-arm diagnostic pilot passed; the full
-K3900 H1 matrix was rejected; no hop policy accepted**
+K3900 H1 matrix and bounded H1-P revision were rejected; no hop policy accepted**
 
 ## Current evidence
 
@@ -345,3 +345,48 @@ SHA-256 values:
 This passes the H1-P wiring gate only. It authorizes the already predeclared
 seed-67 diagnostic, not a multi-seed promotion campaign, Locked control, H2,
 video, or physical motion.
+
+### H1-P seed-67 diagnostic result
+
+The fixed 256-environment, 6,000-iteration diagnostic completed successfully
+in 64 minutes. All reported training scalars stayed finite, NaN termination
+remained zero, and checkpoints 500/1,000/2,000/3,000/4,000/5,999 were retained.
+The unchanged H1 evaluator then completed its held-out seeds 211/223/227 for
+all six checkpoints. Every checkpoint was rejected.
+
+| Iteration | Min cycle success | Min episode pass | Falls | Max drift p95 | Max bottoming | Max rated-speed exceed | Max torque p99 | Max near-stall |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 500 | 16.67% | 0% | 384 | 0.933 m | 0.539% | 1.179% | 1.068 | 8.680% |
+| 1,000 | 40.49% | 0% | 370 | 0.936 m | 0.107% | 0.084% | 0.945 | 0.980% |
+| 2,000 | 67.19% | 0% | 237 | 0.879 m | 0.015% | 0.099% | 0.848 | 0.376% |
+| 3,000 | 85.68% | 0% | 95 | 0.899 m | 0.077% | 0.042% | 0.890 | 0.681% |
+| 4,000 | 91.54% | 0% | 53 | 0.721 m | 0.033% | 0.018% | 0.870 | 0.634% |
+| 5,999 | 96.61% | 0% | 23 | 0.594 m | 0.431% | 0.021% | 0.834 | 0.464% |
+
+At iteration 5,999, median rise was 0.0458 m and the cycle, landing, rise,
+rise-ceiling, spring-bottoming, torque-p99, NaN, and finite-state gates passed.
+The episode-pass, fall, drift, rated-speed-exceedance, and near-stall gates did
+not. The progressive motor-aware objective reduced bottoming, rated-speed
+exposure, torque p99, and near-stall exposure relative to the earlier seed-47
+iteration-6,000 diagnostic, but it did not improve whole-episode survival or
+drift: episode pass stayed at zero, falls rose from 5 to 23, drift p95 rose from
+0.499 m to 0.594 m, and minimum cycle success fell from 98.83% to 96.61%.
+Because this was one training seed per objective, the comparison diagnoses the
+revision; it is not a seed-consensus effect estimate.
+
+Retained output directory on 100.100:
+`artifacts/evaluations/h1p-k3900-e7b15bb-s67-diagnostic/`. Evaluation JSON
+SHA-256 values by iteration are:
+
+- 500: `14086086cb05896cbcedb7d3719c17ed188019188a84007911acf27a80b468b6`;
+- 1,000: `c2223a6fda344191eb4863413317f809bd61ce2188accdca557774fe9a957dbf`;
+- 2,000: `e53f0fc8f2b40daf99d95d12060ff5ba69676ddfa87b472e6f876300b989127a`;
+- 3,000: `1596bf0b27d1551448ab677474bff698b92a4d8620288e3daaf1ff2d4e2c9643`;
+- 4,000: `c8f9061fa929989dbb222f1b94778684e706b1d04625f5e251ef1f74306e4fac`;
+- 5,999: `99907a27954ba31b2d39fcdf427e0c947b4f1ddbb9b9dc82096ff92f411494c3`.
+
+The predeclared stop condition is met: H1-P reduced motor demand but did not
+improve episode survival and drift together. Do not spend more GPU time on this
+objective, a Locked control, or H2. The next work is a separately reviewed
+stability diagnosis of lateral drift and falls; it is source/design work, not
+authorization for another training run, video, or physical motion.

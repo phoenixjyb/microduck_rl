@@ -307,3 +307,11 @@ and commonly fall/bottoming gates. The next predeclared H1-P revision adds the
 already-tested motor-torque cost and a time-staged 20/30/40 mm height envelope;
 it preserves the task mechanics and held-out evaluator. See
 `experiments/2026-09-04-h0-h1-hop-campaign.md`.
+
+The bounded H1-P seed-67 diagnostic also completed and was rejected at every
+predeclared checkpoint. Its final checkpoint improved motor and spring metrics,
+but held-out episode pass remained zero with 23 falls and 0.594 m drift p95.
+The fixed stop condition therefore closes further H1-P GPU work: do not run a
+multi-seed promotion, Locked control, H2, or video. Any next hop revision must
+first diagnose lateral stability and fall causality in a separately reviewed
+source/design slice.

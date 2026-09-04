@@ -77,9 +77,10 @@ track both pass.
 
 | Stage | Task | Difficulty axis | Core evidence |
 | --- | --- | --- | --- |
-| H0 | symmetric in-place hop | target apex | takeoff, airborne phase, landing, no fall |
-| H1 | repeated in-place hops | repetition count | height consistency and thermal estimate |
-| J0 | forward jump without obstacle | forward distance | landing stability and route error |
+| H0 | matched Locked/K2500/K3900 controls | mechanics only | identical learner/task and valid instrumentation |
+| H1 | periodic in-place hop | target apex and repetition | takeoff, airborne rise, landing, no fall |
+| H2 | commanded one-shot jump | target rise | apex error, settle stability, in-place corridor |
+| H3 | running jump | approach speed | clearance, landing stability, speed recovery |
 | J1 | fixed low obstacle | obstacle height | collision-free clearance margin |
 | J2 | varied low obstacle | height bins | per-bin pass rate |
 | J3 | low obstacle with sensor perturbation | one sensor axis per stage | bounded degradation and fail-safe stop |
@@ -276,3 +277,9 @@ timeouts and removed HC4-R2H's added collision, but its clean-pass rate was
 continuation floor. The fresh promotion and threshold matrices were therefore
 not run. HC4-LH remains the accepted composite, while HC4-R2 remains a retained
 near-range specialist rather than a unified runtime replacement.
+
+The independent hop branch now follows the canonical H0--H3 naming above.
+H0 source/configuration checks are complete, but no retained hop training run
+exists on 100.100. The next authorized action is only the predeclared
+five-iteration K3900 runtime smoke in
+`experiments/2026-09-04-h0-h1-hop-campaign.md`; it is not H1 acceptance.

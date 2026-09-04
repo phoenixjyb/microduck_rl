@@ -253,8 +253,11 @@ HC4-R2H implements that composition without retraining. It selects HC4-R2 only
 for valid structured geometry at reconstructed route-forward range no greater
 than 0.95 m and nominal speed no greater than 0.40 m/s; every other observation
 preserves HC4-LH. Invalid geometry still triggers the execution-layer immediate
-stop outside recovery. The composed checkpoint has passed focused unit and
-actual-checkpoint CPU wiring checks but remains pending the predeclared
-three-seed closed-loop and threshold-boundary matrices. HC4-LH therefore
-remains selected. See
+stop outside recovery. The stateless composition passed focused unit and
+actual-checkpoint CPU wiring checks, but failed the three-seed closed-loop
+gate: it recorded three collisions versus two for the paired selected
+baselines. Its lower timeout count and faster passage do not override the
+collision regression. The threshold diagnostic and MP4 were not run. HC4-LH
+therefore remains selected; the next design must latch one specialist for an
+entire episode rather than switching on instantaneous range. See
 `experiments/2026-09-04-hc4r2h-range-speed-composition.md`.

@@ -117,7 +117,7 @@ The actual seed-149 pre-screen and seed-151/157 continuation produced:
 |---|---:|---:|---:|---:|---:|---:|---:|
 | HC4-LH | 1,348 | 8 | 0 | 1,356 | 99.410% | 7.559 s | 0.5465 |
 | HC4-R | 1,422 | 4 | 0 | 1,426 | 99.719% | 7.387 s | 0.5677 |
-| **HC4-R2** | **1,402** | **2** | **0** | **1,404** | **99.858%** | **7.433 s** | **0.5650** |
+| **HC4-R2** | **1,417** | **2** | **0** | **1,419** | **99.859%** | **7.396 s** | **0.5650** |
 
 HC4-R2's two collisions were centered: one at 0.30 m/s and one at 0.40 m/s.
 It was collision-free in all four shifted cells. HC4-R recorded two centered
@@ -141,3 +141,18 @@ box geometry. HC4-LH remains selected for its existing farther-range envelope.
 A unified controller requires a separately tested range/speed gate with
 invalid-geometry fallback; this acceptance alone does not authorize that
 composition, camera perception, or physical motion.
+
+## Visual evidence
+
+Two held-out shifted cells that were collision-free across all three
+evaluation seeds were recorded after numerical acceptance. Both MP4s are
+12-second H.264 videos at 960 x 540, 50 fps, and 600 frames. Both sidecars mark
+representative success with zero collision, fall, NaN, or non-finite events.
+
+| Replay | First pass | MP4 SHA-256 | Sidecar SHA-256 |
+|---|---:|---|---|
+| 0.30 m/s, x=0.90 m, y=-0.08 m, seed 151 | 7.36 s | `6b1fe5fefcdb14d324e11deedb05e623368cff8a068f77c6eb583ff0721c30a5` | `6188a7a3ce03a5b420a31cdc0e77e1f0723ce9c892cc27070366ddd2888ada42` |
+| 0.40 m/s, x=0.90 m, y=+0.08 m, seed 157 | 7.86 s | `64c954c3f9307a34db70e8bf8630467baac1614b28ca6f743d4db4e40f1d1c65` | `9407ce734cf0574475434e386d1b79fb7b854ad1863e5442dcb1d5a313252f9a` |
+
+The files are retained under `../artifacts/hc4r2-1ff1781-heldout/`. Video is
+qualitative evidence only and does not broaden the numerical envelope.

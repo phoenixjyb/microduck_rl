@@ -4,7 +4,7 @@ Date: 2026-09-04
 
 Implementation parent: `048c327cc5c6e456bd994b6e75b1e139865b5fc9`
 
-Decision: **implementation pending closed-loop evidence; HC4-LH remains
+Decision: **do not promote; causal gate narrowly missed; HC4-LH remains
 selected**
 
 ## Single changed axis
@@ -73,3 +73,40 @@ Only after B passes may a centered 0.94/0.96 m threshold diagnostic be run on
 the same fresh seeds. No MP4 is recorded before all numerical gates pass. A
 passing result remains exact-geometry simulation evidence and does not
 authorize camera perception, dynamic obstacles, or physical motion.
+
+## Retained checkpoint and causal result
+
+The canonical simulation checkpoint is
+`artifacts/checkpoints/hc4r2l-d71c076/supervisor.pt`, SHA-256
+`9973079826dd246e0326b16faead5959fa072ed84b6e136851f75ebe04a083f6`.
+Its manifest SHA-256 is
+`85c64d493a534b40e98c2bdf3d5dd4cfa21570e2ccac42da5ae8011c5cc4631c`.
+The repository suite passed 612 tests. An actual-checkpoint CPU check confirmed
+byte-exact HC4-R2/HC4-LH output selection across range changes and correct
+reseating after explicit reset.
+
+The 36-cell causal matrix completed successfully:
+
+| Controller | Clean | Collision | Timeout | Resolved | Clean rate | Weighted passage | Max torque p99 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| HC4-R2L | 2,588 | 2 | 11 | 2,601 | 99.5002% | 8.0807 s | 0.5642 |
+| Paired source baselines | 2,591 | 2 | 11 | 2,604 | 99.5008% | 8.0657 s | 0.5656 |
+
+HC4-R2L matched the aggregate collision and timeout counts and had zero falls,
+NaN terminations, non-finite steps, or rated motor-speed exceedances. It
+removed HC4-R2H's added collision. However, its pooled clean-pass rate was
+0.00058 percentage points below the paired baseline and below the fixed
+99.501% continuation floor; weighted passage was 0.0150 seconds slower. The
+distribution of adverse events also varied by seed/cell even though aggregate
+counts matched.
+
+The retained causal report SHA-256 is
+`42eb472ed5349fc25661eadbe9559e57adb33ce4a107051f9b3080fdb9edfc9c`.
+Because the predeclared continuation gate was not met, fresh seeds 179/181/191,
+the 0.94/0.96 m threshold diagnostic, and MP4 recording were not run.
+
+The tiny difference may reflect fixed-step episode-count sensitivity or GPU
+simulation nondeterminism, but that is an inference rather than acceptance
+evidence. Any future composition protocol should predeclare equal resolved
+attempt counts per cell before another candidate is evaluated. This candidate
+is not rerun or promoted post hoc.

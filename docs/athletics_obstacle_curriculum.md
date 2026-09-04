@@ -269,3 +269,10 @@ the execution layer reports that episode done. Its first gate reuses the
 HC4-R2H seeds only as a causal regression check; fresh seeds are separately
 predeclared for promotion. HC4-LH remains selected until both stages pass. See
 `experiments/2026-09-04-hc4r2l-episode-latched-composition.md`.
+
+HC4-R2L's causal matrix matched the paired sources at two collisions and eleven
+timeouts and removed HC4-R2H's added collision, but its clean-pass rate was
+99.5002% versus 99.5008% for the sources, narrowly below the fixed 99.501%
+continuation floor. The fresh promotion and threshold matrices were therefore
+not run. HC4-LH remains the accepted composite, while HC4-R2 remains a retained
+near-range specialist rather than a unified runtime replacement.

@@ -236,6 +236,14 @@ protocol identity, checkpoint/iteration mismatches, stored decisions that
 disagree with recomputed gates, and any artifact that drops the no-motion
 boundary.
 
+`scripts/evaluate_h1_campaign.py` is the fail-fast campaign driver. It verifies
+that every one of the 51 predeclared checkpoints exists before allocating the
+GPU, evaluates in iteration-major three-training-seed blocks, reuses only JSON
+whose checkpoint hash and complete H1 protocol identity match, then writes the
+manifest and invokes the selector above. An interrupted evaluation therefore
+resumes without silently mixing checkpoints or leaving a misleading partial
+all-seed iteration.
+
 K2500 remains a documented mechanical sensitivity arm, not a co-candidate;
 revisit it only if K3900 cannot pass H1. No MP4 is recorded until the numerical
 matrix accepts a representative checkpoint.

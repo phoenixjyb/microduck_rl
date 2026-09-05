@@ -217,3 +217,42 @@ Decision: `continue_multi_seed_predeclaration`. Together, the two specialist
 pre-screens cover 576 noisy first attempts without a noisy-condition collision
 or timeout. They remain independent single-seed results and do not establish
 a three-seed campaign result or measured sensor readiness.
+
+## Three-seed continuation predeclaration
+
+Parent: `2928b0586d6bd54b1a787ec7b6a3ad613d6fbe97`.
+
+The only additional physics seeds are 281 and 283. Together with retained
+HC4-LH seed 271 and HC4-R2 seed 277, this gives each specialist three
+independent seeds. Noise seeds remain mechanically derived by adding 3000011:
+3000292 and 3000294 for the two new physics seeds.
+
+For each new seed, HC4-LH repeats its frozen three-cell 0.50 x 1.15 m matrix
+and HC4-R2 repeats its frozen six-cell 0.30/0.40 x 0.90 m matrix. Every cell
+uses 64 environments, a 700-step ceiling, the fixed first-attempt protocol,
+and the same exact-versus-`[-0.02, +0.02]` m comparison. Policy checkpoints,
+box geometry, update rate, separate noise stream, command authority, exact
+ground-truth outcomes, and all numerical gates remain unchanged.
+
+Execution is sequential and fail-closed:
+
+1. run and admit the exact baseline for one specialist/seed;
+2. run its noisy condition only after that baseline passes;
+3. produce the deterministic per-seed decision;
+4. stop the affected specialist immediately if any check fails;
+5. continue to the next seed only after a complete per-seed pass.
+
+The final deterministic campaign artifact must name all six baseline/noisy
+report pairs, their hashes, their per-seed decision hashes, and the exact
+source commit. Campaign acceptance requires every retained per-seed gate to
+pass without gate relaxation. It reports pooled outcomes and sample-weighted
+phase-speed deltas descriptively but cannot use pooling to hide a local fail.
+
+A complete pass establishes only three-seed simulation sensitivity to bounded
+two-centimeter uniform range error inside the two accepted specialist
+envelopes. Because this distribution is provisional rather than measured,
+even campaign acceptance does not complete O3a. The next gate would be a
+sensor-calibration artifact defining a measured range-error distribution.
+Failure stops the affected line for diagnosis. No result authorizes
+retraining, bearing noise, latency, dropout, MP4 creation, raw perception, or
+physical motion.

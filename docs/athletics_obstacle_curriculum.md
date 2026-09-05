@@ -344,6 +344,11 @@ clean passages. All phase-speed and motor gates passed, so two additional
 predeclared seeds may now establish or reject multi-seed sensitivity for both
 accepted specialists. The range bound is still provisional simulation stress,
 not a measured sensor specification.
+Seeds 281 and 283 are the only frozen continuation seeds. Each specialist runs
+exact baseline, noisy condition, and deterministic comparison sequentially;
+any local fail stops that specialist. A three-seed pass establishes only the
+provisional two-centimeter simulation envelope, after which measured sensor
+calibration—not another invented perturbation—is the next O3a gate.
 
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign

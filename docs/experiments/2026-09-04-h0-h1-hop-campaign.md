@@ -575,3 +575,37 @@ from the exact H1-P and H1-T task identities under the frozen protocol. Any
 failed check stops H1-T and parks the periodic-hop branch; it does not authorize
 multi-seed promotion, Locked, H2, video, raw perception, actor-observation
 expansion, or physical motion.
+
+### H1-T source and runtime smoke
+
+Commit `117c881ece760ce8b18a1195c7c8ff5839b98c8e` implements and predeclares
+H1-T. The combined hop reward, configuration, registration, and causal-gate
+suite passes 124/124 on both the development Mac and 100.100; remote validation
+ran with CUDA hidden.
+
+The seed-68, 64-environment, five-iteration smoke completed with service result
+`success`. All five mean reward, value-loss, and surrogate-loss readings were
+finite. The new `planar_velocity_cost` was nonzero at every iteration
+(-0.0002 initially and -0.0011 finally), and its curriculum weight remained at
+the expected initial `-0.05`. The H1-P height and motor curricula loaded at
+0.0200 m and -0.2500. NaN termination and spring bottoming remained zero; final
+motor soft-limit exposure was 0.3400. Falls are expected from this untrained
+five-iteration policy and are not H1 performance evidence.
+
+Retained smoke directory on 100.100:
+`logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-38-29_h1t-smoke-117c881-s68/`.
+SHA-256 values:
+
+- `model_4.pt`:
+  `754d4e89fc5538104bfed3fa4df913e025357cd31fb26d338c8d770c1c6f23ac`;
+- ONNX:
+  `70ffc439e59d60342e1a7318114909967c7667cbe1da42cddb449ea1ce4bcbb8`;
+- TensorBoard event:
+  `42a22aae35208eb745320d1e301047a26a2298607c11a17c63fb56eea8b30768`.
+
+The smoke service released the GPU (12 MiB, 0% utilization, 45 C), both
+protected AI Mission services remained inactive, and the exact training
+worktree remained clean. This passes only the H1-T wiring gate. The predeclared
+seed-67 diagnostic remains closed pending explicit continuation; it does not
+authorize multi-seed promotion, Locked, H2, video, raw perception, or physical
+motion.

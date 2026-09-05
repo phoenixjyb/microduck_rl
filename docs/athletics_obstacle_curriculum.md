@@ -303,6 +303,13 @@ seeds and video were not run. The smallest defensible next revision is new
 student-state correction data for that single lingering mode, not a rerun or a
 post-hoc gate relaxation; HC4-LH and HC4-R2 remain the accepted specialists.
 
+HC4-U2 predeclares that one-axis correction: HC4-U1 executes only the failing
+0.30 m/s, 1.15 m far-center cell while the deterministic teacher labels its
+student-reached states. Seed 233 is a bounded collection pre-screen before
+seeds 239/241. Any later candidate keeps HC4-U1's architecture and base data
+and must use fresh evaluation seeds 251/257/263 under the unchanged HC4-E1
+gate. See `experiments/2026-09-05-hc4u2-far-center-correction.md`.
+
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign
 are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at

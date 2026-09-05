@@ -1,6 +1,6 @@
 # HC4-U4 near-envelope student-state correction
 
-Date: 2026-09-06. Status: predeclared bounded correction collection, not a policy.
+Date: 2026-09-06. Status: correction data admitted; seed-42 fit predeclared, not a policy.
 Parent HC4-U3 is rejected at held-out physics seed 311. See the retained U3
 experiment for exact failed cells, hashes, and the limits of causal diagnosis.
 
@@ -77,3 +77,67 @@ is a data-collection student only, never a promoted controller.
 Source validation before launch: 100 focused collection, first-attempt rollout,
 and unchanged numerical-gate tests passed locally with CUDA hidden. The runtime
 smoke and full-shard validation remain required; unit tests alone admit no data.
+
+## Retained collection and frozen fit
+
+Collection source: `e1e701a95d36857fc1d2e403cabf140d74fdfa8d`. The smoke and all
+three full collection services completed with exit zero. Each full admission
+object was independently recomputed from its report and dataset and matched
+exactly. All three full shards had 384 clean outcomes, no collision/timeout/
+fall/nonfinite/rated-speed failures, and passed the original motor checks.
+These are collection results from U3, not acceptance of a new U4 policy.
+
+Artifacts live under `artifacts/evaluations/hc4u4-e1e701a-s{seed}-corrections`
+on 100.100, backed up under `artifacts/overnight-20260906-u4` locally. Each
+directory contains `hierarchical-teacher-evaluation.json`,
+`teacher-correction-dataset.pt`, and `admission.json`.
+
+| Seed | Samples | Report SHA-256 | Dataset SHA-256 | Admission SHA-256 |
+| --- | ---: | --- | --- | --- |
+| 317 | 29160 | `ef34146fecd3113e4060fac7cded8241218727de282baf0f2e0281ff0886c329` | `515745a8c173ae27c02986c9e24a469ac8161c7e426fcecd057eed50d41ec1f2` | `23f79449729a8cafb2ad1e7563bb94b030ad1bc49a612812d6d55f71f5d52309` |
+| 331 | 29043 | `6abbe05d1f2db363035a9805eab83d17fdde7ec5bc384a58f7f31908ac73a94c` | `5ff128a9bb8ac1943d288328a746c8cd9bf6712597fd9f8be60906ce7996bd98` | `fcc7f04032350fe545e7b371178f9055c08ff02030857072bd04d6a701ec3dc4` |
+| 337 | 29329 | `e2b1aaabf33334067dad8e0c994760728fea9e2833826fb2bb0872e09cffeec1` | `47f13a95c3c28cc0e908de6963c7a9ed188965c32466d410db41edbfffeef3c0` | `4f6b2ea6bd8de03c74d82728d32a1eb5504cce7df213502156f52a9ff9fa49a2` |
+
+The separate four-environment smoke retained 313 samples and four clean outcomes:
+report SHA-256 `7f3aaa58c5f82f3c47b54ddf5703dde0dc5fc27ffdac263bb1cf6c8522087c76`,
+dataset SHA-256 `66a25efdcd6585b62c090de62f1af61218040080d984869f8867b5315a1a5877`.
+Its `smoke-admission.json` is explicitly not training-data admission.
+
+The exact ordered sixteen-shard hash tuple is now
+`HC4U4_REQUIRED_DATASET_SHA256` in `obstacle_supervisor_bc.py`: all thirteen
+U2/U3 parent hashes unchanged, then 317, 331, 337 above. The parent paths are
+retained in `artifacts/checkpoints/hc4u3-ab1d831-s42/supervisor.json` (manifest
+SHA-256 `58d8327a6271a4702a10af48bcbd597837d4232c8b729ec9c3473a12f1da860c`).
+The new stage is `HC4U4-near-state-correction-phase-BC`, sharing the unchanged
+phase-expert implementation. Trainer rejects any other corpus order, correction
+identity, seed, epoch count, batch size, or optimizer/model/gate configuration.
+The loader requires the existing three-expert architecture and frozen gait;
+recording remains unsupported. `hc4u4_gate` preserves the v2 numerical checks
+while requiring U4 identity and only fresh seeds 347, 349, 353.
+
+CPU reconstruction of the frozen seed-42 episode split gives 520,787 samples
+and 6,678 episodes: 415,947 training samples / 5,342 episodes and 104,840
+validation samples / 1,336 episodes. The legacy `successful_episodes` manifest
+key counts all retained episodes, including older correction failures; it is
+not a success-rate claim. Phase counts (approach/interaction/recovery) are
+16,196 / 252,435 / 147,316 in training and 4,227 / 63,198 / 37,415 in validation.
+Appending data necessarily changes the deterministic episode split and SGD
+sequence; this is a data-augmentation experiment, not a fixed-split causal proof.
+
+After focused tests and this contract are committed and pushed, permit one
+fresh-initialized seed-42 fit under a retained service with `RuntimeMaxSec=1200`.
+Write `artifacts/checkpoints/hc4u4-<fit-source-short-sha>-s42/supervisor.pt` and
+its existing progress/optimizer and manifest files; never overwrite/retry a
+rejected fit. Verify exact corpus/split, finite losses, offline gates, and back
+up artifacts. Commit the final checkpoint hash before any held-out rollout.
+Each held-out seed matrix is sequential near source, far source, then candidate
+in one retained service capped at 1,200 seconds. No fit or matrix may start after
+06:25 Shanghai, so its maximum runtime leaves fifteen minutes before 07:00.
+All per-seed decisions must be recomputed from retained reports before advancing.
+Passing all three remains a single-training-seed diagnostic, not multi-seed
+training promotion, range-noise acceptance, video admission, or physical safety.
+
+Pre-fit source validation: 144 focused U4 contract/collection, phase-supervisor,
+legacy BC, first-attempt rollout, U3 and U1 gate tests passed locally with CUDA
+hidden (61.29 seconds). Remote repetition and real-corpus contract validation
+are required before launching the fit.

@@ -28,6 +28,8 @@ HC4R2_STAGE = "HC4R2-student-state-correction-BC"
 HC4U1_STAGE = "HC4U1-unified-range-lateral-correction-BC"
 HC4U2_STAGE = "HC4U2-far-center-student-state-correction-BC"
 HC4U3_STAGE = "HC4U3-phase-separated-BC"
+HC4U4_STAGE = "HC4U4-near-state-correction-phase-BC"
+PHASE_BC_STAGES = (HC4U3_STAGE, HC4U4_STAGE)
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
 HC4R2H_STAGE = "HC4R2H-range-speed-gated-supervisor"
 HC4R2L_STAGE = "HC4R2L-episode-latched-supervisor"
@@ -39,6 +41,7 @@ SUPPORTED_BC_STAGES = (
     HC4U1_STAGE,
     HC4U2_STAGE,
     HC4U3_STAGE,
+    HC4U4_STAGE,
 )
 
 # HC4-U1 is a frozen one-candidate experiment. Order is part of the contract
@@ -63,6 +66,15 @@ HC4U2_REQUIRED_DATASET_SHA256 = (
 )
 HC4U2_STUDENT_SHA256 = (
     "2196d2ed2dbc3e182fa0b36edf663d11187330d430cd319ceb368c8a28e9753b"
+)
+HC4U4_REQUIRED_DATASET_SHA256 = (
+    *HC4U2_REQUIRED_DATASET_SHA256,
+    "515745a8c173ae27c02986c9e24a469ac8161c7e426fcecd057eed50d41ec1f2",
+    "5ff128a9bb8ac1943d288328a746c8cd9bf6712597fd9f8be60906ce7996bd98",
+    "47f13a95c3c28cc0e908de6963c7a9ed188965c32466d410db41edbfffeef3c0",
+)
+HC4U4_STUDENT_SHA256 = (
+    "6c6546448340530e4cdb7e4381247f644211029c7750146c0da6dbcf7c60aa2d"
 )
 
 
@@ -447,6 +459,21 @@ def validate_bc_dataset_contract(
     """Enforce stage-specific dataset provenance before fitting a candidate."""
     if len(payloads) != len(dataset_sha256):
         raise ValueError("dataset payload and hash counts do not match")
+    if stage == HC4U4_STAGE:
+        if dataset_sha256 != HC4U4_REQUIRED_DATASET_SHA256:
+            raise ValueError("HC4U4 requires the exact ordered sixteen-shard corpus")
+        validate_bc_dataset_contract(HC4U2_STAGE, payloads[:-3], dataset_sha256[:-3])
+        for payload, seed in zip(payloads[-3:], (317, 331, 337), strict=True):
+            for key, expected in (
+                ("stage", "HC4R2-student-state-teacher-corrections"),
+                ("student_supervisor_checkpoint_sha256", HC4U4_STUDENT_SHA256),
+                ("collection_seeds", [seed]),
+                ("collection_window", "first-terminal-attempt-per-environment-v1"),
+                ("terminal_outcome_protocol", "hard-failure-collision-timeout-pass-v1"),
+            ):
+                if payload.get(key) != expected:
+                    raise ValueError(f"HC4U4 correction identity mismatch: {key}")
+        return
     if stage == HC4U3_STAGE:
         # Architecture is the sole changed axis: keep HC4-U2's ordered corpus.
         validate_bc_dataset_contract(HC4U2_STAGE, payloads, dataset_sha256)
@@ -504,6 +531,10 @@ def train_supervisor(
         raise ValueError("epochs and batch_size must be positive")
     if stage not in SUPPORTED_BC_STAGES:
         raise ValueError(f"unsupported behavioral-cloning stage: {stage}")
+    if stage == HC4U4_STAGE and (
+        (epochs, batch_size, seed) != (200, 1024, 42) or cfg != SupervisorBcCfg()
+    ):
+        raise ValueError("HC4U4 requires the exact predeclared fit configuration")
     if not dataset_paths:
         raise ValueError("at least one dataset is required")
     dataset_paths = tuple(path.resolve(strict=True) for path in dataset_paths)
@@ -511,7 +542,7 @@ def train_supervisor(
     if output_path.exists():
         raise FileExistsError(output_path)
     progress_path = output_path.with_suffix(".progress.pt")
-    if stage == HC4U3_STAGE and progress_path.exists():
+    if stage in PHASE_BC_STAGES and progress_path.exists():
         raise FileExistsError(progress_path)
     payloads = [
         torch.load(path, map_location="cpu", weights_only=False)
@@ -554,12 +585,12 @@ def train_supervisor(
     device = "cuda:0" if os.environ.get("CUDA_VISIBLE_DEVICES", "") else "cpu"
     torch.manual_seed(seed)
     phase_counts = None
-    if stage == HC4U3_STAGE:
+    if stage in PHASE_BC_STAGES:
         phase_counts = {
             "training": phase_partition_counts(observations, training_mask),
             "validation": phase_partition_counts(observations, validation_mask),
         }
-    model_type = PhaseSeparatedSupervisor if stage == HC4U3_STAGE else ObstacleSupervisor
+    model_type = PhaseSeparatedSupervisor if stage in PHASE_BC_STAGES else ObstacleSupervisor
     model = model_type(cfg).to(device)
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=cfg.learning_rate, weight_decay=cfg.weight_decay
@@ -579,8 +610,8 @@ def train_supervisor(
         for start in range(0, train_x.shape[0], batch_size):
             indices = permutation[start : start + batch_size]
             loss = torch.nn.functional.mse_loss(model(train_x[indices]), train_y[indices])
-            if stage == HC4U3_STAGE and not bool(torch.isfinite(loss)):
-                raise ValueError("HC4-U3 training loss is non-finite")
+            if stage in PHASE_BC_STAGES and not bool(torch.isfinite(loss)):
+                raise ValueError(f"{stage} training loss is non-finite")
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
@@ -589,8 +620,8 @@ def train_supervisor(
             validation_loss = float(
                 torch.nn.functional.mse_loss(model(validation_x), validation_y)
             )
-        if stage == HC4U3_STAGE and not math.isfinite(validation_loss):
-            raise ValueError("HC4-U3 validation loss is non-finite")
+        if stage in PHASE_BC_STAGES and not math.isfinite(validation_loss):
+            raise ValueError(f"{stage} validation loss is non-finite")
         if validation_loss < best_loss:
             best_loss = validation_loss
             best_epoch = epoch
@@ -598,7 +629,7 @@ def train_supervisor(
                 name: value.detach().cpu().clone()
                 for name, value in model.state_dict().items()
             }
-        if stage == HC4U3_STAGE and (epoch == 1 or epoch % 10 == 0):
+        if stage in PHASE_BC_STAGES and (epoch == 1 or epoch % 10 == 0):
             output_path.parent.mkdir(parents=True, exist_ok=True)
             temporary = progress_path.with_suffix(".tmp")
             torch.save({
@@ -620,7 +651,7 @@ def train_supervisor(
             }, temporary)
             os.replace(temporary, progress_path)
             print(
-                f"HC4U3 epoch={epoch}/{epochs} validation_mse={validation_loss:.9g} "
+                f"{stage} epoch={epoch}/{epochs} validation_mse={validation_loss:.9g} "
                 f"checkpoint={progress_path}", flush=True,
             )
 
@@ -666,7 +697,7 @@ def train_supervisor(
         "device": device,
         "physical_motion_authorized": False,
     }
-    if stage == HC4U3_STAGE:
+    if stage in PHASE_BC_STAGES:
         checkpoint["architecture"] = "three-independent-phase-experts-v1"
         checkpoint["phase_samples"] = phase_counts
         with torch.inference_mode():

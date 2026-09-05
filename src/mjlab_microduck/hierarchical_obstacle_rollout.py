@@ -255,6 +255,69 @@ def validate_dataset_collection_mode(
         )
 
 
+def fixed_attempt_metrics(
+    *,
+    expected_attempts: int,
+    completed_attempts: int,
+    clean_pass_events: int,
+    collision_events: int,
+    attempt_timeout_events: int,
+    fall_events: int,
+    nan_termination_events: int,
+    other_terminal_events: int,
+) -> dict[str, int | float]:
+    """Summarize a fixed-denominator first-attempt evaluation window."""
+    counts = {
+        "expected_attempts": expected_attempts,
+        "completed_attempts": completed_attempts,
+        "clean_pass_events": clean_pass_events,
+        "collision_events": collision_events,
+        "attempt_timeout_events": attempt_timeout_events,
+        "fall_events": fall_events,
+        "nan_termination_events": nan_termination_events,
+        "other_terminal_events": other_terminal_events,
+    }
+    if expected_attempts <= 0:
+        raise ValueError("expected_attempts must be positive")
+    if any(value < 0 for value in counts.values()):
+        raise ValueError("fixed-attempt counts must be non-negative")
+    if completed_attempts > expected_attempts:
+        raise ValueError("completed_attempts cannot exceed expected_attempts")
+    resolved = clean_pass_events + collision_events + attempt_timeout_events
+    if resolved > completed_attempts:
+        raise ValueError("resolved outcomes cannot exceed completed_attempts")
+    if resolved + other_terminal_events > completed_attempts:
+        raise ValueError(
+            "resolved and other terminal outcomes cannot exceed completed_attempts"
+        )
+    return {
+        "expected_attempts": expected_attempts,
+        "completed_attempts": completed_attempts,
+        "unresolved_attempts": expected_attempts - completed_attempts,
+        "clean_pass_rate_fixed_denominator": clean_pass_events / expected_attempts,
+        "collision_rate_fixed_denominator": collision_events / expected_attempts,
+        "attempt_timeout_rate_fixed_denominator": (
+            attempt_timeout_events / expected_attempts
+        ),
+        "hard_failure_events": fall_events + nan_termination_events,
+        "other_terminal_events": other_terminal_events,
+    }
+
+
+def advance_first_attempt_window(
+    active: torch.Tensor, dones: torch.Tensor
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Close each environment after its first terminal transition."""
+    import torch
+
+    if active.dtype != torch.bool or dones.dtype != torch.bool:
+        raise ValueError("first-attempt masks must be boolean")
+    if active.shape != dones.shape or active.ndim != 1:
+        raise ValueError("first-attempt masks must be matching vectors")
+    finished = active & dones
+    return active & ~finished, finished
+
+
 def resolved_correction_samples(
     observations: torch.Tensor,
     teacher_commands: torch.Tensor,
@@ -389,6 +452,7 @@ def _run_case(
     seed: int,
     collect_success_samples: bool = False,
     collect_teacher_corrections: bool = False,
+    first_attempt_only: bool = False,
     case_index: int = 0,
     supervisor_checkpoint: Path | None = None,
 ) -> dict:
@@ -469,11 +533,20 @@ def _run_case(
         dataset_episode_keys = []
         successful_episode_keys: set[int] = set()
         correction_episode_outcomes: dict[int, int] = {}
+        evaluation_active = torch.ones(num_envs, dtype=torch.bool, device=device)
+        other_terminal_events = 0
+        steps_executed = 0
 
         with torch.inference_mode():
             for step in range(steps):
+                if first_attempt_only and not bool(evaluation_active.any()):
+                    break
+                active = evaluation_active.clone()
+                steps_executed = step + 1
                 route_lateral, route_heading, route_speed = _route_state(env)
-                lateral_abs_max = torch.maximum(lateral_abs_max, route_lateral.abs())
+                lateral_abs_max[active] = torch.maximum(
+                    lateral_abs_max[active], route_lateral[active].abs()
+                )
                 if step % 5 == 0:
                     obstacle_observation = microduck_mdp.obstacle_geometry_observation(
                         env,
@@ -599,20 +672,24 @@ def _run_case(
                         )
 
                 for phase in ObstaclePhase:
-                    mask = state.phase == int(phase)
+                    mask = (state.phase == int(phase)) & active
                     phase_speed_sum[int(phase)] += torch.nan_to_num(
                         route_speed[mask], nan=0.0
                     ).sum()
                     phase_samples[int(phase)] += mask.sum()
-                command_speed_min = min(command_speed_min, float(command[:, 0].min()))
-                command_speed_max = max(command_speed_max, float(command[:, 0].max()))
+                command_speed_min = min(
+                    command_speed_min, float(command[active, 0].min())
+                )
+                command_speed_max = max(
+                    command_speed_max, float(command[active, 0].max())
+                )
                 command_yaw_abs_max = max(
-                    command_yaw_abs_max, float(command[:, 2].abs().max())
+                    command_yaw_abs_max, float(command[active, 2].abs().max())
                 )
 
                 actions = policy(observations)
                 observations, rewards, dones, _ = wrapped.step(actions)
-                episode_steps += 1
+                episode_steps[active] += 1
                 applied_actions = env.action_manager.action.detach()
                 joint_speed = robot.data.joint_vel[:, joint_ids].abs().float()
                 torque = robot.data.actuator_force.abs().float()
@@ -621,21 +698,31 @@ def _run_case(
                         f"joint speed shape {joint_speed.shape} does not match "
                         f"actuator torque shape {torque.shape}"
                     )
-                joint_speed_samples.append(joint_speed)
-                torque_samples.append(torque)
-                action_samples.append(applied_actions.abs().float())
+                joint_speed_samples.append(joint_speed[active])
+                torque_samples.append(torque[active])
+                action_samples.append(applied_actions[active].abs().float())
                 action_deltas = valid_action_deltas(
-                    applied_actions, previous_actions, previous_dones
+                    applied_actions[active],
+                    previous_actions[active],
+                    previous_dones[active],
                 )
                 if action_deltas.numel():
                     action_rate_samples.append(action_deltas.float())
-                collision = env.termination_manager.get_term("obstacle_collision")
-                passed = env.termination_manager.get_term("obstacle_passed")
+                collision = (
+                    env.termination_manager.get_term("obstacle_collision").bool()
+                    & active
+                )
+                passed = (
+                    env.termination_manager.get_term("obstacle_passed").bool()
+                    & active
+                )
                 attempted_out = env.termination_manager.get_term(
                     "obstacle_attempt_timeout"
+                ).bool() & active
+                fell = env.termination_manager.get_term("fell_over").bool() & active
+                nan_state = (
+                    env.termination_manager.get_term("nan_state").bool() & active
                 )
-                fell = env.termination_manager.get_term("fell_over")
-                nan_state = env.termination_manager.get_term("nan_state")
                 collision_events += int(collision.sum())
                 clean_pass_events += int(passed.sum())
                 pass_time_sum_s += float(
@@ -681,9 +768,11 @@ def _run_case(
                             strict=True,
                         ):
                             correction_episode_outcomes[int(key)] = int(code)
-                finite = torch.isfinite(actions).all() & torch.isfinite(rewards).all()
+                finite = torch.isfinite(actions[active]).all()
+                finite &= torch.isfinite(rewards[active]).all()
                 finite &= all(
-                    torch.isfinite(value).all() for value in observations.values()
+                    torch.isfinite(value[active]).all()
+                    for value in observations.values()
                 )
                 nonfinite_steps += int(not bool(finite))
                 if not representative_attempt_done and bool(dones[0]):
@@ -702,6 +791,12 @@ def _run_case(
                     learned_supervisor, "reset_episodes"
                 ):
                     learned_supervisor.reset_episodes(dones.bool())
+                if first_attempt_only:
+                    evaluation_active, finished = advance_first_attempt_window(
+                        active, dones.bool()
+                    )
+                    classified = collision | passed | attempted_out | fell | nan_state
+                    other_terminal_events += int((finished & ~classified).sum())
                 lateral_abs_max[dones.bool()] = 0.0
                 episode_steps[dones.bool()] = 0
                 episode_generation[dones.bool()] += 1
@@ -722,6 +817,7 @@ def _run_case(
             "seed": seed,
             "num_envs": num_envs,
             "steps": steps,
+            "steps_executed": steps_executed,
             "collision_events": collision_events,
             "clean_pass_events": clean_pass_events,
             "attempt_timeout_events": attempt_timeout_events,
@@ -763,6 +859,22 @@ def _run_case(
                 collision_events, clean_pass_events, attempt_timeout_events
             )
         )
+        if first_attempt_only:
+            result["evaluation_window"] = (
+                "first-terminal-attempt-per-environment-v1"
+            )
+            result.update(
+                fixed_attempt_metrics(
+                    expected_attempts=num_envs,
+                    completed_attempts=int((~evaluation_active).sum()),
+                    clean_pass_events=clean_pass_events,
+                    collision_events=collision_events,
+                    attempt_timeout_events=attempt_timeout_events,
+                    fall_events=fall_events,
+                    nan_termination_events=nan_events,
+                    other_terminal_events=other_terminal_events,
+                )
+            )
         if collect_success_samples:
             all_keys = torch.cat(dataset_episode_keys)
             successful_keys = torch.tensor(
@@ -804,6 +916,7 @@ def run_rollout(
     seeds: tuple[int, ...],
     collect_success_dataset: bool = False,
     collect_teacher_corrections: bool = False,
+    first_attempt_only: bool = False,
     supervisor_checkpoint: Path | None = None,
 ) -> Path:
     validate_rollout_bounds(
@@ -815,6 +928,10 @@ def run_rollout(
         collect_teacher_corrections=collect_teacher_corrections,
         supervisor_checkpoint=supervisor_checkpoint,
     )
+    if first_attempt_only and (
+        collect_success_dataset or collect_teacher_corrections
+    ):
+        raise ValueError("first-attempt evaluation cannot collect training datasets")
     if supervisor_checkpoint is not None:
         supervisor_checkpoint = supervisor_checkpoint.resolve(strict=True)
     output_dir = output_dir.resolve()
@@ -841,6 +958,7 @@ def run_rollout(
             seed=seed,
             collect_success_samples=collect_success_dataset,
             collect_teacher_corrections=collect_teacher_corrections,
+            first_attempt_only=first_attempt_only,
             case_index=case_index,
             supervisor_checkpoint=supervisor_checkpoint,
         )
@@ -869,6 +987,21 @@ def run_rollout(
             totals["attempt_timeout_events"],
         )
     )
+    if first_attempt_only:
+        totals.update(
+            fixed_attempt_metrics(
+                expected_attempts=sum(case["expected_attempts"] for case in cases),
+                completed_attempts=sum(case["completed_attempts"] for case in cases),
+                clean_pass_events=totals["clean_pass_events"],
+                collision_events=totals["collision_events"],
+                attempt_timeout_events=totals["attempt_timeout_events"],
+                fall_events=totals["fall_events"],
+                nan_termination_events=totals["nan_termination_events"],
+                other_terminal_events=sum(
+                    case["other_terminal_events"] for case in cases
+                ),
+            )
+        )
     report = {
         "schema_version": 1,
         "stage": "HC1-deterministic-teacher",
@@ -881,6 +1014,11 @@ def run_rollout(
         "attempt_timeout_s": HC1_ATTEMPT_TIMEOUT_S,
         "perception": "exact structured geometry; no raw camera perception",
         "physical_motion_authorized": False,
+        "evaluation_window": (
+            "first-terminal-attempt-per-environment-v1"
+            if first_attempt_only
+            else "fixed-simulator-steps-legacy"
+        ),
         "cases": cases,
         "totals": totals,
     }
@@ -1010,6 +1148,7 @@ def main() -> None:
     parser.add_argument("--seeds", default="41")
     parser.add_argument("--collect-success-dataset", action="store_true")
     parser.add_argument("--collect-teacher-corrections", action="store_true")
+    parser.add_argument("--first-attempt-only", action="store_true")
     parser.add_argument("--supervisor-checkpoint", type=Path)
     args = parser.parse_args()
     run_rollout(
@@ -1023,6 +1162,7 @@ def main() -> None:
         seeds=parse_int_list(args.seeds),
         collect_success_dataset=args.collect_success_dataset,
         collect_teacher_corrections=args.collect_teacher_corrections,
+        first_attempt_only=args.first_attempt_only,
         supervisor_checkpoint=args.supervisor_checkpoint,
     )
 

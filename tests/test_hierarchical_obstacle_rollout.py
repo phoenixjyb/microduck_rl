@@ -7,6 +7,8 @@ import torch
 from mjlab_microduck.hierarchical_obstacle_rollout import (
     HC1_ATTEMPT_TIMEOUT_S,
     MAX_CASES,
+    advance_first_attempt_window,
+    fixed_attempt_metrics,
     load_learned_supervisor,
     prepare_rollout_configs,
     resolved_correction_samples,
@@ -95,6 +97,91 @@ def test_dataset_collection_modes_require_the_matching_controller(tmp_path):
             collect_teacher_corrections=True,
             supervisor_checkpoint=None,
         )
+
+
+def test_fixed_attempt_metrics_uses_the_predeclared_denominator():
+    metrics = fixed_attempt_metrics(
+        expected_attempts=64,
+        completed_attempts=64,
+        clean_pass_events=61,
+        collision_events=1,
+        attempt_timeout_events=2,
+        fall_events=0,
+        nan_termination_events=0,
+        other_terminal_events=0,
+    )
+    assert metrics == {
+        "expected_attempts": 64,
+        "completed_attempts": 64,
+        "unresolved_attempts": 0,
+        "clean_pass_rate_fixed_denominator": 61 / 64,
+        "collision_rate_fixed_denominator": 1 / 64,
+        "attempt_timeout_rate_fixed_denominator": 2 / 64,
+        "hard_failure_events": 0,
+        "other_terminal_events": 0,
+    }
+
+
+def test_first_attempt_window_closes_each_environment_once():
+    active = torch.tensor([True, True, True])
+    active, finished = advance_first_attempt_window(
+        active, torch.tensor([True, False, False])
+    )
+    assert finished.tolist() == [True, False, False]
+    assert active.tolist() == [False, True, True]
+
+    active, finished = advance_first_attempt_window(
+        active, torch.tensor([True, True, False])
+    )
+    assert finished.tolist() == [False, True, False]
+    assert active.tolist() == [False, False, True]
+
+
+def test_first_attempt_window_rejects_invalid_masks():
+    with pytest.raises(ValueError, match="must be boolean"):
+        advance_first_attempt_window(torch.ones(2), torch.ones(2))
+    with pytest.raises(ValueError, match="matching vectors"):
+        advance_first_attempt_window(
+            torch.ones(2, dtype=torch.bool), torch.ones(1, dtype=torch.bool)
+        )
+
+
+@pytest.mark.parametrize(
+    "overrides, message",
+    [
+        ({"expected_attempts": 0}, "expected_attempts must be positive"),
+        ({"collision_events": -1}, "must be non-negative"),
+        ({"completed_attempts": 65}, "cannot exceed"),
+        (
+            {"completed_attempts": 1, "clean_pass_events": 2},
+            "resolved outcomes cannot exceed",
+        ),
+        (
+            {
+                "completed_attempts": 2,
+                "clean_pass_events": 2,
+                "collision_events": 0,
+                "attempt_timeout_events": 0,
+                "other_terminal_events": 1,
+            },
+            "resolved and other terminal outcomes cannot exceed",
+        ),
+    ],
+)
+def test_fixed_attempt_metrics_rejects_impossible_counts(overrides, message):
+    arguments = {
+        "expected_attempts": 64,
+        "completed_attempts": 64,
+        "clean_pass_events": 61,
+        "collision_events": 1,
+        "attempt_timeout_events": 2,
+        "fall_events": 0,
+        "nan_termination_events": 0,
+        "other_terminal_events": 0,
+    }
+    arguments.update(overrides)
+    with pytest.raises(ValueError, match=message):
+        fixed_attempt_metrics(**arguments)
 
 
 def test_correction_dataset_keeps_only_resolved_episode_samples():

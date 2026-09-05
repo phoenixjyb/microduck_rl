@@ -278,6 +278,14 @@ continuation floor. The fresh promotion and threshold matrices were therefore
 not run. HC4-LH remains the accepted composite, while HC4-R2 remains a retained
 near-range specialist rather than a unified runtime replacement.
 
+HC4-E1 now fixes the evaluation denominator before another composition attempt.
+Future candidates use exactly one first terminal attempt per environment and
+exclude all post-reset samples; expected, completed, unresolved, hard-failure,
+and unclassified terminal counts are explicit. Legacy fixed-step results and
+the HC4-R2L rejection remain unchanged. A four-environment accepted-HC4-LH
+wiring smoke is the only runtime action authorized by this source slice. See
+`experiments/2026-09-05-hc4e1-fixed-attempt-protocol.md`.
+
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign
 are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at

@@ -310,6 +310,16 @@ seeds 239/241. Any later candidate keeps HC4-U1's architecture and base data
 and must use fresh evaluation seeds 251/257/263 under the unchanged HC4-E1
 gate. See `experiments/2026-09-05-hc4u2-far-center-correction.md`.
 
+HC4-U2 passed collection and offline fitting but failed fresh seed 251. It had
+763 clean passages, zero collisions, and five timeouts versus the paired
+specialists' 762, zero, and six, yet the far-center 0.30 m/s cell regressed by
+one clean passage and one timeout. Seeds 257/263 and video were not run. Since
+HC4-U1 and HC4-U2 both improved aggregates but missed independent local gates,
+the unified-BC correction line is closed pending a new architectural
+hypothesis. The next recommended obstacle track measures compact-observation
+range-noise sensitivity inside each accepted specialist envelope before any
+new training.
+
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign
 are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at

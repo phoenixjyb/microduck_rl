@@ -4,7 +4,7 @@ Date: 2026-09-05
 
 Parent: `67c7cfcbd7437abab0cee410d717887bacaf1c2c`
 
-Decision: **offline candidate passed; fresh seed-251 pre-screen is next**
+Decision: **reject at fresh seed 251; do not run seeds 257/263**
 
 ## Causal target and unchanged boundaries
 
@@ -99,6 +99,48 @@ recovery, fixed-denominator, and motor gates are byte-for-byte unchanged from
 HC4-U1. Seed 193 is diagnostic history and cannot serve as HC4-U2 acceptance
 evidence.
 
-No training, fresh evaluation, MP4, broader geometry, sensor perturbation,
-raw-perception work, or physical motion is authorized until the preceding
-gate completes and the next exact artifact contract is committed.
+At predeclaration time, no training or fresh evaluation was authorized until
+the preceding gate completed and the next exact artifact contract was
+committed. MP4, broader geometry, sensor perturbation, raw-perception work, and
+physical motion remained closed.
+
+## Fresh seed-251 decision
+
+All candidate and paired-source cells completed exactly 64 first attempts with
+zero unresolved, hard-failure, other-terminal, fall, NaN, non-finite, rated
+motor-speed, or collision events. HC4-U2 stayed inside the torque gate and
+preserved approach/recovery speed:
+
+| Controller | Clean | Collision | Timeout | Attempts | Pooled approach delta | Pooled recovery delta | Max torque p99 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| HC4-U2 | 763 | 0 | 5 | 768 | -0.00195 m/s | +0.00245 m/s | 0.5499 |
+| Paired HC4-R2/HC4-LH | 762 | 0 | 6 | 768 | reference | reference | descriptive |
+
+The candidate passed aggregate outcome, collision, phase-speed, and motor
+checks. It failed two per-cell checks at 0.30 m/s, 1.15 m forward, and 0.00 m
+lateral: 62 clean passages and two timeouts versus HC4-LH's 63 clean passages
+and one timeout. Thus timeout increased by one and clean passage decreased by
+one. The deterministic decision is `stop`.
+
+Retained SHA-256 evidence:
+
+- HC4-U2 report:
+  `699d916db0463dccf6890d0f51074d40b8eb8636ebceb14fc4603d81a4361685`;
+- HC4-R2 near-source report:
+  `9f18b1cc579e7f3f6fd090a427fb28bf7693ea9c85d09ae594e8c9a39dff2bdc`;
+- HC4-LH far-source report:
+  `86d889aca09c83b4e2ebb17aac502a809f39de8eb983c75d4b2b44790d393f60`;
+- deterministic decision JSON:
+  `b73258f197ce9d96a4057965717ee12a9d4df97e448e798732cd5e76f2408720`.
+
+The reports and decision are retained under
+`artifacts/evaluations/hc4u2-d56a23a-s251-prescreen/` on 100.100. Seeds 257
+and 263, MP4 recording, and promotion were not run.
+
+HC4-U1 and HC4-U2 both improved aggregate outcomes but failed a local
+far-center timeout gate on independent evaluation seeds. Adding more
+single-cell correction data is therefore closed without a new architectural
+hypothesis. HC4-LH and HC4-R2 keep their accepted specialist envelopes. The
+next recommended obstacle capability gate is a read-only sensitivity screen
+of those accepted specialists under one compact-observation perturbation axis,
+starting with range noise; it is not authorized by this document.

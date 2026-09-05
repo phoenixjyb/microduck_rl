@@ -78,6 +78,21 @@ _RECORDING_STAGE_SLUGS = {
     HC3G_STAGE: "hc3g",
 }
 
+_ROLLOUT_STAGE_NAMES = {
+    HC2_STAGE: "HC2-behavioral-cloning-rollout",
+    HC4L_STAGE: "HC4L-lateral-behavioral-cloning-rollout",
+    HC4LH_STAGE: "HC4LH-lateral-gated-supervisor-rollout",
+    HC4R_STAGE: "HC4R-near-range-behavioral-cloning-rollout",
+    HC4R2_STAGE: "HC4R2-student-state-correction-BC-rollout",
+    HC4R2H_STAGE: "HC4R2H-range-speed-gated-supervisor-rollout",
+    HC4R2L_STAGE: "HC4R2L-episode-latched-supervisor-rollout",
+    HC4U1_STAGE: "HC4U1-unified-range-lateral-correction-BC-rollout",
+    "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
+    HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
+    HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",
+    HC3G_STAGE: "HC3G-seed-consensus-speed-head-rollout",
+}
+
 
 def recording_controller_stage(supervisor_stage: str | None) -> str:
     """Return the filename slug for a teacher or learned supervisor replay."""
@@ -88,6 +103,16 @@ def recording_controller_stage(supervisor_stage: str | None) -> str:
     except KeyError as error:
         raise ValueError(
             f"unsupported supervisor stage for recording: {supervisor_stage!r}"
+        ) from error
+
+
+def rollout_stage(supervisor_stage: str) -> str:
+    """Return the retained report stage for an eligible supervisor."""
+    try:
+        return _ROLLOUT_STAGE_NAMES[supervisor_stage]
+    except KeyError as error:
+        raise ValueError(
+            f"unsupported supervisor stage for rollout: {supervisor_stage!r}"
         ) from error
 
 
@@ -1030,20 +1055,7 @@ def run_rollout(
         supervisor_payload = torch.load(
             supervisor_checkpoint, map_location="cpu", weights_only=False
         )
-        report_stage = {
-            HC2_STAGE: "HC2-behavioral-cloning-rollout",
-            HC4L_STAGE: "HC4L-lateral-behavioral-cloning-rollout",
-            HC4LH_STAGE: "HC4LH-lateral-gated-supervisor-rollout",
-            HC4R_STAGE: "HC4R-near-range-behavioral-cloning-rollout",
-            HC4R2_STAGE: "HC4R2-student-state-correction-BC-rollout",
-            HC4R2H_STAGE: "HC4R2H-range-speed-gated-supervisor-rollout",
-            HC4R2L_STAGE: "HC4R2L-episode-latched-supervisor-rollout",
-            "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
-            HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
-            HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",
-            HC3G_STAGE: "HC3G-seed-consensus-speed-head-rollout",
-        }
-        report["stage"] = report_stage[supervisor_payload.get("stage")]
+        report["stage"] = rollout_stage(supervisor_payload.get("stage"))
         report["supervisor_checkpoint"] = str(supervisor_checkpoint)
         report["supervisor_checkpoint_sha256"] = _sha256(supervisor_checkpoint)
     if collect_success_dataset:

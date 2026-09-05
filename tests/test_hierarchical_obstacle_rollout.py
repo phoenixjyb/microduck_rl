@@ -12,6 +12,7 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
     load_learned_supervisor,
     prepare_rollout_configs,
     resolved_correction_samples,
+    rollout_stage,
     validate_dataset_collection_mode,
     validate_rollout_bounds,
 )
@@ -46,6 +47,13 @@ def test_hc4u1_offline_checkpoint_is_eligible_for_diagnostic_rollout(tmp_path):
     )
     loaded = load_learned_supervisor(checkpoint, base_checkpoint, "cpu")
     assert isinstance(loaded, ObstacleSupervisor)
+
+
+def test_hc4u1_has_a_retained_rollout_stage():
+    assert (
+        rollout_stage(HC4U1_STAGE)
+        == "HC4U1-unified-range-lateral-correction-BC-rollout"
+    )
 
 
 def test_rollout_config_keeps_obstacle_physics_but_restores_base_observation():

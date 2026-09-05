@@ -350,6 +350,16 @@ any local fail stops that specialist. A three-seed pass establishes only the
 provisional two-centimeter simulation envelope, after which measured sensor
 calibration—not another invented perturbation—is the next O3a gate.
 
+The September 6 continuation completed HC4-LH's three seed gates, but HC4-R2
+seed 281 added one centered collision at 0.30 x 0.90 m under range noise.
+Its seed 283 was not launched and the two-specialist O3a campaign is not
+accepted. The exact-geometry specialists remain retained. HC4-U3 separately
+tests a new architecture over HC4-U2's unchanged exact-geometry corpus: three
+independent approach/interaction/recovery experts using the existing phase
+observation. This is a single training-seed diagnostic with fresh held-out
+seeds 293/307/311 and unchanged local outcome, speed, and motor gates. See
+`experiments/2026-09-06-hc4u3-phase-separated-supervisor.md`.
+
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign
 are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at

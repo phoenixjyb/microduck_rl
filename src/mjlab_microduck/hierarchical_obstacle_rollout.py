@@ -43,10 +43,12 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC4R_STAGE,
     HC4U1_STAGE,
     HC4U2_STAGE,
+    HC4U3_STAGE,
     EpisodeLatchedRangeSpeedSupervisor,
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
+    PhaseSeparatedSupervisor,
     RangeSpeedGatedSupervisor,
     SupervisorBcCfg,
 )
@@ -92,6 +94,7 @@ _ROLLOUT_STAGE_NAMES = {
     HC4R2L_STAGE: "HC4R2L-episode-latched-supervisor-rollout",
     HC4U1_STAGE: "HC4U1-unified-range-lateral-correction-BC-rollout",
     HC4U2_STAGE: "HC4U2-far-center-student-state-correction-BC-rollout",
+    HC4U3_STAGE: "HC4U3-phase-separated-BC-rollout",
     "HC3-supervisor-PPO": "HC3-supervisor-PPO-rollout",
     HC3E_STAGE: "HC3E-interaction-speed-PPO-rollout",
     HC3F_STAGE: "HC3F-seed-averaged-speed-head-rollout",
@@ -214,6 +217,7 @@ def load_learned_supervisor(
                 HC4R2_STAGE,
                 HC4U1_STAGE,
                 HC4U2_STAGE,
+                HC4U3_STAGE,
             }
             and decision == "offline-imitation-pass"
         )
@@ -248,7 +252,12 @@ def load_learned_supervisor(
         raise ValueError("supervisor was trained for another locomotion checkpoint")
     model_cfg = dict(payload["model_config"])
     model_cfg["hidden_dims"] = tuple(model_cfg["hidden_dims"])
-    model = ObstacleSupervisor(SupervisorBcCfg(**model_cfg)).to(device)
+    if stage == HC4U3_STAGE and payload.get("architecture") != (
+        "three-independent-phase-experts-v1"
+    ):
+        raise ValueError("HC4-U3 checkpoint has invalid phase architecture")
+    model_type = PhaseSeparatedSupervisor if stage == HC4U3_STAGE else ObstacleSupervisor
+    model = model_type(SupervisorBcCfg(**model_cfg)).to(device)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
     if stage in {HC4LH_STAGE, HC4R2H_STAGE, HC4R2L_STAGE}:

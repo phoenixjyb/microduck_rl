@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -26,6 +27,7 @@ HC4R_STAGE = "HC4R-near-range-behavioral-cloning"
 HC4R2_STAGE = "HC4R2-student-state-correction-BC"
 HC4U1_STAGE = "HC4U1-unified-range-lateral-correction-BC"
 HC4U2_STAGE = "HC4U2-far-center-student-state-correction-BC"
+HC4U3_STAGE = "HC4U3-phase-separated-BC"
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
 HC4R2H_STAGE = "HC4R2H-range-speed-gated-supervisor"
 HC4R2L_STAGE = "HC4R2L-episode-latched-supervisor"
@@ -36,6 +38,7 @@ SUPPORTED_BC_STAGES = (
     HC4R2_STAGE,
     HC4U1_STAGE,
     HC4U2_STAGE,
+    HC4U3_STAGE,
 )
 
 # HC4-U1 is a frozen one-candidate experiment. Order is part of the contract
@@ -102,6 +105,45 @@ class ObstacleSupervisor(torch.nn.Module):
     def forward(self, observation: torch.Tensor) -> torch.Tensor:
         raw = self.raw_action(observation)
         return torch.stack((torch.sigmoid(raw[:, 0]), torch.tanh(raw[:, 1])), dim=-1)
+
+
+class PhaseSeparatedSupervisor(torch.nn.Module):
+    """Independent approach, interaction, and recovery fits over the same 17D input."""
+
+    def __init__(self, cfg: SupervisorBcCfg = SupervisorBcCfg()) -> None:
+        super().__init__()
+        self.experts = torch.nn.ModuleList(
+            ObstacleSupervisor(cfg) for _ in ObstaclePhase
+        )
+
+    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+        if observation.ndim != 2 or observation.shape[1] != SUPERVISOR_OBSERVATION_DIM:
+            raise ValueError("phase supervisor requires an (N, 17) observation")
+        phase = observation[:, 13:16]
+        valid = ((phase == 0) | (phase == 1)).all(dim=-1) & (phase.sum(-1) == 1)
+        # Malformed phase state must not blend contradictory controllers.
+        weights = torch.where(valid[:, None], phase, torch.zeros_like(phase))
+        commands = torch.stack([expert(observation) for expert in self.experts], dim=1)
+        selected = (commands * weights.unsqueeze(-1)).sum(dim=1)
+        return torch.where(valid[:, None], selected, torch.zeros_like(selected))
+
+
+def phase_partition_counts(
+    observations: torch.Tensor, mask: torch.Tensor
+) -> dict[str, int]:
+    """Reject missing or malformed maneuver phases before an HC4-U3 fit."""
+    selected = observations[mask]
+    if selected.ndim != 2 or selected.shape[1] != SUPERVISOR_OBSERVATION_DIM:
+        raise ValueError("phase training requires an (N, 17) observation")
+    phase = selected[:, 13:16]
+    if not bool(torch.isfinite(selected).all()) or not bool(
+        (((phase == 0) | (phase == 1)).all(-1) & (phase.sum(-1) == 1)).all()
+    ):
+        raise ValueError("phase training observations are non-finite or not one-hot")
+    counts = {p.name.lower(): int((phase[:, int(p)] == 1).sum()) for p in ObstaclePhase}
+    if any(count == 0 for count in counts.values()):
+        raise ValueError("every phase needs samples in each episode partition")
+    return counts
 
 
 def interaction_speed_only_command(
@@ -405,6 +447,10 @@ def validate_bc_dataset_contract(
     """Enforce stage-specific dataset provenance before fitting a candidate."""
     if len(payloads) != len(dataset_sha256):
         raise ValueError("dataset payload and hash counts do not match")
+    if stage == HC4U3_STAGE:
+        # Architecture is the sole changed axis: keep HC4-U2's ordered corpus.
+        validate_bc_dataset_contract(HC4U2_STAGE, payloads, dataset_sha256)
+        return
     dataset_stages = {payload.get("stage") for payload in payloads}
     if stage == HC4R2_STAGE:
         required_stages = {
@@ -464,6 +510,9 @@ def train_supervisor(
     output_path = output_path.resolve()
     if output_path.exists():
         raise FileExistsError(output_path)
+    progress_path = output_path.with_suffix(".progress.pt")
+    if stage == HC4U3_STAGE and progress_path.exists():
+        raise FileExistsError(progress_path)
     payloads = [
         torch.load(path, map_location="cpu", weights_only=False)
         for path in dataset_paths
@@ -504,7 +553,14 @@ def train_supervisor(
     )
     device = "cuda:0" if os.environ.get("CUDA_VISIBLE_DEVICES", "") else "cpu"
     torch.manual_seed(seed)
-    model = ObstacleSupervisor(cfg).to(device)
+    phase_counts = None
+    if stage == HC4U3_STAGE:
+        phase_counts = {
+            "training": phase_partition_counts(observations, training_mask),
+            "validation": phase_partition_counts(observations, validation_mask),
+        }
+    model_type = PhaseSeparatedSupervisor if stage == HC4U3_STAGE else ObstacleSupervisor
+    model = model_type(cfg).to(device)
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=cfg.learning_rate, weight_decay=cfg.weight_decay
     )
@@ -523,6 +579,8 @@ def train_supervisor(
         for start in range(0, train_x.shape[0], batch_size):
             indices = permutation[start : start + batch_size]
             loss = torch.nn.functional.mse_loss(model(train_x[indices]), train_y[indices])
+            if stage == HC4U3_STAGE and not bool(torch.isfinite(loss)):
+                raise ValueError("HC4-U3 training loss is non-finite")
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
@@ -531,6 +589,8 @@ def train_supervisor(
             validation_loss = float(
                 torch.nn.functional.mse_loss(model(validation_x), validation_y)
             )
+        if stage == HC4U3_STAGE and not math.isfinite(validation_loss):
+            raise ValueError("HC4-U3 validation loss is non-finite")
         if validation_loss < best_loss:
             best_loss = validation_loss
             best_epoch = epoch
@@ -538,6 +598,31 @@ def train_supervisor(
                 name: value.detach().cpu().clone()
                 for name, value in model.state_dict().items()
             }
+        if stage == HC4U3_STAGE and (epoch == 1 or epoch % 10 == 0):
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = progress_path.with_suffix(".tmp")
+            torch.save({
+                "schema_version": 1,
+                "stage": stage,
+                "decision": "intermediate-not-eligible-for-rollout",
+                "epoch": epoch,
+                "seed": seed,
+                "model_config": asdict(cfg),
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "sampler_generator_state": generator.get_state(),
+                "best_model_state_dict": best_state,
+                "best_epoch": best_epoch,
+                "best_validation_mse": best_loss,
+                "source_locomotion_checkpoint_sha256": next(iter(source_hashes)),
+                "dataset_sha256": dataset_sha256,
+                "physical_motion_authorized": False,
+            }, temporary)
+            os.replace(temporary, progress_path)
+            print(
+                f"HC4U3 epoch={epoch}/{epochs} validation_mse={validation_loss:.9g} "
+                f"checkpoint={progress_path}", flush=True,
+            )
 
     assert best_state is not None
     model.load_state_dict(best_state)
@@ -581,6 +666,18 @@ def train_supervisor(
         "device": device,
         "physical_motion_authorized": False,
     }
+    if stage == HC4U3_STAGE:
+        checkpoint["architecture"] = "three-independent-phase-experts-v1"
+        checkpoint["phase_samples"] = phase_counts
+        with torch.inference_mode():
+            validation_phases = observations[validation_mask, 13:16]
+            checkpoint["phase_validation_metrics"] = {
+                phase.name.lower(): _error_metrics(
+                    validation_prediction[validation_phases[:, int(phase)] == 1],
+                    commands[validation_mask][validation_phases[:, int(phase)] == 1],
+                )
+                for phase in ObstaclePhase
+            }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint, output_path)
     manifest_path = output_path.with_suffix(".json")

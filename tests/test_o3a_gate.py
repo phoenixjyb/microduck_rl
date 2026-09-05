@@ -10,19 +10,31 @@ import pytest
 from mjlab_microduck.o3a_gate import (
     ACTOR_SHA256,
     ATTEMPT_PROTOCOL,
+    HC4R2_ROLLOUT_STAGE,
+    HC4R2_SUPERVISOR_SHA256,
     NOISE_PROTOCOL,
     ROLLOUT_STAGE,
     SUPERVISOR_SHA256,
+    compare_hc4r2_prescreen,
     compare_o3a_prescreen,
 )
 
 
-def _case(lateral: float, *, noisy: bool, **overrides):
+def _case(
+    lateral: float,
+    *,
+    noisy: bool,
+    speed: float = 0.50,
+    forward: float = 1.15,
+    seed: int = 271,
+    noise_seed: int = 3000282,
+    **overrides,
+):
     case = {
-        "seed": 271,
+        "seed": seed,
         "num_envs": 64,
-        "nominal_speed_mps": 0.50,
-        "obstacle_forward_m": 1.15,
+        "nominal_speed_mps": speed,
+        "obstacle_forward_m": forward,
         "obstacle_lateral_m": lateral,
         "evaluation_window": ATTEMPT_PROTOCOL,
         "expected_attempts": 64,
@@ -46,7 +58,7 @@ def _case(lateral: float, *, noisy: bool, **overrides):
         "obstacle_sensor_protocol": {
             "identity": NOISE_PROTOCOL if noisy else "exact-v1",
             "range_noise_bound_m": 0.02 if noisy else 0.0,
-            "noise_seed": 3000282 if noisy else None,
+            "noise_seed": noise_seed if noisy else None,
             "perturbed_fields": ["range"] if noisy else [],
         },
     }
@@ -54,7 +66,18 @@ def _case(lateral: float, *, noisy: bool, **overrides):
     return case
 
 
-def _write_report(path: Path, *, noisy: bool, overrides=None) -> Path:
+def _write_report(
+    path: Path,
+    *,
+    noisy: bool,
+    overrides=None,
+    stage: str = ROLLOUT_STAGE,
+    supervisor_sha256: str = SUPERVISOR_SHA256,
+    speeds: tuple[float, ...] = (0.50,),
+    forward: float = 1.15,
+    seed: int = 271,
+    noise_seed: int = 3000282,
+) -> Path:
     overrides = overrides or {}
     sensor_model = {
         "range_noise_m": 0.02 if noisy else 0.0,
@@ -68,9 +91,9 @@ def _write_report(path: Path, *, noisy: bool, overrides=None) -> Path:
         json.dumps(
             {
                 "evaluation_window": ATTEMPT_PROTOCOL,
-                "stage": ROLLOUT_STAGE,
+                "stage": stage,
                 "checkpoint_sha256": ACTOR_SHA256,
-                "supervisor_checkpoint_sha256": SUPERVISOR_SHA256,
+                "supervisor_checkpoint_sha256": supervisor_sha256,
                 "physical_motion_authorized": False,
                 "perception": (
                     "compact structured geometry with bounded range noise; "
@@ -83,8 +106,13 @@ def _write_report(path: Path, *, noisy: bool, overrides=None) -> Path:
                     _case(
                         lateral,
                         noisy=noisy,
-                        **overrides.get(lateral, {}),
+                        speed=speed,
+                        forward=forward,
+                        seed=seed,
+                        noise_seed=noise_seed,
+                        **overrides.get((speed, lateral), overrides.get(lateral, {})),
                     )
+                    for speed in speeds
                     for lateral in (-0.08, 0.00, 0.08)
                 ],
             }
@@ -108,6 +136,33 @@ def test_gate_continues_when_every_frozen_check_passes(tmp_path):
     assert result["decision"] == "continue_hc4r2_predeclaration"
     assert all(check["status"] == "pass" for check in result["checks"])
     assert result["physical_motion_authorized"] is False
+
+
+def test_hc4r2_gate_uses_the_frozen_near_range_matrix(tmp_path):
+    baseline = _write_report(
+        tmp_path / "hc4r2-baseline.json",
+        noisy=False,
+        stage=HC4R2_ROLLOUT_STAGE,
+        supervisor_sha256=HC4R2_SUPERVISOR_SHA256,
+        speeds=(0.30, 0.40),
+        forward=0.90,
+        seed=277,
+        noise_seed=3000288,
+    )
+    noisy = _write_report(
+        tmp_path / "hc4r2-noisy.json",
+        noisy=True,
+        stage=HC4R2_ROLLOUT_STAGE,
+        supervisor_sha256=HC4R2_SUPERVISOR_SHA256,
+        speeds=(0.30, 0.40),
+        forward=0.90,
+        seed=277,
+        noise_seed=3000288,
+    )
+    result = compare_hc4r2_prescreen(baseline, noisy)
+    assert len(result["cell_deltas"]) == 6
+    assert result["protocol"] == "O3a-HC4R2-seed-277-range-noise-prescreen-v1"
+    assert result["decision"] == "continue_multi_seed_predeclaration"
 
 
 def test_gate_allows_three_clean_passes_of_loss_per_cell(tmp_path):

@@ -12,9 +12,13 @@ from typing import Any
 ATTEMPT_PROTOCOL = "first-terminal-attempt-per-environment-v1"
 NOISE_PROTOCOL = "compact-range-uniform-v1"
 ROLLOUT_STAGE = "HC4LH-lateral-gated-supervisor-rollout"
+HC4R2_ROLLOUT_STAGE = "HC4R2-student-state-correction-BC-rollout"
 ACTOR_SHA256 = "080f98ae4d5ce731d143c733181bb89d504cb4b51ff39532efccd0b5fdc09c54"
 SUPERVISOR_SHA256 = (
     "0b2608080671c5df85d8c9f900d68b6a6f298ec820eb1c6ba75afc948337505a"
+)
+HC4R2_SUPERVISOR_SHA256 = (
+    "c4ba5925de7144373c94145b57b5e7a7ae3e1fc89bc7c2c3203f8724bdebf1b7"
 )
 PHYSICS_SEED = 271
 NOISE_SEED = 3_000_282
@@ -23,6 +27,10 @@ SPEED_MPS = 0.50
 FORWARD_M = 1.15
 LATERALS_M = (-0.08, 0.00, 0.08)
 RANGE_NOISE_BOUND_M = 0.02
+HC4R2_PHYSICS_SEED = 277
+HC4R2_NOISE_SEED = 3_000_288
+HC4R2_SPEEDS_MPS = (0.30, 0.40)
+HC4R2_FORWARD_M = 0.90
 
 
 def _sha256(path: Path) -> str:
@@ -52,17 +60,28 @@ def _cell_key(case: dict[str, Any]) -> tuple[float, float, float]:
     )
 
 
-def _load_report(path: Path, *, noisy: bool) -> dict[str, Any]:
+def _load_report(
+    path: Path,
+    *,
+    noisy: bool,
+    expected_stage: str,
+    expected_supervisor_sha256: str,
+    physics_seed: int,
+    noise_seed: int,
+    speeds_mps: tuple[float, ...],
+    forward_m: float,
+    laterals_m: tuple[float, ...],
+) -> dict[str, Any]:
     path = path.expanduser().resolve(strict=True)
     report = json.loads(path.read_text())
     _reject_nonfinite(report)
     if report.get("evaluation_window") != ATTEMPT_PROTOCOL:
         raise ValueError(f"unexpected evaluation protocol in {path}")
-    if report.get("stage") != ROLLOUT_STAGE:
+    if report.get("stage") != expected_stage:
         raise ValueError(f"unexpected rollout stage in {path}")
     if report.get("checkpoint_sha256") != ACTOR_SHA256:
         raise ValueError(f"unexpected locomotion actor in {path}")
-    if report.get("supervisor_checkpoint_sha256") != SUPERVISOR_SHA256:
+    if report.get("supervisor_checkpoint_sha256") != expected_supervisor_sha256:
         raise ValueError(f"unexpected supervisor checkpoint in {path}")
     if report.get("physical_motion_authorized") is not False:
         raise ValueError(f"report does not retain the no-motion boundary: {path}")
@@ -95,12 +114,16 @@ def _load_report(path: Path, *, noisy: bool) -> dict[str, Any]:
     if not isinstance(cases, list):
         raise ValueError(f"cases are missing in {path}")
     keyed_cases = {_cell_key(case): case for case in cases}
-    expected_cells = {(SPEED_MPS, FORWARD_M, lateral) for lateral in LATERALS_M}
+    expected_cells = {
+        (speed, forward_m, lateral)
+        for speed in speeds_mps
+        for lateral in laterals_m
+    }
     if len(keyed_cases) != len(cases) or set(keyed_cases) != expected_cells:
         raise ValueError(f"unexpected or duplicate evaluation cells in {path}")
 
     for case in cases:
-        if case.get("seed") != PHYSICS_SEED or case.get("num_envs") != NUM_ENVS:
+        if case.get("seed") != physics_seed or case.get("num_envs") != NUM_ENVS:
             raise ValueError(f"unexpected seed or environment count in {path}")
         if case.get("evaluation_window") != ATTEMPT_PROTOCOL:
             raise ValueError(f"case protocol mismatch in {path}")
@@ -139,7 +162,7 @@ def _load_report(path: Path, *, noisy: bool) -> dict[str, Any]:
         if protocol.get("range_noise_bound_m") != expected_bound:
             raise ValueError(f"case range-noise bound mismatch in {path}")
         if noisy:
-            if protocol.get("noise_seed") != NOISE_SEED:
+            if protocol.get("noise_seed") != noise_seed:
                 raise ValueError(f"unexpected noise seed in {path}")
             if protocol.get("perturbed_fields") != ["range"]:
                 raise ValueError(f"O3a perturbed more than range in {path}")
@@ -160,12 +183,42 @@ def _pooled_phase_speed(cases: list[dict[str, Any]], phase: str) -> float:
     ) / samples
 
 
-def compare_o3a_prescreen(
-    baseline_path: Path, noisy_path: Path
+def _compare_prescreen(
+    baseline_path: Path,
+    noisy_path: Path,
+    *,
+    expected_stage: str,
+    expected_supervisor_sha256: str,
+    physics_seed: int,
+    noise_seed: int,
+    speeds_mps: tuple[float, ...],
+    forward_m: float,
+    laterals_m: tuple[float, ...],
+    protocol: str,
+    continue_decision: str,
 ) -> dict[str, Any]:
-    """Apply the frozen HC4-LH seed-271 O3a pre-screen."""
-    baseline = _load_report(baseline_path, noisy=False)
-    noisy = _load_report(noisy_path, noisy=True)
+    baseline = _load_report(
+        baseline_path,
+        noisy=False,
+        expected_stage=expected_stage,
+        expected_supervisor_sha256=expected_supervisor_sha256,
+        physics_seed=physics_seed,
+        noise_seed=noise_seed,
+        speeds_mps=speeds_mps,
+        forward_m=forward_m,
+        laterals_m=laterals_m,
+    )
+    noisy = _load_report(
+        noisy_path,
+        noisy=True,
+        expected_stage=expected_stage,
+        expected_supervisor_sha256=expected_supervisor_sha256,
+        physics_seed=physics_seed,
+        noise_seed=noise_seed,
+        speeds_mps=speeds_mps,
+        forward_m=forward_m,
+        laterals_m=laterals_m,
+    )
     baseline_cases = baseline["cases"]
     noisy_cases = noisy["cases"]
 
@@ -210,9 +263,10 @@ def compare_o3a_prescreen(
         - _pooled_phase_speed(exact_values, phase)
         for phase in ("approach", "recovery")
     }
+    attempt_count = NUM_ENVS * len(baseline_cases)
     pooled_clean_rate_delta = (
         noisy_totals["clean_pass_events"] - exact_totals["clean_pass_events"]
-    ) / (NUM_ENVS * len(LATERALS_M))
+    ) / attempt_count
     max_torque_p99 = max(
         float(case["motor_torque_utilization_p99"]) for case in noisy_values
     )
@@ -272,7 +326,7 @@ def compare_o3a_prescreen(
     accepted = all(check["status"] == "pass" for check in checks)
     return {
         "schema_version": 1,
-        "protocol": "O3a-HC4LH-seed-271-range-noise-prescreen-v1",
+        "protocol": protocol,
         "baseline": {key: value for key, value in baseline.items() if key != "cases"},
         "noisy": {key: value for key, value in noisy.items() if key != "cases"},
         "baseline_totals": exact_totals,
@@ -282,9 +336,47 @@ def compare_o3a_prescreen(
         "pooled_phase_speed_deltas_mps": pooled_speed_deltas,
         "noisy_max_torque_utilization_p99": max_torque_p99,
         "checks": checks,
-        "decision": "continue_hc4r2_predeclaration" if accepted else "stop",
+        "decision": continue_decision if accepted else "stop",
         "physical_motion_authorized": False,
     }
+
+
+def compare_o3a_prescreen(
+    baseline_path: Path, noisy_path: Path
+) -> dict[str, Any]:
+    """Apply the frozen HC4-LH seed-271 O3a pre-screen."""
+    return _compare_prescreen(
+        baseline_path,
+        noisy_path,
+        expected_stage=ROLLOUT_STAGE,
+        expected_supervisor_sha256=SUPERVISOR_SHA256,
+        physics_seed=PHYSICS_SEED,
+        noise_seed=NOISE_SEED,
+        speeds_mps=(SPEED_MPS,),
+        forward_m=FORWARD_M,
+        laterals_m=LATERALS_M,
+        protocol="O3a-HC4LH-seed-271-range-noise-prescreen-v1",
+        continue_decision="continue_hc4r2_predeclaration",
+    )
+
+
+def compare_hc4r2_prescreen(
+    baseline_path: Path, noisy_path: Path
+) -> dict[str, Any]:
+    """Apply the frozen HC4-R2 seed-277 O3a pre-screen."""
+    return _compare_prescreen(
+        baseline_path,
+        noisy_path,
+        expected_stage=HC4R2_ROLLOUT_STAGE,
+        expected_supervisor_sha256=HC4R2_SUPERVISOR_SHA256,
+        physics_seed=HC4R2_PHYSICS_SEED,
+        noise_seed=HC4R2_NOISE_SEED,
+        speeds_mps=HC4R2_SPEEDS_MPS,
+        forward_m=HC4R2_FORWARD_M,
+        laterals_m=LATERALS_M,
+        protocol="O3a-HC4R2-seed-277-range-noise-prescreen-v1",
+        continue_decision="continue_multi_seed_predeclaration",
+    )
 
 
 def main() -> None:
@@ -292,8 +384,14 @@ def main() -> None:
     parser.add_argument("baseline", type=Path)
     parser.add_argument("noisy", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--specialist", choices=("hc4lh", "hc4r2"), default="hc4lh")
     args = parser.parse_args()
-    result = compare_o3a_prescreen(args.baseline, args.noisy)
+    comparator = (
+        compare_o3a_prescreen
+        if args.specialist == "hc4lh"
+        else compare_hc4r2_prescreen
+    )
+    result = comparator(args.baseline, args.noisy)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.output.exists():
         raise FileExistsError(args.output)

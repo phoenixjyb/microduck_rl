@@ -1,6 +1,6 @@
 # HC4-U4 near-envelope student-state correction
 
-Date: 2026-09-06. Status: correction data admitted; seed-42 fit predeclared, not a policy.
+Date: 2026-09-06. Status: seed-42 offline fit passed; held-out rollout pending.
 Parent HC4-U3 is rejected at held-out physics seed 311. See the retained U3
 experiment for exact failed cells, hashes, and the limits of causal diagnosis.
 
@@ -141,3 +141,42 @@ Pre-fit source validation: 144 focused U4 contract/collection, phase-supervisor,
 legacy BC, first-attempt rollout, U3 and U1 gate tests passed locally with CUDA
 hidden (61.29 seconds). Remote repetition and real-corpus contract validation
 are required before launching the fit.
+
+## Frozen offline candidate before held-out evaluation
+
+Fit source: `bc60b2c8fe2007f76392cba8bfd5ba3db5591246`. Remote repetition passed
+all 144 focused tests in 5.25 seconds and validated the real sixteen-shard corpus
+before launch. `microduck-rl-hc4u4-bc60b2c-s42-fit.service` completed with exit zero
+at 03:28:16 Shanghai, after 106 seconds, without overlapping another GPU workload.
+The GPU returned to 12 MiB / 0% / 47 C. Both protected AI Mission services were
+inactive before launch and are not authorized for restoration by this run.
+
+Frozen output directory: `artifacts/checkpoints/hc4u4-bc60b2c-s42` on 100.100,
+backed up locally under `artifacts/overnight-20260906-u4/hc4u4-bc60b2c-s42`.
+
+- `supervisor.pt` SHA-256:
+  `29855a51df8fe885d6ffed7fedf028093a8449a68b10b4b0e8a4bde7069bcf5b`.
+- `supervisor.json` SHA-256:
+  `2bc346d261d4a1295489699577b87666aaeb2572004c093101454c11be9885e4`.
+- `supervisor.progress.pt` SHA-256:
+  `de7cab86040b23f1fce65a0baa11470da699003d696f21c8cd926caf7522bd8f`.
+
+All 200 epochs completed with finite losses. Minimum validation MSE selected
+epoch 196, MSE 0.0001236711541423574. Validation speed MAE was
+0.0014110556803643703 m/s and yaw MAE 0.005067172460258007 rad/s, passing the
+unchanged 0.025 / 0.050 offline thresholds. Phase speed/yaw MAEs were approach
+0.0002955123 / 0.0009021490, interaction 0.0006868089 / 0.0048478139, and recovery
+0.0027604166 / 0.0059082429. These describe held-out episode imitation, not
+closed-loop collision avoidance or improvement on a fixed validation split.
+
+CPU validation rehashed every corpus shard, checked the exact source/config/
+split/phase counts, finite final weights and optimizer tensors, strict runtime
+loader compatibility, and bit-exact equality of final weights to the progress
+file's selected-best weights. The durable progress includes epoch-200 optimizer
+and sampler state; it is not an alternative evaluation checkpoint.
+
+After this hash declaration is committed/pushed and the idle-GPU gate reopens,
+the first matrix uses seed **347** and output
+`artifacts/evaluations/hc4u4-bc60b2c-s347-prescreen-v2`. Only an independently
+recomputed passing decision allows 349, then 353. Numerical gates and all
+authority limits above remain unchanged. Offline pass alone is not acceptance.

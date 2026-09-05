@@ -11,16 +11,20 @@ from mjlab_microduck.hc4u1_gate import (
     CANDIDATE_STAGE,
     FAR_SHA256,
     FAR_STAGE,
+    HC4U2_SEED,
+    HC4U2_SHA256,
+    HC4U2_STAGE,
     NEAR_SHA256,
     NEAR_STAGE,
     PROTOCOL,
     compare_hc4u1_prescreen,
+    compare_hc4u2_prescreen,
 )
 
 
-def _case(speed: float, forward: float, lateral: float, **overrides):
+def _case(speed: float, forward: float, lateral: float, *, seed=193, **overrides):
     case = {
-        "seed": 193,
+        "seed": seed,
         "num_envs": 64,
         "nominal_speed_mps": speed,
         "obstacle_forward_m": forward,
@@ -56,10 +60,17 @@ def _write_report(
     supervisor_sha256: str,
     forward_positions: tuple[float, ...],
     overrides: dict[tuple[float, float, float], dict] | None = None,
+    seed: int = 193,
 ) -> Path:
     overrides = overrides or {}
     cases = [
-        _case(speed, forward, lateral, **overrides.get((speed, forward, lateral), {}))
+        _case(
+            speed,
+            forward,
+            lateral,
+            seed=seed,
+            **overrides.get((speed, forward, lateral), {}),
+        )
         for speed in (0.30, 0.40)
         for forward in forward_positions
         for lateral in (-0.08, 0.00, 0.08)
@@ -81,25 +92,35 @@ def _write_report(
     return path
 
 
-def _reports(tmp_path: Path, *, candidate_overrides=None):
+def _reports(
+    tmp_path: Path,
+    *,
+    candidate_overrides=None,
+    candidate_stage=CANDIDATE_STAGE,
+    candidate_sha256=CANDIDATE_SHA256,
+    seed=193,
+):
     candidate = _write_report(
         tmp_path / "candidate.json",
-        stage=CANDIDATE_STAGE,
-        supervisor_sha256=CANDIDATE_SHA256,
+        stage=candidate_stage,
+        supervisor_sha256=candidate_sha256,
         forward_positions=(0.90, 1.15),
         overrides=candidate_overrides,
+        seed=seed,
     )
     near = _write_report(
         tmp_path / "near.json",
         stage=NEAR_STAGE,
         supervisor_sha256=NEAR_SHA256,
         forward_positions=(0.90,),
+        seed=seed,
     )
     far = _write_report(
         tmp_path / "far.json",
         stage=FAR_STAGE,
         supervisor_sha256=FAR_SHA256,
         forward_positions=(1.15,),
+        seed=seed,
     )
     return candidate, near, far
 
@@ -147,3 +168,15 @@ def test_gate_stops_on_phase_speed_or_motor_regression(tmp_path):
         "per_cell_recovery_speed_non_regression",
         "motor_torque_p99_at_most_0_60",
     ]
+
+
+def test_hc4u2_uses_fresh_seed_and_exact_candidate_identity(tmp_path):
+    reports = _reports(
+        tmp_path,
+        candidate_stage=HC4U2_STAGE,
+        candidate_sha256=HC4U2_SHA256,
+        seed=HC4U2_SEED,
+    )
+    result = compare_hc4u2_prescreen(*reports)
+    assert result["decision"] == "continue_fresh_seeds"
+    assert result["protocol"] == "HC4-U2-seed-251-fixed-attempt-prescreen-v1"

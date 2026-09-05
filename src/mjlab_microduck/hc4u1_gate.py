@@ -10,12 +10,15 @@ from typing import Any
 
 PROTOCOL = "first-terminal-attempt-per-environment-v1"
 SEED = 193
+HC4U2_SEED = 251
 NUM_ENVS = 64
 ACTOR_SHA256 = "080f98ae4d5ce731d143c733181bb89d504cb4b51ff39532efccd0b5fdc09c54"
 CANDIDATE_STAGE = "HC4U1-unified-range-lateral-correction-BC-rollout"
 CANDIDATE_SHA256 = (
     "2196d2ed2dbc3e182fa0b36edf663d11187330d430cd319ceb368c8a28e9753b"
 )
+HC4U2_STAGE = "HC4U2-far-center-student-state-correction-BC-rollout"
+HC4U2_SHA256 = "ded75258b7a6467ff4460b9441b3a108c42acfcf10cab5d5bc65676ef2648629"
 NEAR_STAGE = "HC4R2-student-state-correction-BC-rollout"
 NEAR_SHA256 = "c4ba5925de7144373c94145b57b5e7a7ae3e1fc89bc7c2c3203f8724bdebf1b7"
 FAR_STAGE = "HC4LH-lateral-gated-supervisor-rollout"
@@ -55,6 +58,7 @@ def _load_report(
     expected_stage: str,
     expected_supervisor_sha256: str,
     forward_positions: tuple[float, ...],
+    expected_seed: int,
 ) -> dict[str, Any]:
     path = path.expanduser().resolve(strict=True)
     report = json.loads(path.read_text())
@@ -79,7 +83,7 @@ def _load_report(
     if len(keyed_cases) != len(cases) or set(keyed_cases) != expected_cells:
         raise ValueError(f"unexpected or duplicate evaluation cells in {path}")
     for case in cases:
-        if case.get("seed") != SEED or case.get("num_envs") != NUM_ENVS:
+        if case.get("seed") != expected_seed or case.get("num_envs") != NUM_ENVS:
             raise ValueError(f"unexpected seed or environment count in {path}")
         if case.get("evaluation_window") != PROTOCOL:
             raise ValueError(f"case protocol mismatch in {path}")
@@ -123,25 +127,33 @@ def compare_hc4u1_prescreen(
     candidate_path: Path,
     near_source_path: Path,
     far_source_path: Path,
+    *,
+    candidate_stage: str = CANDIDATE_STAGE,
+    candidate_sha256: str = CANDIDATE_SHA256,
+    seed: int = SEED,
+    protocol: str = "HC4-U1-seed-193-fixed-attempt-prescreen-v1",
 ) -> dict[str, Any]:
     """Apply the frozen seed-193 HC4-U1 fixed-attempt pre-screen."""
     candidate = _load_report(
         candidate_path,
-        expected_stage=CANDIDATE_STAGE,
-        expected_supervisor_sha256=CANDIDATE_SHA256,
+        expected_stage=candidate_stage,
+        expected_supervisor_sha256=candidate_sha256,
         forward_positions=(0.90, 1.15),
+        expected_seed=seed,
     )
     near = _load_report(
         near_source_path,
         expected_stage=NEAR_STAGE,
         expected_supervisor_sha256=NEAR_SHA256,
         forward_positions=(0.90,),
+        expected_seed=seed,
     )
     far = _load_report(
         far_source_path,
         expected_stage=FAR_STAGE,
         expected_supervisor_sha256=FAR_SHA256,
         forward_positions=(1.15,),
+        expected_seed=seed,
     )
     sources = {**near["cases"], **far["cases"]}
     candidate_cases = candidate["cases"]
@@ -262,7 +274,7 @@ def compare_hc4u1_prescreen(
     accepted = all(check["status"] == "pass" for check in checks)
     return {
         "schema_version": 1,
-        "protocol": "HC4-U1-seed-193-fixed-attempt-prescreen-v1",
+        "protocol": protocol,
         "candidate": {k: v for k, v in candidate.items() if k != "cases"},
         "near_source": {k: v for k, v in near.items() if k != "cases"},
         "far_source": {k: v for k, v in far.items() if k != "cases"},
@@ -277,22 +289,43 @@ def compare_hc4u1_prescreen(
     }
 
 
+def compare_hc4u2_prescreen(
+    candidate_path: Path,
+    near_source_path: Path,
+    far_source_path: Path,
+) -> dict[str, Any]:
+    """Apply the unchanged fixed-attempt gate to fresh HC4-U2 seed 251."""
+    return compare_hc4u1_prescreen(
+        candidate_path,
+        near_source_path,
+        far_source_path,
+        candidate_stage=HC4U2_STAGE,
+        candidate_sha256=HC4U2_SHA256,
+        seed=HC4U2_SEED,
+        protocol="HC4-U2-seed-251-fixed-attempt-prescreen-v1",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidate", type=Path)
     parser.add_argument("near_source", type=Path)
     parser.add_argument("far_source", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--revision", choices=("hc4u1", "hc4u2"), default="hc4u1")
     args = parser.parse_args()
-    result = compare_hc4u1_prescreen(
-        args.candidate, args.near_source, args.far_source
+    comparator = (
+        compare_hc4u1_prescreen
+        if args.revision == "hc4u1"
+        else compare_hc4u2_prescreen
     )
+    result = comparator(args.candidate, args.near_source, args.far_source)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.output.exists():
         raise FileExistsError(args.output)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
-    print(f"hc4u1_prescreen_decision={result['decision']}")
-    print(f"hc4u1_prescreen_retained={args.output}")
+    print(f"unified_prescreen_decision={result['decision']}")
+    print(f"unified_prescreen_retained={args.output}")
 
 
 if __name__ == "__main__":

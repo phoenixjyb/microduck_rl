@@ -4,7 +4,7 @@ Date: 2026-09-05
 
 Parent: `67c7cfcbd7437abab0cee410d717887bacaf1c2c`
 
-Decision: **correction collection passed; candidate training predeclared**
+Decision: **offline candidate passed; fresh seed-251 pre-screen is next**
 
 ## Causal target and unchanged boundaries
 
@@ -71,6 +71,25 @@ shards name the exact HC4-U1 student checkpoint.
 The exact trainer contract is now frozen. One seed-42 HC4-U2 candidate may
 train with the unchanged offline MAE gates after source tests, a clean exact
 branch, idle GPU, and protected-service preflight pass.
+
+## Retained training result
+
+The single seed-42 CUDA fit completed successfully with 433,255 samples from
+5,526 episodes. It used 346,103 training and 87,152 validation samples. Epoch
+198 minimized validation MSE at 0.00035634. Validation speed MAE was 0.003665
+m/s and yaw MAE was 0.009566 rad/s, within the unchanged offline gates; all
+reported values were finite.
+
+- Checkpoint SHA-256:
+  `ded75258b7a6467ff4460b9441b3a108c42acfcf10cab5d5bc65676ef2648629`.
+- Manifest SHA-256:
+  `ba8737605d241f1be6dac563860a3224443bb151115b053c2b198e7e2ea4996d`.
+- Exact source/trainer-contract commit:
+  `d56a23a41c3a9a3b134bf827c2669eb44b6a9e15`.
+
+The offline decision is `offline-imitation-pass`; it does not establish
+closed-loop safety. The deterministic fixed-attempt gate now freezes this
+checkpoint identity and fresh seed 251 before runtime evaluation.
 
 Closed-loop evidence uses the unchanged HC4-U1 twelve-cell matrix and HC4-E1
 fixed-attempt protocol, but entirely fresh seeds: 251 is the pre-screen; 257

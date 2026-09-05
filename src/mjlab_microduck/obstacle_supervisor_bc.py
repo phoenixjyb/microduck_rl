@@ -25,6 +25,7 @@ HC4L_STAGE = "HC4L-lateral-behavioral-cloning"
 HC4R_STAGE = "HC4R-near-range-behavioral-cloning"
 HC4R2_STAGE = "HC4R2-student-state-correction-BC"
 HC4U1_STAGE = "HC4U1-unified-range-lateral-correction-BC"
+HC4U2_STAGE = "HC4U2-far-center-student-state-correction-BC"
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
 HC4R2H_STAGE = "HC4R2H-range-speed-gated-supervisor"
 HC4R2L_STAGE = "HC4R2L-episode-latched-supervisor"
@@ -34,6 +35,7 @@ SUPPORTED_BC_STAGES = (
     HC4R_STAGE,
     HC4R2_STAGE,
     HC4U1_STAGE,
+    HC4U2_STAGE,
 )
 
 # HC4-U1 is a frozen one-candidate experiment. Order is part of the contract
@@ -49,6 +51,15 @@ HC4U1_REQUIRED_DATASET_SHA256 = (
     "e145e34c9ac61cc3e2778151139847cbc98ede0be2dea4850066e584652bc08a",
     "3f20078db7cfc0e460ab0564de608735d5c919c50df5efe4d7dc6eb53fcfb7ca",
     "e871dda49fbe2155f0e9fbc3699abd609a0c711a757dde824c889107527fbce5",
+)
+HC4U2_REQUIRED_DATASET_SHA256 = (
+    *HC4U1_REQUIRED_DATASET_SHA256,
+    "8bbf3560faeb2758c88b5326b5d35975d57db685d6ad47bde83ad691ac55fb71",
+    "efa3ceec37ea9e4b9677175b38c696a8452463a76c122ca103c1693c363142fb",
+    "1fc67b945436700a1aa9a5fe711188ec80e7f9d1c26e0b15eb478279d5538bfb",
+)
+HC4U2_STUDENT_SHA256 = (
+    "2196d2ed2dbc3e182fa0b36edf663d11187330d430cd319ceb368c8a28e9753b"
 )
 
 
@@ -415,6 +426,22 @@ def validate_bc_dataset_contract(
             "HC4R2-student-state-teacher-corrections",
         }:
             raise ValueError("HC4U1 dataset stages do not match the frozen contract")
+    if stage == HC4U2_STAGE:
+        if dataset_sha256 != HC4U2_REQUIRED_DATASET_SHA256:
+            raise ValueError(
+                "HC4U2 training requires the exact ordered predeclared dataset set"
+            )
+        if dataset_stages != {
+            "HC1-successful-teacher-trajectories",
+            "HC4R2-student-state-teacher-corrections",
+        }:
+            raise ValueError("HC4U2 dataset stages do not match the frozen contract")
+        if any(
+            payload.get("student_supervisor_checkpoint_sha256")
+            != HC4U2_STUDENT_SHA256
+            for payload in payloads[-3:]
+        ):
+            raise ValueError("HC4U2 correction shards name the wrong student")
 
 
 def train_supervisor(

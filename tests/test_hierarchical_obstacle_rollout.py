@@ -18,6 +18,7 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
 )
 from mjlab_microduck.obstacle_supervisor_bc import (
     HC4U1_STAGE,
+    HC4U2_STAGE,
     InteractionSpeedOnlySupervisor,
     EpisodeLatchedRangeSpeedSupervisor,
     LateralGatedSupervisor,
@@ -27,7 +28,10 @@ from mjlab_microduck.obstacle_supervisor_bc import (
 )
 
 
-def test_hc4u1_offline_checkpoint_is_eligible_for_diagnostic_rollout(tmp_path):
+@pytest.mark.parametrize("stage", (HC4U1_STAGE, HC4U2_STAGE))
+def test_unified_offline_checkpoint_is_eligible_for_diagnostic_rollout(
+    tmp_path, stage
+):
     base_checkpoint = tmp_path / "actor.pt"
     base_checkpoint.write_bytes(b"frozen actor")
     cfg = SupervisorBcCfg()
@@ -35,7 +39,7 @@ def test_hc4u1_offline_checkpoint_is_eligible_for_diagnostic_rollout(tmp_path):
     checkpoint = tmp_path / "supervisor.pt"
     torch.save(
         {
-            "stage": HC4U1_STAGE,
+            "stage": stage,
             "decision": "offline-imitation-pass",
             "source_locomotion_checkpoint_sha256": hashlib.sha256(
                 base_checkpoint.read_bytes()
@@ -53,6 +57,13 @@ def test_hc4u1_has_a_retained_rollout_stage():
     assert (
         rollout_stage(HC4U1_STAGE)
         == "HC4U1-unified-range-lateral-correction-BC-rollout"
+    )
+
+
+def test_hc4u2_has_a_retained_rollout_stage():
+    assert (
+        rollout_stage(HC4U2_STAGE)
+        == "HC4U2-far-center-student-state-correction-BC-rollout"
     )
 
 

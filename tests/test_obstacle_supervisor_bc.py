@@ -6,6 +6,9 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC4R2_STAGE,
     HC4U1_REQUIRED_DATASET_SHA256,
     HC4U1_STAGE,
+    HC4U2_REQUIRED_DATASET_SHA256,
+    HC4U2_STAGE,
+    HC4U2_STUDENT_SHA256,
     EpisodeLatchedRangeSpeedSupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
@@ -83,6 +86,30 @@ def test_hc4u1_rejects_unexpected_dataset_stage():
     with pytest.raises(ValueError, match="dataset stages"):
         validate_bc_dataset_contract(
             HC4U1_STAGE, payloads, HC4U1_REQUIRED_DATASET_SHA256
+        )
+
+
+def test_hc4u2_requires_exact_inputs_and_hc4u1_student_identity():
+    payloads = [
+        {"stage": "HC1-successful-teacher-trajectories"} for _ in range(7)
+    ] + [
+        {
+            "stage": "HC4R2-student-state-teacher-corrections",
+            "student_supervisor_checkpoint_sha256": HC4U2_STUDENT_SHA256,
+        }
+        for _ in range(6)
+    ]
+    validate_bc_dataset_contract(
+        HC4U2_STAGE, payloads, HC4U2_REQUIRED_DATASET_SHA256
+    )
+
+    payloads[-1] = {
+        "stage": "HC4R2-student-state-teacher-corrections",
+        "student_supervisor_checkpoint_sha256": "0" * 64,
+    }
+    with pytest.raises(ValueError, match="wrong student"):
+        validate_bc_dataset_contract(
+            HC4U2_STAGE, payloads, HC4U2_REQUIRED_DATASET_SHA256
         )
 
 

@@ -4,7 +4,7 @@ Date: 2026-09-05
 
 Parent: `67c7cfcbd7437abab0cee410d717887bacaf1c2c`
 
-Decision: **predeclared collection only; candidate not yet trained**
+Decision: **correction collection passed; candidate training predeclared**
 
 ## Causal target and unchanged boundaries
 
@@ -49,12 +49,28 @@ The same gates apply independently to seeds 239 and 241. Outcome mix is
 descriptive; collision or timeout episodes are intentionally retained for
 correction.
 
+## Retained correction shards
+
+All three CUDA services passed the collection gate with exact actor and HC4-U1
+student identities, finite matched tensors, and nonzero teacher/student
+disagreement. Together they retain 18,825 samples from 192 resolved episodes.
+
+| Seed | Samples | Clean | Collision | Timeout | Dataset SHA-256 | Report SHA-256 |
+|---:|---:|---:|---:|---:|---|---|
+| 233 | 6,294 | 63 | 0 | 1 | `8bbf3560faeb2758c88b5326b5d35975d57db685d6ad47bde83ad691ac55fb71` | `a3cb048aac374fa709bf770f1b00b6eaf38b1aee0cf1335309e3d749a54df522` |
+| 239 | 6,303 | 64 | 0 | 0 | `efa3ceec37ea9e4b9677175b38c696a8452463a76c122ca103c1693c363142fb` | `ff36f1d54e0ee760449358202bc64c3ece104bd9684a9fc1a7fa184d7d85e358` |
+| 241 | 6,228 | 64 | 0 | 0 | `1fc67b945436700a1aa9a5fe711188ec80e7f9d1c26e0b15eb478279d5538bfb` | `3f4118375c021cb278002c4cb41b1caaba4888a32e03803935702253aa6af228` |
+
+The trainer input is now exactly 433,255 samples from 5,526 episodes: the ten
+ordered HC4-U1 shards followed by correction seeds 233, 239, and 241. It
+rejects reordered or hash-mismatched input and verifies that the final three
+shards name the exact HC4-U1 student checkpoint.
+
 ## Candidate and fresh evaluation gate
 
-Only after all three shard hashes are retained may the trainer contract be
-updated to require the exact ordered HC4-U1 ten-shard base followed by
-correction seeds 233/239/241. One seed-42 HC4-U2 candidate may then train with
-the unchanged offline MAE gates.
+The exact trainer contract is now frozen. One seed-42 HC4-U2 candidate may
+train with the unchanged offline MAE gates after source tests, a clean exact
+branch, idle GPU, and protected-service preflight pass.
 
 Closed-loop evidence uses the unchanged HC4-U1 twelve-cell matrix and HC4-E1
 fixed-attempt protocol, but entirely fresh seeds: 251 is the pre-screen; 257

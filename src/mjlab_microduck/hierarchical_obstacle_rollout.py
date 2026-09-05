@@ -41,6 +41,7 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     HC4R2L_STAGE,
     HC4R2_STAGE,
     HC4R_STAGE,
+    HC4U1_STAGE,
     EpisodeLatchedRangeSpeedSupervisor,
     InteractionSpeedOnlySupervisor,
     LateralGatedSupervisor,
@@ -129,7 +130,8 @@ def load_learned_supervisor(
     decision = payload.get("decision")
     allowed = (
         (
-            stage in {HC2_STAGE, HC4L_STAGE, HC4R_STAGE, HC4R2_STAGE}
+            stage
+            in {HC2_STAGE, HC4L_STAGE, HC4R_STAGE, HC4R2_STAGE, HC4U1_STAGE}
             and decision == "offline-imitation-pass"
         )
         or (

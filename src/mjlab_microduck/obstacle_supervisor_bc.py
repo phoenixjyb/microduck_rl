@@ -24,10 +24,32 @@ HC2_STAGE = "HC2-behavioral-cloning"
 HC4L_STAGE = "HC4L-lateral-behavioral-cloning"
 HC4R_STAGE = "HC4R-near-range-behavioral-cloning"
 HC4R2_STAGE = "HC4R2-student-state-correction-BC"
+HC4U1_STAGE = "HC4U1-unified-range-lateral-correction-BC"
 HC4LH_STAGE = "HC4LH-lateral-gated-supervisor"
 HC4R2H_STAGE = "HC4R2H-range-speed-gated-supervisor"
 HC4R2L_STAGE = "HC4R2L-episode-latched-supervisor"
-SUPPORTED_BC_STAGES = (HC2_STAGE, HC4L_STAGE, HC4R_STAGE, HC4R2_STAGE)
+SUPPORTED_BC_STAGES = (
+    HC2_STAGE,
+    HC4L_STAGE,
+    HC4R_STAGE,
+    HC4R2_STAGE,
+    HC4U1_STAGE,
+)
+
+# HC4-U1 is a frozen one-candidate experiment. Order is part of the contract
+# because it affects episode-key namespacing, the held-out split, and training.
+HC4U1_REQUIRED_DATASET_SHA256 = (
+    "660cdfa8b618f8af425baf0e2f9c3d7b01d59eab93fca24848c9a82a84408467",
+    "18d4faf1b37c8fd9982677bd2bff7635f5d254483b8641bd9745315219cf38be",
+    "0fddb6412ea39595bdceeba7bc762d3397f89af49d32811dd783e807be6314ea",
+    "76da0fd8fb9efe99e332ba9d7e787f7d3c607417ee48b906bb3091a6e941f15f",
+    "9bc85efa2917c16fb007fa51647e87c1115e87dd469dd7eb267c384af3a1fad9",
+    "3d9d24355457e033e42448dfb1b71438443ee65186b4f6d644d20127b6264026",
+    "69c8238505a4f60f8de9f17816993947597fbbf5920253898117e6667a961f06",
+    "e145e34c9ac61cc3e2778151139847cbc98ede0be2dea4850066e584652bc08a",
+    "3f20078db7cfc0e460ab0564de608735d5c919c50df5efe4d7dc6eb53fcfb7ca",
+    "e871dda49fbe2155f0e9fbc3699abd609a0c711a757dde824c889107527fbce5",
+)
 
 
 @dataclass(frozen=True)
@@ -364,6 +386,37 @@ def _error_metrics(prediction: torch.Tensor, target: torch.Tensor) -> dict:
     }
 
 
+def validate_bc_dataset_contract(
+    stage: str,
+    payloads: list[dict],
+    dataset_sha256: tuple[str, ...],
+) -> None:
+    """Enforce stage-specific dataset provenance before fitting a candidate."""
+    if len(payloads) != len(dataset_sha256):
+        raise ValueError("dataset payload and hash counts do not match")
+    dataset_stages = {payload.get("stage") for payload in payloads}
+    if stage == HC4R2_STAGE:
+        required_stages = {
+            "HC1-successful-teacher-trajectories",
+            "HC4R2-student-state-teacher-corrections",
+        }
+        if not required_stages.issubset(dataset_stages):
+            raise ValueError(
+                "HC4R2 training requires both HC1 teacher and student-state "
+                "correction datasets"
+            )
+    if stage == HC4U1_STAGE:
+        if dataset_sha256 != HC4U1_REQUIRED_DATASET_SHA256:
+            raise ValueError(
+                "HC4U1 training requires the exact ordered predeclared dataset set"
+            )
+        if dataset_stages != {
+            "HC1-successful-teacher-trajectories",
+            "HC4R2-student-state-teacher-corrections",
+        }:
+            raise ValueError("HC4U1 dataset stages do not match the frozen contract")
+
+
 def train_supervisor(
     dataset_paths: tuple[Path, ...],
     output_path: Path,
@@ -388,17 +441,8 @@ def train_supervisor(
         torch.load(path, map_location="cpu", weights_only=False)
         for path in dataset_paths
     ]
-    if stage == HC4R2_STAGE:
-        dataset_stages = {payload.get("stage") for payload in payloads}
-        required_stages = {
-            "HC1-successful-teacher-trajectories",
-            "HC4R2-student-state-teacher-corrections",
-        }
-        if not required_stages.issubset(dataset_stages):
-            raise ValueError(
-                "HC4R2 training requires both HC1 teacher and student-state "
-                "correction datasets"
-            )
+    dataset_sha256 = tuple(_sha256(path) for path in dataset_paths)
+    validate_bc_dataset_contract(stage, payloads, dataset_sha256)
     source_hashes = {payload.get("checkpoint_sha256") for payload in payloads}
     if len(source_hashes) != 1 or None in source_hashes:
         raise ValueError("datasets do not share one frozen locomotion checkpoint")
@@ -493,8 +537,8 @@ def train_supervisor(
         "model_config": asdict(cfg),
         "teacher_config": asdict(ObstacleTeacherCfg()),
         "datasets": [
-            {"path": str(path), "sha256": _sha256(path)}
-            for path in dataset_paths
+            {"path": str(path), "sha256": sha256}
+            for path, sha256 in zip(dataset_paths, dataset_sha256, strict=True)
         ],
         "source_locomotion_checkpoint_sha256": next(iter(source_hashes)),
         "samples": int(observations.shape[0]),

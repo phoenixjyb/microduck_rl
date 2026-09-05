@@ -286,6 +286,15 @@ the HC4-R2L rejection remain unchanged. A four-environment accepted-HC4-LH
 wiring smoke is the only runtime action authorized by this source slice. See
 `experiments/2026-09-05-hc4e1-fixed-attempt-protocol.md`.
 
+HC4-U1 is the next predeclared candidate. It removes runtime specialist
+selection by fitting one unchanged 64x64 supervisor to the exact ordered union
+of accepted far/lateral teacher data and near-range teacher plus student-state
+corrections. Its first closed-loop evidence uses fresh seeds and HC4-E1's fixed
+64-attempt denominator, paired against HC4-R2 at 0.90 m and HC4-LH at 1.15 m.
+Approach and recovery speed may not regress, while interaction speed remains
+deliberately ungated. See
+`experiments/2026-09-05-hc4u1-unified-supervisor.md`.
+
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign
 are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at

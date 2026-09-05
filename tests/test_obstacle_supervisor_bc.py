@@ -4,12 +4,15 @@ import torch
 from mjlab_microduck.hierarchical_obstacle import SUPERVISOR_OBSERVATION_DIM
 from mjlab_microduck.obstacle_supervisor_bc import (
     HC4R2_STAGE,
+    HC4U1_REQUIRED_DATASET_SHA256,
+    HC4U1_STAGE,
     EpisodeLatchedRangeSpeedSupervisor,
     LateralGatedSupervisor,
     ObstacleSupervisor,
     RangeSpeedGatedSupervisor,
     split_episode_keys,
     train_supervisor,
+    validate_bc_dataset_contract,
 )
 
 
@@ -50,6 +53,36 @@ def test_hc4r2_training_requires_teacher_and_student_state_datasets(tmp_path):
             tmp_path / "supervisor.pt",
             epochs=1,
             stage=HC4R2_STAGE,
+        )
+
+
+def test_hc4u1_requires_the_exact_ordered_predeclared_dataset_set():
+    payloads = [
+        {"stage": "HC1-successful-teacher-trajectories"} for _ in range(7)
+    ] + [
+        {"stage": "HC4R2-student-state-teacher-corrections"}
+        for _ in range(3)
+    ]
+    validate_bc_dataset_contract(
+        HC4U1_STAGE, payloads, HC4U1_REQUIRED_DATASET_SHA256
+    )
+
+    reordered = (
+        HC4U1_REQUIRED_DATASET_SHA256[1],
+        HC4U1_REQUIRED_DATASET_SHA256[0],
+        *HC4U1_REQUIRED_DATASET_SHA256[2:],
+    )
+    with pytest.raises(ValueError, match="exact ordered predeclared"):
+        validate_bc_dataset_contract(HC4U1_STAGE, payloads, reordered)
+
+
+def test_hc4u1_rejects_unexpected_dataset_stage():
+    payloads = [
+        {"stage": "HC1-successful-teacher-trajectories"} for _ in range(9)
+    ] + [{"stage": "unreviewed-correction-data"}]
+    with pytest.raises(ValueError, match="dataset stages"):
+        validate_bc_dataset_contract(
+            HC4U1_STAGE, payloads, HC4U1_REQUIRED_DATASET_SHA256
         )
 
 

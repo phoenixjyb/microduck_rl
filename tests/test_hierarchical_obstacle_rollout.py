@@ -16,6 +16,7 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
     validate_rollout_bounds,
 )
 from mjlab_microduck.obstacle_supervisor_bc import (
+    HC4U1_STAGE,
     InteractionSpeedOnlySupervisor,
     EpisodeLatchedRangeSpeedSupervisor,
     LateralGatedSupervisor,
@@ -23,6 +24,28 @@ from mjlab_microduck.obstacle_supervisor_bc import (
     RangeSpeedGatedSupervisor,
     SupervisorBcCfg,
 )
+
+
+def test_hc4u1_offline_checkpoint_is_eligible_for_diagnostic_rollout(tmp_path):
+    base_checkpoint = tmp_path / "actor.pt"
+    base_checkpoint.write_bytes(b"frozen actor")
+    cfg = SupervisorBcCfg()
+    model = ObstacleSupervisor(cfg)
+    checkpoint = tmp_path / "supervisor.pt"
+    torch.save(
+        {
+            "stage": HC4U1_STAGE,
+            "decision": "offline-imitation-pass",
+            "source_locomotion_checkpoint_sha256": hashlib.sha256(
+                base_checkpoint.read_bytes()
+            ).hexdigest(),
+            "model_config": asdict(cfg),
+            "model_state_dict": model.state_dict(),
+        },
+        checkpoint,
+    )
+    loaded = load_learned_supervisor(checkpoint, base_checkpoint, "cpu")
+    assert isinstance(loaded, ObstacleSupervisor)
 
 
 def test_rollout_config_keeps_obstacle_physics_but_restores_base_observation():

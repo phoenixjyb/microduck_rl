@@ -437,3 +437,35 @@ evaluations, held-out seeds 211/223/227, 128 environments, six cycles, and the
 retained no-motion boundary. Its output records both input JSON hashes and every
 strict-improvement/non-regression comparison; only an `advance_to_multi_seed`
 decision satisfies this diagnostic gate.
+
+### H1-S source and runtime smoke
+
+Commit `c9b045d0bc144de32c8d9acfc0422adc27618601` implements the distinct
+H1-S task, and commit `6d5ddf99c5daf6296f8a1ad43e2f2ea6fb30a3f4` encodes the
+deterministic causal comparison. The complete hop test pair passes 115/115 on
+100.100; the focused causal-gate suite passes 3/3 on both the development Mac
+and 100.100.
+
+The predeclared seed-68, 64-environment, five-iteration runtime smoke completed
+with service result `success`. The newly active
+`stillness_at_zero_command` log was nonzero at 0.0109--0.0144, directly proving
+that H1-S repaired the dead reward path. The height and motor curricula loaded
+at 0.0200 m and -0.2500, respectively. Reward and optimizer scalars were finite,
+NaN termination and spring bottoming were zero, and the final motor soft-limit
+exposure was 0.3313. Frequent falls remain expected from an untrained
+five-iteration policy and are not H1 evidence.
+
+Retained smoke directory on 100.100:
+`logs/rsl_rl/hop_k3900_h1s/2026-09-05_12-38-07_h1s-smoke-6d5ddf9-s68/`.
+SHA-256 values:
+
+- `model_4.pt`:
+  `6f5f793523f90bb00e674f92d3fdec33448d8902ed1c2436f23a86937035d50c`;
+- ONNX:
+  `0d817ef686fe94c755e0392cd1920e2e7c266225c92c2739fb0a0efc1346b4c4`;
+- TensorBoard event:
+  `9474ab5b18e8310f3c2c9065b5bdf12dde06df28afa664fbfae7935948cd299a`.
+
+This passes only the H1-S wiring gate and authorizes the predeclared paired
+seed-67, 256-environment, 6,000-iteration diagnostic. It does not authorize a
+multi-seed promotion, Locked control, H2, video, or physical motion.

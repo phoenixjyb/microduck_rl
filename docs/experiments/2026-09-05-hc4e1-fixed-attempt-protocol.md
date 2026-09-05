@@ -65,6 +65,33 @@ all reported values are finite, and the report names the frozen protocol.
 Collision, timeout, passage time, and motor values are retained but do not
 change the already accepted HC4-LH envelope from this four-attempt smoke.
 
+## Retained smoke result
+
+The accepted-controller wiring smoke passed on 100.100. It ran on CPU because
+the retained user service did not set a non-empty `CUDA_VISIBLE_DEVICES`; the
+GPU remained idle. This is evaluator and checkpoint-wiring evidence, not CUDA
+execution evidence and not a capability evaluation.
+
+- Protocol: `first-terminal-attempt-per-environment-v1`.
+- Attempts: four expected, four completed, four clean, zero unresolved.
+- Failures: zero collision, timeout, fall, NaN, non-finite, hard-failure, and
+  other-terminal events.
+- Execution: 502 of the 700 allowed steps; mean passage time 9.4750 s.
+- Motor diagnostics: speed-utilization p99 0.3567, torque-utilization p99
+  0.5256, near-stall fraction 0.0038%, thermal-load proxy mean 0.0341.
+- Motor-aware actor SHA-256:
+  `080f98ae4d5ce731d143c733181bb89d504cb4b51ff39532efccd0b5fdc09c54`.
+- HC4-LH SHA-256:
+  `0b2608080671c5df85d8c9f900d68b6a6f298ec820eb1c6ba75afc948337505a`.
+- Report SHA-256:
+  `5052c60ac6300b20d1d5d6a306eea018f6e8b0ce327e7dfa3ddb78aead5eeed6`.
+
+The focused obstacle suite passed 89 tests on 100.100 with CUDA hidden. The
+report remains under
+`artifacts/evaluations/hc4e1-6708f9a-s197-smoke/` on that host. The next
+candidate's predeclared matrix must explicitly set its CUDA device; this smoke
+does not substitute for that gate.
+
 ## Next candidate boundary
 
 Only after the source tests and wiring smoke pass may a new, separately

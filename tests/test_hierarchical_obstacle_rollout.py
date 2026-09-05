@@ -11,6 +11,8 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
     fixed_attempt_metrics,
     load_learned_supervisor,
     prepare_rollout_configs,
+    range_noise_provenance,
+    range_noise_uniform_samples,
     resolved_correction_samples,
     rollout_stage,
     validate_dataset_collection_mode,
@@ -113,6 +115,65 @@ def test_rollout_bounds_reject_too_many_cases():
     speeds = tuple(0.1 for _ in range(MAX_CASES + 1))
     with pytest.raises(ValueError, match="case count"):
         validate_rollout_bounds(1, 1, speeds, (1.0,), (0.0,), (1,))
+
+
+def test_range_noise_samples_are_replayable_and_range_only():
+    first = torch.Generator(device="cpu")
+    first.manual_seed(3000282)
+    first_update = range_noise_uniform_samples(
+        4, first, device="cpu", dtype=torch.float64
+    )
+    second_update = range_noise_uniform_samples(
+        4, first, device="cpu", dtype=torch.float64
+    )
+
+    replay = torch.Generator(device="cpu")
+    replay.manual_seed(3000282)
+    replay_first = range_noise_uniform_samples(
+        4, replay, device="cpu", dtype=torch.float64
+    )
+    replay_second = range_noise_uniform_samples(
+        4, replay, device="cpu", dtype=torch.float64
+    )
+
+    torch.testing.assert_close(first_update, replay_first)
+    torch.testing.assert_close(second_update, replay_second)
+    assert not torch.equal(first_update[:, 0], second_update[:, 0])
+    assert torch.all((first_update[:, 0] >= 0.0) & (first_update[:, 0] <= 1.0))
+    torch.testing.assert_close(
+        first_update[:, 1:], torch.full((4, 4), 0.5, dtype=torch.float64)
+    )
+
+
+def test_range_noise_provenance_separates_physics_and_noise_streams():
+    exact = range_noise_provenance(0.0, 271)
+    noisy = range_noise_provenance(0.02, 271)
+
+    assert exact["identity"] == "exact-v1"
+    assert exact["noise_seed"] is None
+    assert noisy == {
+        "identity": "compact-range-uniform-v1",
+        "distribution": "bounded-uniform",
+        "range_noise_bound_m": 0.02,
+        "noise_seed": 3000282,
+        "noise_seed_rule": "physics_seed+3000011",
+        "supervisor_update_interval_steps": 5,
+        "perturbed_fields": ["range"],
+        "exact_fields": [
+            "bearing_sin",
+            "bearing_cos",
+            "width",
+            "height",
+            "closing_rate",
+            "valid",
+        ],
+        "ground_truth_outcomes": True,
+    }
+
+
+def test_range_noise_provenance_rejects_negative_bound():
+    with pytest.raises(ValueError, match="non-negative"):
+        range_noise_provenance(-0.01, 271)
 
 
 def test_dataset_collection_modes_require_the_matching_controller(tmp_path):

@@ -6272,6 +6272,8 @@ def obstacle_geometry_observation(
     height_noise_m: float = 0.0,
     closing_rate_noise_mps: float = 0.0,
     dropout_probability: float = 0.0,
+    uniform_noise_samples: torch.Tensor | None = None,
+    dropout_samples: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """Encode one simulated obstacle using the policy's external-sensor contract.
 
@@ -6343,6 +6345,8 @@ def obstacle_geometry_observation(
             max_height_m=max_height_m,
             max_closing_rate_mps=max_closing_rate_mps,
         ),
+        uniform_noise_samples=uniform_noise_samples,
+        dropout_samples=dropout_samples,
     )
 
 

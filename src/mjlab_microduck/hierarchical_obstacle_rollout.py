@@ -61,6 +61,9 @@ MAX_ENVS = 256
 MAX_STEPS = 1000
 MAX_CASES = 48
 HC1_ATTEMPT_TIMEOUT_S = 12.0
+SUPERVISOR_UPDATE_INTERVAL_STEPS = 5
+O3A_RANGE_NOISE_PROTOCOL = "compact-range-uniform-v1"
+O3A_RANGE_NOISE_SEED_OFFSET = 3_000_011
 HC3E_STAGE = "HC3E-interaction-speed-PPO"
 HC3F_STAGE = "HC3F-seed-averaged-speed-head"
 HC3G_STAGE = "HC3G-seed-consensus-speed-head"
@@ -140,6 +143,52 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def range_noise_uniform_samples(
+    num_envs: int,
+    generator: torch.Generator,
+    *,
+    device: torch.device | str,
+    dtype: torch.dtype,
+) -> torch.Tensor:
+    """Draw one replayable range sample without perturbing other fields."""
+    import torch
+
+    if num_envs <= 0:
+        raise ValueError("num_envs must be positive")
+    samples = torch.full((num_envs, 5), 0.5, dtype=torch.float32)
+    samples[:, 0] = torch.rand(num_envs, generator=generator)
+    return samples.to(device=device, dtype=dtype)
+
+
+def range_noise_provenance(range_noise_m: float, physics_seed: int) -> dict:
+    """Describe the exact/noisy compact-observation boundary for one case."""
+    if range_noise_m < 0.0:
+        raise ValueError("range_noise_m must be non-negative")
+    enabled = range_noise_m > 0.0
+    return {
+        "identity": O3A_RANGE_NOISE_PROTOCOL if enabled else "exact-v1",
+        "distribution": "bounded-uniform" if enabled else "none",
+        "range_noise_bound_m": range_noise_m,
+        "noise_seed": (
+            physics_seed + O3A_RANGE_NOISE_SEED_OFFSET if enabled else None
+        ),
+        "noise_seed_rule": (
+            f"physics_seed+{O3A_RANGE_NOISE_SEED_OFFSET}" if enabled else None
+        ),
+        "supervisor_update_interval_steps": SUPERVISOR_UPDATE_INTERVAL_STEPS,
+        "perturbed_fields": ["range"] if enabled else [],
+        "exact_fields": [
+            "bearing_sin",
+            "bearing_cos",
+            "width",
+            "height",
+            "closing_rate",
+            "valid",
+        ],
+        "ground_truth_outcomes": True,
+    }
 
 
 def load_learned_supervisor(
@@ -491,6 +540,7 @@ def _run_case(
     first_attempt_only: bool = False,
     case_index: int = 0,
     supervisor_checkpoint: Path | None = None,
+    range_noise_m: float = 0.0,
 ) -> dict:
     import torch
     from mjlab.envs import ManagerBasedRlEnv
@@ -509,6 +559,11 @@ def _run_case(
     agent_cfg.seed = seed
     device = "cuda:0" if os.environ.get("CUDA_VISIBLE_DEVICES", "") else "cpu"
     torch.manual_seed(seed)
+    sensor_provenance = range_noise_provenance(range_noise_m, seed)
+    range_noise_generator = None
+    if range_noise_m > 0.0:
+        range_noise_generator = torch.Generator(device="cpu")
+        range_noise_generator.manual_seed(sensor_provenance["noise_seed"])
     env = ManagerBasedRlEnv(cfg=env_cfg, device=device)
     wrapped = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
     try:
@@ -583,7 +638,19 @@ def _run_case(
                 lateral_abs_max[active] = torch.maximum(
                     lateral_abs_max[active], route_lateral[active].abs()
                 )
-                if step % 5 == 0:
+                if step % SUPERVISOR_UPDATE_INTERVAL_STEPS == 0:
+                    uniform_noise_samples = None
+                    dropout_samples = None
+                    if range_noise_generator is not None:
+                        uniform_noise_samples = range_noise_uniform_samples(
+                            num_envs,
+                            range_noise_generator,
+                            device=device,
+                            dtype=route_lateral.dtype,
+                        )
+                        dropout_samples = torch.ones(
+                            num_envs, device=device, dtype=route_lateral.dtype
+                        )
                     obstacle_observation = microduck_mdp.obstacle_geometry_observation(
                         env,
                         asset_name="obstacle",
@@ -591,6 +658,9 @@ def _run_case(
                         height_m=0.10,
                         horizontal_fov_rad=2.0 * math.pi,
                         max_range_m=2.0,
+                        range_noise_m=range_noise_m,
+                        uniform_noise_samples=uniform_noise_samples,
+                        dropout_samples=dropout_samples,
                     )
                     previous_supervisor_command = state.previous_command.clone()
                     learned_observation = None
@@ -854,6 +924,7 @@ def _run_case(
             "num_envs": num_envs,
             "steps": steps,
             "steps_executed": steps_executed,
+            "obstacle_sensor_protocol": sensor_provenance,
             "collision_events": collision_events,
             "clean_pass_events": clean_pass_events,
             "attempt_timeout_events": attempt_timeout_events,
@@ -954,6 +1025,7 @@ def run_rollout(
     collect_teacher_corrections: bool = False,
     first_attempt_only: bool = False,
     supervisor_checkpoint: Path | None = None,
+    range_noise_m: float = 0.0,
 ) -> Path:
     validate_rollout_bounds(
         num_envs, steps, speeds, forward_positions, lateral_positions, seeds
@@ -968,6 +1040,12 @@ def run_rollout(
         collect_success_dataset or collect_teacher_corrections
     ):
         raise ValueError("first-attempt evaluation cannot collect training datasets")
+    if range_noise_m < 0.0:
+        raise ValueError("range_noise_m must be non-negative")
+    if range_noise_m > 0.0 and (
+        collect_success_dataset or collect_teacher_corrections
+    ):
+        raise ValueError("sensor perturbation cannot collect training datasets")
     if supervisor_checkpoint is not None:
         supervisor_checkpoint = supervisor_checkpoint.resolve(strict=True)
     output_dir = output_dir.resolve()
@@ -997,6 +1075,7 @@ def run_rollout(
             first_attempt_only=first_attempt_only,
             case_index=case_index,
             supervisor_checkpoint=supervisor_checkpoint,
+            range_noise_m=range_noise_m,
         )
         dataset = case.pop("_success_dataset", None)
         if dataset is not None:
@@ -1048,7 +1127,20 @@ def run_rollout(
         "obstacle_physics_task_id": OA0_TASK_ID,
         "teacher_config": asdict(ObstacleTeacherCfg()),
         "attempt_timeout_s": HC1_ATTEMPT_TIMEOUT_S,
-        "perception": "exact structured geometry; no raw camera perception",
+        "perception": (
+            "compact structured geometry with bounded range noise; "
+            "no raw camera perception"
+            if range_noise_m > 0.0
+            else "exact structured geometry; no raw camera perception"
+        ),
+        "obstacle_sensor_model": {
+            "range_noise_m": range_noise_m,
+            "bearing_noise_rad": 0.0,
+            "width_noise_m": 0.0,
+            "height_noise_m": 0.0,
+            "closing_rate_noise_mps": 0.0,
+            "dropout_probability": 0.0,
+        },
         "physical_motion_authorized": False,
         "evaluation_window": (
             "first-terminal-attempt-per-environment-v1"
@@ -1173,6 +1265,7 @@ def main() -> None:
     parser.add_argument("--collect-teacher-corrections", action="store_true")
     parser.add_argument("--first-attempt-only", action="store_true")
     parser.add_argument("--supervisor-checkpoint", type=Path)
+    parser.add_argument("--range-noise-m", type=float, default=0.0)
     args = parser.parse_args()
     run_rollout(
         args.checkpoint,
@@ -1187,6 +1280,7 @@ def main() -> None:
         collect_teacher_corrections=args.collect_teacher_corrections,
         first_attempt_only=args.first_attempt_only,
         supervisor_checkpoint=args.supervisor_checkpoint,
+        range_noise_m=args.range_noise_m,
     )
 
 

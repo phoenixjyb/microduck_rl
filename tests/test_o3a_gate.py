@@ -15,6 +15,8 @@ from mjlab_microduck.o3a_gate import (
     NOISE_PROTOCOL,
     ROLLOUT_STAGE,
     SUPERVISOR_SHA256,
+    compare_hc4lh_seed,
+    compare_hc4r2_seed,
     compare_hc4r2_prescreen,
     compare_o3a_prescreen,
 )
@@ -163,6 +165,41 @@ def test_hc4r2_gate_uses_the_frozen_near_range_matrix(tmp_path):
     assert len(result["cell_deltas"]) == 6
     assert result["protocol"] == "O3a-HC4R2-seed-277-range-noise-prescreen-v1"
     assert result["decision"] == "continue_multi_seed_predeclaration"
+
+
+@pytest.mark.parametrize(
+    "specialist,seed",
+    (("hc4lh", 281), ("hc4lh", 283), ("hc4r2", 281), ("hc4r2", 283)),
+)
+def test_campaign_seed_gate_uses_the_frozen_seed_and_noise_stream(
+    tmp_path, specialist, seed
+):
+    is_near = specialist == "hc4r2"
+    kwargs = {
+        "stage": HC4R2_ROLLOUT_STAGE if is_near else ROLLOUT_STAGE,
+        "supervisor_sha256": (
+            HC4R2_SUPERVISOR_SHA256 if is_near else SUPERVISOR_SHA256
+        ),
+        "speeds": (0.30, 0.40) if is_near else (0.50,),
+        "forward": 0.90 if is_near else 1.15,
+        "seed": seed,
+        "noise_seed": seed + 3000011,
+    }
+    baseline = _write_report(
+        tmp_path / f"{specialist}-{seed}-baseline.json", noisy=False, **kwargs
+    )
+    noisy = _write_report(
+        tmp_path / f"{specialist}-{seed}-noisy.json", noisy=True, **kwargs
+    )
+    comparator = compare_hc4r2_seed if is_near else compare_hc4lh_seed
+    result = comparator(baseline, noisy, seed)
+    assert result["decision"] == "continue_campaign"
+    assert f"seed-{seed}" in result["protocol"]
+
+
+def test_campaign_seed_gate_rejects_unplanned_seed(tmp_path):
+    with pytest.raises(ValueError, match="outside the HC4-LH campaign"):
+        compare_hc4lh_seed(tmp_path / "missing", tmp_path / "missing", 289)
 
 
 def test_gate_allows_three_clean_passes_of_loss_per_cell(tmp_path):

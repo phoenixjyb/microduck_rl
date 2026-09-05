@@ -31,6 +31,9 @@ HC4R2_PHYSICS_SEED = 277
 HC4R2_NOISE_SEED = 3_000_288
 HC4R2_SPEEDS_MPS = (0.30, 0.40)
 HC4R2_FORWARD_M = 0.90
+O3A_RANGE_NOISE_SEED_OFFSET = 3_000_011
+HC4LH_CAMPAIGN_SEEDS = (PHYSICS_SEED, 281, 283)
+HC4R2_CAMPAIGN_SEEDS = (HC4R2_PHYSICS_SEED, 281, 283)
 
 
 def _sha256(path: Path) -> str:
@@ -360,6 +363,29 @@ def compare_o3a_prescreen(
     )
 
 
+def compare_hc4lh_seed(
+    baseline_path: Path, noisy_path: Path, physics_seed: int
+) -> dict[str, Any]:
+    """Apply the frozen HC4-LH gate to one campaign seed."""
+    if physics_seed not in HC4LH_CAMPAIGN_SEEDS:
+        raise ValueError("physics seed is outside the HC4-LH campaign")
+    if physics_seed == PHYSICS_SEED:
+        return compare_o3a_prescreen(baseline_path, noisy_path)
+    return _compare_prescreen(
+        baseline_path,
+        noisy_path,
+        expected_stage=ROLLOUT_STAGE,
+        expected_supervisor_sha256=SUPERVISOR_SHA256,
+        physics_seed=physics_seed,
+        noise_seed=physics_seed + O3A_RANGE_NOISE_SEED_OFFSET,
+        speeds_mps=(SPEED_MPS,),
+        forward_m=FORWARD_M,
+        laterals_m=LATERALS_M,
+        protocol=f"O3a-HC4LH-seed-{physics_seed}-range-noise-prescreen-v1",
+        continue_decision="continue_campaign",
+    )
+
+
 def compare_hc4r2_prescreen(
     baseline_path: Path, noisy_path: Path
 ) -> dict[str, Any]:
@@ -379,19 +405,45 @@ def compare_hc4r2_prescreen(
     )
 
 
+def compare_hc4r2_seed(
+    baseline_path: Path, noisy_path: Path, physics_seed: int
+) -> dict[str, Any]:
+    """Apply the frozen HC4-R2 gate to one campaign seed."""
+    if physics_seed not in HC4R2_CAMPAIGN_SEEDS:
+        raise ValueError("physics seed is outside the HC4-R2 campaign")
+    if physics_seed == HC4R2_PHYSICS_SEED:
+        return compare_hc4r2_prescreen(baseline_path, noisy_path)
+    return _compare_prescreen(
+        baseline_path,
+        noisy_path,
+        expected_stage=HC4R2_ROLLOUT_STAGE,
+        expected_supervisor_sha256=HC4R2_SUPERVISOR_SHA256,
+        physics_seed=physics_seed,
+        noise_seed=physics_seed + O3A_RANGE_NOISE_SEED_OFFSET,
+        speeds_mps=HC4R2_SPEEDS_MPS,
+        forward_m=HC4R2_FORWARD_M,
+        laterals_m=LATERALS_M,
+        protocol=f"O3a-HC4R2-seed-{physics_seed}-range-noise-prescreen-v1",
+        continue_decision="continue_campaign",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("baseline", type=Path)
     parser.add_argument("noisy", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--specialist", choices=("hc4lh", "hc4r2"), default="hc4lh")
+    parser.add_argument("--physics-seed", type=int)
     args = parser.parse_args()
+    default_seed = PHYSICS_SEED if args.specialist == "hc4lh" else HC4R2_PHYSICS_SEED
+    physics_seed = default_seed if args.physics_seed is None else args.physics_seed
     comparator = (
-        compare_o3a_prescreen
+        compare_hc4lh_seed
         if args.specialist == "hc4lh"
-        else compare_hc4r2_prescreen
+        else compare_hc4r2_seed
     )
-    result = comparator(args.baseline, args.noisy)
+    result = comparator(args.baseline, args.noisy, physics_seed)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.output.exists():
         raise FileExistsError(args.output)

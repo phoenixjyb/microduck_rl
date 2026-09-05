@@ -1,6 +1,6 @@
 # First-attempt recorder runtime smoke
 
-Date: 2026-09-06. Status: predeclared, not yet run. Diagnostic instrumentation
+Date: 2026-09-06. Status: stopped at exact-report equality; not validated. Diagnostic instrumentation
 only; U3/U4 rejection, all numerical gates, and no-motion boundaries stand.
 
 ## Source and purpose
@@ -82,3 +82,82 @@ The 26 smoke validator/runner tests passed again after final runner review
 dispatch, child error/timeout closure, tampered sidecars, nonzero-environment
 collision accounting, and exact-report mismatch rejection. Remote repetition
 on the exact committed source is required before launch.
+
+## Retained runtime result and read-only diagnosis
+
+Source: `f4190775abd110ffa54be275f7c862f0c747ce47`. All 200 focused tests passed
+on 100.100 with CUDA hidden (5.30 s), and the source/actor/supervisor/idle-GPU/
+protected-service checks passed. `microduck-rl-recorder-s359-v1.service` ran
+04:51:09--04:51:42 Shanghai. Both children exited zero, taking 15.7359837843 s
+(disabled) and 15.9853184209 s (enabled). The parent deliberately exited **2**
+on `ValueError: legacy reports differ; exact equality required`; this is the
+predeclared diagnostic stop, not a child crash or timeout. No retry was run.
+
+Both passes had four clean first attempts and zero collisions, timeouts, falls,
+NaN/nonfinite, hard/other failures, unresolved attempts, or rated-speed exceedance.
+The sidecar passed independent structural, identity, hash, frame-coverage and
+outcome-reconciliation checks: **four environment IDs, 324 frames, four passes**.
+This does not establish instrumentation equivalence because report equality failed.
+
+Read-only recursive comparison found 604 leaf/length differences: 15 non-trace
+scalar fields and 589 representative-trace differences (including its length).
+All outcome totals were identical. Selected disabled/enabled differences:
+
+| Retained field | Disabled | Enabled |
+| --- | ---: | ---: |
+| Simulator steps executed | 435 | 438 |
+| Mean passage time (s) | 7.944999694824219 | 7.980000019073486 |
+| Mean lateral excursion (m) | 0.3644675761461258 | 0.37549589574337006 |
+| Recovery route speed (m/s) | 0.28611719608306885 | 0.2838948369026184 |
+| Motor torque utilization p99 | 0.5279281735420227 | 0.5256340503692627 |
+| Motor thermal proxy mean | 0.03383292630314827 | 0.03381514549255371 |
+
+The representative trace's initial state and commands match exactly. The first
+retained divergence is at **0.1 s**: route speed 0.0037332605570554733 versus
+0.0037333075888454914 m/s, and commanded speed 0.30400991439819336 versus
+0.30400994420051575 m/s. Later traces and terminal times differ. Source review
+confirms neither the rollout nor recorder changed between the recorder commit
+and this smoke. The validator/runner are the only added execution paths.
+
+These two runs cannot distinguish ordinary process-to-process simulation
+variation from a recorder-induced scheduling/numerical effect. Identical initial
+representative state does not prove equality of every internal state or RNG.
+There was no recording-disabled/disabled repeatability control in this protocol.
+The tiny initial divergence therefore is **not proof of either cause**; neither
+the recorder nor the historical seed-347 collision is causally explained.
+
+The complete stop decision was recomputed from the same absolute report paths
+on CPU and matched exactly. (A first verification using relative paths differed
+only in the returned sidecar path; using the original absolute inputs resolves
+that verification-input mismatch, without changing any artifact or decision.)
+All files are retained on 100.100 under
+`artifacts/evaluations/first-attempt-recorder-s359-v1` and backed up locally under
+`artifacts/overnight-20260906-u4/first-attempt-recorder-s359-v1`.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `decision.json` | `292024b847ee6aa2b74c084181fd9c985055b8838d8bb68a8e15a38c124ea788` |
+| Disabled report | `5cd1798d3a25bfb4882c480a57d6279ed24fc4f4184f5147eafd9b318735e70b` |
+| Enabled report | `9411efd9250625c2ef2e57f834abfe9760d38092a640873d383e4ad4a12e4217` |
+| Enabled `first-attempt-traces/case-000.json` | `a7fc2569c679b99cc50e9df3beaa84150500acc413f0ecc5eb94007c2fdf05fc` |
+| `runtime.json` | `135a15e958d0f5c4a342e8ef808749ddef110c0ac8e124fa6598558d794b0a55` |
+| `launch.json` | `ad51644747d829d38711f149f6e115a820bb22dda334cb4dfa48e7f9318ef1d7` |
+| Disabled log | `4a8214718d3f812169e6764b4ab5eff5823d01f1c91331b9ad1bfb8e60ac76e3` |
+| Enabled log | `cec2253941a219b52c787f609e28ee860145bcc1328dff005662a5d80c6df22f` |
+
+The GPU returned idle (12 MiB, 0%, 48 C), with no compute process and both
+protected services still inactive. Source remained clean. No policy, recorder,
+comparison field, tolerance or historical decision was changed after the stop.
+
+Next bounded work is source-only repeatability-study design: predeclare a tiny
+fresh-seed recording-disabled/disabled control, with fixed source/artifacts,
+counts, identity, strict comparison, bounded runtime and no retries, before
+considering another GPU diagnosis. No such control is launched or authorized
+by this result alone; the overnight workflow must first commit its separate
+protocol and focused tests. Even if baseline variation is later observed, it
+cannot retroactively pass this smoke or establish recorder non-interference.
+The larger U4/near trace diagnostic, new training, and promotion remain closed.
+
+Retention verification: all eight local-backup hashes match the remote files
+and the table. The 26 focused validator/runner tests passed again with CUDA
+hidden (1.19 s) before committing this unchanged-code diagnostic evidence.

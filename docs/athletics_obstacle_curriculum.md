@@ -320,6 +320,16 @@ hypothesis. The next recommended obstacle track measures compact-observation
 range-noise sensitivity inside each accepted specialist envelope before any
 new training.
 
+O3a now begins with a bounded, paired HC4-LH pre-screen rather than another
+training candidate. It perturbs only compact range by replayable uniform error
+in `[-0.02, +0.02]` m while exact simulator geometry continues to determine
+visibility, collision, passage, and termination. The magnitude is a
+provisional simulation stress level, not measured sensor evidence, so even a
+pass cannot complete O3a. Seed 271 compares exact and noisy conditions at
+0.50 m/s, 1.15 m forward, and lateral positions -0.08/0.00/+0.08 m under the
+HC4-E1 fixed-attempt denominator. See
+`experiments/2026-09-05-o3a-range-noise-prescreen.md`.
+
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign
 are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at

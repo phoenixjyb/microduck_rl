@@ -4,7 +4,7 @@ Date: 2026-09-05
 
 Parent: `8fd5e07274ae65a43f26be6120eee24378667ea2`
 
-Decision: **predeclared candidate; not yet trained or accepted**
+Decision: **reject at the seed-193 pre-screen; do not run seeds 199/229**
 
 ## Purpose and single changed axis
 
@@ -78,3 +78,68 @@ Only a complete three-seed pass can accept HC4-U1 for this exact-geometry
 envelope. A failed pre-screen stops continuation. No MP4, broader geometry,
 sensor noise, raw perception, or physical motion is authorized before the
 numerical gate passes.
+
+## Retained training result
+
+The exact seed-42 CUDA job completed successfully on 100.100 using all ten
+ordered shards: 414,430 samples, 5,334 episodes, 331,598 training samples, and
+82,832 validation samples. Epoch 198 minimized validation MSE at 0.00037494.
+Validation speed MAE was 0.003528 m/s and yaw MAE was 0.010007 rad/s, so the
+offline gate passed. All reported values were finite.
+
+- Checkpoint SHA-256:
+  `2196d2ed2dbc3e182fa0b36edf663d11187330d430cd319ceb368c8a28e9753b`.
+- Manifest SHA-256:
+  `eb6ecba9417409c40a5439f4c0cd705b44212690ad1864ac25440c51ff13b503`.
+- Source/predeclaration commit:
+  `6641e6c105c6c6c6866cc2d73f3dd966f42dcf4c`.
+
+## Seed-193 pre-screen decision
+
+The first candidate rollout completed all twelve simulation cells, but the
+initial report write failed on a missing HC4-U1 stage-name mapping. It produced
+no JSON and therefore no admissible numerical evidence. The mapping-only fix
+was tested and pushed as `d197dadd23b19b113ba58f9650f53be24ce79d21`; the
+same frozen matrix then ran once into a new output directory.
+
+All three valid reports used 64 completed and resolved first attempts per cell,
+with zero unresolved, hard-failure, other-terminal, fall, NaN, non-finite, or
+rated-speed events. The aggregate result was:
+
+| Controller | Clean | Collision | Timeout | Attempts | Pooled approach delta | Pooled recovery delta | Max torque p99 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| HC4-U1 | 766 | 0 | 2 | 768 | -0.00212 m/s | +0.00612 m/s | 0.5623 |
+| Paired HC4-R2/HC4-LH | 760 | 2 | 6 | 768 | reference | reference | descriptive |
+
+HC4-U1 passed aggregate outcome, every collision, clean-passage, phase-speed,
+and motor gate. It failed exactly one predeclared check: at 0.30 m/s, 1.15 m
+forward, and 0.00 m lateral, HC4-U1 had 63 clean passages and one timeout,
+while HC4-LH had 63 clean passages, one collision, and zero timeouts. The
+collision improved by one but timeout worsened by one, so the independent
+per-cell timeout non-regression rule requires `stop`.
+
+Retained SHA-256 evidence:
+
+- HC4-U1 report:
+  `c7a261e6cdc205f2be7778cce2f50d412ae2d9492c277a5d944c5876c64b6d99`;
+- HC4-R2 near-source report:
+  `95666f52b1d584dcbbb868ce66d2387329283020b88365f44daceed6a527fc4a`;
+- HC4-LH far-source report:
+  `51a53c05ccba5533823b594fb23d8f5a68ae29266bfa4e28119ba982326650c1`;
+- deterministic decision JSON:
+  `f99678d2c6363bf1273e97d5ab3a8895f3bb0fce640edfbd328720a7a5c99acb`.
+
+The reports and decision are retained under
+`artifacts/evaluations/hc4u1-6641e6c-s193-prescreen/` on 100.100. Seeds 199
+and 229, MP4 recording, and promotion were not run. HC4-LH and HC4-R2 keep
+their existing accepted specialist envelopes.
+
+## Smallest next revision
+
+The evidence does not justify weakening the gate or rerunning HC4-U1. A future
+HC4-U2 may change only one training input: add deterministic-teacher labels at
+states visited by HC4-U1 in the single failing far-center cell, while retaining
+the HC4-U1 architecture, optimizer, base data, seed, and fixed-attempt gate.
+Collection seeds, outcome-retention rules, exact hashes, and a stop condition
+must be predeclared before that GPU work. This is a proposed next design, not
+training authorization from this result.

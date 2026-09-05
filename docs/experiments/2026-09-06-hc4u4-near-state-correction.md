@@ -243,3 +243,41 @@ Retention checks: all four local-backup hashes match the remote evidence and
 the document; the decision counts match the retained JSON. All 38 focused
 U4/U3/U1 gate tests passed locally with CUDA hidden (64.51 seconds). No evaluator,
 policy, dataset or threshold was changed to close this result.
+
+## Passive recorder source implementation
+
+The opt-in `--record-first-attempts` path now retains every environment's first
+attempt, not just representative environment zero. It requires first-attempt
+mode and forbids dataset collection; storage is bounded to 64 environments,
+12 cases, and 1,000 steps per case. Each attempt gets a stable environment ID,
+pre-step route progress/lateral/heading/speed, obstacle-ahead and clearance proxy,
+phase, and commanded speed/yaw. Clearance is center distance minus 0.22 m,
+explicitly not a contact-distance measurement.
+
+Frames are sampled every five simulation steps, with the immediate pre-terminal
+frame always retained even off cadence. Terminal records contain only after-step
+time, raw flags, overlap indicator, and the unchanged failure-priority outcome;
+they never substitute an auto-reset pose for a failure state. Completed attempts
+cannot reactivate, incomplete attempts remain explicit, and nonfinite telemetry
+is encoded as null with the affected field names rather than hidden or emitted
+as invalid JSON. Detached CPU copies keep source tensors unchanged.
+
+Each case writes an exclusive-created, SHA-256-bound JSON sidecar under
+`first-attempt-traces/case-NNN.json`, binding case identity and locomotion/
+supervisor hashes. Protocol is `all-first-attempt-pre-step-v1`; its declared
+purpose is diagnostic-only, not training data or policy acceptance. Existing
+representative traces and reports when disabled are unchanged. No controller
+inputs/state, RNG draws, reward, physics, reset, numerical metric, or gate is
+modified. Recording may add synchronization and wall-clock overhead; runtime
+overhead and simulation equivalence have not yet been measured.
+
+Local CPU validation with CUDA hidden passed **174 tests** in 78.48 seconds:
+the new recorder, hierarchical rollout, U4 contract/collection, and unchanged
+U3/U1 gate suites. Tests cover all 32 raw terminal-flag combinations, nonzero
+environment collisions, exact pre-terminal retention, input/RNG immutability,
+reset masking, bounded storage, malformed inputs, and opt-in report/hash binding.
+The rollout integration test uses a mocked simulator: this is source/unit-test
+evidence, not a live rollout or causal diagnosis. Remote CPU repetition and a
+separately predeclared bounded runtime diagnostic remain necessary. No GPU job,
+new acceptance seed, refit, or policy promotion is authorized by this source
+implementation; the U3 and U4 rejections remain closed.

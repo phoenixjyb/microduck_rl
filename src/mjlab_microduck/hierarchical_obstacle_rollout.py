@@ -19,6 +19,12 @@ from mjlab_microduck.evaluation import (
     parse_int_list,
     valid_action_deltas,
 )
+from mjlab_microduck.first_attempt_recording import (
+    MAX_RECORDED_ENVS,
+    OUTCOME_PROTOCOL,
+    RECORDING_PROTOCOL,
+    FirstAttemptRecorder,
+)
 from mjlab_microduck.hierarchical_obstacle import (
     SUPERVISOR_OBSERVATION_DIM,
     ObstaclePhase,
@@ -354,6 +360,18 @@ def validate_dataset_collection_mode(
         )
 
 
+def validate_first_attempt_recording_mode(
+    enabled: bool, *, first_attempt_only: bool, num_envs: int, case_count: int,
+    collecting_dataset: bool,
+) -> None:
+    """Bound opt-in diagnostic storage and keep it separate from training data."""
+    if enabled and (
+        not first_attempt_only or collecting_dataset
+        or num_envs > MAX_RECORDED_ENVS or case_count > 12
+    ):
+        raise ValueError("first-attempt recording needs first-only, no dataset, <=64 envs and <=12 cases")
+
+
 def fixed_attempt_metrics(
     *,
     expected_attempts: int,
@@ -589,6 +607,7 @@ def _run_case(
     case_index: int = 0,
     supervisor_checkpoint: Path | None = None,
     range_noise_m: float = 0.0,
+    record_first_attempts: bool = False,
 ) -> dict:
     import torch
     from mjlab.envs import ManagerBasedRlEnv
@@ -596,6 +615,15 @@ def _run_case(
     from mjlab.tasks.registry import load_runner_cls
 
     from mjlab_microduck.tasks import mdp as microduck_mdp
+
+    validate_first_attempt_recording_mode(
+        record_first_attempts, first_attempt_only=first_attempt_only,
+        num_envs=num_envs, case_count=1,
+        collecting_dataset=collect_success_samples or collect_teacher_corrections,
+    )
+    recorder = FirstAttemptRecorder(num_envs, steps) if record_first_attempts else None
+    if recorder is not None:
+        assert OUTCOME_PROTOCOL == FIRST_TERMINAL_OUTCOME_PROTOCOL
 
     env_cfg, agent_cfg = prepare_rollout_configs(
         num_envs,
@@ -845,6 +873,21 @@ def _run_case(
                     command_yaw_abs_max, float(command[active, 2].abs().max())
                 )
 
+                if recorder is not None:
+                    robot_xy = robot.data.root_link_pos_w[:, :2]
+                    obstacle_delta = env.scene["obstacle"].data.root_link_pos_w[:, :2] - robot_xy
+                    path_dir = env._obstacle_path_dir_w
+                    recorder.capture_pre_step(step, step * env.step_dt, active, {
+                        "route_progress_m": ((robot_xy - env._obstacle_route_origin_w) * path_dir).sum(-1),
+                        "route_lateral_error_m": route_lateral,
+                        "route_heading_error_rad": route_heading,
+                        "route_speed_mps": route_speed,
+                        "obstacle_ahead_m": (obstacle_delta * path_dir).sum(-1),
+                        "obstacle_clearance_m": torch.linalg.vector_norm(obstacle_delta, dim=-1) - 0.22,
+                        "phase": state.phase,
+                        "command_speed_mps": command[:, 0],
+                        "command_yaw_rate_rps": command[:, 2],
+                    })
                 actions = policy(observations)
                 observations, rewards, dones, _ = wrapped.step(actions)
                 episode_steps[active] += 1
@@ -881,6 +924,12 @@ def _run_case(
                 nan_state = (
                     env.termination_manager.get_term("nan_state").bool() & active
                 )
+                recording_raw_flags = None
+                if recorder is not None:
+                    recording_raw_flags = dict(zip(
+                        ("collision", "pass", "timeout", "fall", "nan"),
+                        (collision, passed, attempted_out, fell, nan_state), strict=True,
+                    ))
                 if first_attempt_only:
                     for name, mask in zip(
                         raw_terminal_events,
@@ -896,6 +945,14 @@ def _run_case(
                     collision, passed, attempted_out = (
                         outcomes["collision"], outcomes["pass"], outcomes["timeout"]
                     )
+                if recorder is not None:
+                    assert recording_raw_flags is not None
+                    classified = collision | passed | attempted_out | fell | nan_state
+                    recorder.finish_step((step + 1) * env.step_dt, dones.bool(), recording_raw_flags, {
+                        "hard_failure": active & dones.bool() & (fell | nan_state),
+                        "collision": collision, "timeout": attempted_out, "pass": passed,
+                        "other_terminal": active & dones.bool() & ~classified,
+                    })
                 collision_events += int(collision.sum())
                 clean_pass_events += int(passed.sum())
                 pass_time_sum_s += float(
@@ -1066,6 +1123,8 @@ def _run_case(
                 "commands": torch.cat(dataset_commands)[keep],
                 "episode_keys": all_keys[keep],
             }
+        if recorder is not None:
+            result["_first_attempt_recording"] = recorder.report()
         if collect_teacher_corrections:
             result["_teacher_correction_dataset"] = resolved_correction_samples(
                 torch.cat(dataset_observations),
@@ -1096,9 +1155,16 @@ def run_rollout(
     first_attempt_only: bool = False,
     supervisor_checkpoint: Path | None = None,
     range_noise_m: float = 0.0,
+    record_first_attempts: bool = False,
 ) -> Path:
     validate_rollout_bounds(
         num_envs, steps, speeds, forward_positions, lateral_positions, seeds
+    )
+    validate_first_attempt_recording_mode(
+        record_first_attempts, first_attempt_only=first_attempt_only,
+        num_envs=num_envs,
+        case_count=len(speeds) * len(forward_positions) * len(lateral_positions) * len(seeds),
+        collecting_dataset=collect_success_dataset or collect_teacher_corrections,
     )
     checkpoint = checkpoint.resolve(strict=True)
     validate_dataset_collection_mode(
@@ -1144,7 +1210,33 @@ def run_rollout(
             case_index=case_index,
             supervisor_checkpoint=supervisor_checkpoint,
             range_noise_m=range_noise_m,
+            record_first_attempts=record_first_attempts,
         )
+        recording = case.pop("_first_attempt_recording", None)
+        if record_first_attempts:
+            if recording is None:
+                raise RuntimeError("requested first-attempt recording is missing")
+            recording["case"] = {
+                key: case[key] for key in (
+                    "nominal_speed_mps", "obstacle_forward_m", "obstacle_lateral_m",
+                    "seed", "num_envs", "steps", "steps_executed",
+                )
+            }
+            recording["case_index"] = case_index
+            recording["checkpoint_sha256"] = _sha256(checkpoint)
+            recording["supervisor_checkpoint_sha256"] = (
+                _sha256(supervisor_checkpoint) if supervisor_checkpoint else None
+            )
+            recording_dir = output_dir / "first-attempt-traces"
+            recording_dir.mkdir(exist_ok=True)
+            recording_path = recording_dir / f"case-{case_index:03d}.json"
+            with recording_path.open("x") as stream:
+                json.dump(recording, stream, indent=2, allow_nan=False)
+                stream.write("\n")
+            case["first_attempt_recording"] = {
+                "path": str(recording_path), "sha256": _sha256(recording_path),
+                "protocol": RECORDING_PROTOCOL,
+            }
         dataset = case.pop("_success_dataset", None)
         if dataset is not None:
             datasets.append(dataset)
@@ -1231,6 +1323,8 @@ def run_rollout(
         report["stage"] = rollout_stage(supervisor_payload.get("stage"))
         report["supervisor_checkpoint"] = str(supervisor_checkpoint)
         report["supervisor_checkpoint_sha256"] = _sha256(supervisor_checkpoint)
+    if record_first_attempts:
+        report["first_attempt_recording_protocol"] = RECORDING_PROTOCOL
     if collect_success_dataset:
         if not datasets or not any(
             dataset["observations"].shape[0] for dataset in datasets
@@ -1339,6 +1433,7 @@ def main() -> None:
     parser.add_argument("--collect-success-dataset", action="store_true")
     parser.add_argument("--collect-teacher-corrections", action="store_true")
     parser.add_argument("--first-attempt-only", action="store_true")
+    parser.add_argument("--record-first-attempts", action="store_true")
     parser.add_argument("--supervisor-checkpoint", type=Path)
     parser.add_argument("--range-noise-m", type=float, default=0.0)
     args = parser.parse_args()
@@ -1354,6 +1449,7 @@ def main() -> None:
         collect_success_dataset=args.collect_success_dataset,
         collect_teacher_corrections=args.collect_teacher_corrections,
         first_attempt_only=args.first_attempt_only,
+        record_first_attempts=args.record_first_attempts,
         supervisor_checkpoint=args.supervisor_checkpoint,
         range_noise_m=args.range_noise_m,
     )

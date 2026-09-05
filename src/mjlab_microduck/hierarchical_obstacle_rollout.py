@@ -64,6 +64,7 @@ MAX_STEPS = 1000
 MAX_CASES = 48
 HC1_ATTEMPT_TIMEOUT_S = 12.0
 SUPERVISOR_UPDATE_INTERVAL_STEPS = 5
+FIRST_TERMINAL_OUTCOME_PROTOCOL = "hard-failure-collision-timeout-pass-v1"
 O3A_RANGE_NOISE_PROTOCOL = "compact-range-uniform-v1"
 O3A_RANGE_NOISE_SEED_OFFSET = 3_000_011
 HC3E_STAGE = "HC3E-interaction-speed-PPO"
@@ -412,6 +413,40 @@ def advance_first_attempt_window(
     return active & ~finished, finished
 
 
+def first_terminal_outcomes(
+    active: torch.Tensor,
+    dones: torch.Tensor,
+    collision: torch.Tensor,
+    passed: torch.Tensor,
+    timed_out: torch.Tensor,
+    fell: torch.Tensor,
+    nan_state: torch.Tensor,
+) -> dict[str, torch.Tensor]:
+    """Partition terminal attempts conservatively; retain raw flags separately.
+
+    Independent simulator terms can fire together (including success at the
+    deadline). A hard failure cannot be a clean pass; collision wins over
+    timeout, and timeout wins over pass. Physics and reset timing are unchanged.
+    """
+    import torch
+
+    masks = (active, dones, collision, passed, timed_out, fell, nan_state)
+    if any(mask.dtype != torch.bool or mask.shape != active.shape
+           or mask.ndim != 1 or mask.device != active.device for mask in masks):
+        raise ValueError("terminal masks must be matching boolean vectors")
+    finished = active & dones
+    flags = torch.stack((collision, passed, timed_out, fell, nan_state), dim=1)
+    if bool((active & flags.any(dim=1) & ~dones).any()):
+        raise RuntimeError("terminal flag without a completed transition")
+    eligible = finished & ~(fell | nan_state)
+    return {
+        "collision": eligible & collision,
+        "timeout": eligible & ~collision & timed_out,
+        "pass": eligible & ~collision & ~timed_out & passed,
+        "overlap": finished & (flags.sum(dim=1) > 1),
+    }
+
+
 def resolved_correction_samples(
     observations: torch.Tensor,
     teacher_commands: torch.Tensor,
@@ -602,6 +637,10 @@ def _run_case(
         attempt_timeout_events = 0
         fall_events = 0
         nan_events = 0
+        terminal_overlap_events = 0
+        raw_terminal_events = dict.fromkeys(
+            ("collision", "pass", "timeout", "fall", "nan"), 0
+        )
         nonfinite_steps = 0
         phase_speed_sum = torch.zeros(3, device=device)
         phase_samples = torch.zeros(3, dtype=torch.long, device=device)
@@ -838,6 +877,21 @@ def _run_case(
                 nan_state = (
                     env.termination_manager.get_term("nan_state").bool() & active
                 )
+                if first_attempt_only:
+                    for name, mask in zip(
+                        raw_terminal_events,
+                        (collision, passed, attempted_out, fell, nan_state),
+                        strict=True,
+                    ):
+                        raw_terminal_events[name] += int(mask.sum())
+                    outcomes = first_terminal_outcomes(
+                        active, dones.bool(), collision, passed, attempted_out,
+                        fell, nan_state,
+                    )
+                    terminal_overlap_events += int(outcomes["overlap"].sum())
+                    collision, passed, attempted_out = (
+                        outcomes["collision"], outcomes["pass"], outcomes["timeout"]
+                    )
                 collision_events += int(collision.sum())
                 clean_pass_events += int(passed.sum())
                 pass_time_sum_s += float(
@@ -976,6 +1030,9 @@ def _run_case(
             )
         )
         if first_attempt_only:
+            result["terminal_outcome_protocol"] = FIRST_TERMINAL_OUTCOME_PROTOCOL
+            result["terminal_overlap_events"] = terminal_overlap_events
+            result["raw_terminal_events"] = raw_terminal_events
             result["evaluation_window"] = (
                 "first-terminal-attempt-per-environment-v1"
             )
@@ -1155,6 +1212,10 @@ def run_rollout(
             "first-terminal-attempt-per-environment-v1"
             if first_attempt_only
             else "fixed-simulator-steps-legacy"
+        ),
+        "terminal_outcome_protocol": (
+            FIRST_TERMINAL_OUTCOME_PROTOCOL
+            if first_attempt_only else "independent-term-counts-legacy"
         ),
         "cases": cases,
         "totals": totals,

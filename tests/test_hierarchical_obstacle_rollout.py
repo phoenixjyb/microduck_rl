@@ -9,6 +9,7 @@ from mjlab_microduck.hierarchical_obstacle_rollout import (
     MAX_CASES,
     advance_first_attempt_window,
     fixed_attempt_metrics,
+    first_terminal_outcomes,
     load_learned_supervisor,
     prepare_rollout_configs,
     range_noise_provenance,
@@ -223,6 +224,44 @@ def test_fixed_attempt_metrics_uses_the_predeclared_denominator():
         "hard_failure_events": 0,
         "other_terminal_events": 0,
     }
+
+
+@pytest.mark.parametrize("bits", range(32))
+def test_terminal_outcomes_exhaustive_failure_priority(bits):
+    flags = [torch.tensor([bool(bits & (1 << bit))]) for bit in range(5)]
+    result = first_terminal_outcomes(
+        torch.tensor([True]), torch.tensor([True]), *flags
+    )
+    collision, passed, timeout, fell, nan = [bool(flag[0]) for flag in flags]
+    assert bool(result["collision"][0]) == (collision and not (fell or nan))
+    assert bool(result["timeout"][0]) == (timeout and not (collision or fell or nan))
+    assert bool(result["pass"][0]) == (passed and not (collision or timeout or fell or nan))
+    assert bool(result["overlap"][0]) == (sum(bool(flag[0]) for flag in flags) > 1)
+    assert sum(int(result[key][0]) for key in ("collision", "timeout", "pass")) <= 1
+
+
+def test_pass_at_deadline_counts_once_as_timeout_and_closed_attempt_is_ignored():
+    yes = torch.tensor([True, True])
+    no = torch.tensor([False, False])
+    result = first_terminal_outcomes(torch.tensor([True, False]), yes, no, yes, yes, no, no)
+    assert result["timeout"].tolist() == [True, False]
+    assert result["pass"].tolist() == [False, False]
+    assert result["overlap"].tolist() == [True, False]
+    metrics = fixed_attempt_metrics(
+        expected_attempts=1, completed_attempts=1,
+        clean_pass_events=int(result["pass"].sum()),
+        collision_events=0, attempt_timeout_events=int(result["timeout"].sum()),
+        fall_events=0, nan_termination_events=0, other_terminal_events=0,
+    )
+    assert metrics["attempt_timeout_rate_fixed_denominator"] == 1.0
+
+
+def test_terminal_flag_without_done_is_not_silently_discarded():
+    yes, no = torch.tensor([True]), torch.tensor([False])
+    with pytest.raises(RuntimeError, match="without a completed"):
+        first_terminal_outcomes(yes, no, no, yes, no, no, no)
+    with pytest.raises(ValueError, match="boolean vectors"):
+        first_terminal_outcomes(yes, yes.long(), no, yes, no, no, no)
 
 
 def test_first_attempt_window_closes_each_environment_once():

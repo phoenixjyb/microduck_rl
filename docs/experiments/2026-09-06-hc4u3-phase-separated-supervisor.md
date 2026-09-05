@@ -100,3 +100,52 @@ Decision: `offline-imitation-pass`, pending the unchanged closed-loop gate.
 The checkpoint hash above is frozen before the first seed-293 evaluation.
 Fitting improvement cannot establish collision avoidance or timeout recovery.
 Retained user service: `microduck-rl-hc4u3-ab1d831-s42.service` (success, exit 0).
+
+## Seed-293 evaluator interruption and bounded accounting repair
+
+At source `63707439c9f137357665a6595c958da80b67cb47`, service
+`microduck-rl-hc4u3-ab1d831-s293-eval.service` exited 1 during the fourth
+far-specialist cell (0.40 m/s, 1.15 m, -0.08 m). The exact exception was
+`ValueError: resolved outcomes cannot exceed completed_attempts`. The candidate
+had not run. This is incomplete evaluation evidence, not a candidate gate failure.
+The completed near baseline had 381 clean / 3 collision / 0 timeout attempts;
+report SHA-256 `e8b5a414f77ede009fb53a373777abd61232334f26f633de7c96ddc7c2f4c26b`.
+
+Read-only diagnosis left policies, physics and services unchanged. An instrumented
+single-cell replay and then the complete paired-source matrix did not reproduce
+the exception, overlapping flags, or flags without a terminal transition. The
+matrix replay retained 381/3/0 near and 379/0/5 far. The original crash therefore
+has no captured raw-event proof; simultaneous outcomes are a source-supported
+failure mechanism, not a confirmed explanation of that particular run.
+
+The source independently evaluates success and the `elapsed >= 12 s` timeout.
+A success on the deadline can consequently be counted twice by the old evaluator.
+The bounded repair partitions first-terminal outcomes with this explicit priority:
+hard failure, collision, timeout, clean pass. Hard-failure flags remain separately
+retained; unknown terminal events remain failures. Nonterminal flags raise an
+error. Each report retains the raw five term counts and overlap count, under
+`hard-failure-collision-timeout-pass-v1`; the HC4-U3 comparator requires this
+protocol in all three reports and every cell and uses prescreen protocol v2.
+Thirty-two exhaustive flag combinations and deadline/inactive-mask tests cover
+the arbitration. All 106 focused tests pass locally with CUDA hidden.
+
+This changes accounting, not the policy, simulator, resets, timing, training data,
+or numerical thresholds. It does not retroactively certify old evidence or alter
+training-dataset collection. Retry seed 293 in the fresh directory
+`artifacts/evaluations/hc4u3-ab1d831-s293-prescreen-v2`, rerunning **both** baselines
+and the frozen candidate. Do not mix the original partial baseline into v2.
+Proceed to seeds 307/311 only after the same unchanged numerical gates pass.
+
+Retained diagnostic directory:
+`artifacts/evaluations/hc4u3-ab1d831-s293-accounting-diagnosis`.
+
+- Original failure journal SHA-256:
+  `3a46cd7c1fe56181c62cf8f23ad91c3d000fd11d037a39b36965bc2b44578f4f`.
+- Single-cell replay journal SHA-256:
+  `a23ecfb8173520f651d0c3303895dbc059eb82b0c57866873c72322fa3bb1473`.
+- Source-matrix replay journal SHA-256:
+  `21af02f56e56d72c98425149a45f8c2eb61267317f0c90086c3f5e8cb7d7271d`.
+- Replay near report SHA-256:
+  `7741e04951a599e83a78fdaa05cab3fbc30688d18b504d0213f66f42869c5e68`.
+- Replay far report SHA-256:
+  `393f0af7a1e1db7ea551359a242122d18f2c8fbb701d7eb4d586f81a8bae14a3`.

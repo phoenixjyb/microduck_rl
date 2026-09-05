@@ -148,3 +148,41 @@ bounded sensitivity evidence, not a statistical claim that range noise is
 beneficial. It authorizes only a separately frozen HC4-R2 near-range
 pre-screen. O3a completion, measured-sensor acceptance, retraining, later
 sensor axes, video, raw perception, and physical motion remain closed.
+
+## HC4-R2 seed-277 predeclaration
+
+Parent: `e44c95130f261354bb9d64c827cc22fc6bc95a47`.
+
+The second specialist uses the byte-exact HC4-R2 checkpoint SHA-256
+`c4ba5925de7144373c94145b57b5e7a7ae3e1fc89bc7c2c3203f8724bdebf1b7`.
+Its paired matrix remains entirely inside the accepted near-range envelope:
+
+| Field | Frozen value |
+|---|---|
+| Nominal speeds | 0.30 and 0.40 m/s |
+| Obstacle forward position | 0.90 m |
+| Obstacle lateral positions | -0.08, 0.00, +0.08 m |
+| Physics seed | 277 |
+| Noise seed | 3000288 |
+| Environments | 64 per cell |
+| Step ceiling | 700 |
+| Evaluation window | `first-terminal-attempt-per-environment-v1` |
+| Compared conditions | exact baseline and the unchanged `compact-range-uniform-v1` |
+
+The six-cell exact baseline runs first and must pass the same identity,
+completion, finite-state, terminal-integrity, and rated-motor-speed admission
+checks as the HC4-LH baseline. The noisy half then uses the unchanged
+independent bounded uniform error in `[-0.02, +0.02]` m at each five-step
+supervisor update. All other compact fields and all ground-truth outcomes stay
+exact.
+
+The decision gates are unchanged: no per-cell or pooled collision increase;
+clean-pass loss no greater than 3/64 per cell and five percentage points
+pooled; approach/recovery speed delta at least -0.03 m/s per cell and -0.01
+m/s sample-weighted; torque-utilization p99 at most 0.60 per cell; and zero
+unresolved, hard, other-terminal, fall, NaN, non-finite, or rated-speed event.
+
+Only a deterministic `continue_multi_seed_predeclaration` decision allows a
+later document to freeze multiple independent seeds. This seed-277 screen
+cannot by itself complete O3a, authorize a larger noise level, measure a real
+sensor, create video, introduce raw perception, or authorize physical motion.

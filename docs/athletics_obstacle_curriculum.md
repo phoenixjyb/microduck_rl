@@ -336,6 +336,9 @@ passages and zero collisions, with no timeouts or hard failures and all frozen
 phase-speed and motor gates satisfied. This is one-seed simulation sensitivity
 evidence, not proof that noise improves control and not measured sensor
 acceptance. Only a separately predeclared HC4-R2 near-range screen may follow.
+That screen is now frozen at seed 277 across HC4-R2's accepted 0.30/0.40 m/s,
+0.90 m forward, and -0.08/0.00/+0.08 m lateral cells, using the same paired
+exact-versus-two-centimeter protocol and numerical gates.
 
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign

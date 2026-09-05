@@ -609,3 +609,60 @@ worktree remained clean. This passes only the H1-T wiring gate. The predeclared
 seed-67 diagnostic remains closed pending explicit continuation; it does not
 authorize multi-seed promotion, Locked, H2, video, raw perception, or physical
 motion.
+
+### H1-T seed-67 diagnostic result
+
+The paired seed-67 H1-T diagnostic completed all 6,000 iterations successfully
+with finite reward and optimizer metrics. The final curriculum values were the
+predeclared 0.040 m hop rise, -2.00 motor cost, and -0.20 bounded planar cost.
+NaN termination remained zero. The service released the GPU before evaluation,
+and all six checkpoint evaluations then ran sequentially under the frozen H1
+protocol.
+
+| Iteration | Min cycle success | Min episode pass | Falls | Max drift p95 | Max bottoming | Max rated-speed exceed | Max torque p99 | Max near-stall |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 500 | 16.80% | 0% | 384 | 0.918 m | 0.0109% | 1.637% | 1.068 | 20.294% |
+| 1,000 | 30.99% | 0% | 384 | 0.956 m | 0.602% | 0.482% | 1.068 | 1.815% |
+| 2,000 | 50.91% | 0% | 347 | 0.968 m | 0.557% | 0.212% | 0.870 | 0.677% |
+| 3,000 | 84.38% | 0% | 137 | 0.827 m | 0.176% | 0.134% | 0.831 | 0.454% |
+| 4,000 | 93.75% | 0% | 48 | 0.668 m | 0.105% | 0.125% | 0.780 | 0.369% |
+| 5,999 | 99.35% | 0% | 4 | 0.476 m | 0.194% | 0.571% | 0.798 | 0.305% |
+
+The deterministic causal gate returned `stop`. Relative to paired H1-P at
+iteration 5,999, H1-T preserved the hop (99.35% cycle success), reduced falls
+from 23 to 4, reduced drift p95 from 0.594 m to 0.476 m, reduced bottoming,
+torque p99, and near-stall exposure, and remained within the absolute rise and
+spring/torque ceilings. It nevertheless failed three predeclared causal checks:
+episode pass remained zero, drift did not cross the 0.30 m causal threshold,
+and rated-speed exposure regressed from 0.0208% to 0.571%. Under the full H1
+acceptance protocol, the remaining nonzero falls and near-stall exposure also
+fail their stricter gates.
+
+Retained training directory on 100.100:
+`logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-47-06_h1t-k3900-117c881-s67-6000x256/`.
+Final `model_5999.pt` SHA-256:
+`454bd7db3da50896c2b00cebd72ea7eecf1fee3e9802a6ee03693e8fa858040a`.
+
+Retained evaluation directory:
+`artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/`. Evaluation JSON
+SHA-256 values by iteration are:
+
+- 500: `adf5a64612bbd76c3d5e12070d52fa2a4c85f39e0508a50b243bbf30c92b517b`;
+- 1,000: `582ed7fc660249f7948f71c0dadcf02e7334ba3603fc44e95300ee1ddabedca9`;
+- 2,000: `ac9a4086902c5f375e7f9ca266f4084f6ffb42bffadb05e22745168e44a97a3f`;
+- 3,000: `0d2798143d80b1dbcfbbb31746e3356764fad4a6ca32e492fa8cabc3c025930d`;
+- 4,000: `4564a4e98f532481a1e23a1238727c8b17244ddbce1ec3ae8b3997d0e37526f2`;
+- 5,999: `867e1c9c1b4ba4d4a1385bd72a4ef8cdf9ff60120f70a3077e6e1b89c8ac91be`.
+
+The causal comparison JSON SHA-256 is
+`2e8731a7e1fb552f7badbd46b082cee75f10e3412341f9c17d7db55e5fcb5ef8`;
+it retains baseline JSON hash
+`99907a27954ba31b2d39fcdf427e0c947b4f1ddbb9b9dc82096ff92f411494c3`
+and candidate JSON hash
+`867e1c9c1b4ba4d4a1385bd72a4ef8cdf9ff60120f70a3077e6e1b89c8ac91be`.
+
+The H1-T stop condition is met. Per the predeclared boundary, park periodic-hop
+training here: do not run multi-seed promotion, Locked, H2, or video. The next
+curriculum work should return to the already functional motor-aware running and
+compact-observation obstacle negotiation path rather than spend more GPU time
+on another hop reward revision.

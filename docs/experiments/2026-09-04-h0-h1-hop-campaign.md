@@ -469,3 +469,54 @@ SHA-256 values:
 This passes only the H1-S wiring gate and authorizes the predeclared paired
 seed-67, 256-environment, 6,000-iteration diagnostic. It does not authorize a
 multi-seed promotion, Locked control, H2, video, or physical motion.
+
+### H1-S seed-67 diagnostic result
+
+The paired seed-67, 256-environment H1-S run completed all 6,000 iterations
+successfully and retained every 500-iteration checkpoint. The same held-out
+seeds 211/223/227, 128 environments, six cycles, and unchanged H1 evaluator
+were applied at the six predeclared diagnostic iterations:
+
+| Iteration | Min cycle success | Min episode pass | Falls | Max drift p95 | Max bottoming | Max rated-speed exceed | Max torque p99 | Max near-stall |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 500 | 22.79% | 0% | 384 | 0.990 m | 0.227% | 1.200% | 1.068 | 6.644% |
+| 1,000 | 50.13% | 0% | 344 | 0.944 m | 0.065% | 0.422% | 0.780 | 0.362% |
+| 2,000 | 12.50% | 0% | 0 | 0.0186 m | 0% | 0% | 0.279 | 0% |
+| 3,000 | 11.85% | 0% | 0 | 0.0220 m | 0% | 0% | 0.294 | 0% |
+| 4,000 | 12.89% | 0% | 0 | 0.0200 m | 0% | 0% | 0.277 | 0% |
+| 5,999 | 11.98% | 0% | 0 | 0.0227 m | 0% | 0% | 0.298 | 0% |
+
+The deterministic final-checkpoint comparison returned `stop`. H1-S improved
+falls from 23 to zero and drift p95 from 0.594 m to 0.0227 m, and it did not
+regress the spring or four motor-envelope comparisons. It failed the two
+behavioral causal checks: episode pass did not improve above zero, and minimum
+cycle success collapsed from 96.61% to 11.98%. The always-active stillness
+objective therefore solved locomotor drift by suppressing the hop itself, not
+by teaching a stable in-place hop.
+
+Retained training checkpoint on 100.100:
+`logs/rsl_rl/hop_k3900_h1s/2026-09-05_12-39-46_h1s-k3900-c9b045d-s67-6000x256/model_5999.pt`,
+SHA-256
+`57dd8ef9157131ee7445705dd6f747d56afe9a41b6292cbee3bfd914f6b1ba98`.
+
+Retained evaluation directory:
+`artifacts/evaluations/h1s-k3900-c9b045d-s67-diagnostic/`. Evaluation JSON
+SHA-256 values by iteration are:
+
+- 500: `1c0f499a02060810ffb37936dc856437ef6940b2f04b5b56c1bee513893d798f`;
+- 1,000: `c21896d6028eff4115a64a0e2e626865a8997b5ec81d784ce11a6ca061fd93a7`;
+- 2,000: `1f86381ee780d28e94a75c3314a21b654ea7b177f8ca88261e4eacaa6497ed02`;
+- 3,000: `e360447f21e74469315cd1358924adde5b8d3131ed8c743b6879bfb309f05cde`;
+- 4,000: `3b05192dc49c3e2b21d6891b4ded4279b45fe2fbdc1dfe8e42d590565f7f1017`;
+- 5,999: `a48fa4a5bb99256b40ea23bebbac2b3ba721925f96b620a12377c2030bf8719b`.
+
+The retained causal comparison JSON SHA-256 is
+`2f1fe1f58986df53bfa11b59b3a52c7cc4ec6345b01f30c7047a896c5f0d1e56`.
+The first evaluation wrapper attempt expanded its loop variable prematurely
+and failed before opening a checkpoint or using the GPU; the corrected retry
+used six explicit sequential commands and completed successfully.
+
+The H1-S stop condition is met. Do not run a multi-seed promotion, Locked
+control, H2, video, or physical motion. Any subsequent stability revision must
+first predeclare a reward that distinguishes planar translation from the
+vertical hop instead of applying full-strength stillness throughout the cycle.

@@ -186,3 +186,34 @@ Only a deterministic `continue_multi_seed_predeclaration` decision allows a
 later document to freeze multiple independent seeds. This seed-277 screen
 cannot by itself complete O3a, authorize a larger noise level, measure a real
 sensor, create video, introduce raw perception, or authorize physical motion.
+
+## Retained HC4-R2 seed-277 decision
+
+Commit `218266e382869c5a99f531da161888d080eae26c` extends the deterministic
+gate to the frozen HC4-R2 matrix. Its six gate tests passed locally and on
+100.100 before runtime evaluation.
+
+The exclusive-CUDA exact and noisy conditions each completed all 384 first
+attempts as clean passages. Both had zero collision, timeout, fall, NaN,
+non-finite, hard, other-terminal, unresolved, or rated motor-speed event. The
+noisy matrix's maximum torque-utilization p99 was 0.5679.
+
+Range noise changed sample-weighted approach speed by -0.00545 m/s and
+recovery speed by +0.00002 m/s. The largest individual approach delta was
+-0.00987 m/s at 0.30 m/s and +0.08 m lateral; every per-cell phase delta
+remained inside the -0.03 m/s bound. Every deterministic check passed.
+
+Retained SHA-256 evidence under
+`artifacts/evaluations/o3a-218266e-hc4r2-s277-*` on 100.100:
+
+- exact baseline report:
+  `e83a59edf50b8567c0f2a40b750eb354d334734d7a4a4757ac9b1f70a9d65a22`;
+- noisy report:
+  `90f0afcbede29d566cffc28661461a0127dbf1693d1264f7b2c6e2059246e932`;
+- deterministic decision:
+  `5a0435d74876467fbaffdb4d150c7bb733664790a163c679c9b790c21231f8ef`.
+
+Decision: `continue_multi_seed_predeclaration`. Together, the two specialist
+pre-screens cover 576 noisy first attempts without a noisy-condition collision
+or timeout. They remain independent single-seed results and do not establish
+a three-seed campaign result or measured sensor readiness.

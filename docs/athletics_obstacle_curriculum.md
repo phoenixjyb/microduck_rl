@@ -339,6 +339,11 @@ acceptance. Only a separately predeclared HC4-R2 near-range screen may follow.
 That screen is now frozen at seed 277 across HC4-R2's accepted 0.30/0.40 m/s,
 0.90 m forward, and -0.08/0.00/+0.08 m lateral cells, using the same paired
 exact-versus-two-centimeter protocol and numerical gates.
+HC4-R2's seed-277 exact and noisy matrices each completed all 384 attempts as
+clean passages. All phase-speed and motor gates passed, so two additional
+predeclared seeds may now establish or reject multi-seed sensitivity for both
+accepted specialists. The range bound is still provisional simulation stress,
+not a measured sensor specification.
 
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign

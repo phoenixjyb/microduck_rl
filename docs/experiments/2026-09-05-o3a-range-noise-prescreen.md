@@ -4,8 +4,8 @@ Date: 2026-09-05
 
 Parent: `c8026b1781f92eec0d0eadcdcba3e1bc74200207`
 
-Decision: **predeclare a bounded HC4-LH sensitivity pre-screen; do not retrain
-or promote a noisy-sensor capability yet**
+Decision: **HC4-LH passes three seeds; HC4-R2 stops on seed-281 collision
+regression; the two-specialist range-noise campaign is not accepted**
 
 ## Purpose and unchanged authority
 
@@ -97,6 +97,50 @@ predeclared HC4-R2 near-range sensitivity screen. A stop decision closes this
 noise level for diagnosis; it does not authorize retraining, a post-hoc gate
 change, bearing noise, latency, dropout, MP4 creation, raw perception, or
 physical motion.
+
+## Retained September 6 continuation
+
+100.100 reconnected at 00:54 Asia/Shanghai. Its clean branch fast-forwarded to
+`a1feec4ec1ae6f5e1ac19cea2f6ca1c290c2a11f`; all 84 focused obstacle/O3a tests
+passed with CUDA hidden. The accepted actor and both supervisor hashes matched.
+The GPU was idle and both protected AI Mission services inactive before launch.
+
+| Specialist / seed | Exact clean / collision / timeout | Noisy clean / collision / timeout | Max noisy torque p99 | Decision |
+|---|---|---|---:|---|
+| HC4-LH / 281 | 192 / 0 / 0 | 191 / 0 / 1 | 0.590056 | continue |
+| HC4-LH / 283 | 192 / 0 / 0 | 192 / 0 / 0 | 0.572060 | continue |
+| HC4-R2 / 281 | 384 / 0 / 0 | 383 / 1 / 0 | 0.569249 | stop |
+
+HC4-R2 fails collision non-regression at precisely 0.30 m/s, 0.90 m forward,
+0.00 m lateral: one noisy collision versus none in the matched exact cell.
+All remaining numerical checks pass, including finite metrics and zero hard
+failures, falls, NaN terminations, unresolved attempts, and rated-speed exposure.
+The failure is a retained evaluation result, not a crashed simulator. Its
+sequential service deliberately exited 2 after writing the stop decision.
+HC4-R2 seed 283 was not launched, and no six-pair acceptance JSON was emitted.
+The pooled two-specialist campaign is **not accepted**. HC4-LH completed its
+three passing seed gates, but this remains provisional simulation sensitivity.
+
+Exact retained SHA-256 values (baseline report / noisy report / decision):
+
+- HC4-LH 281:
+  `346d1b82a3c405665a243993507e1bc9f10f1a43fe70c0aa3e9ca5f213678a1c` /
+  `894df599c82c6a44e571ae8c8734d178fe1ce0fa80ae729e78ec6b6c84aa8666` /
+  `893454596f36c6bc2e7beb51e72868e28bb64ea8dcb2ae251fa42e98f488148a`;
+- HC4-LH 283:
+  `15e208d93f9570aeced96ed6a076410cdebda32c185a378f50c0259eb1b2237b` /
+  `5c26498179280ca4f35e8c2e235e110b509aaec5561bf90855a5a05a4cdba077` /
+  `a24de19616ad5d351993fa10f99503198a9582df2058e60d3ca40d8aba1fd564`;
+- HC4-R2 281:
+  `cb060e13be286a3f92637037dd6b15237a98badd0086012e79e8c0f78634cc0e` /
+  `08924261f26ff8d9feb9f7f90991e37279e268417a260e64e5e43bc459542c5c` /
+  `bc7179736db983ce9122c488431f82e206c748164acba232dc3144cb08c41cba`.
+
+Artifacts remain under `artifacts/evaluations/o3a-a1feec4-*` on 100.100.
+After the controlled stop, the GPU returned to 12 MiB, 0% use, 44 C.
+No noise magnitude or threshold was changed. Further range-noise training
+requires a separately declared revision and a fresh comparison; the overnight
+HC4-U3 architecture diagnostic uses only the retained exact-geometry corpus.
 
 ## Retained implementation and wiring evidence
 

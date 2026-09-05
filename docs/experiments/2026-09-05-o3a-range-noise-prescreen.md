@@ -97,3 +97,54 @@ predeclared HC4-R2 near-range sensitivity screen. A stop decision closes this
 noise level for diagnosis; it does not authorize retraining, a post-hoc gate
 change, bearing noise, latency, dropout, MP4 creation, raw perception, or
 physical motion.
+
+## Retained implementation and wiring evidence
+
+Commit `a2d3962514dbc1160d16bb6a0e4a4967c3150a46` adds the dedicated replay
+stream, range-only rollout wiring, report provenance, and deterministic O3a
+gate. The focused obstacle suite passed 74 tests locally and on 100.100. A
+four-environment CPU comparison at the centered cell completed all first
+attempts with four clean passages in both conditions and no collision,
+timeout, fall, NaN, non-finite, hard, other, or unresolved event.
+
+- exact CPU report SHA-256:
+  `08b1c474a375258214d16c4feca504e4dd903bbfc876d0da6fc3596f6f0b2e5a`;
+- noisy CPU report SHA-256:
+  `67268c521bac7fdeda86f849693202e2012d4297d488cf05dd0b987eb037f9be`.
+
+The noisy report names only `range` as perturbed, retains the two-centimeter
+bound, physics seed 271, noise seed 3000282, and exact ground-truth outcomes.
+This is wiring evidence only and does not count toward the 192-attempt gate.
+
+## Retained HC4-LH seed-271 decision
+
+The exclusive-CUDA exact and noisy matrices both completed 192/192 first
+attempts. They recorded zero timeout, fall, NaN, non-finite, hard, other, or
+unresolved events and zero rated motor-speed exceedance.
+
+| Condition | Clean | Collision | Timeout | Max torque p99 |
+|---|---:|---:|---:|---:|
+| Exact baseline | 191 | 1 | 0 | 0.5905 |
+| Range error `[-0.02, +0.02]` m | 192 | 0 | 0 | 0.5879 |
+
+The sole baseline collision was centered. The noisy matrix had no collision
+in any cell, so clean count changed by +1 and collision count by -1 without a
+timeout trade. Sample-weighted approach speed changed by +0.00073 m/s and
+recovery speed by -0.00207 m/s. Every per-cell phase-speed delta stayed inside
+the -0.03 m/s bound, and every deterministic check passed.
+
+Retained SHA-256 evidence under
+`artifacts/evaluations/o3a-a2d3962-hc4lh-s271-*` on 100.100:
+
+- exact baseline report:
+  `97adf0d98842ab7e4c8fe3375e453459819e49bb5c90b24f2e9b31cf65482f48`;
+- noisy report:
+  `a0712b0d91978889ed4f5adf4fe11e51959ce74022b6188afa6c1f699edfa902`;
+- deterministic decision:
+  `921c5a309f4c57169a65e9f6fabf63fef1900065d4b9edc75092f5fcdfcd0636`.
+
+Decision: `continue_hc4r2_predeclaration`. This single matched seed establishes
+bounded sensitivity evidence, not a statistical claim that range noise is
+beneficial. It authorizes only a separately frozen HC4-R2 near-range
+pre-screen. O3a completion, measured-sensor acceptance, retraining, later
+sensor axes, video, raw perception, and physical motion remain closed.

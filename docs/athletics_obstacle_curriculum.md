@@ -330,6 +330,13 @@ pass cannot complete O3a. Seed 271 compares exact and noisy conditions at
 HC4-E1 fixed-attempt denominator. See
 `experiments/2026-09-05-o3a-range-noise-prescreen.md`.
 
+That HC4-LH pre-screen passed at seed 271. The exact matrix recorded 191 clean
+passages and one collision; the paired range-noise matrix recorded 192 clean
+passages and zero collisions, with no timeouts or hard failures and all frozen
+phase-speed and motor gates satisfied. This is one-seed simulation sensitivity
+evidence, not proof that noise improves control and not measured sensor
+acceptance. Only a separately predeclared HC4-R2 near-range screen may follow.
+
 The independent hop branch now follows the canonical H0--H3 naming above. H0
 source/configuration checks and the first retained matched-arm runtime campaign
 are complete. In the fixed seed-43, 256-iteration diagnostic, Locked ended at

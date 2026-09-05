@@ -186,3 +186,33 @@ All four JSONs are backed up locally under `artifacts/overnight-20260906-u3`.
   `280add80a541baa2dc3232b4471cd1d26db510c7c846fbac3570cb0b3a862caa`.
 - Deterministic decision SHA-256:
   `f48c300bdccdb8e7bf7912775b83b30141872d99dcec476a240e12455548f225`.
+
+## Seed-307 v2 result: continue to the last held-out seed
+
+At source `2b87dc5279891b10a106256a9d17b76be6180d11` (unchanged evaluator),
+`microduck-rl-hc4u3-a88fa90-s307-eval.service` completed successfully at 02:12
+Asia/Shanghai, exit 0. Candidate **766 clean / 0 collisions / 2 timeouts** matched
+the paired sources' outcome totals over 768 fixed attempts. All eight checks
+passed, with no per-cell regressions, unresolved attempts, falls, NaN terminations,
+nonfinite steps, hard/other failures, or rated-speed exceedance. No overlapping
+terminal flags occurred. Maximum candidate cell torque p99 was 0.563957; pooled
+approach/recovery speed deltas were -0.006405 / +0.009357 m/s.
+
+The full `continue_fresh_seeds` decision was recomputed independently with CUDA
+hidden and matched exactly. The next and last predeclared held-out seed is 311,
+using the frozen checkpoint, both paired sources, and the same v2 protocol.
+No architecture, training, sensor, geometry, or threshold change is authorized by
+this intermediate result. The one-training-seed and no-physical-promotion limits
+remain in force.
+
+Directory: `artifacts/evaluations/hc4u3-ab1d831-s307-prescreen-v2`.
+All four JSONs are backed up locally under `artifacts/overnight-20260906-u3`.
+
+- Candidate report SHA-256:
+  `29dd2fc18c2ab0aba7bfaf0e04cf927468bd742f0d51153d39b717947ff8fd8a`.
+- Near source report SHA-256:
+  `fb1ec5a111789d8013e099c82993abe771cce81626b3621c70f17217b7794834`.
+- Far source report SHA-256:
+  `cd7460a41e06673d2403629ee3f9dab2d07b6631ea9c6fb6c54834fc45d5ba6a`.
+- Deterministic decision SHA-256:
+  `fbaa2597b510cc8241261e46dd721f63ff9a1680a7d9be4fb56b4a46624b960b`.

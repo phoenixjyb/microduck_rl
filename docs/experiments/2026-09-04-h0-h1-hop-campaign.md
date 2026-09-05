@@ -520,3 +520,58 @@ The H1-S stop condition is met. Do not run a multi-seed promotion, Locked
 control, H2, video, or physical motion. Any subsequent stability revision must
 first predeclare a reward that distinguishes planar translation from the
 vertical hop instead of applying full-strength stillness throughout the cycle.
+
+## Predeclared bounded-cost H1-T revision
+
+H1-T is the smallest causal follow-up to H1-S. It composes directly from H1-P,
+not from rejected H1-S, and replaces the inherited dead zero-command stillness
+term with one negative planar-translation cost:
+
+`min((vx^2 + vy^2) / 0.20^2, 1)`.
+
+The term is zero at rest, ignores vertical velocity, and is capped at one. It
+therefore prices translation without paying a positive per-step dividend for
+remaining still. Non-finite planar velocity maps to the maximum cost. Its
+weight progresses gently at fresh-run iterations 0, 2,000, and 4,000:
+`-0.05`, `-0.10`, and `-0.20`. Even at the final stage its per-step magnitude
+cannot exceed 0.20, versus H1-S's weight-3.0 positive stillness opportunity.
+
+The distinct task is `Mjlab-Hop-H1T-Flat-Sprung-K3900-MicroDuck`. H1-T changes
+no actor or critic observation, action, mechanics, phase command, H1-P height
+or motor curriculum, held-out evaluator, or physical-motion boundary. In
+particular, base linear velocity remains privileged critic state rather than a
+new real-robot actor dependency.
+
+The first runtime action is only a seed-68, 64-environment, five-iteration
+wiring smoke from scratch. It must complete with finite reward and optimizer
+metrics, emit a nonzero `planar_velocity_cost` value and its initial `-0.05`
+curriculum weight, load the H1-P height and motor curricula, retain `model_4.pt`,
+and show no NaN termination. Five-iteration falls are diagnostic only. Smoke
+success does not constitute H1 performance evidence and this source slice does
+not launch the longer diagnostic.
+
+The later paired causal diagnostic, if separately continued after reviewing the
+smoke, is seed 67, 256 environments, 6,000 iterations from scratch with retained
+checkpoints 500, 1,000, 2,000, 3,000, 4,000, and 5,999. Each checkpoint uses the
+unchanged H1 held-out seeds 211/223/227, 128 environments, and six cycles. The
+final iteration advances only if every predeclared check passes:
+
+- minimum cycle success is at least 90%;
+- minimum episode pass is above zero;
+- total falls are below paired H1-P's 23;
+- maximum drift p95 is below 0.30 m;
+- spring bottoming, rated-speed exposure, torque-utilization p99, and near-stall
+  exposure do not regress from paired H1-P.
+
+The deterministic gate is:
+
+```console
+python -m mjlab_microduck.hop_revision_gate BASELINE_JSON CANDIDATE_JSON \
+  --revision h1t --output OUTPUT_JSON
+```
+
+It retains exact input hashes and accepts only final `model_5999.pt` evaluations
+from the exact H1-P and H1-T task identities under the frozen protocol. Any
+failed check stops H1-T and parks the periodic-hop branch; it does not authorize
+multi-seed promotion, Locked, H2, video, raw perception, actor-observation
+expansion, or physical motion.

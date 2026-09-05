@@ -11,7 +11,9 @@ from mjlab_microduck.hop_evaluation import h1_decision
 from mjlab_microduck.hop_revision_gate import (
     BASELINE_TASK,
     CANDIDATE_TASK,
+    H1T_TASK,
     compare_h1s_to_h1p,
+    compare_h1t_to_h1p,
 )
 
 
@@ -104,3 +106,47 @@ def test_gate_rejects_wrong_candidate_identity(tmp_path):
     candidate = _write_evaluation(tmp_path / "candidate.json", BASELINE_TASK, _case())
     with pytest.raises(ValueError, match="unexpected task"):
         compare_h1s_to_h1p(baseline, candidate)
+
+
+def test_h1t_gate_advances_only_with_behavior_and_envelope_passes(tmp_path):
+    baseline = _write_evaluation(tmp_path / "baseline.json", BASELINE_TASK, _case())
+    candidate = _write_evaluation(
+        tmp_path / "candidate.json",
+        H1T_TASK,
+        _case(
+            cycle_success_fraction=0.95,
+            episode_pass_fraction=0.1,
+            fall_events=22,
+            max_drift_p95_m=0.29,
+            spring_bottomed_fraction=0.003,
+            motor_speed_rated_exceed_fraction=0.0001,
+            motor_torque_utilization_p99=0.82,
+            motor_torque_near_stall_fraction=0.004,
+        ),
+    )
+    result = compare_h1t_to_h1p(baseline, candidate)
+    assert result["decision"] == "advance_to_multi_seed"
+    assert all(check["status"] == "pass" for check in result["comparisons"])
+    assert result["protocol"] == "H1-T-vs-H1-P-causal-gate-v1"
+
+
+def test_h1t_gate_stops_when_drift_threshold_is_missed(tmp_path):
+    baseline = _write_evaluation(tmp_path / "baseline.json", BASELINE_TASK, _case())
+    candidate = _write_evaluation(
+        tmp_path / "candidate.json",
+        H1T_TASK,
+        _case(
+            cycle_success_fraction=0.95,
+            episode_pass_fraction=0.1,
+            fall_events=22,
+            max_drift_p95_m=0.30,
+            spring_bottomed_fraction=0.003,
+            motor_speed_rated_exceed_fraction=0.0001,
+            motor_torque_utilization_p99=0.82,
+            motor_torque_near_stall_fraction=0.004,
+        ),
+    )
+    result = compare_h1t_to_h1p(baseline, candidate)
+    failures = [c["name"] for c in result["comparisons"] if c["status"] == "fail"]
+    assert result["decision"] == "stop"
+    assert failures == ["drift_below_0_30_m"]

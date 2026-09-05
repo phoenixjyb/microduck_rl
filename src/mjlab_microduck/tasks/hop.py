@@ -187,6 +187,19 @@ H1P_MOTOR_COST_WEIGHT_STAGES = [
     {"step": _h1p_step(4000), "weight": -2.00},
 ]
 
+# H1-T follows the rejected H1-S causal diagnostic. H1-S paid a weight-3.0
+# positive Gaussian at every step, which made standing still a better strategy
+# than hopping. H1-T instead introduces only a small, bounded negative cost.
+# The first two thousand iterations are intentionally light so the policy can
+# acquire the hop before planar stability receives its full (still modest)
+# weight.
+H1T_PLANAR_COST_REFERENCE_SPEED = 0.20
+H1T_PLANAR_COST_WEIGHT_STAGES = [
+    {"step": 0, "weight": -0.05},
+    {"step": _h1p_step(2000), "weight": -0.10},
+    {"step": _h1p_step(4000), "weight": -0.20},
+]
+
 # Upper edge of `com_height_target`'s band, for the RIGID robot, in the hop task
 # only. See the in-place edit in make_hop_variant for the reasoning.
 HOP_COM_HEIGHT_MAX = 0.20
@@ -575,6 +588,36 @@ def make_h1s_variant(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def make_h1t_variant(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """Add the bounded planar-translation cost after H1-P.
+
+    H1-T is deliberately composed from H1-P, not H1-S. It removes the inherited
+    dead zero-command stillness term and replaces it with a distinct cost whose
+    magnitude is capped. Observations, actions, mechanics, and the H1 height and
+    motor curricula remain unchanged.
+    """
+    if "motor_torque_load" not in cfg.rewards:
+        raise ValueError("make_h1t_variant requires make_h1p_variant first")
+    if cfg.rewards.pop("stillness_at_zero_command", None) is None:
+        raise ValueError("make_h1t_variant requires stillness_at_zero_command")
+
+    cfg.rewards["planar_velocity_cost"] = RewardTermCfg(
+        func=microduck_mdp.bounded_planar_velocity_cost,
+        weight=H1T_PLANAR_COST_WEIGHT_STAGES[0]["weight"],
+        params={"reference_speed": H1T_PLANAR_COST_REFERENCE_SPEED},
+    )
+    cfg.curriculum["planar_velocity_cost_weight"] = CurriculumTermCfg(
+        func=microduck_mdp.reward_weight,
+        params={
+            "reward_name": "planar_velocity_cost",
+            "weight_stages": [
+                dict(stage) for stage in H1T_PLANAR_COST_WEIGHT_STAGES
+            ],
+        },
+    )
+    return cfg
+
+
 from copy import deepcopy
 from dataclasses import replace
 
@@ -630,3 +673,9 @@ def h1s_rl_cfg():
     """Distinct logging identity for the source-only H1-S revision."""
     cfg = hop_rl_cfg("k3900")
     return replace(cfg, experiment_name="hop_k3900_h1s", run_name="h1s_k3900")
+
+
+def h1t_rl_cfg():
+    """Distinct logging identity for the bounded-cost H1-T revision."""
+    cfg = hop_rl_cfg("k3900")
+    return replace(cfg, experiment_name="hop_k3900_h1t", run_name="h1t_k3900")

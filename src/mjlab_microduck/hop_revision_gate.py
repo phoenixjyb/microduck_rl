@@ -1,4 +1,4 @@
-"""Deterministic causal gate for the source-only H1-S hop revision."""
+"""Deterministic causal gates for bounded H1 hop revisions."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from mjlab_microduck.hop_evaluation import H1_PROTOCOL, h1_decision
 
 BASELINE_TASK = "Mjlab-Hop-H1P-Flat-Sprung-K3900-MicroDuck"
 CANDIDATE_TASK = "Mjlab-Hop-H1S-Flat-Sprung-K3900-MicroDuck"
+H1T_TASK = "Mjlab-Hop-H1T-Flat-Sprung-K3900-MicroDuck"
 HELDOUT_SEEDS = [211, 223, 227]
 FINAL_ITERATION = 5999
 
@@ -112,13 +113,103 @@ def compare_h1s_to_h1p(baseline_path: Path, candidate_path: Path) -> dict[str, A
     }
 
 
+def compare_h1t_to_h1p(baseline_path: Path, candidate_path: Path) -> dict[str, Any]:
+    """Apply H1-T's predeclared absolute and H1-P non-regression gates."""
+    baseline = _load_evaluation(baseline_path, expected_task=BASELINE_TASK)
+    candidate = _load_evaluation(candidate_path, expected_task=H1T_TASK)
+    specifications = [
+        (
+            "cycle_success_at_least_90_percent",
+            "cycle_success_fraction",
+            ">=",
+            0.90,
+            "absolute_threshold",
+        ),
+        (
+            "episode_pass_above_zero",
+            "episode_pass_fraction",
+            ">",
+            0.0,
+            "absolute_threshold",
+        ),
+        ("falls_improve", "falls", "<", float(baseline["gates"]["falls"]), "h1p"),
+        (
+            "drift_below_0_30_m",
+            "drift",
+            "<",
+            0.30,
+            "absolute_threshold",
+        ),
+        (
+            "spring_bottoming_does_not_regress",
+            "spring_bottoming",
+            "<=",
+            float(baseline["gates"]["spring_bottoming"]),
+            "h1p",
+        ),
+        (
+            "rated_speed_does_not_regress",
+            "rated_speed_exceedance",
+            "<=",
+            float(baseline["gates"]["rated_speed_exceedance"]),
+            "h1p",
+        ),
+        (
+            "torque_p99_does_not_regress",
+            "torque_utilization_p99",
+            "<=",
+            float(baseline["gates"]["torque_utilization_p99"]),
+            "h1p",
+        ),
+        (
+            "near_stall_does_not_regress",
+            "near_stall_fraction",
+            "<=",
+            float(baseline["gates"]["near_stall_fraction"]),
+            "h1p",
+        ),
+    ]
+    comparisons = []
+    for name, metric, operator, reference, reference_kind in specifications:
+        candidate_value = float(candidate["gates"][metric])
+        passed = {
+            ">": candidate_value > reference,
+            "<": candidate_value < reference,
+            ">=": candidate_value >= reference,
+            "<=": candidate_value <= reference,
+        }[operator]
+        comparisons.append(
+            {
+                "name": name,
+                "metric": metric,
+                "operator": operator,
+                "reference": reference,
+                "reference_kind": reference_kind,
+                "candidate": candidate_value,
+                "status": "pass" if passed else "fail",
+            }
+        )
+    accepted = all(item["status"] == "pass" for item in comparisons)
+    return {
+        "schema_version": 1,
+        "protocol": "H1-T-vs-H1-P-causal-gate-v1",
+        "baseline": baseline,
+        "candidate": candidate,
+        "comparisons": comparisons,
+        "decision": "advance_to_multi_seed" if accepted else "stop",
+        "physical_motion_authorized": False,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("baseline", type=Path)
     parser.add_argument("candidate", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--revision", choices=("h1s", "h1t"), default="h1s")
     args = parser.parse_args()
-    result = compare_h1s_to_h1p(args.baseline, args.candidate)
+    comparator = compare_h1s_to_h1p if args.revision == "h1s" else compare_h1t_to_h1p
+    result = comparator(args.baseline, args.candidate)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
     print(f"h1_revision_gate_decision={result['decision']}")

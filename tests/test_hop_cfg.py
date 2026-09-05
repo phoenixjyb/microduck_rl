@@ -19,6 +19,8 @@ from mjlab_microduck.tasks.hop import (
     HOP_PERIOD,
     H1P_HEIGHT_ENVELOPE_STAGES,
     H1P_MOTOR_COST_WEIGHT_STAGES,
+    H1T_PLANAR_COST_REFERENCE_SPEED,
+    H1T_PLANAR_COST_WEIGHT_STAGES,
     LOAD_FORCE_MAX_RATIO,
     LOAD_FORCE_WEIGHT,
     MIN_RISE,
@@ -27,6 +29,7 @@ from mjlab_microduck.tasks.hop import (
     UPWARD_VELOCITY_WEIGHT,
     make_h1p_variant,
     make_h1s_variant,
+    make_h1t_variant,
     make_hop_variant,
 )
 from mjlab_microduck.tasks.motor_aware import (
@@ -132,6 +135,41 @@ def test_h1s_requires_h1p_and_activates_existing_stillness_reward():
     assert term.func is microduck_mdp.planar_stillness
     assert term.weight == original_weight == 3.0
     assert term.params == {"vel_std": 0.07}
+    assert revised.observations is observations
+    assert revised.actions is actions
+    assert revised.scene is scene
+
+
+def test_h1t_requires_h1p_and_replaces_dead_stillness_with_bounded_cost():
+    with pytest.raises(ValueError, match="requires make_h1p_variant first"):
+        make_h1t_variant(make_hop_variant(make_microduck_velocity_env_cfg()))
+
+    cfg = make_h1p_variant(make_hop_variant(make_microduck_velocity_env_cfg()))
+    observations = cfg.observations
+    actions = cfg.actions
+    scene = cfg.scene
+    revised = make_h1t_variant(cfg)
+    assert "stillness_at_zero_command" not in revised.rewards
+    term = revised.rewards["planar_velocity_cost"]
+    assert term.func is microduck_mdp.bounded_planar_velocity_cost
+    assert term.weight == H1T_PLANAR_COST_WEIGHT_STAGES[0]["weight"]
+    assert term.params == {"reference_speed": H1T_PLANAR_COST_REFERENCE_SPEED}
+    curriculum = revised.curriculum["planar_velocity_cost_weight"]
+    assert curriculum.func is microduck_mdp.reward_weight
+    assert curriculum.params == {
+        "reward_name": "planar_velocity_cost",
+        "weight_stages": H1T_PLANAR_COST_WEIGHT_STAGES,
+    }
+    assert [stage["step"] for stage in H1T_PLANAR_COST_WEIGHT_STAGES] == [
+        0,
+        2000 * 24,
+        4000 * 24,
+    ]
+    assert [stage["weight"] for stage in H1T_PLANAR_COST_WEIGHT_STAGES] == [
+        -0.05,
+        -0.10,
+        -0.20,
+    ]
     assert revised.observations is observations
     assert revised.actions is actions
     assert revised.scene is scene
@@ -294,6 +332,7 @@ def test_hop_task_ids_registered():
         assert tid in tasks, f"{tid} not registered"
     assert "Mjlab-Hop-H1P-Flat-Sprung-K3900-MicroDuck" in tasks
     assert "Mjlab-Hop-H1S-Flat-Sprung-K3900-MicroDuck" in tasks
+    assert "Mjlab-Hop-H1T-Flat-Sprung-K3900-MicroDuck" in tasks
 
 
 def test_h1p_registered_cfg_and_run_identity():
@@ -319,6 +358,25 @@ def test_h1s_registered_cfg_and_run_identity():
     assert cfg.rewards["stillness_at_zero_command"].func is microduck_mdp.planar_stillness
     assert rl_cfg.experiment_name == "hop_k3900_h1s"
     assert rl_cfg.run_name == "h1s_k3900"
+
+
+def test_h1t_registered_cfg_and_run_identity():
+    import mjlab_microduck.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
+
+    task_id = "Mjlab-Hop-H1T-Flat-Sprung-K3900-MicroDuck"
+    cfg = load_env_cfg(task_id)
+    rl_cfg = load_rl_cfg(task_id)
+    assert "stillness_at_zero_command" not in cfg.rewards
+    assert (
+        cfg.rewards["planar_velocity_cost"].func
+        is microduck_mdp.bounded_planar_velocity_cost
+    )
+    assert cfg.curriculum["planar_velocity_cost_weight"].params[
+        "weight_stages"
+    ] == H1T_PLANAR_COST_WEIGHT_STAGES
+    assert rl_cfg.experiment_name == "hop_k3900_h1t"
+    assert rl_cfg.run_name == "h1t_k3900"
 
 
 def test_hop_arms_have_distinct_wandb_identities():

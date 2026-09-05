@@ -3908,6 +3908,35 @@ def planar_stillness(
     return torch.exp(-(body_vel**2) / vel_std**2)
 
 
+def bounded_planar_velocity_cost(
+    env: ManagerBasedRlEnv,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+    reference_speed: float = 0.2,
+) -> torch.Tensor:
+    """Return a bounded cost for planar body translation only.
+
+    The term is zero at rest and rises quadratically to one at
+    ``reference_speed``. Faster motion remains capped at one, so this term
+    cannot create the dominant positive stay-still dividend that suppressed
+    hopping in H1-S. Vertical velocity is deliberately ignored: a clean hop
+    should not be penalized merely for leaving the ground.
+
+    Non-finite planar velocity is mapped to the maximum cost rather than
+    silently opening the regularizer.
+    """
+    if reference_speed <= 0.0:
+        raise ValueError("reference_speed must be positive")
+    asset: Entity = env.scene[asset_cfg.name]
+    planar_velocity = torch.nan_to_num(
+        asset.data.root_link_lin_vel_w[:, :2],
+        nan=reference_speed,
+        posinf=reference_speed,
+        neginf=-reference_speed,
+    )
+    normalized_speed_sq = torch.sum(planar_velocity**2, dim=1) / reference_speed**2
+    return torch.clamp(normalized_speed_sq, max=1.0)
+
+
 def joint_vel_l2_when_standing(
     env: ManagerBasedRlEnv,
     asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,

@@ -6,6 +6,7 @@ import pytest
 import torch
 
 from mjlab_microduck.tasks.mdp import (
+    bounded_planar_velocity_cost,
     com_height_target_recovery_only,
     hop_body_height,
     hop_both_feet_airborne,
@@ -130,6 +131,27 @@ def test_planar_stillness_is_ungated_and_monotone_in_planar_speed():
     # A unit-magnitude phase command would zero stillness_at_zero_command;
     # H1-S must remain active because phase is not a velocity target.
     assert moving.item() > 0.0
+
+
+def test_bounded_planar_velocity_cost_is_zero_monotone_and_capped():
+    env = _Env()
+    assert bounded_planar_velocity_cost(env, reference_speed=0.2).item() == 0.0
+
+    env.scene._asset.data.root_link_lin_vel_w[0] = torch.tensor([0.1, 0.0, 9.0])
+    assert bounded_planar_velocity_cost(
+        env, reference_speed=0.2
+    ).item() == pytest.approx(0.25)
+
+    env.scene._asset.data.root_link_lin_vel_w[0, :2] = torch.tensor([0.2, 0.2])
+    assert bounded_planar_velocity_cost(env, reference_speed=0.2).item() == 1.0
+
+
+def test_bounded_planar_velocity_cost_fails_closed_on_nonfinite_velocity():
+    env = _Env()
+    env.scene._asset.data.root_link_lin_vel_w[0, 0] = float("nan")
+    assert bounded_planar_velocity_cost(env, reference_speed=0.2).item() == 1.0
+    with pytest.raises(ValueError, match="reference_speed must be positive"):
+        bounded_planar_velocity_cost(env, reference_speed=0.0)
 
 
 # --- hop_both_feet_airborne -------------------------------------------------

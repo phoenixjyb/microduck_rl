@@ -79,3 +79,24 @@ check. Bound the fit to 45 minutes, and each held-out seed matrix to 20 minutes;
 recheck the clock before every launch and reserve 15 minutes before 07:00 for
 artifact retention. Never overlap GPU workloads. At cutoff, launch nothing
 further; retain completed artifacts and leave protected services inactive.
+
+## Retained fit and frozen evaluation identity
+
+Implementation/training commit: `ab1d8312865455acc77675a71ef1c14586cc2c2f`.
+All 66 focused architecture, fitting, loading, rollout, and gate tests passed
+locally and on 100.100 with CUDA hidden. The fit completed all 200 epochs with
+finite losses and selected epoch 200; source, sample counts, partition counts,
+and all thirteen dataset identities matched the predeclaration.
+
+- Checkpoint: `artifacts/checkpoints/hc4u3-ab1d831-s42/supervisor.pt`;
+  SHA-256 `6c6546448340530e4cdb7e4381247f644211029c7750146c0da6dbcf7c60aa2d`.
+- Manifest SHA-256:
+  `58d8327a6271a4702a10af48bcbd597837d4232c8b729ec9c3473a12f1da860c`.
+- Validation MSE 0.0001491593, speed MAE 0.001879 m/s, yaw MAE 0.005441 rad/s.
+- Recovery speed MAE 0.004089 m/s and p95 error 0.014493 m/s, compared with
+  HC4-U2's 0.006029 and 0.023411 m/s on the identical validation partition.
+
+Decision: `offline-imitation-pass`, pending the unchanged closed-loop gate.
+The checkpoint hash above is frozen before the first seed-293 evaluation.
+Fitting improvement cannot establish collision avoidance or timeout recovery.
+Retained user service: `microduck-rl-hc4u3-ab1d831-s42.service` (success, exit 0).

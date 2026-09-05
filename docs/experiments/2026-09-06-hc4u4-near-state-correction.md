@@ -1,6 +1,6 @@
 # HC4-U4 near-envelope student-state correction
 
-Date: 2026-09-06. Status: seed-42 offline fit passed; held-out rollout pending.
+Date: 2026-09-06. Status: rejected at the first predeclared held-out seed (347).
 Parent HC4-U3 is rejected at held-out physics seed 311. See the retained U3
 experiment for exact failed cells, hashes, and the limits of causal diagnosis.
 
@@ -180,3 +180,66 @@ the first matrix uses seed **347** and output
 `artifacts/evaluations/hc4u4-bc60b2c-s347-prescreen-v2`. Only an independently
 recomputed passing decision allows 349, then 353. Numerical gates and all
 authority limits above remain unchanged. Offline pass alone is not acceptance.
+
+## Seed-347 rejection and retained diagnosis
+
+Evaluator source: `0f3d8b6b500dd7c6e898f53d4ce763a2ff52a791`.
+`microduck-rl-hc4u4-bc60b2c-s347-eval.service` completed the entire matrix at
+03:36:01 Shanghai and intentionally exited 2 after writing `decision.json`.
+This is a numerical rejection, not an infrastructure crash. CPU recomputation
+of the complete decision matched exactly. At 03:47, the GPU was idle at
+12 MiB / 0% / 45 C, both protected services inactive, and the worktree clean.
+
+The candidate had **767 clean / 1 collision / 0 timeouts** over 768 first
+attempts. Paired specialists had **765 clean / 0 collisions / 3 timeouts**.
+At **0.40 m/s, 0.90 m forward, 0.00 m lateral**, the candidate had 63 clean and
+one collision, versus the near specialist's 64 clean and zero collisions.
+Per-cell collision, per-cell clean, and aggregate outcome non-regression fail.
+The three timeout improvements elsewhere cannot compensate for that collision.
+This closes U4: **do not run 349 or 353, refit, select another checkpoint, or
+repeat 347 to seek a passing result**.
+
+Timeout and approach/recovery-speed checks passed. Pooled speed deltas were
+-0.006451841246509188 / +0.011795808031717203 m/s; maximum candidate cell motor
+torque p99 was 0.5478392243385315, below 0.60. There were zero falls, NaN
+terminations, nonfinite steps, hard/other failures, unresolved attempts, or
+rated-speed exceedance. The candidate and near source had no overlapping
+terminal flags. The far source's 0.30/1.15/0.00 cell had one pass/timeout overlap;
+failure-priority accounting retained 63 clean and one timeout from 64 raw pass
+flags plus one timeout. This does not explain or change the candidate collision.
+
+Directory: `artifacts/evaluations/hc4u4-bc60b2c-s347-prescreen-v2`, backed up
+locally under `artifacts/overnight-20260906-u4`.
+
+- Candidate report SHA-256:
+  `e6c2cbccb730a60fc0dac390e7c5fdc7388809b869c92a2898d35b5272d39a61`.
+- Near report SHA-256:
+  `ef52c0f4ff6b8d1ddf4899ea45555a0b2bc91197201bbd2b08024197d359b8d9`.
+- Far report SHA-256:
+  `70336e48748ed896282e758d72a704ce75444af8d3a9012646796f19fc60d224`.
+- Decision SHA-256:
+  `f55faae00ba653a64c6ec6a93f938e13f300bf70ef5984c3cd59e2a42b93b535`.
+
+Read-only inspection again finds an evidence gap: only environment zero has a
+retained trajectory, and it passed for both candidate (8.4 s) and near source
+(8.3 s). The colliding environment is not identified or traced. The representative
+command differences, average offline imitation error, and full-near data coverage
+therefore do not establish the collision's cause. Adding three admitted correction
+shards did not establish a robust unified supervisor; no further data-only fit is
+justified from this aggregate evidence alone.
+
+Next bounded source-only work is a passive, all-first-attempt failure recorder
+with focused tests. It should retain environment identity, ordered pre-step
+structured state/commands, resolved terminal outcome and accounting version,
+while distinguishing terminal flags from auto-reset state. It must not change
+policy inputs, teacher/controller state, RNG, rewards, physics, resets or gates.
+Keep the existing representative trace and frozen U3/U4 artifacts unchanged.
+No new GPU run is predeclared by this recorder plan, and no historical acceptance
+seed may be rerun or reclassified. A future diagnostic or training revision needs
+its own evidence-backed bounded protocol before GPU admission. Hopping, noisy
+perception, video, promotion and physical motion remain closed.
+
+Retention checks: all four local-backup hashes match the remote evidence and
+the document; the decision counts match the retained JSON. All 38 focused
+U4/U3/U1 gate tests passed locally with CUDA hidden (64.51 seconds). No evaluator,
+policy, dataset or threshold was changed to close this result.

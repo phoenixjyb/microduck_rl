@@ -2,7 +2,7 @@
 
 Date: 2026-09-06. Parent source: `a1feec4ec1ae6f5e1ac19cea2f6ca1c290c2a11f`.
 
-Status: predeclared single-candidate architecture diagnostic, simulation only.
+Status: rejected at the third predeclared physics seed (311), simulation only.
 The user authorized continued Duck development and training until 07:00
 Asia/Shanghai today. O3a's running evaluation completes before this GPU job.
 
@@ -216,3 +216,50 @@ All four JSONs are backed up locally under `artifacts/overnight-20260906-u3`.
   `cd7460a41e06673d2403629ee3f9dab2d07b6631ea9c6fb6c54834fc45d5ba6a`.
 - Deterministic decision SHA-256:
   `fbaa2597b510cc8241261e46dd721f63ff9a1680a7d9be4fb56b4a46624b960b`.
+
+## Seed-311 v2 rejection and diagnosis
+
+Source `6aef5922a406b8de8e6abfcc176f8b14f9113866`, unchanged evaluator.
+Service `microduck-rl-hc4u3-a88fa90-s311-eval.service` finished its complete
+matrix at 02:32 Asia/Shanghai and deliberately exited 2 on the retained `stop`
+decision; this was not a software crash. CPU recomputation matched the complete
+decision exactly. Candidate: **760 clean / 2 collisions / 6 timeouts**, paired
+sources: **759 / 1 / 8**, each over 768 fixed attempts.
+
+At 0.30 m/s, 0.90 m forward, -0.08 m lateral, U3 had 63 clean and one collision
+versus the near specialist's 64 clean and no collision. This fails per-cell
+collision, per-cell clean, and aggregate collision non-regression. Timeout,
+approach/recovery speed and motor gates passed; maximum torque p99 was 0.560354.
+There were no falls, NaN/nonfinite events, hard/other failures, unresolved attempts,
+rated-speed exceedance, or overlapping terminal flags. No extra acceptance seeds,
+independent-training-seed promotion, or capacity-control promotion follow this
+rejection.
+
+Read-only trace inspection found that the retained representative environment
+passed for both controllers. The actual colliding environment's trajectory is
+not retained. Consequently, distribution shift in student-reached near-obstacle
+states is a hypothesis, not a proved collision cause. The original training
+corrections were reached by older HC4-R and HC4-U1 networks, not HC4-U3. A separately
+predeclared full-near-envelope correction collection will test this coverage
+hypothesis without changing architecture, perception, command authority or gates;
+see `2026-09-06-hc4u4-near-state-correction.md`.
+
+Across all three predeclared seeds, candidate totals are 2,288 clean / 5 collisions /
+11 timeouts, paired sources 2,283 / 5 / 16, over 2,304 attempts per controller.
+The pooled improvement and equal total collisions **do not override** seed 311's
+local failure. The full single-training-seed diagnostic is rejected.
+All three decision objects were recomputed again before writing the retained
+summary `artifacts/evaluations/hc4u3-ab1d831-three-seed-v2.json`, SHA-256
+`02305b301cb6fc72476dfc5a26197832e156a54b9c5470ea7f3bd580594bdcd3`.
+
+Directory: `artifacts/evaluations/hc4u3-ab1d831-s311-prescreen-v2`, with all four
+JSONs backed up locally under `artifacts/overnight-20260906-u3`.
+
+- Candidate report SHA-256:
+  `a6e8b0f09680747da29f228d42015d170b9333a6db9041223b932fdb031a1813`.
+- Near source report SHA-256:
+  `7c83daf23dd6e3862d30b8b118d731c34ce3c5049fd34b82a7dc02ac01ba1587`.
+- Far source report SHA-256:
+  `76b7bee5890c79f8608fe6398e2ba36167a58247d53ce0b87a0564fe57cf0a4d`.
+- Deterministic decision SHA-256:
+  `0a034abd660702ae191720c9c838f8a1dd98992755c7f9533fa3ed61bb846e55`.

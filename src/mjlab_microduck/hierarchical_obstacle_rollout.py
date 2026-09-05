@@ -1102,10 +1102,8 @@ def run_rollout(
         collect_teacher_corrections=collect_teacher_corrections,
         supervisor_checkpoint=supervisor_checkpoint,
     )
-    if first_attempt_only and (
-        collect_success_dataset or collect_teacher_corrections
-    ):
-        raise ValueError("first-attempt evaluation cannot collect training datasets")
+    if first_attempt_only and collect_success_dataset:
+        raise ValueError("first-attempt collection supports student corrections only")
     if range_noise_m < 0.0:
         raise ValueError("range_noise_m must be non-negative")
     if range_noise_m > 0.0 and (
@@ -1273,6 +1271,9 @@ def run_rollout(
         correction_payload = {
             "schema_version": 1,
             "stage": "HC4R2-student-state-teacher-corrections",
+            "collection_window": report["evaluation_window"],
+            "terminal_outcome_protocol": report["terminal_outcome_protocol"],
+            "collection_seeds": list(seeds),
             "checkpoint": str(checkpoint),
             "checkpoint_sha256": _sha256(checkpoint),
             "student_supervisor_checkpoint": str(supervisor_checkpoint),

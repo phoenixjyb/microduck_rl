@@ -149,3 +149,40 @@ Retained diagnostic directory:
   `7741e04951a599e83a78fdaa05cab3fbc30688d18b504d0213f66f42869c5e68`.
 - Replay far report SHA-256:
   `393f0af7a1e1db7ea551359a242122d18f2c8fbb701d7eb4d586f81a8bae14a3`.
+
+## Seed-293 v2 result: continue to the next held-out seed
+
+At evaluator source `a88fa90d4449ec7375ca8249aea54b600d32b439`, retained service
+`microduck-rl-hc4u3-a88fa90-s293-eval.service` completed successfully (exit 0)
+at 01:52 Asia/Shanghai. All 106 focused tests also passed on 100.100 before launch.
+The candidate completed all 768 fixed attempts: **762 clean / 3 collisions /
+3 timeouts**, versus paired sources **758 / 4 / 6**. There were no falls, NaN
+terminations, nonfinite steps, unresolved attempts, other/hard failures, or rated
+motor-speed exceedance. All eight numerical checks passed, including every
+per-cell outcome and before/after-speed comparison. Maximum candidate cell torque
+p99 was 0.555901 (limit 0.60); pooled approach/recovery speed deltas were
+-0.007868 / +0.009833 m/s. This is a relative diagnostic pass, not zero-collision
+acceptance, physical readiness, or a demonstrated architectural causal benefit.
+
+The repaired evaluator captured one actual simultaneous success/timeout in the
+candidate's 0.30 m/s, 1.15 m, -0.08 m cell: raw counts 63 pass + 2 timeout over
+64 attempts. Failure-priority accounting correctly retained **62 clean + 2
+timeout**, not an extra success. This proves the overlapping-term mechanism can
+occur, but does not identify the uncaptured flags in the earlier baseline crash.
+
+On read-only CPU recomputation, the full decision object matched exactly:
+`continue_fresh_seeds`. Fresh seeds 307 and then 311 remain gated, in order.
+The checkpoint and architecture stay frozen. Subsequent directories use suffix
+`prescreen-v2` and the same evaluator; no partial v1 reports are admissible.
+
+Report directory: `artifacts/evaluations/hc4u3-ab1d831-s293-prescreen-v2`.
+All four JSONs are backed up locally under `artifacts/overnight-20260906-u3`.
+
+- Candidate report SHA-256:
+  `10f27d31ab42161df5b7c089072c4ab9632ad822f20dce21951011f7b628a1cd`.
+- Near source report SHA-256:
+  `304fe3d9f3cf0de953532c0c95b8a841090dc4810ce2158c58bcdc6c1fb052d0`.
+- Far source report SHA-256:
+  `280add80a541baa2dc3232b4471cd1d26db510c7c846fbac3570cb0b3a862caa`.
+- Deterministic decision SHA-256:
+  `f48c300bdccdb8e7bf7912775b83b30141872d99dcec476a240e12455548f225`.

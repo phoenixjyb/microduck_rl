@@ -14,6 +14,8 @@ from enum import IntEnum
 
 import torch
 
+from mjlab_microduck.recovery_control import RecoveryAccelerationCfg, cap_recovery_acceleration
+
 from mjlab_microduck.tasks.obstacle_observation import (
     DEFAULT_OBSTACLE_OBSERVATION_LIMITS,
     OBSTACLE_OBSERVATION_DIM,
@@ -236,10 +238,14 @@ def apply_bounded_supervisor_command(
     state: ObstacleTeacherState,
     *,
     cfg: ObstacleTeacherCfg = ObstacleTeacherCfg(),
+    recovery_cfg: RecoveryAccelerationCfg | None = None,
+    update_dt_s: float | None = None,
 ) -> torch.Tensor:
     """Apply execution-layer limits and fail-safe behavior to any supervisor."""
     if desired_command.shape != state.previous_command.shape:
         raise ValueError("desired supervisor command must have shape (N, 2)")
+    if recovery_cfg is not None and not bool(torch.isfinite(desired_command).all()):
+        raise ValueError("nonfinite recovery supervisor command")
     desired_speed = desired_command[:, 0].clamp(0.0, cfg.max_forward_speed_mps)
     desired_yaw = desired_command[:, 1].clamp(
         -cfg.max_yaw_rate_rps, cfg.max_yaw_rate_rps
@@ -261,6 +267,11 @@ def apply_bounded_supervisor_command(
     )
     valid = obstacle_observation[:, 6] > 0.5
     unsafe_invalid = (state.phase != int(ObstaclePhase.RECOVERY)) & ~valid
+    if recovery_cfg is not None:
+        command = cap_recovery_acceleration(
+            command, state.previous_command, state.phase,
+            cfg=recovery_cfg, update_dt_s=update_dt_s,
+        )
     command[unsafe_invalid] = 0.0
     state.previous_command.copy_(command)
     return command
@@ -274,6 +285,8 @@ def teacher_command(
     state: ObstacleTeacherState,
     *,
     cfg: ObstacleTeacherCfg = ObstacleTeacherCfg(),
+    recovery_cfg: RecoveryAccelerationCfg | None = None,
+    update_dt_s: float | None = None,
 ) -> torch.Tensor:
     """Advance the HC1 teacher and return ``[forward_mps, yaw_rps]``.
 
@@ -340,6 +353,8 @@ def teacher_command(
         obstacle_observation,
         state,
         cfg=cfg,
+        recovery_cfg=recovery_cfg,
+        update_dt_s=update_dt_s,
     )
 
 

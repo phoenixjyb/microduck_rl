@@ -39,6 +39,11 @@ from mjlab_microduck.hierarchical_obstacle import (
 )
 from mjlab_microduck.obstacle_baseline import _resolved_attempt_metrics
 from mjlab_microduck.obstacle_protocol import OA0_TASK_ID
+from mjlab_microduck.recovery_control import (
+    RecoveryAccelerationCfg,
+    ROLLOUT_STAGE as RECOVERY_ROLLOUT_STAGE,
+    validate_rollout_mode as validate_recovery_rollout_mode,
+)
 from mjlab_microduck.obstacle_supervisor_bc import (
     HC2_STAGE,
     HC4L_STAGE,
@@ -609,6 +614,7 @@ def _run_case(
     range_noise_m: float = 0.0,
     record_first_attempts: bool = False,
     motor_measurement_audit: bool = False,
+    recovery_cfg: RecoveryAccelerationCfg | None = None,
 ) -> dict:
     import torch
     from mjlab.envs import ManagerBasedRlEnv
@@ -618,6 +624,12 @@ def _run_case(
     from mjlab_microduck.tasks import mdp as microduck_mdp
     from mjlab_microduck import motor_measurement_audit as motor_audit_module
 
+    validate_recovery_rollout_mode(
+        recovery_cfg, first_attempt_only=first_attempt_only,
+        motor_measurement_audit=motor_measurement_audit,
+        collecting_dataset=collect_success_samples or collect_teacher_corrections,
+        recording=record_first_attempts, range_noise_m=range_noise_m,
+    )
     motor_audit_module.validate_mode(
         motor_measurement_audit, first_attempt_only=first_attempt_only,
         collecting_dataset=collect_success_samples or collect_teacher_corrections,
@@ -652,6 +664,9 @@ def _run_case(
         range_noise_generator.manual_seed(sensor_provenance["noise_seed"])
     env = ManagerBasedRlEnv(cfg=env_cfg, device=device)
     wrapped = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
+    recovery_kwargs = ({"recovery_cfg": recovery_cfg,
+                        "update_dt_s": SUPERVISOR_UPDATE_INTERVAL_STEPS * env.step_dt}
+                       if recovery_cfg is not None else {})
     try:
         runner_cls = load_runner_cls(BASE_TASK_ID)
         assert runner_cls is not None
@@ -771,6 +786,7 @@ def _run_case(
                             route_heading,
                             state,
                             cfg=ObstacleTeacherCfg(),
+                            **recovery_kwargs,
                         )
                     else:
                         advance_obstacle_state(
@@ -812,6 +828,7 @@ def _run_case(
                             desired_command,
                             obstacle_observation,
                             state,
+                            **recovery_kwargs,
                         )
                     if collect_success_samples:
                         dataset_observations.append(
@@ -1149,6 +1166,10 @@ def _run_case(
             result["_first_attempt_recording"] = recorder.report()
         if motor_audit is not None:
             result["motor_measurement_audit"] = motor_audit.report()
+        if recovery_cfg is not None:
+            result["recovery_control"] = {
+                **recovery_cfg.provenance(), "update_dt_s": recovery_kwargs["update_dt_s"],
+            }
         if collect_teacher_corrections:
             result["_teacher_correction_dataset"] = resolved_correction_samples(
                 torch.cat(dataset_observations),
@@ -1181,12 +1202,19 @@ def run_rollout(
     range_noise_m: float = 0.0,
     record_first_attempts: bool = False,
     motor_measurement_audit: bool = False,
+    recovery_cfg: RecoveryAccelerationCfg | None = None,
 ) -> Path:
     validate_rollout_bounds(
         num_envs, steps, speeds, forward_positions, lateral_positions, seeds
     )
     from mjlab_microduck.motor_measurement_audit import validate_mode
 
+    validate_recovery_rollout_mode(
+        recovery_cfg, first_attempt_only=first_attempt_only,
+        motor_measurement_audit=motor_measurement_audit,
+        collecting_dataset=collect_success_dataset or collect_teacher_corrections,
+        recording=record_first_attempts, range_noise_m=range_noise_m,
+    )
     validate_mode(
         motor_measurement_audit, first_attempt_only=first_attempt_only,
         collecting_dataset=collect_success_dataset or collect_teacher_corrections,
@@ -1245,7 +1273,15 @@ def run_rollout(
             range_noise_m=range_noise_m,
             record_first_attempts=record_first_attempts,
             motor_measurement_audit=motor_measurement_audit,
+            **({"recovery_cfg": recovery_cfg} if recovery_cfg is not None else {}),
         )
+        if recovery_cfg is not None:
+            provenance = case.get("recovery_control", {})
+            if (not isinstance(provenance, dict)
+                    or any(provenance.get(k) != v for k, v in recovery_cfg.provenance().items())
+                    or type(provenance.get("update_dt_s")) not in (float, int)
+                    or not math.isfinite(provenance["update_dt_s"]) or provenance["update_dt_s"] <= 0):
+                raise RuntimeError("requested recovery configuration/timing provenance is missing or mismatched")
         recording = case.pop("_first_attempt_recording", None)
         if motor_measurement_audit:
             from mjlab_microduck.motor_measurement_audit import PROTOCOL
@@ -1369,6 +1405,12 @@ def run_rollout(
         from mjlab_microduck.motor_measurement_audit import PROTOCOL
 
         report["motor_measurement_audit_protocol"] = PROTOCOL
+    if recovery_cfg is not None:
+        # Old controller gates must not admit a changed command execution path.
+        report["source_controller_stage"] = report["stage"]
+        report["stage"] = RECOVERY_ROLLOUT_STAGE
+        report["recovery_control"] = recovery_cfg.provenance()
+        report["policy_acceptance"] = False
     if collect_success_dataset:
         if not datasets or not any(
             dataset["observations"].shape[0] for dataset in datasets
@@ -1479,6 +1521,8 @@ def main() -> None:
     parser.add_argument("--first-attempt-only", action="store_true")
     parser.add_argument("--record-first-attempts", action="store_true")
     parser.add_argument("--motor-measurement-audit", action="store_true")
+    parser.add_argument("--recovery-acceleration-mps2", type=float,
+                        help="opt-in diagnostic positive acceleration cap; requires first-only motor audit")
     parser.add_argument("--supervisor-checkpoint", type=Path)
     parser.add_argument("--range-noise-m", type=float, default=0.0)
     args = parser.parse_args()
@@ -1496,6 +1540,8 @@ def main() -> None:
         first_attempt_only=args.first_attempt_only,
         record_first_attempts=args.record_first_attempts,
         motor_measurement_audit=args.motor_measurement_audit,
+        recovery_cfg=(RecoveryAccelerationCfg(args.recovery_acceleration_mps2)
+                      if args.recovery_acceleration_mps2 is not None else None),
         supervisor_checkpoint=args.supervisor_checkpoint,
         range_noise_m=args.range_noise_m,
     )

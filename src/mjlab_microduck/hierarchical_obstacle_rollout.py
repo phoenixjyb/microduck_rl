@@ -714,7 +714,10 @@ def _run_case(
         robot = env.scene["robot"]
         joint_ids, _ = robot.find_joints(r"^(?!passive_).*")
         motor_audit = None
+        recovery_measurement = None
         if motor_measurement_audit:
+            from mjlab_microduck.recovery_measurement import RecoveryMeasurement
+            recovery_measurement = RecoveryMeasurement(num_envs, nominal_speed_mps, env.step_dt)
             motor_names, motor_ids = motor_audit_module.motor_layout(robot)
             motor_audit = motor_audit_module.MotorMeasurementAudit(
                 num_envs, steps, motor_names, motor_ids,
@@ -923,10 +926,14 @@ def _run_case(
                         "command_speed_mps": command[:, 0],
                         "command_yaw_rate_rps": command[:, 2],
                     })
+                if recovery_measurement is not None:
+                    recovery_measurement.begin(step, state.phase, route_speed)
                 actions = policy(observations)
                 if motor_audit is not None:
                     motor_audit.begin(step, active, state.phase)
                 observations, rewards, dones, _ = wrapped.step(actions)
+                if recovery_measurement is not None:
+                    recovery_measurement.finish(dones.bool())
                 if motor_audit is not None:
                     motor_audit.finish(dones.bool(), robot.data.actuator_force)
                 episode_steps[active] += 1
@@ -1166,6 +1173,8 @@ def _run_case(
             result["_first_attempt_recording"] = recorder.report()
         if motor_audit is not None:
             result["motor_measurement_audit"] = motor_audit.report()
+        if recovery_measurement is not None:
+            result["recovery_speed_measurement"] = recovery_measurement.report()
         if recovery_cfg is not None:
             result["recovery_control"] = {
                 **recovery_cfg.provenance(), "update_dt_s": recovery_kwargs["update_dt_s"],

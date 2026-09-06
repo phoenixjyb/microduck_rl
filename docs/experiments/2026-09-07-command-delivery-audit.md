@@ -165,3 +165,9 @@ Shared-boundary closeout: **608 focused CPU tests passed locally** (8.39 s),
 including 35 command-delivery cases. No skips; two pre-existing actuator/site
 warnings remain. No existing entrypoint imports the new adapter, and no GPU
 job, optimizer step, checkpoint change or protocol-default change occurred.
+
+The [foundation-speed curriculum proposal](2026-09-07-foundation-speed-curriculum-proposal.md)
+is the superseding overnight handoff. It separates a potential locomotion
+update from the blocked frozen-gait recovery pilot and requires explicit scope
+agreement. Do not build or run more timing diagnostics without a distinct
+unanswered question; the CPU timing finding itself is already established.

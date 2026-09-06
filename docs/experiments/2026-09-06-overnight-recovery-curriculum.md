@@ -175,3 +175,76 @@ Runner precommit validation: **523 focused CPU tests passed locally** (10.12 s,
 CUDA hidden; two existing actuator/site-pattern warnings), including 58 new
 A/B checks and the retained 465 regressions. Diff whitespace checks passed.
 No A/B outcomes were available when the protocol, thresholds or runner were set.
+
+## Retained v1 stop: first baseline, not a cap comparison
+
+Launch source `bd2a20a6232f647e656a2dfe6788b037e29a06b1` passed **523 CPU tests
+on 100.100** (7.06 s). Service
+`microduck-rl-recovery-ab-s379-bd2a20a.service` ran September 6
+23:33:55–23:34:19 Shanghai. Exactly one simulation child ran, exit 0,
+16.3819944877 s; parent deliberately exited 2 for the numerical gate. The unit
+is retained failed, not restarted/reset. No A2, capped B, later cell or PPO ran.
+
+First cell: HC4-R2, 0.30 m/s, obstacle 0.90 m forward and centered, seed 379,
+eight first attempts. **8/8 clean**, zero collisions, falls, timeouts, hard/other
+terminals, nonfinite steps or rated-speed exceedance. Legacy torque-utilization
+p99 **0.5060326457 <= 0.60**. All eight entered recovery and remained observable
+for **2.94–3.78 s**, but **0/8** achieved the half-second speed band within two
+seconds (or any later retained stable span). They are `window-missed`, not
+censored or omitted. Deterministic decision: **`numerical-gate-stop`**, sole
+failed criterion `recovery-window`; pilot support and all admission flags false.
+
+Mean approach / interaction / recovery route speeds: **0.0326169506 /
+0.1995471418 / 0.2034718841 m/s**, with 15 / 1825 / 1382 samples. The very short
+approach phase includes startup and is not a steady-state speed estimate.
+Mean passage time: 8.0549997687 s. Full-case commanded speed range:
+0.2949104309–0.3119393289 m/s. Recovery pre-reset pooled utilization p99:
+0.5006072929; maximum named-joint recovery p99: left knee 0.6498272851. These
+pre-reset quantities do not replace the legacy gate or describe physical heat.
+
+Read-only diagnostic observation: environment 0's existing 10 Hz representative
+trace has 38 recovery samples, measured route speeds **0.0813181847–0.2612001896
+m/s**. Its largest positive command increment in recovery is only
+**0.0059571862 m/s**, below the proposed cap's 0.02 m/s per update. Recovery also
+contains substantial yaw commands and lateral rejoining. Therefore acceleration
+capping has no demonstrated remedy here; the capped arm was never run, and
+these representative observations do not prove a cause across all environments.
+The instantaneous-speed requirement may be sensitive to gait oscillation, but
+the measured mean speed deficit cannot be dismissed as censoring or a single
+spike. Do not loosen the band, deadline, safety gate or retry seed 379.
+
+All eight files were copied byte-for-byte to local
+`artifacts/diagnostics/recovery-cap-specialist-s379-v1`; originals remain in
+remote `artifacts/evaluations/recovery-cap-specialist-s379-v1`. SHA-256 manifest:
+
+| File | SHA-256 |
+| --- | --- |
+| `00-cell0-a1/hierarchical-teacher-evaluation.json` | `b6bf4a7baa4e16e47a1e672f382cca80e1e9b46dbe70b5bd9da3481062a73828` |
+| `00.log` | `faa8e11d4f1fbbe98a79b488d4551ba272df918f3e9d1d799d5f932f2b6fd294` |
+| `decision-00.json` and `decision.json` (each) | `8b34b5186a45dda26aad43cb71b095367c765a4b3ed090c997179d416422a0a2` |
+| `launch-00.json` | `48740a3dea349e99e90fe3dd9e86c357b3b282f50499e4ef771070e56f57cb3c` |
+| `launch.json` | `ebd0a47494534ff40d9cd227848e1dc3853c718dc64996cee813dd6b3f93a96f` |
+| `runtime-00.json` | `fa28bd487ab07e1357a761dcae3410a43c31763e26776acda26fb8616a1d57a8` |
+| `runtime.json` | `b415923019deb7e4d18d01939bc76a564e796cdb5c97b1af51bdf5e873bf4983` |
+
+Local canonical-JSON recomputation exactly matches the retained decision.
+At 23:36:03 Shanghai, GPU was idle (0%, 45 C, 12 MiB), no compute process or
+running Duck unit, both protected services inactive, and source clean. Existing
+actor/supervisor checkpoints were never modified.
+
+**Superseding handoff:** v1 is closed. Keep its gates and evidence immutable.
+Next continue bounded source/read-only diagnosis separating frozen-gait speed
+response, route-heading/lateral recovery, and instantaneous versus sustained
+speed measurement. Inspect the existing actor evaluator and command frames;
+test any identified contract defect before changes. If a new simulation control
+is justified, predeclare a genuinely distinct minimal no-obstacle/straight-line
+speed-response diagnostic, fresh identity and finite runtime, with the same
+actor and unchanged motor limits, before launching. It cannot admit v1 or PPO.
+Do not silently enable the recovery-speed PPO pilot: its prerequisite failed.
+Keep working within the overnight window on diagnosis/tests, not repeated
+rejected GPU jobs. Deadline and service-preservation rules above remain active.
+
+Evidence-closeout CPU validation: **524 tests passed locally** (8.50 s),
+including a hash-bound canonical replay of the retained seed-379 stop. The
+evidence replay skips explicitly on checkouts without the separately retained
+artifacts; it executed here. Two pre-existing actuator/site warnings remain.

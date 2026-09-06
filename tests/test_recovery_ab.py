@@ -281,3 +281,21 @@ def test_deadline_predeclaration():
     doc = (Path(__file__).resolve().parents[1] / "docs/experiments/2026-09-06-overnight-recovery-curriculum.md").read_text()
     for literal in (ab.PROTOCOL, ab.ACTOR_SHA256, ab.NEAR_SHA256, ab.FAR_SHA256, "2400", "180", "07:00"):
         assert literal in doc
+
+
+def test_retained_seed379_stop_replays_when_evidence_is_available():
+    root = Path(__file__).resolve().parents[1]
+    options = [root / "artifacts" / kind / ab.PROTOCOL for kind in ("diagnostics", "evaluations")]
+    retained_root = next((p for p in options if (p / "decision.json").exists()), None)
+    if retained_root is None:
+        pytest.skip("retained simulation evidence not distributed in Git")
+    report = retained_root / "00-cell0-a1/hierarchical-teacher-evaluation.json"
+    decision_path = retained_root / "decision.json"
+    assert ab.sha256(report) == "b6bf4a7baa4e16e47a1e672f382cca80e1e9b46dbe70b5bd9da3481062a73828"
+    assert ab.sha256(decision_path) == "8b34b5186a45dda26aad43cb71b095367c765a4b3ed090c997179d416422a0a2"
+    result = ab.evaluate_paths([report])
+    # The public artifact is JSON; tuple/list representation is normalized here.
+    assert ab.canonical(result) == ab.canonical(json.loads(decision_path.read_text()))
+    assert result["decision"] == "numerical-gate-stop" and result["failures"] == ["recovery-window"]
+    assert not result["supports_predeclared_pilot"]
+    assert len(json.loads((retained_root / "runtime.json").read_text())["runs"]) == 1

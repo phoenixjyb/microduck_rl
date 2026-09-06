@@ -213,3 +213,30 @@ def test_main_one_control_no_retry_retained_no_admission(tmp_path, monkeypatch, 
     decision = json.loads((control.OUTPUT / "decision.json").read_text())
     assert not any(decision[k] for k in ("training_admitted", "reopens_recovery_ab", "physical_motion_authorized"))
     assert (control.OUTPUT / "launch.json").exists() and (control.OUTPUT / "runtime.json").exists()
+
+
+def test_retained_straight_control_hashes_and_classification_when_available():
+    root = Path(__file__).resolve().parents[1]
+    options = [root / "artifacts" / kind / control.PROTOCOL for kind in ("diagnostics", "evaluations")]
+    evidence = next((p for p in options if (p / "response.json").exists()), None)
+    if evidence is None:
+        pytest.skip("retained control artifacts not distributed in Git")
+    expected = {
+        "response.json": "4e4d94d82f90621fe4441df907236de1b76c7a0e5950b948dfdd1354d6fa3c73",
+        "decision.json": "e47e8dbea684e7d65e968bcc9a505436576b9173c95ae90f00c95ded37d73959",
+        "launch.json": "c3fb377ce4aa8735cc0f69d5cd52be669135577d6db63230f6383d0766fc94fc",
+        "runtime.json": "a207b34590137bdc5d8ca908a8e3bd86f16cf0d24dcf610ac3a005bc8424ee8a",
+    }
+    for name, digest in expected.items(): assert control.sha256(evidence / name) == digest
+    report = json.loads((evidence / "response.json").read_text())
+    decision = json.loads((evidence / "decision.json").read_text())
+    assert decision["report_sha256"] == expected["response.json"]
+    assert report["source"] == "0679be398b29ffc79dcf003001869e4d9a146afe"
+    assert report["checkpoint_sha256"] == control.ACTOR_SHA256
+    assert report["sample_steps"] == 400 and report["terminal_steps"] == []
+    assert report["safety_failures"] == []
+    assert len(report["groups"]["settled"]["body_forward_per_env_mean"]) == 8
+    assert all(v < .27 for v in report["groups"]["settled"]["body_forward_per_env_mean"])
+    assert report["classification"] == decision["classification"] == "straight-body-mean-outside-band"
+    for key in ("training_admitted", "reopens_recovery_ab", "physical_motion_authorized"):
+        assert report[key] is decision[key] is False

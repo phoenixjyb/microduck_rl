@@ -104,3 +104,75 @@ actual-control-loop startup-terminal test. That test verifies the pre-reset
 sample is consumed, the entire loop stops and reset velocities cannot enter
 the summary. Two pre-existing actuator/site-pattern warnings remain. No live
 straight-control outcome was available when this protocol was predeclared.
+
+## Retained result: speed deficit without obstacle/supervisor
+
+Executed once at **`0679be398b29ffc79dcf003001869e4d9a146afe`**, after 558 focused
+CPU checks passed on 100.100 (7.39 s). User service
+`microduck-rl-straight-speed-s383-0679be3.service` ran **00:06:58–00:07:15
+Shanghai September 7**, exited 0, with 7.5346382754 s inside the diagnostic.
+The retained unit is `active/exited`, MainPID 0; it is not a running GPU job.
+
+All 400 control steps completed. No terminal event (including startup), changed
+command, nonfinite sample or rated-speed exposure. Actor observation remained
+8 x 61 and actor hash matched. All-period / settled legacy torque p99:
+**0.5166896582 / 0.5082634687**, below .60. Pre-reset pooled torque p99:
+0.5166892692 / 0.5082631126; near equality here is expected with no resets and
+does not invalidate the earlier terminal-sampling audit. Squared-utilization
+proxy is not physical motor temperature.
+
+Settled six-second measurements:
+
+| Quantity | Observed |
+| --- | --- |
+| Body-forward mean | **0.2102451335 m/s** |
+| Initial-route-forward mean | **0.1852372128 m/s** |
+| Per-environment body means | **0.1976068256–0.2431169455 m/s**, all 8 below .27 |
+| Per-environment route means | **0.1374899797–0.2192060368 m/s** |
+| Route speed p05 / p95 | 0.0681508623 / 0.2519421816 m/s |
+| Cross-route absolute speed mean | 0.1089139541 m/s |
+| Maximum absolute heading drift | 1.4794538021 rad |
+| Stable route-speed window | **0/8**, all window-missed, none censored |
+
+Classification: **`straight-body-mean-outside-band`**, safety failures empty.
+This is a completed diagnostic, not a successful speed-tracking controller.
+Training, physical admission and reopening the recovery A/B remain false.
+
+Inference supported by this control: navigation/rejoining is **not necessary**
+for a speed deficit to appear in this runtime; it persists without an obstacle
+or supervisor and even in body-forward velocity. Route projection adds another
+deficit alongside substantial yaw/lateral drift under a zero-yaw command. It
+does **not** establish whether the root cause is policy behavior, command/input
+semantics, runtime/configuration mismatch, low-speed coverage, or a combination.
+One seed/eight environments is not multi-seed policy acceptance. Do not lower
+the .30 goal to .21 or change the recovery gate to make this look successful.
+
+Four original JSON artifacts remain in
+`artifacts/evaluations/frozen-straight-speed-s383-v1` on 100.100; byte-identical
+copies are local at `artifacts/diagnostics/frozen-straight-speed-s383-v1`.
+Systemd journal remains retained under the named unit. Exact SHA-256:
+
+| File | SHA-256 |
+| --- | --- |
+| `response.json` | `4e4d94d82f90621fe4441df907236de1b76c7a0e5950b948dfdd1354d6fa3c73` |
+| `decision.json` | `e47e8dbea684e7d65e968bcc9a505436576b9173c95ae90f00c95ded37d73959` |
+| `launch.json` | `c3fb377ce4aa8735cc0f69d5cd52be669135577d6db63230f6383d0766fc94fc` |
+| `runtime.json` | `a207b34590137bdc5d8ca908a8e3bd86f16cf0d24dcf610ac3a005bc8424ee8a` |
+
+After completion: GPU idle (0%, 45 C, 12 MiB), no compute process; both protected
+services inactive, source clean. Checkpoints unchanged. No optimizer, cap arm,
+additional seed, video or physical motion was run.
+
+**Next handoff:** close this one-shot control, no retry. Audit the frozen actor's
+saved training config and normalization/command observation against the actual
+installed play configuration and retained Stage-2 speed evaluations. Separate
+training coverage, zero-yaw drift, command delivery and measurement contracts.
+Prefer source-level counterexamples/tests before any further GPU experiment.
+The recovery-speed-only PPO prerequisite remains failed; do not substitute a
+new low-level locomotion training job under that authorization. Any materially
+different training scope must be explicitly agreed. Continue bounded diagnostic
+and code/test work within the overnight deadline while preserving all gates.
+
+Evidence-closeout validation: **559 focused CPU tests passed locally** (8.75 s),
+including hash-bound replay of both retained diagnostic outcomes. Two existing
+actuator/site-pattern warnings remain; no tests were skipped on this checkout.

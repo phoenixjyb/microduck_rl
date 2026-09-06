@@ -248,3 +248,10 @@ Evidence-closeout CPU validation: **524 tests passed locally** (8.50 s),
 including a hash-bound canonical replay of the retained seed-379 stop. The
 evidence replay skips explicitly on checkouts without the separately retained
 artifacts; it executed here. Two pre-existing actuator/site warnings remain.
+
+Next distinct diagnostic is predeclared in
+[straight-speed response](2026-09-07-straight-speed-response.md): fixed .30 m/s,
+no obstacle/supervisor, seed 383, eight environments, 400 steps, one four-minute
+maximum service. It separates body and route speed and does not hide startup
+failures. It cannot clear v1 or authorize PPO. Read that document's latest
+handoff before any further overnight action.

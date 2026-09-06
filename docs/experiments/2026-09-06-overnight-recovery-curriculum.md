@@ -144,3 +144,34 @@ asynchronous-terminal/exact-deadline regressions. Two existing real-spec
 actuator/site-pattern warnings remain. Diff whitespace checks passed. This is
 source-level validation only; no GPU A/B or optimizer update has been run for
 this chunk.
+
+## Runner implementation handoff (before any A/B observation)
+
+`python -m mjlab_microduck.recovery_ab --source <full tested commit>` implements
+the exact ordered prefix above. Retained paths verified on 100.100:
+`artifacts/checkpoints/hc4r2-bc-796634d-s42/supervisor.pt` (near) and
+`artifacts/checkpoints/hc4lh-11002cc-center002/supervisor.pt` (far). The older
+`center006` far file has a different hash and is not used.
+
+The runner checks source/model identity and idle protected GPU state before
+every child. It retains fsynced exclusive launch/runtime/decision receipts,
+child logs, report hashes and numerical stops; no retry is implemented. Use
+one retained user service with `RuntimeMaxSec=2400`, `TimeoutStopSec=15`,
+`KillMode=control-group`, `Restart=no`. It refuses launch unless 45 minutes
+remain, and separately checks the remaining service and absolute child budget.
+Only a complete passing 12-report matrix supports predeclaring a pilot;
+partial prefixes and legacy motor/recovery-window failures do not.
+
+Pure `evaluate_paths(ordered_report_paths)` recomputes the deterministic
+decision without simulation. Tests use real CPU observer/audit collectors for
+synthetic reports and mocked subprocesses for orchestration. They exercise
+missing/duplicate/swapped/extra-after-failure evidence, case and model identity,
+reset/measurement coverage, cap configuration, baseline tolerance, per-cell
+and pooled speed limits, load improvement, invalid statistics, timeout/crash,
+changed/busy host, expired deadlines and preservation of existing directories.
+These tests are not GPU repeatability or policy acceptance evidence.
+
+Runner precommit validation: **523 focused CPU tests passed locally** (10.12 s,
+CUDA hidden; two existing actuator/site-pattern warnings), including 58 new
+A/B checks and the retained 465 regressions. Diff whitespace checks passed.
+No A/B outcomes were available when the protocol, thresholds or runner were set.

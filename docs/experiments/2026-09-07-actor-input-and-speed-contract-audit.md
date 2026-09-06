@@ -109,3 +109,29 @@ If no concrete contract defect is found, present the separate low-speed
 locomotion calibration/training scope for explicit agreement rather than
 spending GPU time on the closed diagnostics. All overnight deadline and
 protected-service rules remain unchanged.
+
+## Retained execution and closeout
+
+Source **`1ee0f7b6c5ee12ec10dabbf83ab64731bc516361`** was tested locally
+(571 CPU tests, 9.91 s), pushed to the exact fork feature branch, then
+fast-forwarded onto the clean idle remote worktree. The same **571 tests passed
+on 100.100** (8.18 s). Two pre-existing actuator/site-pattern warnings remain.
+
+The CPU-only helper completed successfully on 100.100: all state keys matched,
+both model and normalizer were in evaluation mode, two 2-by-14 outputs were
+finite and equal, and state was unchanged. It retained
+`artifacts/evaluations/frozen-actor-input-audit-v1/inference-audit.json` with
+SHA-256 **`3cbc27cf51c6f858d6f9a3f9cc868b084d042331d00d110b9b5c7032e952c91f`**.
+All behavioral, complete-runtime-equivalence and physical-admission flags are
+false. No GPU simulation or optimizer was run for this audit.
+
+Local `artifacts/diagnostics/frozen-actor-input-audit-v1` contains byte-identical
+copies of that report, both saved YAML files and both historical reports (named
+`hc0-envelope.json` and `stage2-envelope.json`). Their five hashes match those
+recorded above; original remote files remain unchanged. Added hash-bound tests
+keep loading success separate from behavior and prevent the retained command
+labels from being mistaken for achieved speed or current .60 torque admission.
+
+Evidence-closeout validation: **573 focused CPU tests passed locally** (9.63 s),
+including both retained-evidence checks without skips; the same two existing
+actuator/site warnings remain. The closeout changes no runtime configuration.

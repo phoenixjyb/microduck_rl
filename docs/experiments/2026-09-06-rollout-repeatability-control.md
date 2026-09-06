@@ -1,6 +1,6 @@
 # Recording-disabled repeatability control
 
-Date: 2026-09-06. Status: predeclared, not run. Diagnostic only.
+Date: 2026-09-06. Status: closed invalid at first-child motor gate; no pair comparison. Diagnostic only.
 
 The original overnight window ended at **07:00 Asia/Shanghai** before this
 control was ready. No seed-367 control was launched in that window. Source
@@ -111,3 +111,73 @@ seed-359 stop decision still hashed to
 The seed-367 output directory did not exist. The expired overnight automation
 was deleted through the app; checkpoints, evidence and services were untouched.
 This closes the overnight window, not the scientific repeatability question.
+
+## Retained single-control result: motor stop, no repeatability verdict
+
+Amended source `e658562058237af4923fa5f610e9eb56c28c7c1a` was committed and
+pushed before launch. All **264** focused tests passed locally (26.82 s) and
+on 100.100 (5.34 s) with CUDA hidden. Exact clean source, artifact hashes, an
+idle GPU (0%, 12 MiB, 44 C), inactive protected services and absent output/unit
+were verified before starting the retained service.
+
+`microduck-rl-repeatability-s367-v1.service` ran **08:54:56--08:55:11 Shanghai**,
+with RuntimeMaxSec 600, TimeoutStopSec 15, KillMode control-group and Restart no.
+Its first child exited **0**, taking **15.235372732859105 s**. The parent then
+deliberately exited **2** with `ValueError: runtime motor check` and decision
+`invalid-control-stop`. This was not a child crash, timeout or comparison
+mismatch. Per the predeclared early-stop rule, the second child was **never
+started**; no second directory/report exists. There was no retry.
+
+The first report records four clean completed first attempts and zero
+collisions, timeouts, falls, NaN/nonfinite steps, hard/other failures, unresolved
+attempts or rated-speed exceedance. It stopped after 407 simulation steps.
+These clean obstacle outcomes do not override the separate motor gate.
+
+| First-child reported metric | Value |
+| --- | ---: |
+| Motor torque utilization p99 (dimensionless) | 0.6125551462173462 |
+| Frozen maximum torque utilization p99 | 0.60 |
+| Absolute excess | 0.012555146217346214 |
+| Motor speed utilization p99 | 0.3969431221485138 |
+| Motor near-stall fraction | 0.00009536524885334074 |
+| Motor thermal load proxy mean | 0.04175148159265518 |
+| Mean passage time (s) | 7.4899996519088745 |
+| Mean lateral excursion (m) | 0.3671746104955673 |
+| Recovery route speed (m/s) | 0.30098631978034973 |
+
+Read-only source inspection confirms that the reported torque statistic is
+the 0.99 quantile of pooled active-environment absolute simulated actuator
+forces, normalized by the model's 0.60 Nm stall reference. The control threshold
+is **0.60 utilization**, not 0.60 Nm. The reported statistic exceeds that
+threshold by about 2.09%; rated-speed exposure is zero, so it is the torque
+term that rejects this report. This is a simulation-envelope diagnostic, not
+physical motor-temperature or hardware-safety evidence. The retained report
+does not contain per-joint force histories, so it cannot identify the joint or
+phase causing the tail, nor independently reconstruct the underlying quantile.
+
+CPU validation of the unchanged report reproduces the exact exception. The
+runtime receipt confirms one successful child only; all five backup hashes
+match remote originals, and every policy/recorder/data/motion/further-GPU
+authorization remains false. The GPU was idle again at **08:55:19** (0%, 12 MiB,
+46 C), no compute process, both protected services inactive with MainPID 0.
+
+Remote retention: `artifacts/evaluations/rollout-repeatability-disabled-s367-v1`.
+Local backup: `artifacts/overnight-20260906-u4/rollout-repeatability-disabled-s367-v1`.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `decision.json` | `4523d18c0296912bcd85bf7d53e2ef265d33ca0fd0226204e622494ed3959295` |
+| First report | `5d75a781d21ad4a302ac35ffb1e6b6294e961da8c30b0952d927817a821ffe26` |
+| `first.log` | `7cf60ee3c48fccdf085086d39ac7c74f0f2cf24eab9f698e6380233a38619eac` |
+| `launch.json` | `660c585a2b7baf07e19a960f5f3a727b673aaa2f8283ae739c4d0d64c4d71c26` |
+| `runtime.json` | `6d8d1e2b4ffd814a195aeafc90407a385c522334feb19ce92fa849de368b3b5c` |
+
+**No repeatability conclusion is available** because there is no pair. This
+neither explains nor clears the failed seed-359 off/on smoke; U3/U4/O3a remain
+rejected. No case, seed, threshold, recorder, policy or simulator change was
+made after the stop. Two CPU regression cases retain the observed torque value
+and verify that an otherwise successful first child prevents a second launch.
+The expanded **266-test** focused suite passed locally with CUDA hidden (7.22 s)
+before the evidence commit; runtime code is unchanged from the launch source.
+The single-control authorization is spent. Stop here: no replacement seed,
+new GPU diagnostic, refit, training, promotion, video or physical motion.

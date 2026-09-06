@@ -114,6 +114,7 @@ def test_every_valid_difference_is_retained_without_tolerance(pair, change):
     lambda r: r["cases"][0].update(clean_pass_events=3),
     lambda r: r["totals"].update(collision_events=2, clean_pass_events=1),
     lambda r: r["cases"][0].update(motor_torque_utilization_p99=.60001),
+    lambda r: r["cases"][0].update(motor_torque_utilization_p99=.6125551462173462),
     lambda r: r["cases"][0].update(motor_torque_utilization_p99=-.01),
     lambda r: r["cases"][0].update(motor_speed_rated_exceed_fraction=.00001),
     lambda r: r.update(unused_metric=float("nan")),
@@ -150,7 +151,7 @@ def test_recursive_diff_is_typed_signed_zero_aware_and_ordered():
     assert control.differences({"b": 2, "a": 1}, {"a": 1, "b": 2}) == []
 
 
-@pytest.mark.parametrize("failure", [None, "exit", "timeout", "invalid-first", "existing",
+@pytest.mark.parametrize("failure", [None, "exit", "timeout", "invalid-first", "motor-first", "existing",
                                    "dirty", "branch", "source", "expired", "occupied-second", "diverge"])
 def test_runner_is_bounded_sequential_preserve_first_and_fail_closed(tmp_path, monkeypatch, report, failure):
     monkeypatch.chdir(tmp_path)
@@ -187,6 +188,8 @@ def test_runner_is_bounded_sequential_preserve_first_and_fail_closed(tmp_path, m
         case_dir.mkdir()
         if failure == "invalid-first":
             report["cases"][0]["fall_events"] = 1
+        if failure == "motor-first":
+            report["cases"][0]["motor_torque_utilization_p99"] = .6125551462173462
         if failure == "diverge" and len(calls) == 2:
             report["cases"][0]["steps_executed"] = 601
         (case_dir / "hierarchical-teacher-evaluation.json").write_text(json.dumps(report))

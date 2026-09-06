@@ -135,3 +135,8 @@ labels from being mistaken for achieved speed or current .60 torque admission.
 Evidence-closeout validation: **573 focused CPU tests passed locally** (9.63 s),
 including both retained-evidence checks without skips; the same two existing
 actuator/site warnings remain. The closeout changes no runtime configuration.
+
+The next audit is now [command delivery and play noise](2026-09-07-command-delivery-audit.md).
+It reproduces a changed-command timing lag in the hierarchical call ordering,
+not a cause of the constant-command speed deficit. Read its latest handoff;
+historical rollouts and all failed gates remain unchanged.

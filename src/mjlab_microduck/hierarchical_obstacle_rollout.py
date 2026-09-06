@@ -608,6 +608,7 @@ def _run_case(
     supervisor_checkpoint: Path | None = None,
     range_noise_m: float = 0.0,
     record_first_attempts: bool = False,
+    motor_measurement_audit: bool = False,
 ) -> dict:
     import torch
     from mjlab.envs import ManagerBasedRlEnv
@@ -615,6 +616,13 @@ def _run_case(
     from mjlab.tasks.registry import load_runner_cls
 
     from mjlab_microduck.tasks import mdp as microduck_mdp
+    from mjlab_microduck import motor_measurement_audit as motor_audit_module
+
+    motor_audit_module.validate_mode(
+        motor_measurement_audit, first_attempt_only=first_attempt_only,
+        collecting_dataset=collect_success_samples or collect_teacher_corrections,
+        recording=record_first_attempts, num_envs=num_envs, steps=steps, case_count=1,
+    )
 
     validate_first_attempt_recording_mode(
         record_first_attempts, first_attempt_only=first_attempt_only,
@@ -632,6 +640,8 @@ def _run_case(
         obstacle_lateral_m,
     )
     env_cfg.seed = seed
+    if motor_measurement_audit:
+        motor_audit_module.install_metric(env_cfg)
     agent_cfg.seed = seed
     device = "cuda:0" if os.environ.get("CUDA_VISIBLE_DEVICES", "") else "cpu"
     torch.manual_seed(seed)
@@ -688,6 +698,14 @@ def _run_case(
         representative_attempt_done = False
         robot = env.scene["robot"]
         joint_ids, _ = robot.find_joints(r"^(?!passive_).*")
+        motor_audit = None
+        if motor_measurement_audit:
+            motor_names, motor_ids = motor_audit_module.motor_layout(robot)
+            motor_audit = motor_audit_module.MotorMeasurementAudit(
+                num_envs, steps, motor_names, motor_ids,
+                stall_reference_nm=XL330_M288_RATED_STALL_TORQUE_NM_6V,
+            )
+            env._microduck_motor_measurement_audit = motor_audit
         joint_speed_samples = []
         torque_samples = []
         action_samples = []
@@ -889,7 +907,11 @@ def _run_case(
                         "command_yaw_rate_rps": command[:, 2],
                     })
                 actions = policy(observations)
+                if motor_audit is not None:
+                    motor_audit.begin(step, active, state.phase)
                 observations, rewards, dones, _ = wrapped.step(actions)
+                if motor_audit is not None:
+                    motor_audit.finish(dones.bool(), robot.data.actuator_force)
                 episode_steps[active] += 1
                 applied_actions = env.action_manager.action.detach()
                 joint_speed = robot.data.joint_vel[:, joint_ids].abs().float()
@@ -1125,6 +1147,8 @@ def _run_case(
             }
         if recorder is not None:
             result["_first_attempt_recording"] = recorder.report()
+        if motor_audit is not None:
+            result["motor_measurement_audit"] = motor_audit.report()
         if collect_teacher_corrections:
             result["_teacher_correction_dataset"] = resolved_correction_samples(
                 torch.cat(dataset_observations),
@@ -1156,9 +1180,18 @@ def run_rollout(
     supervisor_checkpoint: Path | None = None,
     range_noise_m: float = 0.0,
     record_first_attempts: bool = False,
+    motor_measurement_audit: bool = False,
 ) -> Path:
     validate_rollout_bounds(
         num_envs, steps, speeds, forward_positions, lateral_positions, seeds
+    )
+    from mjlab_microduck.motor_measurement_audit import validate_mode
+
+    validate_mode(
+        motor_measurement_audit, first_attempt_only=first_attempt_only,
+        collecting_dataset=collect_success_dataset or collect_teacher_corrections,
+        recording=record_first_attempts, num_envs=num_envs, steps=steps,
+        case_count=len(speeds) * len(forward_positions) * len(lateral_positions) * len(seeds),
     )
     validate_first_attempt_recording_mode(
         record_first_attempts, first_attempt_only=first_attempt_only,
@@ -1211,8 +1244,15 @@ def run_rollout(
             supervisor_checkpoint=supervisor_checkpoint,
             range_noise_m=range_noise_m,
             record_first_attempts=record_first_attempts,
+            motor_measurement_audit=motor_measurement_audit,
         )
         recording = case.pop("_first_attempt_recording", None)
+        if motor_measurement_audit:
+            from mjlab_microduck.motor_measurement_audit import PROTOCOL
+
+            audit = case.get("motor_measurement_audit")
+            if not isinstance(audit, dict) or audit.get("protocol") != PROTOCOL:
+                raise RuntimeError("requested pre-reset motor audit is missing")
         if record_first_attempts:
             if recording is None:
                 raise RuntimeError("requested first-attempt recording is missing")
@@ -1325,6 +1365,10 @@ def run_rollout(
         report["supervisor_checkpoint_sha256"] = _sha256(supervisor_checkpoint)
     if record_first_attempts:
         report["first_attempt_recording_protocol"] = RECORDING_PROTOCOL
+    if motor_measurement_audit:
+        from mjlab_microduck.motor_measurement_audit import PROTOCOL
+
+        report["motor_measurement_audit_protocol"] = PROTOCOL
     if collect_success_dataset:
         if not datasets or not any(
             dataset["observations"].shape[0] for dataset in datasets
@@ -1434,6 +1478,7 @@ def main() -> None:
     parser.add_argument("--collect-teacher-corrections", action="store_true")
     parser.add_argument("--first-attempt-only", action="store_true")
     parser.add_argument("--record-first-attempts", action="store_true")
+    parser.add_argument("--motor-measurement-audit", action="store_true")
     parser.add_argument("--supervisor-checkpoint", type=Path)
     parser.add_argument("--range-noise-m", type=float, default=0.0)
     args = parser.parse_args()
@@ -1450,6 +1495,7 @@ def main() -> None:
         collect_teacher_corrections=args.collect_teacher_corrections,
         first_attempt_only=args.first_attempt_only,
         record_first_attempts=args.record_first_attempts,
+        motor_measurement_audit=args.motor_measurement_audit,
         supervisor_checkpoint=args.supervisor_checkpoint,
         range_noise_m=args.range_noise_m,
     )

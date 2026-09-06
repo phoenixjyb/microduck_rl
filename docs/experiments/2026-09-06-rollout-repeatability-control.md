@@ -3,10 +3,22 @@
 Date: 2026-09-06. Status: predeclared, not run. Diagnostic only.
 
 The original overnight window ended at **07:00 Asia/Shanghai** before this
-control was ready. No seed-367 control was launched. The runner retains its
-expired 06:25 start guard and cannot launch under this declaration. Finishing
-CPU/source validation does not reopen GPU authority: a new explicit window and
-a reviewed, committed deadline amendment are required before execution.
+control was ready. No seed-367 control was launched in that window. Source
+commit `3e630e84abff8cfbea23f46085aed06197f8d1ee` retained the expired 06:25
+guard. CPU/source validation did not reopen GPU authority.
+
+### Single-control authorization amendment, before execution
+
+After closeout the user explicitly approved one bounded ten-minute diagnostic
+("yes go on"). This amendment permits exactly the predeclared two sequential
+seed-367 recording-disabled processes, with no retries or follow-on job.
+Launch **before 2026-09-06 09:05 Asia/Shanghai** (01:05 UTC), with the existing
+600-second service cap and 15-second cleanup limit. Thus the workload must
+finish by 09:15, with at most 15 seconds for enforced cleanup. This is a new
+single-control window, not a renewed overnight campaign. Only the runner start
+deadline changes; all cases, artifacts, simulation behavior and analysis remain
+frozen. Commit, push and test the exact amended source before launch. Leave
+protected services and 100.98 unchanged, and stop after retaining the result.
 
 ## Question and limits
 
@@ -49,8 +61,9 @@ implementations are unchanged from source `0aac755d3b3a7620aba7dfd978e4e750c7e42
 Before launch: focused tests locally and remotely on the exact committed/pushed
 source; clean exact feature branch; matching artifacts; idle/cool GPU with no
 compute process; both protected AI Mission services inactive. Recheck occupancy
-before the second process. Launch before 06:25 Shanghai and leave the 07:00
-cutoff intact. Preserve unrelated workloads and 100.98/FilmBrain. No H1/H2,
+before the second process. The original 06:25 start / 07:00 stop is superseded
+only for this pair by the explicit single-control amendment above. Preserve
+unrelated workloads and 100.98/FilmBrain. No H1/H2,
 Locked, video, raw perception, actor-observation expansion or physical motion.
 
 ## Frozen analysis and terminal decisions

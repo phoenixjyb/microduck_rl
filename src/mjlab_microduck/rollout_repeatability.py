@@ -23,7 +23,8 @@ ROOT = Path("/home/converge/work/microduck_rl-athletics-obstacle-curriculum")
 ACTOR = ROOT / "logs/rsl_rl/run_motor_aware/2026-09-02_22-45-55_stage2-motor-aware-4096x3000-36667ee/model_7998.pt"
 SUPERVISOR = ROOT / "artifacts/checkpoints/hc4u4-bc60b2c-s42/supervisor.pt"
 OUTPUT = ROOT / "artifacts/evaluations/rollout-repeatability-disabled-s367-v1"
-LAST_START = dt.datetime(2026, 9, 5, 22, 25, tzinfo=dt.timezone.utc)
+# One newly authorized ten-minute control; not an overnight extension.
+LAST_START = dt.datetime(2026, 9, 6, 1, 5, tzinfo=dt.timezone.utc)
 COUNT_KEYS = ("collision_events", "clean_pass_events", "attempt_timeout_events",
               "fall_events", "nan_termination_events", "nonfinite_steps",
               "hard_failure_events", "other_terminal_events", "expected_attempts",

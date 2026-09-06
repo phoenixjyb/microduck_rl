@@ -10,6 +10,10 @@ import pytest
 from mjlab_microduck import rollout_repeatability as control
 
 
+def test_start_deadline_is_the_explicit_single_control_amendment():
+    assert control.LAST_START == dt.datetime(2026, 9, 6, 1, 5, tzinfo=dt.timezone.utc)
+
+
 @pytest.fixture
 def report():
     counts = dict.fromkeys(control.COUNT_KEYS, 0)

@@ -8,6 +8,9 @@ import torch
 from mjlab.managers.observation_manager import ObservationManager
 
 from mjlab_microduck.command_delivery import DIMENSIONS, TERMS, fresh_actor_twist
+from mjlab_microduck.command_delivery import (
+    LEGACY_PROTOCOL, PROTOCOL, prepare_actor_command_input, require_matching_delivery,
+)
 from mjlab_microduck.speed_response_control import prepare_config
 from mjlab_microduck.tasks import mdp
 
@@ -140,3 +143,101 @@ def test_play_noise_is_active_and_imu_bias_shared_fixed_not_step_noise():
         torch.testing.assert_close(gravity, mdp.quat_apply(q, env.scene["robot"].data.projected_gravity_b))
         torch.testing.assert_close(angular, mdp.quat_apply(q, env.scene["robot"].data.root_link_ang_vel_b))
         torch.testing.assert_close(gravity, mdp.projected_gravity_imu_misaligned(env, max_angle_deg=6.))
+
+
+@pytest.mark.parametrize("protocol", [LEGACY_PROTOCOL, PROTOCOL])
+def test_shared_adapter_trace_matches_actor_received_tensor_and_is_isolated(cpu_manager, protocol):
+    from tensordict import TensorDict
+
+    env, manager = cpu_manager
+    raw = TensorDict(manager.compute(update_history=True), batch_size=[2])
+    raw["critic"] = torch.zeros(2, 7)
+    original = raw.clone()
+    env.commands["twist"][:] = torch.tensor([.1, 0., -.4])
+    rng = torch.get_rng_state().clone()
+    delivery = prepare_actor_command_input(raw, env.commands["twist"], manager, protocol=protocol, step=0)
+    assert torch.equal(torch.get_rng_state(), rng)
+    # A spy at the inference boundary, not an executed trained actor.
+    observed_by_policy = delivery.observations["actor"][:, 48:51].clone()
+    torch.testing.assert_close(observed_by_policy, delivery.consumed)
+    torch.testing.assert_close(raw["actor"], original["actor"])
+    report = delivery.report()
+    assert report["issued_input_equal_per_env"] == [protocol == PROTOCOL] * 2
+    assert not any(report[k] for k in ("actor_inference_executed", "simulation_executed",
+                                      "training_admitted", "policy_acceptance", "physical_motion_authorized"))
+    # Later reset/command changes and caller edits cannot rewrite the snapshot.
+    env.commands["twist"].zero_()
+    raw["actor"].fill_(123)
+    raw["critic"].fill_(123)
+    assert delivery.report() == report
+    assert bool((delivery.observations["critic"] == 0).all())
+    delivery.observations["actor"].zero_()
+    assert delivery.report() == report
+
+
+def fake_lifecycle(env, manager, protocol, *, nested_training_loop):
+    """Two loop shapes with identical command changes, including a reset row."""
+    from tensordict import TensorDict
+
+    raw = TensorDict(manager.compute(update_history=True), batch_size=[2])
+    reports = []
+
+    def tick(step):
+        nonlocal raw
+        if step in (0, 5):
+            env.commands["twist"][:] = torch.tensor([.1 if step == 0 else .2, 0., -.4])
+        delivery = prepare_actor_command_input(raw, env.commands["twist"], manager,
+                                               protocol=protocol, step=step)
+        reports.append(delivery.report())
+        # Synthetic next-step observation acquisition. No dynamics or reward.
+        raw = TensorDict(manager.compute(update_history=True), batch_size=[2])
+        if step == 2:
+            # Existing trainer resets the nominal command after obtaining the
+            # reset observation. Only the reset row changes at this boundary.
+            env.commands["twist"][1] = torch.tensor([.3, 0., 0.])
+
+    if nested_training_loop:
+        for macro in range(2):
+            for micro in range(5): tick(macro * 5 + micro)
+    else:
+        for step in range(10): tick(step)
+    return reports
+
+
+@pytest.mark.parametrize("protocol", [LEGACY_PROTOCOL, PROTOCOL])
+def test_flat_eval_and_five_step_training_lifecycles_share_timing(cpu_manager, protocol):
+    env, manager = cpu_manager
+    # Independent real managers use the same synthetic sensor and command setup.
+    other_env = NS(num_envs=2, device="cpu", sensors=copy.deepcopy(env.sensors),
+                   commands=copy.deepcopy(env.commands))
+    other_env.command_manager = NS(get_command=lambda name: other_env.commands[name])
+    other_manager = ObservationManager(copy.deepcopy(manager.cfg), other_env)
+    flat = fake_lifecycle(env, manager, protocol, nested_training_loop=False)
+    nested = fake_lifecycle(other_env, other_manager, protocol, nested_training_loop=True)
+    assert flat == nested  # snapshots contain command fields, not sampled sensors
+    mismatches = [(r["step"], i) for r in flat for i, equal in
+                  enumerate(r["issued_input_equal_per_env"]) if not equal]
+    assert mismatches == ([] if protocol == PROTOCOL else [(0, 0), (0, 1), (3, 1), (5, 0), (5, 1)])
+
+
+@pytest.mark.parametrize("protocol,step", [("unknown", 0), (None, 0), (PROTOCOL, -1),
+                                         (PROTOCOL, True), (PROTOCOL, .5)])
+def test_adapter_rejects_ambiguous_identity_or_step(cpu_manager, protocol, step):
+    from tensordict import TensorDict
+
+    env, manager = cpu_manager
+    raw = TensorDict(manager.compute(update_history=True), batch_size=[2])
+    with pytest.raises(ValueError):
+        prepare_actor_command_input(raw, env.commands["twist"], manager, protocol=protocol, step=step)
+
+
+@pytest.mark.parametrize("training,evaluation", [(PROTOCOL, LEGACY_PROTOCOL),
+    (LEGACY_PROTOCOL, PROTOCOL), (None, PROTOCOL), (LEGACY_PROTOCOL, None),
+    ("unknown", PROTOCOL), (None, None)])
+def test_changed_or_missing_delivery_metadata_cannot_claim_compatibility(training, evaluation):
+    with pytest.raises(ValueError): require_matching_delivery(training, evaluation)
+
+
+@pytest.mark.parametrize("protocol", [PROTOCOL, LEGACY_PROTOCOL])
+def test_matching_delivery_metadata_is_only_compatibility(protocol):
+    assert require_matching_delivery(protocol, protocol) is None  # no admission decision

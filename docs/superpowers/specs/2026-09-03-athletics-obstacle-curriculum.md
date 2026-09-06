@@ -36,6 +36,12 @@ collision impossible to assign to sensing, planning, or control.
 | Obstacle observation | Seven-channel geometry contract and scene adapter | Accepted interface; perception remains separate. |
 | Single-box avoidance | Several bounded pilots and held-out evaluations | Learning is real, but no checkpoint satisfies the promotion gate below. |
 
+September 7 clarification: the Stage-2 row describes historical **command**
+acceptance, not measured speed equal to .5–.8 m/s or admission under later,
+stricter motor gates. The [speed-contract audit](../../experiments/2026-09-07-actor-input-and-speed-contract-audit.md)
+retains the actual tracking and torque measurements. Accurate low-speed
+tracking remains an unmet prerequisite for the newer recovery objective.
+
 The obstacle experiments exposed two important failure modes:
 
 - training longer is not monotonically better; final checkpoints frequently

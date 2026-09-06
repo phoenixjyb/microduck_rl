@@ -12,6 +12,13 @@ levels. The accepted motor-aware locomotion actor is frozen. A new supervisor
 may modify only velocity commands inside measured bounds; it cannot emit joint
 targets or alter motor limits.
 
+Acceptance is protocol-specific, not a guarantee of exact velocity tracking.
+The [September 7 speed-contract audit](experiments/2026-09-07-actor-input-and-speed-contract-audit.md)
+shows that a .30 m/s straight command historically produced about .21 m/s
+body-forward speed. Supported command bounds must not be reported as achieved
+speeds. The newer nominal-speed recovery gate remains unmet; the historical
+phase thresholds below do not supersede it.
+
 ```text
 external geometry + route state
             |

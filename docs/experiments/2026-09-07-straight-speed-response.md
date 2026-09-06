@@ -176,3 +176,7 @@ and code/test work within the overnight deadline while preserving all gates.
 Evidence-closeout validation: **559 focused CPU tests passed locally** (8.75 s),
 including hash-bound replay of both retained diagnostic outcomes. Two existing
 actuator/site-pattern warnings remain; no tests were skipped on this checkout.
+
+The next handoff is now the [actor input and speed-contract audit](2026-09-07-actor-input-and-speed-contract-audit.md).
+It finds historical low-speed undertracking and checks strict CPU restoration;
+it does not reopen this control or admit recovery-only PPO.

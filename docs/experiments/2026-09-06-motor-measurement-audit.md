@@ -1,6 +1,8 @@
 # Pre-reset motor measurement audit
 
-Date: 2026-09-06. Status: CPU/source validation only; no new GPU job declared.
+Date: 2026-09-06. Initial source chunk: CPU/source validation only; no GPU job
+declared by that change. The subsequent separately authorized live validation
+is retained in [the seed-373 smoke](2026-09-06-motor-audit-smoke.md).
 
 ## Finding and limits
 

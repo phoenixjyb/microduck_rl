@@ -85,3 +85,86 @@ Prelaunch local validation: **359 focused CPU tests passed** with CUDA hidden
 (10.70 s), including 54 new smoke/validator tests. The existing real-spec
 actuator/site-pattern warning remains; named unit-gear JOINT mapping is tested.
 Remote repetition at the exact pushed launch commit is required before launch.
+
+## Retained result: measurement smoke validated, no policy admission
+
+Executed once at source **`fb7b1dc0d32c569e40c9ee5f5bbd7f32a4558af3`**, after all
+359 focused tests passed on 100.100 with CUDA hidden (6.22 s). Runtime versions,
+all three installed dependency hashes and both model hashes matched preflight.
+The retained service started **2026-09-06 17:17:40 Asia/Shanghai**, exited at
+**17:18:01**, Result=success, ExecMainStatus=0, MainPID=0. RemainAfterExit leaves
+the unit active/exited; that does not mean a Duck process is still running.
+The sole child returned zero in **15.083693279419094 seconds**. No retry,
+second rollout, training, video, dataset, perception or physical action followed.
+
+Deterministic decision: **`measurement-smoke-validated-not-admission`**.
+Measurement structure and the unchanged legacy runtime gate both passed.
+The pure JSON validator reproduced the exact retained decision independently
+on the host and on the local backup; all five files matched SHA-256 byte-for-byte.
+All policy, runtime-equivalence, dataset, physical and further-GPU admission
+flags remain false.
+
+Post-result validation: all **359 focused CPU tests passed locally again**
+(215.24 s), with the same existing real-spec pattern warning and no failures.
+Both frozen model hashes were rechecked unchanged after the rollout.
+
+- Four expected/completed first attempts, **4 clean passes**, zero collisions,
+  timeouts, falls, NaN terminations, nonfinite steps, hard/other terminal events
+  or unresolved attempts.
+- **389** executed/captured control steps, **1499** active environment-steps,
+  **20,986** motor samples, all finite; four terminal environment-steps and
+  zero incomplete attempts. All 14 named joints and all three phases reconciled.
+- Legacy torque-utilization p99 **0.5748031139373779**, below the unchanged
+  pooled 0.60 limit. Legacy rated-speed exceedance fraction zero, speed-reference
+  utilization p99 **0.4123215973377228**; thermal-load proxy mean
+  **0.03993804752826691**, not a measured temperature.
+
+The new pre-reset measurements (force divided by the 0.60 Nm model reference):
+
+| Scope | Environment-steps | Pooled utilization p99 | Highest joint utilization p99 |
+| --- | ---: | ---: | --- |
+| All | 1499 | 0.5755217795570708 | right_hip_pitch: 0.7986437002817789 |
+| Approach | 20 | 0.5778405760725338 | right_knee: 0.6865567748745283 |
+| Interaction | 885 | 0.5203912352522216 | left_hip_pitch: 0.7094891627629595 |
+| Recovery | 594 | 0.6324249580502511 | right_hip_pitch: 0.8497568269570681 |
+
+The pooled statistic obscures greater phase/joint loads in this case. In
+particular, recovery deserves attention before any motor-aware curriculum
+revision. This is a descriptive finding, **not a new post-hoc per-phase or
+per-joint acceptance threshold**. The pre-reset maximum sampled actuator force
+was **0.6405236124992371 Nm** (normalized **1.0675393541653952**), above the
+normalization reference. This is not proof of acceptable real motor operation;
+the reference is not a continuous-duty rating or an asserted simulation clamp.
+No cause for that peak or general cross-seed load pattern is established here.
+
+Terminal motor samples visibly differ across the two sampling boundaries:
+pre-reset absolute force p99 **0.47529449462890627 Nm**, post-return p99
+**0.26755833625793457 Nm**. The p99 of the **paired absolute differences** is
+**0.7220623001456261 Nm**, with maximum **0.7372826337814331 Nm**; it is not the
+difference of those two quantiles. All three distributions contain 56 samples.
+This supplies live evidence that post-return samples do not preserve the
+terminal motor state. It does **not** reconstruct seed-367 or prove that reset
+sampling caused its rejection. Historical decisions remain unchanged.
+
+GPU observations: 0%/44 C/12 MiB before launch; 2%/46 C/397 MiB during, with only
+the expected child compute PID 1214254; 0%/45 C/12 MiB at 17:18:21 after exit,
+no compute PID. These are snapshots, not a continuous temperature-peak record.
+Both protected system services remained inactive with MainPID=0 at closeout;
+neither service was changed.
+
+Remote evidence remains in the predeclared output directory. Local second copy:
+`/Users/yanbo/Projects/microduckPlayground/microduck_rl/artifacts/diagnostics/motor-measurement-audit-s373-v1`.
+
+| Retained file | SHA-256 |
+| --- | --- |
+| decision.json | `79bc321740fb6c43e60853942247ba4e21bce23a98bc375161277e58d05fab0c` |
+| launch.json | `3dffa5eca397d4701d2b421f23a9bdc722ee37593d0e43d224d3d4bf45e6aafd` |
+| rollout/hierarchical-teacher-evaluation.json | `60a2d0e23d8b3e1a65a63b47a97134aeadefde3602a157a78782637224b23b77` |
+| rollout.log | `bfe9a2e7df89c792ad89e1b9e2bb6b3a568762715fcb34dd6b3d05919d2d4b70` |
+| runtime.json | `2833a9bd4f88467e0bcea42d58d8dc411fa477758e830a7ba7c6d3d4d9a77913` |
+
+Next boundary: use these retained phase/joint findings to propose a gentler
+return-to-speed, motor-aware simulation curriculum with predeclared criteria.
+This result alone authorizes neither its implementation nor another GPU run,
+and still does not establish repeatability, sensor-recorder non-interference,
+general policy acceptance or physical readiness.

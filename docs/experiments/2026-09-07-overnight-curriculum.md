@@ -149,3 +149,8 @@ gate or claim of completed hopping is authorized by this work window.
   reports all repeat ranges without causal or acceptance claims. Fresh data
   require a tested pushed `foundation_motor_replicates` runner; no collection
   has started merely because the CPU contract exists. Pilot usage remains1/3.
+- Six-case `foundation_motor_replicates` runner now implemented; final local
+  regression809 passed. Fixed source/checkpoint/fingerprint bindings, one
+  sequential900second service, no optimizer, immutable raw evidence and
+  first-unsafe stop are tested. Next: remote CPU regression and live idle/source
+  checks, then launch only the predeclared descriptive dataset once.

@@ -1,7 +1,7 @@
 # F1-M descriptive motor measurements
 
-Status: CPU contract implemented; fresh collection is gated on the separately
-tested runner and pushed source below. No new optimizer updates are authorized
+Status: CPU contract and runner implemented/tested; fresh collection is gated
+on the pushed source and remote checks below. No new optimizer updates are authorized
 by a measurement result.
 
 ## Why this is a separate experiment
@@ -95,3 +95,21 @@ command/route integrity, explicit refusal of causal/historical/admission claims,
 unsafe and missing-joint inputs, fixed case order, missing replicas/settings,
 observed-range arithmetic and preservation of every original failed gate.
 `git diff --check` passed. These synthetic tests are not fresh GPU evidence.
+
+## Runner validation and launch gate
+
+The `foundation_motor_replicates` runner is implemented with fixed case order,
+checkpoint/hash-history checks, identical baseline process fingerprints,
+per-child idle checks,120s timeouts,900s service cap and60s remaining reserve.
+It preserves returned raw reports/fingerprints before validation errors, writes
+an immutable manifest on normal/error closure and never invokes training.
+
+Final local regression passed809 tests in32.32s, no skips, two existing
+actuator/site-pattern warnings. Eight runner tests cover first/later unsafe
+stops, runtime/fingerprint failures, no optimizer, timeout/startup environment,
+deadline refusal, manifest preservation and raw retention before validation.
+The initial fingerprint test incorrectly aliased its mutable mock baseline;
+the fixture now uses an independent copy matching real JSON-loaded history,
+and the full final suite passed. No GPU job ran during that test correction.
+Repeat the same suite on100.100, then verify clean exact pushed source and
+idle GPU before launching the predeclared six-case collection once.

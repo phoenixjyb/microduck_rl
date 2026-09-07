@@ -159,3 +159,52 @@ still rejected: no claim that hopping has been retained or completed.
 
 Future training needs a separately approved window and predeclared hypothesis,
 not another experiment squeezed into this exhausted three-pilot budget.
+
+## Slice2b: historical source and current CPU robot reconstruction
+
+`robot_source_reconstruction.py` verifies working bytes against Git blob IDs
+from the exact training source2614d09 before importing its config factory.
+Coverage is97 historical project Python files, the robot XML and all38 directly
+referenced meshes:136 files,23,193,150 bytes. Includes, unknown file-bearing
+assets, traversal, duplicate meshes and source symlinks are refused rather
+than silently omitted. These files are recoverable source evidence, not a
+captured historical compiled model.
+
+The rebuilt config's tagged robot, simulator, ordered observations, actor,
+actions, commands, clipping and timing declarations exactly match slice2a.
+Only `Entity` robot construction and MuJoCo CPU compilation are performed;
+the saved simulator options are applied to that robot-local model. No scene,
+environment reset, randomization, runtime actuator initialization, actor
+inference, physics step, optimizer update or CUDA initialization occurs.
+
+Observed robot-local topology is nq21/nv20/nu14,16 bodies,75 geoms and38 meshes.
+The existing direct-unit-gear hinge validator resolves14 motors in the recorded
+order, with local joint indices0–13. This is a reconstructed motor mapping,
+not yet the complete resolved policy-action/preprocessing pipeline.
+
+The report retains selected finite compiled arrays and227 current dependency
+file hashes: BAM/mjlab Python sources and the actual bundled XL330 M6 JSON.
+The distribution name is `better-actuator-models`1.0.1, distinct from import
+name `bam`; an initial metadata lookup test exposed that naming difference
+and was corrected after inspecting installed metadata and the lockfile.
+Remaining package versions: mjlab1.3.0, MuJoCo3.10.0, MuJoCo Warp3.8.1,
+torch2.9.1 and Warp1.12.0. Native binary/runtime state is not fully inventoried.
+
+| Retained identity | SHA256 |
+| --- | --- |
+| Historical robot XML |`07af5e482200dfd2a7bf80ddde371153c88768a3a5aebc2f58ea42136fc7dadb`|
+| Current bundled BAM XL330 M6 JSON |`61c699362fb3fabdde93eeba5e1ad3bf4ef9ca2f71d03e316b1924ff005b20d3`|
+| Mac reconstruction report |`cc75a3e26d7fd2aeb8a724a3d0089aebe5764cffe5e622fd550aed85a10531d8`|
+
+New output `artifacts/audits/f1y-robot-only-cpu-reconstruction-v1.json`,91,868
+bytes on the Mac. Its decision is
+`reconstructed-robot-only-not-historical-equivalence`; every historical-model,
+policy-action-pipeline, behavioral-retention and admission flag remains false.
+The slice2a report and all closed campaign payloads remain unchanged.
+
+Local validation:24 focused reconstruction tests and1019 regression tests
+passed, with four occurrences of the existing actuator/site warning. Next
+verify the same source on100.100 and retain its independent CPU reconstruction.
+Compare source/assets/config/mapping identities exactly; retain any compiled
+numeric differences descriptively, without a tolerance-based policy pass or
+another GPU experiment.

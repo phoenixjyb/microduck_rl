@@ -220,3 +220,9 @@ gate or claim of completed hopping is authorized by this work window.
   report deliberately has no complete descriptor: effective model, resolved
   mappings, runtime and behavioral evidence remain unresolved. See the
   skill-retention document for the immutable output/hash and next CPU steps.
+- CPU slice2b verifies136 source/asset files against the training Git tree and
+  compiles a robot-only CPU reconstruction with matching saved declarations
+  and14 named direct-drive motor mappings. Local regression1019 passed.
+  Historical randomized-model equivalence, full action-pipeline binding and
+  behavioral retention remain false; no GPU work or skill promotion. The
+  reconstruction report is separate from all earlier immutable evidence.

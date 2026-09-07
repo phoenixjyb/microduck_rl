@@ -81,3 +81,17 @@ the exact Duck service; never start the protected workload concurrently.
 
 No physical robot motion, raw perception, automatic MP4, weakened numerical
 gate or claim of completed hopping is authorized by this work window.
+
+## Live experiment ledger
+
+- Paired pilot1/3: F1-M seed499 complete; source
+  `fbc0b73ca1a61016ea8e4002f1af65e24990e892`, decision `numerical-gate-stop`.
+  Two500-update pilots and two10-update smokes retained. All83 payloads mirrored
+  and verified; five evaluation cases, first pair503 rejected. Treatment lowers
+  load/power modestly but loses speed and redistributes load toward left knee
+  and head roll. No extra509/521 candidate evaluations or seed replacement.
+- Next bounded step: motor-timing instrumentation and a separately predeclared
+  evaluation-only diagnosis of the already absolute-safe503 reports. Existing
+  aggregate motor quantiles cannot establish the timing of the regressions.
+  Do not spend paired pilot2 until this evidence is closed and a single-axis
+  hypothesis is justified. Higher curriculum stages and hopping remain gated.

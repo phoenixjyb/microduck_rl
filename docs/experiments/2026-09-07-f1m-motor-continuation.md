@@ -1,6 +1,6 @@
 # F1-M: motor-load contrast with the lateral objective retained
 
-Status: predeclared, not yet run. Renewed user authorization on September7:
+Status: **completed and numerically rejected at the first pair**. Renewed user authorization on September7:
 continue bounded coding/training through **September8 07:00 Asia/Shanghai**.
 This is a new experiment, not a retry or reinterpretation of rejected F1-L.
 
@@ -104,3 +104,83 @@ stream and per-joint/power gates, idle telemetry retention, first-failure stop,
 budget refusal, paired initial states and complete immutable manifest coverage.
 Document links resolve and `git diff --check` passes. GPU/remote runtime results
 are separate live checks, not implied by these local tests.
+
+## Retained completion: September7 22:13 Shanghai
+
+Source `fbc0b73ca1a61016ea8e4002f1af65e24990e892`; user service
+`microduck-rl-f1m-fbc0b73-s499.service` ran22:01:28–22:13:29 and exited normally.
+Normal service completion is **not** numerical acceptance. Remote prelaunch
+regression also passed727 tests in15.35s (same two warnings, no skips).
+
+Both10-update smokes and both500-update pilots completed. All26 post-update
+checkpoints and4initial snapshots were verified finite with exact iteration
+and common-step counters. Every initial snapshot matches the original narrow
+parent's actor, critic, normalizers and Adam, with the declared next-iteration
+label8499 and common step204000. All four initial file hashes are
+`4eab6fcb933e5244bf29a546a4fb663bb4ba201a32966277cf75f2ff4c84d6d3`.
+
+| Training arm | Pilot seconds | Fall windows | Max fall fraction/window | Final model8998 SHA256 |
+| --- | ---: | ---: | ---: | --- |
+| Control motor weight-2 | 293.383 | 7 | 1/256 | `cf63952d0975b120f14f92b7cb9b7d5f8b2d6f5e46b5db8f214c63b1c77df83a` |
+| Treatment motor weight-4 | 292.348 | 8 | 1/256 | `dcef0f75a3b3bccd0f026de34510aca793f888d10ff8aa4569e74ee4201a18fb` |
+
+Each pilot retains500 finite values for75 TensorBoard scalar tags. Actual
+motor-weight curriculum telemetry is-2 throughout control and-4 throughout
+treatment; lateral cost is active in both (final episode metrics-0.214891 and
+-0.226036). No gross training guard fired. Maximum pooled training torque p99
+was0.734897/0.722518; maximum rated-speed sample fraction0.000116257/0.000104632;
+maximum sampled GPU temperature58C in both. These stochastic training values
+are not deterministic evaluation acceptance or continuous physical telemetry.
+
+All three parent references and control/treatment seed503 completed400steps
+with no terminal or absolute safety failure. The first treatment pair failed
+17 labels, including speed, lateral motion and motor nonregression. Seeds509
+and521 were **not** evaluated for the trained arms after the terminal decision.
+Five cases/40first episodes were evaluated, not the nine-case maximum.
+
+| Settled seed503 metric | Parent8498 | Matched control8998 | Motor treatment8998 |
+| --- | ---: | ---: | ---: |
+| Body forward mean m/s | 0.265486 | 0.266530 | 0.263566 |
+| Route forward mean m/s | 0.264222 | 0.265489 | 0.262488 |
+| Absolute cross-route speed m/s | 0.076588 | 0.061455 | 0.059304 |
+| Maximum absolute heading rad | 0.220607 | 0.173266 | 0.149070 |
+| Pooled torque utilization p99 | 0.555508 | 0.577563 | 0.577160 |
+| Mean squared utilization | 0.039697 | 0.042347 | 0.040973 |
+| Mean absolute mechanical power/sample W | 0.137257 | 0.155006 | 0.150813 |
+| Stable speed windows | 0/8 | 1/8 | 1/8 |
+
+Versus matched control, treatment reduced lateral motion3.50%, squared load
+3.24% and power2.70%, but reduced route speed by0.003000m/s and did not improve
+stable windows. Every treatment environment still exceeds0.05m/s mean absolute
+lateral speed (range0.054552–0.065314). Two route means are below0.25m/s.
+The pooled torque p99 is below the absolute0.60 gate but exceeds the frozen
+parent's+0.02 margin; power is9.88% above the parent, beyond the5% margin.
+
+Named-joint diagnosis: against matched control the left knee p99 rises
+0.594742→0.639553 and head roll0.299829→0.353293, both above the+0.02 margin.
+Against the parent, left hip yaw/pitch, head yaw/roll, right hip yaw and right
+knee regress. Other joints improve; this is load redistribution, not merely
+one global scale change. These are pooled named-joint quantiles, not time- or
+contact-phase-resolved evidence. Original reports retain raw route/command
+traces but not raw per-step motor history, so they cannot establish when those
+joint peaks coincide with slowing or lateral motion. Do not infer a gait-phase
+cause from these quantiles alone.
+
+Read-only closeout reproduced the exact pair/failure decision on CPU, audited
+all five heading-command traces and reconstructed their route-speed summaries
+and stable windows from raw route samples. All83 payload hashes and byte counts
+match on remote and local mirror;163,963,281 payload bytes plus manifest.
+Local mirror: `artifacts/diagnostics/f1m-motor-paired-s499-v1`.
+
+- Manifest SHA256: `cf0954316a0523f54104e4ddf0b1982f4e3dde9ef53e5352c75aad0883c0a788`.
+- Decision SHA256: `1c5bb1f83bbd86a2a8eea8a9d65e71bdad43e0f8e041df4f484018e07aecfe7f`.
+- Parent503 report: `36d1ebd9fc86afa4039c29287010beb12d626b97be09d80199f2a4ab0b1d3deb`.
+- Control503 report: `ca6cc0ab870618f242a6b71e497b37e0cd177961d9c138373e25e256c89e177e`.
+- Treatment503 report: `b54f7b20b897b622042af15add4783047e05efd3e91846d352485ba3d6b7f22f`.
+
+At22:18 GPU was idle (no compute PID,0%,45C,12MiB) and both protected system
+services were inactive. Original walking/narrow/rejected-hop sentinels remain
+unchanged. **No promotion or continuation of this closed seed sweep.** Next:
+predeclare a short motor-timing measurement of these already absolute-safe
+seed503 cases before guessing another reward change. That measurement must
+write separate evidence, add no optimizer updates, and retain existing gates.

@@ -26,6 +26,9 @@ Renewed September7 overnight authorization starts the separately predeclared
 The [overnight curriculum and budget](experiments/2026-09-07-overnight-curriculum.md)
 define the gait, stop/recovery, obstacle-diversity and independent-hop sequence,
 retention requirements and September8 07:00 Shanghai cutoff.
+F1-M also stopped at its first pair: modest load/power improvements did not
+pass speed, lateral or named-joint nonregression gates. Its next step is
+motor-timing diagnosis, not an admitted obstacle or hopping stage.
 
 For the requested capable obstacle avoider with stabilization and eventual
 hopping, maintain a separate retention ledger:

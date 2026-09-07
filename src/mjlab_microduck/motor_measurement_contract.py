@@ -5,6 +5,7 @@ import re
 from mjlab_microduck import foundation_motor_experiment as exp
 from mjlab_microduck.first_attempt_smoke import canonical, require
 from mjlab_microduck.motor_trace_audit import audit_motor_trace, JOINTS
+from mjlab_microduck.rollout_repeatability import differences
 
 PROTOCOL = "f1m-descriptive-motor-replicates-v1"
 ORDER = ("parent-1", "control-1", "motor-1", "motor-2", "control-2", "parent-2")
@@ -69,6 +70,26 @@ def range_contrast(reference, candidate):
                 delta_minimum=lower, delta_maximum=upper,
                 observed_direction="higher" if lower > 0 else "lower" if upper < 0 else "overlapping-or-equal",
                 confidence_interval=False, causal_effect_established=False)
+
+
+def reconcile_derived_analysis(recorded, recomputed):
+    """Cross-CPU derived means only, at the existing raw-summary precision.
+
+    Raw reports, hashes, quantiles, indices, counts, labels and decisions do not
+    receive this tolerance. This never replaces historical replay identity.
+    """
+    canonical([recorded,recomputed])
+    require(all(r[k] is False for r in (recorded,recomputed) for k in CLAIMS), "descriptive scope only")
+    delta=differences(recorded,recomputed)
+    path=re.compile(r"/analysis/joints/("+"|".join(JOINTS)+r")/(settled_squared_load_share|"
+                    r"squared_load_other|squared_load_when_route_below_027|one_second_bins/[0-5]/squared_utilization_mean)")
+    for row in delta:
+        require("missing" not in row and path.fullmatch(row["path"]) is not None
+                and type(row["first"]) is float and type(row["second"]) is float
+                and abs(row["first"]-row["second"]) <= 1e-9, "derived-analysis mismatch outside existing reconstruction precision")
+    return dict(exact_match=not delta, differing_float_leaves=len(delta),
+                max_absolute_delta=max((abs(r["first"]-r["second"]) for r in delta),default=0.),
+                derived_mean_absolute_tolerance=1e-9, differences=delta, **CLAIMS)
 
 
 def describe_dataset(records, *, source):

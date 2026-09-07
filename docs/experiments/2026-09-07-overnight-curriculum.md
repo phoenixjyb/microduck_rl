@@ -154,3 +154,15 @@ gate or claim of completed hopping is authorized by this work window.
   sequential900second service, no optimizer, immutable raw evidence and
   first-unsafe stop are tested. Next: remote CPU regression and live idle/source
   checks, then launch only the predeclared descriptive dataset once.
+- Descriptive collection completed23:55:16, source
+  `c0ec38453ff18ee1100a1f3eb92e70ca37357521`, service
+  `microduck-rl-motor-replicates-c0ec384.service`. All six cases absolute-safe;
+  raw reconstruction and full deterministic decision verified. All32 payloads
+  mirrored. Decision `descriptive-replicates-only`; both performance readouts
+  reject. Motor versus control shows higher left-knee/head-roll p99 in both
+  repeats, persistent head-roll load across all six settled bins, and higher
+  head-roll speed/adjacent-sample speed differences. Pooled torque/heading
+  ranges overlap. GPU is idle; protected services remain inactive.
+  Mac derived means differ only at <=5.56e-17; named means use the existing
+  1e-9 reconstruction precision, while raw hashes and complete decision remain
+  exact. No historical rejection or numerical gate was changed. Pilot usage1/3.

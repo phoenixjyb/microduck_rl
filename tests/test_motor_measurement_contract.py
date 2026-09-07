@@ -97,3 +97,24 @@ def test_dataset_refuses_selection_missing_replicate_or_changed_conditions(mutat
         for row in rows:
             for phase in ("before","after"): del row["fingerprint"][phase]["cudnn_enabled"]
     with pytest.raises(ValueError):m.describe_dataset(rows,source=SOURCE)
+
+
+@pytest.mark.parametrize("mutation",[None,"tiny_mean","large_mean","peak","quantile","count","scope","type","missing","case"])
+def test_cross_cpu_precision_applies_only_to_derived_means_never_gates_or_identity(mutation):
+    a=m.measure_case(report("parent-1"),source=SOURCE,case="parent-1");b=copy.deepcopy(a)
+    row=b["analysis"]["joints"][m.JOINTS[0]]
+    if mutation=="tiny_mean":row["one_second_bins"][0]["squared_utilization_mean"]+=1e-17
+    if mutation=="large_mean":row["one_second_bins"][0]["squared_utilization_mean"]+=1e-8
+    if mutation=="peak":row["peak"]["utilization"]+=1e-16
+    if mutation=="quantile":row["one_second_bins"][0]["torque_p99"]+=1e-16
+    if mutation=="count":row["slow_samples"]+=1
+    if mutation=="scope":b["historical_replay_identity"]=True
+    if mutation=="type":row["squared_load_when_route_below_027"]=0.
+    if mutation=="missing":del row["squared_load_other"]
+    if mutation=="case":b["case"]="parent-2"
+    if mutation in (None,"tiny_mean"):
+        result=m.reconcile_derived_analysis(a,b)
+        assert result["exact_match"] is (mutation is None) and not result["training_admitted"]
+        assert result["max_absolute_delta"]<=1e-9
+    else:
+        with pytest.raises(ValueError):m.reconcile_derived_analysis(a,b)

@@ -1,7 +1,7 @@
 # F1-M descriptive motor measurements
 
-Status: CPU contract and runner implemented/tested; fresh collection is gated
-on the pushed source and remote checks below. No new optimizer updates are authorized
+Status: six-case collection completed and retained; descriptive evidence only.
+No new optimizer updates are authorized
 by a measurement result.
 
 ## Why this is a separate experiment
@@ -113,3 +113,84 @@ the fixture now uses an independent copy matching real JSON-loaded history,
 and the full final suite passed. No GPU job ran during that test correction.
 Repeat the same suite on100.100, then verify clean exact pushed source and
 idle GPU before launching the predeclared six-case collection once.
+
+## Completed collection: September7 23:53–23:55 Shanghai
+
+Source `c0ec38453ff18ee1100a1f3eb92e70ca37357521`; service
+`microduck-rl-motor-replicates-c0ec384.service` started23:53:27, emitted the
+complete decision23:55:15 and exited normally23:55:16. Remote prelaunch
+regression passed809 tests in34.61s, no skips, the same two existing warnings.
+All six cases completed400steps/8env with no absolute safety failure. All
+raw motor/route/command audits passed; no optimizer ran. The observed GPU
+temperature during collection reached52C; closure was idle0%,47C,12MiB,
+no compute PID, both protected system services inactive.
+
+Decision: `descriptive-replicates-only`. Both replica-specific original
+performance gate readouts reject the motor policy. These are48 first episodes
+at one development physics seed, not independent training-seed confirmation.
+
+Observed settled ranges across the two repeats (not confidence intervals):
+
+| Metric | Parent | Control | Motor |
+| --- | --- | --- | --- |
+| Route speed, m/s | 0.264451–0.264964 | 0.264332–0.265092 | 0.262416–0.262544 |
+| Absolute lateral speed, m/s | 0.076530–0.076985 | 0.061641–0.061756 | 0.058994–0.059206 |
+| Mean squared utilization | 0.039624–0.039689 | 0.042118–0.042294 | 0.040962–0.041014 |
+| Mean absolute mechanical power, W/motor | 0.136972–0.137257 | 0.154569–0.154959 | 0.150968–0.151414 |
+| Pooled torque-utilization p99 | 0.558068–0.558746 | 0.576717–0.579710 | 0.577809–0.580285 |
+
+Motor versus control has non-overlapping observed ranges for lower speed,
+lateral motion, squared load and power. Pooled torque p99, heading maximum
+and soft-limit fraction ranges overlap: do not claim reliable improvement
+for those quantities. Every gate remains unrounded in the retained decision.
+Left-knee p99 is higher than control by0.033499–0.037050 across all four
+comparisons (allowed nonregression margin0.02). Head-roll p99 is higher by
+0.049006–0.060357; both repeats also violate the parent head-roll margin.
+
+The head-roll load increase persists in every settled one-second bin: motor
+bin mean squared utilization0.029091–0.033630 versus control0.020607–0.023790.
+Head-roll share of total squared load is5.4436–5.4556% versus3.7806–3.7877%;
+left-knee share11.4131–11.5837% versus9.5647–9.6432%. These are associations,
+not contact-phase or causal findings.
+
+Exploratory CPU-only inspection of the same raw joint-speed tensors, steps
+100:400, gives head-roll RMS speed1.862200–1.864644rad/s for motor versus
+1.577424–1.577647 for control. RMS adjacent control-sample velocity differences
+(299 differences per environment, not actuator target changes) are
+0.835818–0.837132rad/s versus0.695811–0.695875. This supports testing a
+head-motion regularization hypothesis; it does not prove action chatter or
+that reducing head activity will preserve balance or repair the knee/speed gates.
+
+## Retention and cross-CPU reconciliation
+
+All32 payloads (28,284,624bytes plus manifest) were mirrored locally under
+`artifacts/diagnostics/f1m-descriptive-motor-replicates-v1`. Both hosts verified
+the complete byte/hash/file coverage, all six report hashes, process
+fingerprints, raw-summary reconstruction and the complete deterministic
+decision. Original F1-M83, failed timing5, OFF/OFF10, hash-controlled10 and all
+checkpoint sentinels remain unchanged.
+
+- Manifest: `44d43f73564e73e67d4e5a456487c4129eff44cd20b128ca051ab3b211f1795e`.
+- Decision: `be1b7a45a94e20d07a0ccc00984bff5745aad82b3f8b5a8aa2c6ab59b7851960`.
+- parent-1: `81d835344258bec267ed90ee995de95f0a26fc2a828973af17128a0525d84547`.
+- control-1: `374380ae54d14ba1b505170e3f99f0c0e8c0cc7828457c0f0c394e8b0c272e34`.
+- motor-1: `e20dfd60986a3766b9604809d56845e11cc62f79d25b86a5eaad6edb1a30c998`.
+- motor-2: `e59af669a66a5e3f042ed4695268be8c1275aa3e02a5dcf660b8e13803228139`.
+- control-2: `419f7197996439391eb1aa7ee22f55b79a9a29fc0c0c37b7a3ed09e396c0b86e`.
+- parent-2: `806a40685e91a877211d16d5f7174d40bae0ac54fc8da7a15be6f9f13e1b1925`.
+
+The initial Mac audit's extra **bit-exact derived-analysis** assertion failed.
+Read-only diagnosis found270 differing float leaves, maximum absolute
+difference5.551115123125783e-17, only in derived squared means/load shares.
+Per-case counts are45/39/38/49/48/51 in execution order. Every raw-summary
+audit passes its original1e-9 precision and the complete decision reproduces
+exactly. Linux reproduces the per-case derived analyses exactly as well.
+
+The CPU-only `reconcile_derived_analysis` helper explicitly allows the existing
+1e-9 reconstruction precision only for those named derived means/shares.
+Raw reports/hashes, quantiles, peak indices, counts, source/case identity,
+scope claims and decisions remain exact. It does not alter simulator outputs,
+acceptance thresholds or the closed historical replay failure. Ten focused
+tests cover these boundaries; combined contract/runner tests47 passed in22.06s.
+Final full local regression after the reconciliation helper:819 passed in37.13s,
+no skips, the same two existing warnings; `git diff --check` passed.

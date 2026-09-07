@@ -56,15 +56,15 @@ def motor_failures(candidate, reference):
     return failures
 
 
-def paired_decision(parent,control,lateral):
+def paired_decision(parent,control,lateral,*,protocol=PROTOCOL,seeds=SEEDS):
     canonical([parent,control,lateral])
     require(not parent["safety_failures"] and not control["safety_failures"], "safe paired references")
-    failures = candidate_failures(lateral,parent,protocol=PROTOCOL,seeds=SEEDS)
+    failures = candidate_failures(lateral,parent,protocol=protocol,seeds=seeds)
     failures += motor_failures(lateral,parent)
-    matched = candidate_failures(lateral,control,protocol=PROTOCOL,seeds=SEEDS)
+    matched = candidate_failures(lateral,control,protocol=protocol,seeds=seeds)
     failures += ["matched-control:"+f for f in matched if "nonregression" in f]
     failures += ["matched-control:"+f for f in motor_failures(lateral,control)]
-    control_failures = candidate_failures(control,parent,protocol=PROTOCOL,seeds=SEEDS)
+    control_failures = candidate_failures(control,parent,protocol=protocol,seeds=seeds)
     # State all failed speed gates, rather than hiding them behind the first label.
     # Safety-stop summaries intentionally omit performance-only flags. Preserve
     # their numerical rejection rather than throwing a reporting KeyError.

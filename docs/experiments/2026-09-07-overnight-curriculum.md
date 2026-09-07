@@ -1,0 +1,83 @@
+# Bounded MicroDuck work through September8 07:00 Shanghai
+
+User request: continue the next training round and plan the curriculum well,
+working until07:00. Window ends **2026-09-07T23:00:00Z**. This is a bounded
+simulation research campaign, not a promise to complete every skill overnight.
+
+## Curriculum and anti-forgetting plan
+
+| Order | Training objective | Required evidence before moving on |
+| --- | --- | --- |
+| F: stable economical gait | Correct route/speed/lateral motion without excess motor loading; one reward/control axis per experiment | Existing absolute and paired speed, heading, lateral, torque, power and load gates; then three independent training seeds and untouched confirmation seeds |
+| S: stop and recovery | Ramp to rest, stand, restart, then bounded perturbations one axis at a time | First-attempt no falls, settled stop/restart windows, motor limits, and rerun the accepted F matrix on the composed controller |
+| O: obstacle negotiation | Freeze admitted gait; train a low-rate supervisor on compact external geometry | Collision/timeout/route-return gates by placement/speed bin; nominal tracking before and after maneuver, slowdown permitted inside it; F/S retention |
+| O-diversity | Vary range, bearing, geometry and speed separately, then structured noise/latency/dropout | Per-bin and worst-seed results, not pooled pass rate; safe stop under stale/missing input and recovery afterward |
+| H: hop and landing | Separate progressive-height repair of the rejected H1 track; no claimed retained hop yet | Original H1 takeoff/landing/drift/spring/motor gates and independent-seed confirmation; no H2 on failed H1 |
+| Integration | Explicit stop/bypass/hop routing with bounded transitions | Align rigid/sprung mechanics first, then test every earlier skill plus transition and interruption matrices; checkpoint preservation alone is not behavioral retention |
+
+Keep an immutable skill library with checkpoint, training source, mechanics,
+command/sensor envelope and evaluator hashes. Candidate work writes separate
+directories; never overwrite the fallback gait or historical obstacle specialist.
+Start with separate policies and frozen low-level actors; do not fine-tune a
+single joint policy on obstacles and assume its walking/hopping survived.
+Hopping repair can be planned in parallel conceptually, but no second GPU job
+runs concurrently and tonight's first bottleneck is F, not higher obstacles.
+
+## Tonight's finite experiment queue
+
+1. Run [F1-M](2026-09-07-f1m-motor-continuation.md): identical lateral objective,
+   motor weight-2 versus-4, paired seed499,500updates each. No broad gain search.
+2. Close numerical evidence and compare speed/lateral versus torque/power.
+   If all diagnostic gates pass, predeclare a matched independent-training-seed
+   confirmation (same500updates, cadence and protocol). Do not extend iterations
+   and change seeds at the same time. Candidate admission still needs the full
+   three-training-seed matrix, never a single favorable result.
+3. If F1-M fails, retain it and inspect failure type before another edit:
+   motor improvement with lost speed calls for a single-axis objective-balance
+   revision; persistent load concentration calls for a named-joint/timing
+   diagnosis before modifying the reward; unsafe reference or infrastructure
+   failure calls for read-only diagnosis, not a seed replacement or blind rerun.
+   A new revision needs a committed hypothesis, exact parent, changed axis,
+   fixed seed/budget/evaluator and focused tests **before** launch.
+4. At most **three new paired500-update pilot experiments total tonight**
+   including F1-M, or one F1-M plus two matched confirmation seeds. Smokes are
+   ten updates per arm. Do not use leftover time for unbounded tuning. After
+   this cap, continue CPU evidence audits, retention-test implementation and
+   curriculum documentation until the deadline. Any GPU-backed retention
+   check needs its own short predeclared protocol and a numeric entry gate.
+
+Selection/evaluation seeds used to guide revisions become development data.
+List them in the experiment ledger. Reserve a fresh, predeclared confirmation
+matrix for final promotion, and include earlier development failures in the
+report. Do not market adaptive development-seed improvement as generalization.
+No stage advances merely because a larger reward or longer training looks good.
+
+## Execution and handoff rules
+
+Local `/Users/yanbo/Projects/microduckPlayground/microduck_rl`; remote
+`converge@192.168.100.100:/home/converge/work/microduck_rl-athletics-obstacle-curriculum`;
+exact branch `feat/athletics-obstacle-curriculum`. One write owner and one
+retained GPU user service at a time. Verify clean pushed source, frozen runtime,
+GPU PID/utilization/memory/temperature and both protected **system** services
+inactive before launch. Preserve unrelated workloads and100.98/FilmBrain.
+
+While a job runs, inspect progress/checkpoints, finite metrics, falls,
+motor-load/soft-limit/thermal proxies and GPU state; do not edit its worktree
+or service. On completion validate checkpoint counters and hashes, reconcile
+the deterministic decision, mirror artifacts to the Mac and test/commit/push
+concise evidence. Failures are diagnosed read-only before fixes; never erase
+failed units/reports or automatically restart closed campaigns.
+
+Scheduled thread follow-ups should be quiet on unchanged/non-actionable state
+and report meaningful milestones, completion, real failure or required input.
+Every service needs a hard runtime cap and a launch check proving its worst
+case plus closeout fits07:00. No new GPU job after06:00; reserve the last hour
+for completion/evidence and CPU work. Stop new Duck work at07:00, verify no
+Duck compute process remains and checkpoints are durable, leave both protected
+AI services inactive unless explicitly asked otherwise, delete the follow-up
+automation and report retained state. If an unexpected job survives its cap,
+diagnose it and preserve its newest durable checkpoint before stopping only
+the exact Duck service; never start the protected workload concurrently.
+
+No physical robot motion, raw perception, automatic MP4, weakened numerical
+gate or claim of completed hopping is authorized by this work window.

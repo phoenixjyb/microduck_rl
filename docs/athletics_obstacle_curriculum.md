@@ -20,7 +20,12 @@ within their named historical envelopes. See the current
 The subsequent [F1-L continuation](experiments/2026-09-07-f1l-lateral-continuation.md)
 reduced lateral motion in its first held-out pair but increased motor load and
 was rejected. Its final comparison was recovered from stored data on CPU;
-neither gait promotion nor a further seed sweep is admitted.
+neither gait promotion nor a further seed sweep of F1-L is admitted.
+Renewed September7 overnight authorization starts the separately predeclared
+[F1-M motor-weight contrast](experiments/2026-09-07-f1m-motor-continuation.md).
+The [overnight curriculum and budget](experiments/2026-09-07-overnight-curriculum.md)
+define the gait, stop/recovery, obstacle-diversity and independent-hop sequence,
+retention requirements and September8 07:00 Shanghai cutoff.
 
 For the requested capable obstacle avoider with stabilization and eventual
 hopping, maintain a separate retention ledger:

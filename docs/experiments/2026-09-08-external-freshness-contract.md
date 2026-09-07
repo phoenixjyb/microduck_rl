@@ -129,3 +129,24 @@ on100.100 after exact clean-source, idle-GPU/no-running-Duck and inactive-
 protected-service checks. The same138 focused CPU tests passed there in5.69s.
 GPU remained0%,45C,12MiB with no compute PID; both protected SYSTEM services
 remained inactive and the worktree clean. No receiver or policy was deployed.
+
+## Lifecycle review: test bookkeeping is not a deployed receiver
+
+Seventeen additional sequence tests use a test-only history fixture to exercise
+the documented packet and check-time watermarks. They cover repeated cache
+polling through expiry, missing/new data in every phase, newer invalid/stale
+samples blocking old good ones, conflicting retransmissions, unsolicited
+context changes, explicit test episode rebinding, future timestamps and receiver
+rollback after malformed input. The classifier remains pure; production code
+is unchanged. No operational latch, handshake, clock mapper, receiver loop or
+automatic controller resumption is implemented by this fixture.
+
+These65 combined freshness tests preserve `motion_command=None` and false
+authority flags throughout each sequence. A later fresh classification after
+an error remains metadata-only: a production fault latch/reacquisition decision
+needs separate implementation and closed-loop evidence. This review does not
+fill retention-plan references or reopen the three-pilot budget.
+
+Local validation after the lifecycle review:65 combined freshness tests and1217
+broader CPU regression tests passed (42.94s,17 existing actuator/site warning
+occurrences). No production source changed in this lifecycle slice.

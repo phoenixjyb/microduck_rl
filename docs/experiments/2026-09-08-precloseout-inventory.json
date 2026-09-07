@@ -1,0 +1,47 @@
+{
+  "schema": "microduck-overnight-precloseout-v1",
+  "checked_at_utc": "2026-09-07 22:17:24 UTC",
+  "status": "pre-deadline-inventory-only",
+  "deadline_utc": "2026-09-07T23:00:00Z",
+  "cross_host_inventory_match": true,
+  "payload_count": 289,
+  "payload_bytes": 522533420,
+  "checkpoint_file_count": 90,
+  "checkpoint_count_scope": "Includes initial snapshots and smoke/pilot checkpoints, not distinct accepted policies",
+  "campaigns": [
+    {
+      "bytes": 163963281,
+      "campaign": "f1m-motor-paired-s499-v1",
+      "checkpoint_files": 30,
+      "decision": "numerical-gate-stop",
+      "decision_sha256": "1c5bb1f83bbd86a2a8eea8a9d65e71bdad43e0f8e041df4f484018e07aecfe7f",
+      "manifest_sha256": "cf0954316a0523f54104e4ddf0b1982f4e3dde9ef53e5352c75aad0883c0a788",
+      "payloads": 83,
+      "source": "fbc0b73ca1a61016ea8e4002f1af65e24990e892"
+    },
+    {
+      "bytes": 179111100,
+      "campaign": "f1n-neck-rate-paired-s499-v1",
+      "checkpoint_files": 30,
+      "decision": "numerical-gate-stop",
+      "decision_sha256": "ce37f29a36a078522bd09fc497d62d541b4fcaa3a58523fbb2349f13cd603196",
+      "manifest_sha256": "8e6fcb53477ee6edb6508d55678073540b59d3ade61981bb9437a6ce636b0bcf",
+      "payloads": 101,
+      "source": "4317802cb09a3464b2db805ce4bef801abecd825"
+    },
+    {
+      "bytes": 179459039,
+      "campaign": "f1y-yaw-support-paired-s499-v1",
+      "checkpoint_files": 30,
+      "decision": "numerical-gate-stop",
+      "decision_sha256": "142723cf3b0211920e22d7c3d3a6f65478c7dd1cf103c099ff39b74554441495",
+      "manifest_sha256": "63a9c8c5cd8a909a1f7cc1490deff60978368c22bbfd2e314985b667febfbe41",
+      "payloads": 105,
+      "source": "2614d09a994223a025d7a0d17d5b6879c7b513dd"
+    }
+  ],
+  "deadline_closeout_verified": false,
+  "policy_acceptance": false,
+  "training_authorized": false,
+  "physical_motion_authorized": false
+}

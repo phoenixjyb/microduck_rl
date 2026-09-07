@@ -1,8 +1,7 @@
 # F1-N: predeclared matched neck-action smoothing pilot
 
-Status: implemented and locally tested, **not launched**. This reserves the second
-paired-pilot slot of the current window; a launch consumes that slot even if
-it stops early. Current launched paired experiments:1/3.
+Status: **closed, rejected at the first evaluation pair**. Both pilots completed;
+this consumed the second paired-pilot slot. Current launched experiments:2/3.
 
 ## Evidence and falsifiable hypothesis
 
@@ -125,3 +124,85 @@ Tests cover the single config axis, original cache/mapping, consumed reward,
 fixed checkpoint/counter corruption, child hash/caps, first-failure stop,
 immutable manifests and original motor/speed/route gates. Remote frozen-runtime,
 CPU tests and clean idle launch gates remain separate requirements.
+
+## Closure: September8 00:55:40 Shanghai
+
+Source `4317802cb09a3464b2db805ce4bef801abecd825`, user service
+`microduck-rl-f1n-4317802-s499.service`, started00:42:57, normal exit0.
+Remote84 focused CPU tests, frozen dependency hashes, old evidence/sentinels,
+clean source and two idle samples passed before launch. On closure MainPID0,
+active/exited (retained service, not running), GPU0%,45C,12MiB and no compute
+PID; both protected SYSTEM services inactive. No service restart or new rollout.
+
+All101 payloads (179,111,100 bytes), plus manifest, mirrored to
+`artifacts/diagnostics/f1n-neck-rate-paired-s499-v1` on the Mac. Complete payload
+inventory/hash verification, all26 post-update checkpoints plus4 initial
+snapshots, finite learned/Adam tensors, checkpoint cadence and environment
+counters verified on both hosts. The exact original pair decision was
+independently recomputed on CPU on both hosts: `numerical-gate-stop`,22 failed
+labels. All three parent cases and the control/neck503 cases were400-step,
+absolute-safe rollouts. No candidate509/521 cases were run after rejection.
+
+- Manifest SHA256: `8e6fcb53477ee6edb6508d55678073540b59d3ade61981bb9437a6ce636b0bcf`
+- Decision SHA256: `ce37f29a36a078522bd09fc497d62d541b4fcaa3a58523fbb2349f13cd603196`
+- Control8998: `3d895dac137576c3a7a60aed1728edf31e1ec8e78259e71d1ed0f46518c8e6c7`
+- Neck8998: `e04660c311a1bdd5de27c1640f0ef0ec309f176ce4c30beb27b59a572ac8a1cb`
+- All four identical initial snapshots: `2ba27fa7c3f403b6eacd48a2a102da9252f0b8aa7dfe2a91d6dec63bce9729fa`
+
+Smokes completed10 updates each (~6.92s); pilots500 each (299.81s/298.48s),
+final environment counter216000. Every rollout/reward window was finite;
+neck weights remained-0.1/-0.2, motor-4, lateral-0.5. Both pilots had maximum
+per-update fall fraction0.0078125, temperature58C and no gross guard failure.
+Training pooled torque peaks0.726261/0.728269 are below the gross training
+guard, not evidence of passing the stricter held-out limit.
+
+| Settled seed503 metric | Parent | Control | Neck treatment |
+| --- | --- | --- | --- |
+| Route speed m/s | 0.264810 | 0.258435 | 0.258513 |
+| Absolute lateral speed m/s | 0.076618 | 0.056387 | 0.054643 |
+| Maximum heading error rad | 0.231430 | 0.161820 | 0.125040 |
+| Pooled torque utilization p99 | 0.562742 | 0.541279 | 0.566971 |
+| Mean squared utilization | 0.039734 | 0.039624 | 0.040386 |
+| Mean absolute mechanical power W/motor | 0.137111 | 0.143608 | 0.147600 |
+| Head-roll utilization p99 | 0.288640 | 0.362075 | 0.359958 |
+| Left-hip-pitch utilization p99 | 0.662164 | 0.631318 | 0.720799 |
+| Right-knee utilization p99 | 0.662799 | 0.655608 | 0.685223 |
+
+Values above are rounded for display only; all decisions use retained full
+precision and per-environment/joint gates. The22 labels include insufficient
+speed and recovery window, lateral motion, multiple joint regressions,
+pooled torque versus control, and mechanical power versus parent. Control
+also fails its speed/lateral comparison; neither arm is admitted.
+
+The live raw neck action-change cost averaged0.179033 control versus0.170752
+treatment, with final100-update means0.178495/0.171470. Thus the term was live
+and the sampled action cost decreased; acceptable head/body motor behavior
+did not follow. This one development seed cannot establish a reliable causal
+effect. Do not raise this penalty again or promote head-roll-only improvement.
+
+## Read-only command-domain diagnosis and next step
+
+The pinned training YAML and guarded training loop use only body commands
+`[0.3,0,0]`. In all five retained held-out cases, all2400 settled actor inputs
+have nonzero yaw from the unchanged heading controller. Forward/lateral
+commands remain within their training bounds. At seed503, absolute mean yaw
+is0.059199/0.041417/0.039590 rad/s for parent/control/neck; parent521 reaches
+-0.273181 rad/s. `foundation_command_coverage.py` verifies the closed manifest,
+reads YAML without executing Python tags, validates original command delivery,
+and compares native float32 command ranges without a deadband.
+
+This is a **continuation command-domain gap**, not proof that the earlier
+parent was never trained on yaw, nor proof that the gap caused this rejection.
+No new physics/optimizer steps were used in this audit. The bounded next
+hypothesis is [F1-Y command support](2026-09-08-f1y-command-support.md), not
+another neck/motor-weight search. It remains unimplemented/unlaunched and must
+pass its implementation gate before consuming the last slot.
+
+Closeout CPU regression:858 passed,3 existing actuator/site warnings. The
+command audit's canonical JSON SHA256 is
+`3240dbd02754a341ba2494528322aff45cc38740ad35645d4718b6b463f69053`
+on the Mac. Reproduce with `audit_retained(root)` from
+`mjlab_microduck.foundation_command_coverage`, then SHA256 of UTF-8
+`first_attempt_smoke.canonical(result)`; this is a read-only result, not a
+replacement for either original manifest or decision. Remote reconstruction
+of this new audit is a separate post-push check.

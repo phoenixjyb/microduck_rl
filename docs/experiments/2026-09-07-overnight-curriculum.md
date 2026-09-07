@@ -180,3 +180,16 @@ gate or claim of completed hopping is authorized by this work window.
   first-failure immutable closeout are tested. Still not launched; next verify
   remote CPU/runtime/source and idle gates, then run slot2 once. Preserve every
   closed rejection and do not promote any skill from implementation tests.
+- F1-N slot2 completed00:55:40, source4317802, service
+  `microduck-rl-f1n-4317802-s499.service`; exit0 but `numerical-gate-stop` at
+  first pair503,22 failed labels. Both500-update pilots and all checkpoint/
+  reward counters verified; all101 payloads mirrored and original decision
+  reproduced on both hosts. No follow-on candidate509/521 or retry. GPU idle,
+  protected SYSTEM services inactive; details/hashes in F1-N ledger.
+- CPU command-coverage audit finds continuation yaw fixed0 while all settled
+  held-out actor inputs use nonzero heading-hold yaw. This is a support gap,
+  not established rejection causality. Next: implement/test the separately
+  predeclared [F1-Y](2026-09-08-f1y-command-support.md) single yaw-range contrast.
+  It is not launched; only after its actual-command/actor delivery tests and
+  all operational gates may it consume final slot3. Keep all reward settings
+  at F1-N control, all old numerical gates, and all closed rejected evidence.

@@ -470,3 +470,72 @@ in1.23s. Its independently produced26,182-byte audit matches the Mac SHA256
 exactly. GPU remained0%,45C,12MiB with no compute PID; both protected services
 remained inactive and the worktree clean. This verifies inventory delivery and
 summary reconciliation, not a new hop rollout or behavior acceptance.
+
+## Slice5: frozen obstacle/recovery baseline and terminal boundary
+
+`retained_recovery_inventory.py` verifies the closed seed379 eight-file
+experiment and three checkpoint references: original motor-aware7998 gait,
+near HC4-R2 supervisor and far HC4-LH supervisor. All11 selected payloads,
+5,020,145bytes, are mirrored on the Mac under
+`artifacts/retained/recovery-seed379-v1/` with original repo-relative paths.
+The earlier eight-file diagnostic mirror and remote originals remain unchanged.
+Checkpoint hashes match the original launch receipt; the eight experiment
+hashes match the September6 ledger. No weights are deserialized.
+
+Tracked inventory `2026-09-08-recovery-retained-inventory.json`, SHA256
+`6d49fa4a5af7ef18018c8fc8a25c5f175f7ca03203ad5660ca75b1588e3be43f`,
+also pins nine selected validator/controller/observer/rollout source files to
+Git blobs at `bd2a20a6232f647e656a2dfe6788b037e29a06b1`. This is not a complete
+transitive dependency or historical runtime binding. The audit constructs the
+expected argv without executing it, verifies the exact original frozen models,
+single child index0/exit0 receipt and uncapped near-A1 command, then runs only
+the existing pure `recovery_ab.evaluate_paths` reducer. Its canonical result
+equals both original decision receipts exactly. The closed evaluation directory
+must contain precisely its eight files: an extra A2/B report or symlink is an
+error, not permission to extend this failed prefix.
+
+The historical result remains `numerical-gate-stop`, solely `recovery-window`.
+Eight clean obstacle passages, zero collisions/falls/timeouts and legacy pooled
+torque p99 of0.5060326457023621 do not clear the recovery requirement. All eight
+entered recovery; none held0.30+/-0.03m/s for the sampled0.50s span within2s.
+All eight are `window-missed`, not unobserved or censored. Mean recovery speed
+was0.20347188413143158m/s over1382 samples. Approach mean0.03261695057153702m/s
+has only15 startup-inclusive samples and must not be reported as steady-state
+approach performance. Interaction mean0.19954714179039001m/s is descriptive;
+the curriculum intentionally permits slowdown during the maneuver.
+
+The gait and near supervisor were used by this one retained child. The far
+supervisor was hash-verified as a declared reference but **not evaluated** here.
+No A2 repeat, capped-B comparison, later placement/speed cell or recovery-PPO
+pilot ran. The actual decision is a failed prerequisite, not proof that a cap
+does or does not improve recovery. Standstill, safe stop/restart, interruptions
+and stale/missing sensor behavior were not evaluated. The report used exact
+structured geometry with zero noise/dropout; no raw perception is involved.
+
+Output `artifacts/audits/recovery-retained-inventory-v1.json`,11,321bytes,
+SHA256 `0fd893d5b1459d9d62a7ea64a28244c0b2e156e41d034af3411686378417c522`.
+Its descriptor stays null and its declared rigid-locomotion mechanics group
+stays separate from sprung H1-T. Runtime/mechanics binding, raw reconstruction,
+behavioral retention and all admission/transition/training/motion flags remain
+false. Retention-plan slots are not filled with this failed baseline report.
+
+Reproduce using the Mac selected mirror, or use `--root .` on100.100:
+
+```bash
+CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1 .venv/bin/python -m mjlab_microduck.retained_recovery_inventory \
+  --root artifacts/retained/recovery-seed379-v1 --repo . \
+  --output artifacts/audits/recovery-retained-inventory-v1.json
+```
+
+Focused local validation:23 new inventory/receipt tests plus the existing
+recovery suites passed132 tests. Checks include every selected payload's bytes,
+extra/symlinked evidence, changed source/model/command, extra children, original
+failure preservation, and refusal to load checkpoints or call the launcher.
+The broader local regression passed1152 tests in41.04s, with17 occurrences of
+the existing actuator/site warning; `git diff --check` passed.
+
+Next bounded CPU slice: consolidate the evidence-backed curriculum readiness
+matrix and explicit missing acceptance cases. Keep F speed/motor repair before
+further obstacle progression; do not reinterpret clean passage as retained
+recovery, standing or hopping. No further GPU experiment in the consumed3/3
+window, and the07:00 Shanghai cutoff/protected-service rules remain unchanged.

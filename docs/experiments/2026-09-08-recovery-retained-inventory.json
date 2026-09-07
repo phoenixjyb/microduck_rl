@@ -1,0 +1,117 @@
+{
+  "historical_protocol_source": "bd2a20a6232f647e656a2dfe6788b037e29a06b1",
+  "payloads": {
+    "artifacts/checkpoints/hc4lh-11002cc-center002/supervisor.pt": {
+      "bytes": 49205,
+      "path": "artifacts/checkpoints/hc4lh-11002cc-center002/supervisor.pt",
+      "sha256": "0b2608080671c5df85d8c9f900d68b6a6f298ec820eb1c6ba75afc948337505a"
+    },
+    "artifacts/checkpoints/hc4r2-bc-796634d-s42/supervisor.pt": {
+      "bytes": 27193,
+      "path": "artifacts/checkpoints/hc4r2-bc-796634d-s42/supervisor.pt",
+      "sha256": "c4ba5925de7144373c94145b57b5e7a7ae3e1fc89bc7c2c3203f8724bdebf1b7"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/00-cell0-a1/hierarchical-teacher-evaluation.json": {
+      "bytes": 73262,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/00-cell0-a1/hierarchical-teacher-evaluation.json",
+      "sha256": "b6bf4a7baa4e16e47a1e672f382cca80e1e9b46dbe70b5bd9da3481062a73828"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/00.log": {
+      "bytes": 19591,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/00.log",
+      "sha256": "faa8e11d4f1fbbe98a79b488d4551ba272df918f3e9d1d799d5f932f2b6fd294"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/decision-00.json": {
+      "bytes": 1193,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/decision-00.json",
+      "sha256": "8b34b5186a45dda26aad43cb71b095367c765a4b3ed090c997179d416422a0a2"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/decision.json": {
+      "bytes": 1193,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/decision.json",
+      "sha256": "8b34b5186a45dda26aad43cb71b095367c765a4b3ed090c997179d416422a0a2"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/launch-00.json": {
+      "bytes": 1030,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/launch-00.json",
+      "sha256": "48740a3dea349e99e90fe3dd9e86c357b3b282f50499e4ef771070e56f57cb3c"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/launch.json": {
+      "bytes": 1709,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/launch.json",
+      "sha256": "ebd0a47494534ff40d9cd227848e1dc3853c718dc64996cee813dd6b3f93a96f"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/runtime-00.json": {
+      "bytes": 1065,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/runtime-00.json",
+      "sha256": "fa28bd487ab07e1357a761dcae3410a43c31763e26776acda26fb8616a1d57a8"
+    },
+    "artifacts/evaluations/recovery-cap-specialist-s379-v1/runtime.json": {
+      "bytes": 1259,
+      "path": "artifacts/evaluations/recovery-cap-specialist-s379-v1/runtime.json",
+      "sha256": "b415923019deb7e4d18d01939bc76a564e796cdb5c97b1af51bdf5e873bf4983"
+    },
+    "logs/rsl_rl/run_motor_aware/2026-09-02_22-45-55_stage2-motor-aware-4096x3000-36667ee/model_7998.pt": {
+      "bytes": 4843445,
+      "path": "logs/rsl_rl/run_motor_aware/2026-09-02_22-45-55_stage2-motor-aware-4096x3000-36667ee/model_7998.pt",
+      "sha256": "080f98ae4d5ce731d143c733181bb89d504cb4b51ff39532efccd0b5fdc09c54"
+    }
+  },
+  "protocol_sources": {
+    "src/mjlab_microduck/first_attempt_smoke.py": {
+      "bytes": 10711,
+      "git_blob": "2852530dbba044c095ef9044e3f27f95d3ef0c6d",
+      "path": "src/mjlab_microduck/first_attempt_smoke.py",
+      "sha256": "01bb1a0e031974b03b79280f417f742d02771eea5aab048d2d3bcf1b495a1d3b"
+    },
+    "src/mjlab_microduck/hc4u1_gate.py": {
+      "bytes": 12542,
+      "git_blob": "bba0e43943a882f16458286a2ec0f5c67f863e70",
+      "path": "src/mjlab_microduck/hc4u1_gate.py",
+      "sha256": "d375187c92d490a3c19c32b98197db3cd2281933bec3b02815201ae9fa16250d"
+    },
+    "src/mjlab_microduck/hierarchical_obstacle.py": {
+      "bytes": 15493,
+      "git_blob": "e1b7f9560ada5bc2ab46478ed8aff1baf944de08",
+      "path": "src/mjlab_microduck/hierarchical_obstacle.py",
+      "sha256": "db2102fbb729eed06e15cf9ad50de67539a6e60ec462032812055e96bc4494c2"
+    },
+    "src/mjlab_microduck/hierarchical_obstacle_rollout.py": {
+      "bytes": 67452,
+      "git_blob": "8a2fb93ba139ea7220bd4d4f42ebe13be16a1e4a",
+      "path": "src/mjlab_microduck/hierarchical_obstacle_rollout.py",
+      "sha256": "78430c791fb5d4e23594af0180e614b8d127d637292931cb30a31f4440687f9c"
+    },
+    "src/mjlab_microduck/motor_audit_smoke.py": {
+      "bytes": 12220,
+      "git_blob": "2784bef0a6be2d7e9fc0014b15643558340464fc",
+      "path": "src/mjlab_microduck/motor_audit_smoke.py",
+      "sha256": "57a7f54e1f95a70e01f860509b3ebd34705af5115169af581e9d91372ba62fd7"
+    },
+    "src/mjlab_microduck/recovery_ab.py": {
+      "bytes": 20039,
+      "git_blob": "f2d1c664a2d22c3d52f44f20091490f3e10e02a9",
+      "path": "src/mjlab_microduck/recovery_ab.py",
+      "sha256": "63919d19da945225c38879ab295e1e9287bc3b2c84a1def878c9df19aae1df38"
+    },
+    "src/mjlab_microduck/recovery_control.py": {
+      "bytes": 3448,
+      "git_blob": "a11bd032e29231985eba9d40c3a1b7922b4c5aae",
+      "path": "src/mjlab_microduck/recovery_control.py",
+      "sha256": "2b73c33bcd9eab2df16e37ba145ec49e6de4d2976bfdb5fbd28e6ce262bd04d5"
+    },
+    "src/mjlab_microduck/recovery_measurement.py": {
+      "bytes": 4887,
+      "git_blob": "05ef0e0b64ddba62fc4a705e3f9fe10cc33f3b46",
+      "path": "src/mjlab_microduck/recovery_measurement.py",
+      "sha256": "984d7cc13f717a138ae0af5971986f6ff3e5ec3d6468a85dad87ebbb657e50a6"
+    },
+    "src/mjlab_microduck/rollout_repeatability.py": {
+      "bytes": 11178,
+      "git_blob": "d005eb693ffce0043f3981848c79866339a8beda",
+      "path": "src/mjlab_microduck/rollout_repeatability.py",
+      "sha256": "b9d067bdbfc53b7f588804fb4f13216d4c211a37c539010b43f64728a184494f"
+    }
+  },
+  "schema": "retained-recovery-inventory-v1"
+}

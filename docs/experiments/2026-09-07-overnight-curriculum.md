@@ -1,15 +1,18 @@
 # Bounded MicroDuck work through September8 07:00 Shanghai
 
-Latest CPU handoff (September8 around04:30 Shanghai): all3/3 paired pilots are
+Latest CPU handoff (September8 around05:00 Shanghai): all3/3 paired pilots are
 closed; no further GPU work this window. The retention-plan checker covers
 four skills, all12 directed requests and16 interruption/history/sensor cases;
 its72 unbound slots remain explicit. The selected H1-T checkpoint/config/report
 inventory is now mirrored, and all six historical H1 summary rejections plus
 the final causal stop reproduce on CPU. No new hopping acceptance or full
 mechanics binding is claimed. See [retention contract](2026-09-08-skill-retention-contract.md)
-slices3-4. Next: bounded CPU obstacle/stop-recovery protocol and terminal-decision
-inventory, preserving frozen actor identity. The07:00 deadline and protected-
-service rules below are unchanged.
+slices3-5. The seed379 obstacle/recovery baseline and frozen gait/near/far
+checkpoint inventory are now mirrored; its original first-baseline recovery
+failure reproduces on CPU. No capped/far case or stop/stance validation is
+implied. Next: consolidate the evidence-backed curriculum readiness matrix and
+missing acceptance cases. The07:00 deadline and protected-service rules below
+are unchanged.
 
 User request: continue the next training round and plan the curriculum well,
 working until07:00. Window ends **2026-09-07T23:00:00Z**. This is a bounded

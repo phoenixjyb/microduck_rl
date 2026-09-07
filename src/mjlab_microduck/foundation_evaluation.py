@@ -14,11 +14,67 @@ SEEDS = (397, 401, 409)
 OUTPUT = ROOT / "artifacts/evaluations" / PROTOCOL
 
 
+def validate_speed_classification(report):
+    """Validate redundant speed labels against vectors and first-attempt rows.
+
+    This is consistency checking, not reconstruction of missing raw samples.
+    Retained reports still require the separate hash/identity checks.
+    """
+    require(report["speed_mps"] == .3 and report["step_dt_s"] == .02
+            and report["num_envs"] == 8, "fixed F1 speed/timestep/environment contract")
+    if report["safety_failures"]:
+        require(report["classification"] == "safety-or-coverage-stop", "unsafe report cannot claim tracking")
+        return
+    require(report["sample_steps"] == 400 and report["startup_steps"] == 100
+            and report["settled_steps"] == 300 and report["terminal_steps"] == [], "complete safe response")
+    settled = report["groups"]["settled"]
+    flags = []
+    for key in ("body_forward_per_env_mean", "route_forward_per_env_mean"):
+        values = settled[key]
+        require(type(values) is list and len(values) == 8
+                and all(type(v) in (int, float) for v in values), "eight numeric speed means")
+        flags.append(all(abs(v-.3) <= .03 for v in values))
+    measurement = report["stable_route_response"]
+    require(measurement["nominal_speed_mps"] == .3 and measurement["step_dt_s"] == .02
+            and measurement["speed_tolerance_mps"] == .03 and measurement["stable_span_s"] == .5
+            and measurement["deadline_s"] == 2., "unchanged response window")
+    rows = measurement["environments"]
+    require(type(rows) is list and len(rows) == 8, "eight first-attempt window rows")
+    statuses = []
+    for i, row in enumerate(rows):
+        require(type(row["environment"]) is int and row["environment"] == i
+                and row["terminal"] is False and type(row["first_recovery_step"]) is int
+                and row["first_recovery_step"] == 100
+                and abs(row["sampled_recovery_span_s"]-5.98) < 1e-10, "complete first-attempt identity/span")
+        latency = row["stable_recovery_latency_s"]
+        require(latency is None or type(latency) in (int, float)
+                and .5-1e-12 <= latency <= 5.98+1e-12, "valid sampled stable latency")
+        require(latency is None or abs(latency/.02-round(latency/.02)) < 1e-9, "latency on control-step grid")
+        status = "recovered-in-window" if latency is not None and latency <= 2.+1e-12 else "window-missed"
+        require(row["status"] == status, "window label matches sampled latency")
+        statuses.append(status)
+    expected_counts = {s: statuses.count(s) for s in
+                       ("not-observed", "recovered-in-window", "window-missed", "censored-before-window")}
+    require(measurement["counts"] == expected_counts
+            and all(type(v) is int for v in measurement["counts"].values()), "window count reconciliation")
+    body_ok, route_ok = flags
+    stable = expected_counts["recovered-in-window"] == 8
+    require(report["body_mean_in_band_all_envs"] is body_ok
+            and report["route_mean_in_band_all_envs"] is route_ok
+            and report["stable_route_window_all_envs"] is stable, "speed flags agree with measurements")
+    derived = ("straight-body-mean-outside-band" if not body_ok else
+        "body-route-response-diverge" if not route_ok else
+        "mean-tracking-but-instantaneous-window-missed" if not stable else "straight-response-within-both-criteria")
+    require(report["classification"] == derived, "speed classification agrees with measurements")
+
+
 def candidate_failures(report, parent):
     canonical(report); canonical(parent)  # reject NaN/Infinity before comparisons
     require(report["protocol"] == parent["protocol"] == PROTOCOL
             and report["seed"] == parent["seed"] in SEEDS, "paired F1 identity")
     require(report["num_envs"] == parent["num_envs"] == 8, "eight held-out environments")
+    validate_speed_classification(report)
+    validate_speed_classification(parent)
     failures = list(report["safety_failures"])
     if report["classification"] != "straight-response-within-both-criteria":
         failures.append(report["classification"])

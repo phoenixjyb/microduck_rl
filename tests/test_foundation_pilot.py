@@ -81,6 +81,13 @@ def test_finite_gradient_hook_is_identity_and_rejects_nan():
 
 def report():
     return dict(protocol=f1.PROTOCOL, seed=SEEDS[0], num_envs=8, safety_failures=[],
+        speed_mps=.3, step_dt_s=.02, sample_steps=400, startup_steps=100, settled_steps=300,
+        terminal_steps=[], body_mean_in_band_all_envs=True, route_mean_in_band_all_envs=True,
+        stable_route_window_all_envs=True, stable_route_response=dict(
+            nominal_speed_mps=.3, step_dt_s=.02, speed_tolerance_mps=.03, stable_span_s=.5, deadline_s=2.,
+            counts={"not-observed":0, "recovered-in-window":8, "window-missed":0, "censored-before-window":0},
+            environments=[dict(environment=i, terminal=False, first_recovery_step=100,
+                sampled_recovery_span_s=5.98, stable_recovery_latency_s=.5, status="recovered-in-window") for i in range(8)]),
         classification="straight-response-within-both-criteria", groups={"settled":dict(
         heading_abs_max=.1, cross_route_abs_per_env_mean=[.02]*8, legacy_torque_p99=.5,
         cross_route_abs_mean=.02, body_forward_per_env_mean=[.3]*8, route_forward_per_env_mean=[.3]*8)})
@@ -93,4 +100,27 @@ def test_gate_cannot_hide_bad_env_or_motor_in_pool(key,value):
     parent, candidate = report(), report()
     assert candidate_failures(candidate,parent) == []
     candidate["groups"]["settled"][key] = value
+    if key == "body_forward_per_env_mean":
+        candidate["body_mean_in_band_all_envs"] = False
+        candidate["classification"] = "straight-body-mean-outside-band"
     assert candidate_failures(candidate,parent)
+
+
+@pytest.mark.parametrize("change", [
+    lambda r: r["groups"]["settled"].update(body_forward_per_env_mean=[.21]*8),
+    lambda r: r["groups"]["settled"].update(route_forward_per_env_mean=[.21]*8),
+    lambda r: r.update(stable_route_window_all_envs=False),
+    lambda r: r["stable_route_response"]["counts"].update(**{"recovered-in-window":7}),
+    lambda r: r["stable_route_response"]["environments"][0].update(stable_recovery_latency_s=2.5),
+    lambda r: r["stable_route_response"]["environments"][0].update(stable_recovery_latency_s=.51),
+    lambda r: r["stable_route_response"]["environments"][0].update(first_recovery_step=100.),
+    lambda r: r["stable_route_response"]["counts"].update(**{"window-missed":False}),
+    lambda r: r["stable_route_response"]["environments"][0].update(terminal=True),
+    lambda r: r["stable_route_response"].update(deadline_s=3.),
+    lambda r: r.update(classification="straight-body-mean-outside-band"),
+    lambda r: r.update(sample_steps=399),
+])
+def test_contradictory_speed_labels_or_window_evidence_fail_closed(change):
+    parent,candidate = report(),report()
+    change(candidate)
+    with pytest.raises(ValueError): candidate_failures(candidate,parent)

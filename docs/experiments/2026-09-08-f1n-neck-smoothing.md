@@ -201,8 +201,10 @@ pass its implementation gate before consuming the last slot.
 Closeout CPU regression:858 passed,3 existing actuator/site warnings. The
 command audit's canonical JSON SHA256 is
 `3240dbd02754a341ba2494528322aff45cc38740ad35645d4718b6b463f69053`
-on the Mac. Reproduce with `audit_retained(root)` from
+on both Mac and100.100. Reproduce with `audit_retained(root)` from
 `mjlab_microduck.foundation_command_coverage`, then SHA256 of UTF-8
 `first_attempt_smoke.canonical(result)`; this is a read-only result, not a
-replacement for either original manifest or decision. Remote reconstruction
-of this new audit is a separate post-push check.
+replacement for either original manifest or decision. Post-push verification
+at126cf5083ff93e80bf42ab5a0b919e3abab3503f passed39 focused CPU tests, exactly
+reproduced this canonical hash on100.100, and reverified all older pinned
+evidence/sentinels. No GPU work was launched during closeout.

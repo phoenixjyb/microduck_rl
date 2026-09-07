@@ -539,3 +539,11 @@ matrix and explicit missing acceptance cases. Keep F speed/motor repair before
 further obstacle progression; do not reinterpret clean passage as retained
 recovery, standing or hopping. No further GPU experiment in the consumed3/3
 window, and the07:00 Shanghai cutoff/protected-service rules remain unchanged.
+
+Implementation `2dff3e8bb7b0d56b9a6b4feaacab6b7186209fe8` was pushed and
+fast-forwarded on100.100 after exact clean-source, idle-GPU/no-running-Duck
+and inactive-protected-SYSTEM-service checks. Remote251 focused CPU tests
+passed in6.71s. Its independently generated11,321-byte report matches the Mac
+SHA256 exactly. GPU remained0%,45C,12MiB with no compute PID; both protected
+services remained inactive and the worktree clean. No cap treatment, rollout,
+optimizer update or physical action was performed.

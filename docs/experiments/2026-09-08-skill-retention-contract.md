@@ -462,3 +462,11 @@ regression tests passed in42.69s with17 occurrences of the existing actuator/
 site warning. Tests cover all11 payload tampering cases, manifest replacement,
 exact non-path causal comparison, retained rejection and refusal to deserialize
 checkpoints. `git diff --check` passed. No new raw rollout samples were collected.
+
+Implementation `662dce5636d4c5f97e45a1d919f920d4bd2f29a8` was pushed and
+fast-forwarded on100.100 after clean-source, idle-GPU, no-running-Duck and
+inactive-protected-SYSTEM-service checks. Remote151 focused CPU tests passed
+in1.23s. Its independently produced26,182-byte audit matches the Mac SHA256
+exactly. GPU remained0%,45C,12MiB with no compute PID; both protected services
+remained inactive and the worktree clean. This verifies inventory delivery and
+summary reconciliation, not a new hop rollout or behavior acceptance.

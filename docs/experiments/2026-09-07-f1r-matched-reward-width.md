@@ -1,6 +1,6 @@
 # F1-R: matched reward-width diagnostic
 
-Status: **predeclared; execution not yet verified**. Separately authorized by
+Status: **closed; numerical-gate-stop** (execution below). Separately authorized by
 the user's “sure go on” after the closed F1 pilot. This does not reopen that
 pilot, restore its deleted automation or renew its one-hour work window.
 
@@ -107,3 +107,144 @@ actuator/site-pattern warnings. Includes config identity, matched nonregression,
 first-failure ordering, subprocess budget/module, route-frame invariance and
 first-terminal trace exclusion. Remote tests and GPU execution remain separate
 checks; this paragraph does not claim either has happened.
+
+## Executed result — September7 10:11–10:23 Shanghai
+
+Execution source `77a1d612495c484b42a0c58702d55eae163bff1b` was committed and
+pushed before launch. Both hosts passed661 CPU tests (local10.59s,
+remote7.91s, no skips, same two existing warnings). HTTPS push authentication
+failed; the existing authenticated GitHub SSH path succeeded without credential
+or remote-configuration changes. No failed HTTPS delivery was called a push.
+
+One sequential user service, `microduck-rl-f1r-77a1d61-s421.service`, started
+10:11:53 and emitted its final numerical decision10:23:31. No other GPU job
+was launched. After completion the GPU was idle,45C/12MiB, with no compute
+process; both protected services remained inactive and the remote worktree
+remained clean at execution source. The transient unit was subsequently
+collected; completion evidence is its retained results/decision and journal,
+not an assumed persistent service exit-status field.
+
+### Training and checkpoint integrity
+
+| Arm | Updates | Learning wall s | Fall-containing rollout windows | Max rollout torque p99 | Max rated-speed exceed fraction |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control smoke419 |10|6.3456|0|.729209|0|
+| Narrow smoke419 |10|6.3356|0|.733033|.000011626|
+| Control pilot421 |500|286.9103|8|.737774|.000069754|
+| Narrow pilot421 |500|289.2436|12|.777159|.000186012|
+
+Each nonzero pilot fall window involved1/256 environments; no training abort
+limit was crossed. Do not call either pilot fall-free. Each run's74
+TensorBoard scalar tags were finite, with10/500 scalar entries respectively;
+the named NaN-state termination signal stayed zero. Sampled training GPU
+temperatures peaked at59C. Max soft-limit exposure fractions were.013451
+(control pilot) and.016578(narrow pilot). Training quantiles/exceedances are
+not the stricter deterministic evaluation metrics and not pooled quantiles
+across all rollouts. Total reward is not directly comparable across different
+reward functions.
+
+All26 scheduled post-update checkpoints were loadable, finite and had exact
+iteration/common-step identities. Four initial snapshots also retained;
+their actor, critic and optimizer state trees matched the original parent
+exactly. Initial files matched byte-for-byte across each paired smoke/pilot.
+Final pilot step204000, actor normalizer count789504000 in both arms
+(parent786432000 plus3,072,000 samples). No counts were reset. Both final
+actors changed from the parent; neither smoke was used as a training parent.
+
+### Held-out pair431
+
+All three parent evaluations passed safety/coverage but undertracked. Then
+control431 and narrow431 ran. The narrow arm failed; paired433/439 were
+**not executed**. Actual coverage:5cases/40 first episodes, not9/72.
+All five cases had400 samples, zero terminals/nonfinite/command mutation,
+zero rated-speed exceedance and all/settled torque p99 within.60.
+
+| Settled metric | Parent7998 | Control8498 | Narrow8498 |
+| --- | ---: | ---: | ---: |
+| Mean body-forward speed m/s |.206439|.222818|.264707|
+| Mean route-forward speed m/s |.187413|.214368|.252882|
+| Body mean in.27–.33 band |0/8|0/8|4/8|
+| Route mean in.27–.33 band |0/8|0/8|3/8|
+| Timely.50s stable route window |0/8|0/8|0/8|
+| Max heading drift rad |1.392097|.618995|.764543|
+| Mean absolute cross-route velocity m/s |.098537|.094326|.093739|
+| Legacy torque utilization p99 |.487920|.494691|.546806|
+| Squared-load proxy |.029923|.033612|.038670|
+| Mean per-joint absolute mechanical power W |.107126|.115519|.134028|
+
+Narrow versus matched control: body speed+18.80%, route speed+17.97%, torque
+p99+10.53%, squared-load proxy+15.05%, absolute mechanical power+16.02%.
+This is a single matched training seed and one held-out paired case, not
+generalization or a multi-seed causal estimate. The proxy is not physical
+temperature. Absolute torque passed, but its+.052115 increase over control
+exceeded the predeclared+.02 nonregression margin. Parent-relative torque
+also regressed beyond its margin. Max heading increased by.145548rad.
+
+The exact narrow failure list is:
+
+1. `straight-body-mean-outside-band`
+2. `heading-drift`
+3. `cross-route-motion`
+4. `torque-nonregression`
+5. `matched-control:torque-nonregression`
+6. `matched-control:heading-nonregression`
+7. `matched-control:route_forward_per_env_mean-nonregression`
+
+No checkpoint search, omitted-case retry, extension or next curriculum stage.
+All authority/admission flags remain false.
+
+### What the new traces establish
+
+The CPU-only audit reproduced all five reports' velocity summaries and
+per-environment stable-response windows from retained400×8 samples. Position
+and signed-velocity summary fields also matched their traces. This adds
+consistency evidence; it is not a new acceptance rule or hardware proof.
+
+Narrow431 last sampled cross-route positions span−.777141 to+.697977m
+at7.98s. Its largest sampled absolute cross-route displacement is.777141m,
+versus.553864m for control431. These are actual projected positions, not
+velocity-integral estimates. Drift is therefore real in this case; the
+absolute-velocity failures cannot all be dismissed as harmless sway.
+Some low-heading-error environments still have substantial oscillatory
+lateral velocity, so do not equate every absolute-speed sample with net drift.
+The final post-action position was not sampled and is not claimed here.
+
+### Interpretation and next boundary
+
+The narrower reward is a useful speed-learning signal in this paired case,
+but it does not deliver motor-efficient straight-line tracking. Faster body
+motion alone is not F1 completion, nor evidence for obstacles or hopping.
+Next design work should diagnose route/heading feedback and the speed-versus-
+motor-load tradeoff before another training revision. Keep the current61D
+actor's lack of explicit base-linear-velocity and absolute-route-heading
+inputs visible as a hypothesis/limitation, not a proven cause. No actor-input
+expansion, looser gate or further reward revision is launched by this result.
+
+### Retention
+
+Remote originals stay under the predeclared experiment root; local mirror is
+`artifacts/diagnostics/f1r-width-paired-s421-v1`. Manifest lists74 payload files
+totaling159,024,034bytes, plus the manifest itself. Full hash/size verification
+passed on both hosts with zero mismatches. One transfer was interrupted by
+an SSH `Host is down` transport error after training/evaluation had finished.
+Read-only connectivity checks recovered without a restart; the retry copied
+the verified narrow final checkpoint first, then completed the remaining files.
+No experiment or failed case was rerun. Numerical decision was independently
+reproduced from the retained parent/control/narrow431 JSON; all five traces
+passed the CPU consistency audit without rerunning simulation.
+
+Post-run local focused regression:670 passed in12.75s, no skips, two existing
+warnings. The added tests include full retained manifest hashes, actual
+five-case accounting, raw-trace reconstruction, unchanged failed decision
+and synthetic trace-corruption rejection. This offline audit was added after
+GPU completion; execution identity remains77a1d61, not the evidence commit.
+
+| Artifact | SHA256 |
+| --- | --- |
+| Control final8498 | `38904154f1f682b7622e84a83511edf848f2f2c091ab1748b3986b3ae2aebf90` |
+| Narrow final8498 | `7ed703d6b5b8407da912f51755be8a8e57698340f62d0f5d3a80cf195ec1f80f` |
+| Decision | `fde5ce1a0659a1bbbc759215c7548c182a7f61adae25a8b94f60cfbb92db8440` |
+| Manifest | `ead4f9b6cd4ef9dcde184f5f70485da9a9c223efc80226afb86f71c183c3f753` |
+| Parent431 report | `3a74b2eadabeb190fe45194b2e737dd051452f887bac719d9d5aa1eaf966068f` |
+| Control431 report | `60df36a37970bdded4e640326dad3ca1c6416d415a25803b7362b20b5f7c2d12` |
+| Narrow431 report | `af6463f91bcea9d1a90c1e2c40c45ae3645b28d48fa73df9d631de1e3d197a20` |

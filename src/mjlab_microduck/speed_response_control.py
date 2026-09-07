@@ -30,11 +30,11 @@ SPEED, STEP_DT = .3, .02
 SERVICE_SECONDS, CLOSEOUT_SECONDS = 240, 300
 
 
-def prepare_config():
+def prepare_config(*, seed=SEED):
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
     cfg, agent = load_env_cfg(TASK, play=True), load_rl_cfg(TASK)
-    cfg.seed = agent.seed = SEED
+    cfg.seed = agent.seed = seed
     cfg.scene.num_envs = cfg.scene.terrain.num_envs = NUM_ENVS
     fix_velocity_commands(cfg, SPEED, 0.)
     cfg.curriculum.clear()
@@ -66,7 +66,7 @@ def velocity_rows(world_velocity, body_velocity, quaternion, route_dir):
 
 
 def summarize(velocities, commands, legacy_force, legacy_speed, pre_force, pre_speed, terminal_steps,
-              measurement):
+              measurement, *, protocol=PROTOCOL, seed=SEED):
     """Consume retained bounded tensors; no simulator or policy action."""
     count = velocities.shape[0]
     require(1 <= count <= STEPS and velocities.shape == (count, NUM_ENVS, 4)
@@ -77,10 +77,10 @@ def summarize(velocities, commands, legacy_force, legacy_speed, pre_force, pre_s
                 (velocities, commands, legacy_force, legacy_speed, pre_force, pre_speed)), "finite sample values")
     require(type(terminal_steps) is list and all(type(i) is int and 0 <= i < count for i in terminal_steps),
             "terminal step accounting")
-    result = dict(protocol=PROTOCOL, decision="diagnostic-only", physical_motion_authorized=False,
+    result = dict(protocol=protocol, decision="diagnostic-only", physical_motion_authorized=False,
                   policy_acceptance=False, training_admitted=False, reopens_recovery_ab=False,
                   sample_steps=count, startup_steps=min(SETTLE, count), settled_steps=max(0, count-SETTLE),
-                  terminal_steps=terminal_steps, speed_mps=SPEED, seed=SEED, num_envs=NUM_ENVS,
+                  terminal_steps=terminal_steps, speed_mps=SPEED, seed=seed, num_envs=NUM_ENVS,
                   step_dt_s=STEP_DT, warmup_failures_ignored=False,
                   velocity_sampling="pre-control-step; body x and initial-heading world projection",
                   stable_route_response=measurement, groups={})
@@ -98,11 +98,15 @@ def summarize(velocities, commands, legacy_force, legacy_speed, pre_force, pre_s
             route_speed_p05=float(torch.quantile(v[:, :, 1].flatten(), .05)),
             route_speed_p95=float(torch.quantile(v[:, :, 1].flatten(), .95)),
             cross_route_abs_mean=float(v[:, :, 2].abs().mean()), heading_abs_max=float(v[:, :, 3].abs().max()),
+            cross_route_abs_per_env_mean=v[:, :, 2].abs().mean(0).tolist(),
+            heading_abs_per_env_max=v[:, :, 3].abs().max(0).values.tolist(),
             legacy_torque_p99=float(torch.quantile(force.flatten(), .99)),
             legacy_rated_speed_exceed_fraction=float((speed > 1).float().mean()),
             pre_reset_torque_p99=float(torch.quantile(pre.flatten(), .99)),
             pre_reset_rated_speed_exceed_fraction=float((pre_velocity > 1).double().mean()),
             pre_reset_squared_utilization_mean=float(pre.square().mean()),
+            pre_reset_soft_limit_fraction=float((pre > .7).double().mean()),
+            pre_reset_mechanical_abs_power_mean_w=float((pre_force[start:].double()*pre_speed[start:].double()).abs().mean()),
             pre_reset_joint_p99={joint: float(torch.quantile(pre[:, :, i].flatten(), .99))
                                  for i, joint in enumerate(JOINTS)})
     expected = torch.tensor([SPEED, 0., 0.], device=commands.device, dtype=commands.dtype)
@@ -131,19 +135,19 @@ def summarize(velocities, commands, legacy_force, legacy_speed, pre_force, pre_s
     return result
 
 
-def run_control(*, device="cuda:0"):
+def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOCOL):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
 
-    cfg, agent = prepare_config()
-    torch.manual_seed(SEED)
+    cfg, agent = prepare_config(seed=seed)
+    torch.manual_seed(seed)
     env = ManagerBasedRlEnv(cfg=cfg, device=device)
     try:
         require(env.step_dt == STEP_DT, "exact control timestep")
         wrapped = RslRlVecEnvWrapper(env, clip_actions=agent.clip_actions)
         runner = load_runner_cls(TASK)(wrapped, asdict(agent), device=device)
-        runner.load(str(ACTOR), map_location=device)
+        runner.load(str(checkpoint), map_location=device)
         policy = runner.get_inference_policy(device=device)
         observations = wrapped.get_observations()
         require(observations["actor"].shape == (NUM_ENVS, 61), "frozen 61D actor observation")
@@ -183,8 +187,8 @@ def run_control(*, device="cuda:0"):
                     terminals.append(step)
                     break  # stop all environments; no reset episode may enter the control
         report = summarize(**{k: torch.stack(v) for k, v in data.items()}, terminal_steps=terminals,
-                           measurement=observer.report())
-        report.update(task=TASK, checkpoint_sha256=sha256(ACTOR), motor_stream=stream.provenance(),
+                           measurement=observer.report(), protocol=protocol, seed=seed)
+        report.update(task=TASK, checkpoint_sha256=sha256(checkpoint), motor_stream=stream.provenance(),
                       actor_observation_shape=list(observations["actor"].shape))
         return report
     finally:

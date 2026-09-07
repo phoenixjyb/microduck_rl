@@ -166,3 +166,12 @@ gate or claim of completed hopping is authorized by this work window.
   Mac derived means differ only at <=5.56e-17; named means use the existing
   1e-9 reconstruction precision, while raw hashes and complete decision remain
   exact. No historical rejection or numerical gate was changed. Pilot usage1/3.
+- Next experiment predeclared, not launched:
+  [F1-N neck-action smoothing](2026-09-08-f1n-neck-smoothing.md).
+  Both arms retain motor weight-4; only existing neck-action-rate weight changes
+  from-0.1 to-0.2. Same unaccepted narrow8498 parent, paired10-update smokes491
+  and500-update pilots499, fixed8998 evaluation and every original gate.
+  Development seeds are reused, not hunted or described as independent.
+  Implement/test/push the new `foundation_neck_experiment` runner before any
+  launch; consume pilot slot2 on launch and keep one GPU workload at a time.
+  No claim that head smoothing will fix knee/speed/balance failures.

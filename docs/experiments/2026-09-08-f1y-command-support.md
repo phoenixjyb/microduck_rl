@@ -1,8 +1,8 @@
 # F1-Y: predeclared continuation yaw-command support
 
-Status: **implemented and locally tested; not launched**. Two of three paired
-pilot slots have been consumed. This is the final possible pilot this window;
-do not launch it simply because time remains or rerun a failed service.
+Status: **closed, numerical rejection at first pair503**. All three paired
+pilot slots have been consumed. No further training or GPU experiment is
+permitted this window; continue bounded CPU retention/compatibility work only.
 
 ## Evidence and hypothesis
 
@@ -112,3 +112,88 @@ one-sided/stale/misconfigured input rejection, and first-failure sequencing.
 The actual GPU smoke remains a separate gate. Remote CPU tests, pinned
 runtime/history, pushed clean exact source and idle-host checks are still
 required before the one authorized slot3 launch.
+
+## Retained closeout, September8 02:06 Shanghai
+
+Source `2614d09a994223a025d7a0d17d5b6879c7b513dd`; service
+`microduck-rl-f1y-2614d09-s499.service` ran01:42:03–01:55:08 Shanghai,
+normal exit0. Exit0 means the campaign produced a valid decision, not acceptance.
+The retained unit is active/exited with MainPID0. At02:05:48 the GPU had no
+compute PID,0% utilization,45C and12MiB; both protected SYSTEM services remained
+inactive. No service was changed or restarted during closeout.
+
+Both10-update smokes and500-update pilots finished. Pilot elapsed times were
+306.108s control and307.387s yaw; each retained11 post-update checkpoints through
+8998/common step216000. All26 post-update and four initial checkpoints were
+verified for exact cadence, counters, finite tensors and restoration evidence
+on both hosts. Both pilots' maximum sampled fall fraction was0.00390625,
+maximum temperature58C and maximum sampled training torque p99 was0.720211/
+0.729346. These are gross training guard observations, not evaluation acceptance.
+
+The live command audit reconciles12,000 steps per pilot: control consumed
+3,072,000 exact-zero yaw samples; yaw consumed1,528,537 positive and1,543,463
+negative samples, no zero samples. Actor/transition/physics-entry equality and
+unchanged non-reset commands passed. The original neck reward remained live
+at-0.1 in both arms. This validates delivery, not the causal hypothesis.
+
+Exactly five original evaluation reports exist: parent503/509/521 and
+control503/yaw503. All are absolute-safe400-step rollouts. The first paired
+decision is `numerical-gate-stop`; candidate509/521 were not run.
+
+| Settled503 metric | Parent | Control | Yaw support |
+| --- | ---: | ---: | ---: |
+| Body forward m/s |0.266276|0.264220|0.259175|
+| Route forward m/s |0.264949|0.263178|0.258836|
+| Absolute lateral m/s |0.076845|0.060435|0.056216|
+| Maximum heading rad |0.220906|0.135438|0.107919|
+| Pooled pre-reset torque p99 |0.554892|0.562075|0.556649|
+| Squared utilization mean |0.039622|0.041084|0.038988|
+| Absolute mechanical power W/motor |0.136729|0.151850|0.142821|
+| Soft-limit fraction |0.001280|0.001756|0.001012|
+
+The exact16 failed labels were independently reconstructed from original raw
+motor/route/command evidence on both hosts:
+
+```text
+straight-body-mean-outside-band
+cross-route-motion
+body_forward_per_env_mean-nonregression
+route_forward_per_env_mean-nonregression
+joint-torque-nonregression:left_hip_yaw
+joint-torque-nonregression:head_yaw
+joint-torque-nonregression:right_hip_yaw
+matched-control:body_forward_per_env_mean-nonregression
+matched-control:route_forward_per_env_mean-nonregression
+matched-control:joint-torque-nonregression:left_hip_yaw
+matched-control:joint-torque-nonregression:left_ankle
+matched-control:joint-torque-nonregression:right_hip_roll
+matched-control:joint-torque-nonregression:right_hip_pitch
+body_mean_in_band_all_envs-failed
+route_mean_in_band_all_envs-failed
+stable_route_window_all_envs-failed
+```
+
+Sampled heading/lateral/load improved versus control, but speed worsened and
+several named joints regressed. No averaging away these failures, causal or
+generalization claim, new confirmation seed, retry, or policy promotion.
+
+Remote evidence: `artifacts/experiments/f1y-yaw-support-paired-s499-v1`;
+Mac mirror: `artifacts/diagnostics/f1y-yaw-support-paired-s499-v1`.
+All105 payloads (179,459,039 bytes), plus manifest, verified on both hosts.
+
+| Artifact | SHA256 |
+| --- | --- |
+| Manifest |`63a9c8c5cd8a909a1f7cc1490deff60978368c22bbfd2e314985b667febfbe41`|
+| Decision |`142723cf3b0211920e22d7c3d3a6f65478c7dd1cf103c099ff39b74554441495`|
+| All four initial learned states |`72d232b192e363d602c08108d643cce1a639f8d5885e0ff393b51ce05010756b`|
+| Control fixed8998 |`a1828f89db7fa87380fdeaa8c0e5155fbc3c5711e77241eb483f8be5932b2266`|
+| Yaw fixed8998 |`1dbc54bc9780c71f6c2ff4e49ccdc7d680a9b5269f7681bab02b04a3ae2f26fc`|
+| Parent503 report |`58080a39854614ab7c1fe7f0dee202cf9b79db426662ccc0c1fb24c3c742bb26`|
+| Parent509 report |`430c31d32fdb2f7621d863a85a63a497a295ae80a37ecfdc7c12d8ea2d0995cd`|
+| Parent521 report |`2661c5bf8c9dc64670e5c13b530c68bb82f4d9a8028b307510a2bd8d47f9cd51`|
+| Control503 report |`97d5563b2bf845ee3dd7a74b9ba9e755bbc60858b516ad1a1de64a1b9a1da9cf`|
+| Yaw503 report |`b68023cd2d949b3033c94194fd9eff0d84058e8820cd2e58faf68c3357d8853b`|
+
+Prelaunch remote focused tests131 passed; local regression890 passed. Original
+reports and decisions remain immutable. Next: the CPU-only static skill
+compatibility prerequisite, then separately evidenced behavioral retention.

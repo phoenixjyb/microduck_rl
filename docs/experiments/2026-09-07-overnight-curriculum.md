@@ -199,3 +199,18 @@ gate or claim of completed hopping is authorized by this work window.
   The observer is read-only and all historical fixed-command callers retain
   their defaults. Next: remote tests, frozen sampler/PPO/history hashes and
   idle exact-source checks, then the single capped slot3 campaign if all pass.
+- F1-Y slot3 completed01:55:08 Shanghai, source2614d09, service
+  `microduck-rl-f1y-2614d09-s499.service`; normal exit0 but first pair503
+  `numerical-gate-stop`,16 failed labels. All105 payloads mirrored and hashed;
+  original motor/route/command evidence, exact decision,26 post-update and four
+  initial checkpoints independently verified on both hosts. Actual yaw reached
+  the actor with both signs; speed and named-joint load failures still prevent
+  promotion. Details and exact hashes are in the F1-Y closeout.
+- **All3/3 paired pilot slots are closed. No more GPU or training experiments
+  this window, including retries or extra evaluation arms.** Current next work
+  is the [CPU skill-retention prerequisite](2026-09-08-skill-retention-contract.md).
+  Slice1 verifies byte-bound declared mechanics/interface identity but never
+  authorizes a transition or claims behavioral retention. Next derive real
+  artifact bindings and a fail-closed retention plan in bounded tested slices.
+  Continue CPU-only through07:00, then verify idle/durable state, leave protected
+  services inactive, delete the automation and report the final retained state.

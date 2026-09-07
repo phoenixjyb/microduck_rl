@@ -91,6 +91,54 @@ CPU checks, not any live policy switch or behavioral retention.
    missing/stale sensor handling. It may report missing evidence but cannot
    manufacture a behavioral pass. No GPU retention collection this window.
 
+## Slice2a: real F1-Y artifact binding, explicitly incomplete
+
+`mjlab_microduck.retained_skill_binding` now audits the closed yaw fixed8998
+artifact without launching simulation. It pins the original F1-Y manifest,
+checks all105 payloads and exact inventory, then links the checkpoint, saved
+environment/agent YAML, launch/result/backend records and rejected503 report.
+Weights are loaded CPU-only with `weights_only=True`; the known61-input,
+14-output actor tensor layout, finite values, dtypes and8998/216000 counters
+are checked without running inference. The motor-column list in the original
+report is retained as a recorded list, **not** promoted to proof of action order.
+
+Important extraction finding: the YAML stores `spec_fn` and observation
+functions in Python tags, with empty scalar values. A plain BaseLoader mapping
+therefore loses their callable names. The new parser uses node composition,
+retains tags as inert strings and preserves ordered entries/scalar spelling.
+It never constructs Python objects, imports tagged factories or invokes them.
+Duplicate/non-string keys, cyclic aliases, malformed/multiple documents and
+excessive depth/expansion/size are rejected. Existing command-coverage audits
+only use scalar bounds, so their original results are not changed by this.
+
+Saved actor term order is `base_ang_vel`, `projected_gravity`, `joint_pos`,
+`joint_vel`, `actions`, `command`, `head_command`, `body_command`. Saved timing
+is0.005s physics with decimation4, matching the report's0.02s control period.
+These are retained declarations, not resolved historical model equivalence.
+The saved factory tag names `microduck_constants.get_walk_spec`; no standalone
+effective compiled-model/asset inventory was produced by this campaign.
+
+The output decision is `partial-artifact-binding-only`, with `descriptor=null`.
+Five explicit unresolved requirements remain:
+
+1. Historical effective compiled model and asset inventory.
+2. Resolved actor columns and preprocessing binding.
+3. Resolved action/joint ordering, scaling, offset and reset binding.
+4. Complete runtime and actuator implementation binding.
+5. Accepted per-skill and transition-retention evidence.
+
+No synthetic placeholder fills these gaps. All admission/transition/retention
+flags remain false. A later CPU reconstruction must be labeled reconstructed
+and compared against historical evidence, not presented as a captured training
+model. No controller switch or new training follows from this report.
+
+Mac output: `artifacts/audits/f1y-retained-skill-binding-v1.json`,130,409 bytes,
+SHA256 `62a3bf5a34abda909246205011a54c1c7261f571ba7ddc9e5afce2a8ea502bf2`.
+The output records exact extractor/helper source hashes and never writes inside
+the closed evidence root or overwrites an existing report. Local regression
+995 passed,3 existing actuator/site warnings, including45 binding tests and
+the real retained-artifact check. Remote reproduction is a separate gate.
+
 The later behavior sequence remains foundation gait, stop/recovery, frozen-gait
 structured obstacle supervision, one-axis obstacle diversity, separate hop
 repair, then matched-mechanics transitions. Avoidance can slow within the

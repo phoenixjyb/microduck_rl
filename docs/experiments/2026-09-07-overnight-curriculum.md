@@ -214,3 +214,9 @@ gate or claim of completed hopping is authorized by this work window.
   artifact bindings and a fail-closed retention plan in bounded tested slices.
   Continue CPU-only through07:00, then verify idle/durable state, leave protected
   services inactive, delete the automation and report the final retained state.
+- CPU slice2a links the real F1-Y fixed8998 artifact to its original configuration
+  and rejection, with tag-preserving inert YAML extraction and full105-payload
+  verification. Local regression995 passed. The resulting partial binding
+  report deliberately has no complete descriptor: effective model, resolved
+  mappings, runtime and behavioral evidence remain unresolved. See the
+  skill-retention document for the immutable output/hash and next CPU steps.

@@ -11,6 +11,31 @@ in an earlier one.
 
 ## Capability graph
 
+September7 integration boundary: the historical milestones below do not
+constitute one fully validated combined robot. F1/F1-R still fail current
+straight-speed/route/motor-nonregression gates; H1-T is rejected and periodic
+hopping is parked. Exact-geometry obstacle specialists remain retained only
+within their named historical envelopes. See the current
+[heading-hold diagnostic](experiments/2026-09-07-heading-hold-diagnostic.md).
+
+For the requested capable obstacle avoider with stabilization and eventual
+hopping, maintain a separate retention ledger:
+
+| Track | Required before integrated promotion | Current boundary |
+| --- | --- | --- |
+| Stand/stop/disturbance recovery | First-attempt stability and motor evaluation of the proposed integrated controller | Not established by straight walking |
+| Route/speed tracking | Per-env approach/recovery speed, heading, lateral displacement and motor gates | F1-R rejected; frozen heading A/B next |
+| Obstacle avoidance | Clean pass, collision, timeout and route/speed recovery by placement/speed bin | Historical specialists are not universal acceptance |
+| Hop/landing | Independent H1 survival, drift, spring and motor gates | H1-T rejected; no validated hop to claim retained |
+| Skill transitions | Matched mechanics, bounded command/action transitions and all earlier retention tests | Not yet admitted |
+
+Train the obstacle supervisor separately from locomotion; preserve frozen
+checkpoint identities. Speed may drop during collision avoidance, not silently
+in approach/recovery. No raw-image learning is required. Separate checkpoint
+files do not by themselves prove behavioral retention: test the composed
+controller too. Rigid-foot locomotion and sprung-foot hop experiments cannot
+be promoted as the same plant without explicit mechanical alignment.
+
 1. **Foundation** — stand, recover, and track low-speed commands.
 2. **Motor-aware running** — track 0.5 m/s without exceeding the rated motor
    envelope. This is the parent for obstacle locomotion.

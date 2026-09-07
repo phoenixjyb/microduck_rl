@@ -66,7 +66,7 @@ def velocity_rows(world_velocity, body_velocity, quaternion, route_dir):
 
 
 def summarize(velocities, commands, legacy_force, legacy_speed, pre_force, pre_speed, terminal_steps,
-              measurement, *, protocol=PROTOCOL, seed=SEED):
+              measurement, *, protocol=PROTOCOL, seed=SEED, command_targets=None):
     """Consume retained bounded tensors; no simulator or policy action."""
     count = velocities.shape[0]
     require(1 <= count <= STEPS and velocities.shape == (count, NUM_ENVS, 4)
@@ -110,6 +110,12 @@ def summarize(velocities, commands, legacy_force, legacy_speed, pre_force, pre_s
             pre_reset_joint_p99={joint: float(torch.quantile(pre[:, :, i].flatten(), .99))
                                  for i, joint in enumerate(JOINTS)})
     expected = torch.tensor([SPEED, 0., 0.], device=commands.device, dtype=commands.dtype)
+    if command_targets is not None:
+        # New diagnostic protocols must independently validate their controller
+        # rule from retained traces; this checks issued-vs-observed delivery only.
+        require(command_targets.shape == commands.shape and bool(torch.isfinite(command_targets).all()),
+                "explicit bounded command targets")
+        expected = command_targets
     command_ok = bool(torch.allclose(commands, expected.expand_as(commands), atol=1e-6, rtol=0))
     failures = []
     if not command_ok: failures.append("command-not-fixed")
@@ -148,7 +154,7 @@ def route_position_rows(position, origin, route):
 
 
 def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOCOL,
-                retain_route_trace=False):
+                retain_route_trace=False, command_adapter=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
@@ -173,6 +179,7 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
         route = torch.stack((yaw.cos(), yaw.sin()), -1).clone()
         origin = robot.data.root_link_pos_w.detach().clone() if retain_route_trace else None
         positions = []
+        issued_rows, consumed_rows, cached_rows = [], [], []
         observer = RecoveryMeasurement(NUM_ENVS, SPEED, STEP_DT)
         data = {k: [] for k in ("velocities", "commands", "legacy_force", "legacy_speed", "pre_force", "pre_speed")}
         terminals = []
@@ -184,8 +191,17 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
                     positions.append(route_position_rows(robot.data.root_link_pos_w, origin, route).cpu())
                 phase = torch.full((NUM_ENVS,), 0 if step < SETTLE else 2, device=device, dtype=torch.long)
                 observer.begin(step, phase, velocities[:, 1])
+                if command_adapter is not None:
+                    prepared = command_adapter.prepare(observations, env, step, velocities[:, 3])
+                    observations = prepared.observations
+                    require(bool(torch.equal(prepared.issued, prepared.consumed)), "fresh actor command delivery")
+                    issued_rows.append(prepared.issued.cpu())
+                    consumed_rows.append(prepared.consumed.cpu())
+                    cached_rows.append(prepared.cached.cpu())
                 command = env.command_manager.get_command("twist").detach().clone()
-                require(bool(torch.allclose(command, torch.tensor([SPEED, 0., 0.], device=device).expand_as(command),
+                expected = (torch.tensor([SPEED, 0., 0.], device=device).expand_as(command)
+                            if command_adapter is None else prepared.issued)
+                require(bool(torch.allclose(command, expected,
                                              atol=1e-6, rtol=0)), "fixed command mutated")
                 require(all(bool(torch.isfinite(x).all()) for x in observations.values()), "finite actor inputs")
                 actions = policy(observations)
@@ -204,7 +220,8 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
                     terminals.append(step)
                     break  # stop all environments; no reset episode may enter the control
         report = summarize(**{k: torch.stack(v) for k, v in data.items()}, terminal_steps=terminals,
-                           measurement=observer.report(), protocol=protocol, seed=seed)
+                           measurement=observer.report(), protocol=protocol, seed=seed,
+                           command_targets=torch.stack(issued_rows) if issued_rows else None)
         report.update(task=TASK, checkpoint_sha256=sha256(checkpoint), motor_stream=stream.provenance(),
                       actor_observation_shape=list(observations["actor"].shape))
         if retain_route_trace:
@@ -217,6 +234,11 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
                 last_sample_cross_route_m=p[-1, :, 1].tolist(),
                 max_abs_cross_route_m=p[:, :, 1].abs().max(0).values.tolist(),
                 signed_cross_route_velocity_mean_mps=v[:, :, 2].mean(0).tolist())
+        if command_adapter is not None:
+            report["command_adapter"] = command_adapter.provenance()
+            report["command_trace"] = dict(issued=torch.stack(issued_rows).tolist(),
+                actor_input=torch.stack(consumed_rows).tolist(), cached=torch.stack(cached_rows).tolist(),
+                inference_and_simulation_steps=len(issued_rows))
         return report
     finally:
         env.close()

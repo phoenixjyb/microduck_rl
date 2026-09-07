@@ -124,7 +124,8 @@ def test_real_task_config_has_no_obstacle_and_pins_body_commands():
 
 
 @pytest.mark.parametrize("retain_route_trace", [False, True])
-def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(monkeypatch, retain_route_trace):
+@pytest.mark.parametrize("adapt_commands", [False, True])
+def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(monkeypatch, retain_route_trace, adapt_commands):
     import mjlab.envs
     import mjlab.rl
     import mjlab.tasks.registry
@@ -139,7 +140,8 @@ def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(mon
         def __init__(self, **kwargs):
             self.step_dt = .02
             self.scene = {"robot": NS(data=raw_data)}
-            self.command_manager = NS(get_command=lambda _: torch.tensor([[.3, 0., 0.]]).repeat(8, 1))
+            self.command = torch.tensor([[.3, 0., 0.]]).repeat(8, 1)
+            self.command_manager = NS(get_command=lambda _: self.command)
             self.steps = 0
             self.closed = False
         def close(self): self.closed = True
@@ -162,19 +164,43 @@ def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(mon
     class Runner:
         def __init__(self, *args, **kwargs): pass
         def load(self, *args, **kwargs): pass
-        def get_inference_policy(self, **kwargs): return lambda _: torch.zeros(8, 14)
+        def get_inference_policy(self, **kwargs):
+            def policy(observations):
+                if adapt_commands:
+                    assert torch.equal(observations["actor"][:,48:51], env.command)
+                    assert torch.all(env.command[:,2] == .02*(env.steps+1))
+                return torch.zeros(8, 14)
+            return policy
+    class Adapter:
+        def provenance(self): return {"mock": True}
+        def prepare(self, observations, raw_env, step, heading):
+            assert step == raw_env.steps
+            raw_env.command[:,2] = .02*(step+1)
+            actor = observations["actor"].clone()
+            cached = actor[:,48:51].clone()
+            actor[:,48:51] = raw_env.command
+            return NS(observations={"actor": actor}, issued=raw_env.command.clone(),
+                      consumed=actor[:,48:51].clone(), cached=cached)
     monkeypatch.setattr(mjlab.envs, "ManagerBasedRlEnv", lambda **kwargs: env)
     monkeypatch.setattr(mjlab.rl, "RslRlVecEnvWrapper", Wrapper)
     monkeypatch.setattr(mjlab.tasks.registry, "load_runner_cls", lambda _: Runner)
     monkeypatch.setattr(control.MotorStepStream, "from_robot", lambda *args, **kwargs:
         MotorStepStream(8, control.JOINTS, tuple(range(14)), device="cpu", cost_cfg=control.MotorStepCostCfg()))
     monkeypatch.setattr(control, "sha256", lambda _: control.ACTOR_SHA256)
-    report = control.run_control(device="cpu", retain_route_trace=retain_route_trace)
+    report = control.run_control(device="cpu", retain_route_trace=retain_route_trace,
+                                 command_adapter=Adapter() if adapt_commands else None)
     assert env.steps == 3 and env.closed
     assert report["sample_steps"] == 3 and report["terminal_steps"] == [2]
     assert report["groups"]["all"]["body_forward_mean"] == pytest.approx(.1)
     assert "settled" not in report["groups"] and report["classification"] == "safety-or-coverage-stop"
     assert report["motor_stream"]["trainer_integration_validated"] is False
+    if adapt_commands:
+        trace = report["command_trace"]
+        assert trace["inference_and_simulation_steps"] == 3
+        assert trace["issued"] == trace["actor_input"]
+        assert trace["issued"][0][0][2] == pytest.approx(.02)
+        assert trace["issued"][2][0][2] == pytest.approx(.06)
+        assert "command-mutation" not in report["safety_failures"]
     if retain_route_trace:
         assert len(report["route_trace"]["position"]) == 3
         assert torch.tensor(report["route_trace"]["position"]).abs().max() == 0

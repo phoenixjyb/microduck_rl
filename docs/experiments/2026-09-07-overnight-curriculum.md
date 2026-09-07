@@ -127,3 +127,8 @@ gate or claim of completed hopping is authorized by this work window.
   Backend fingerprints match except process-start Python hash identity, which
   was observed uncontrolled. Before any third/new case, predeclare the single
   startup-hash control; no reward/precision/physics changes or pilot2 admitted.
+- Next predeclared control: [startup hash503 OFF/OFF](2026-09-07-f1m-startup-hash-control.md).
+  Same replay module with `--startup-hash`, new immutable output
+  `artifacts/experiments/f1m-replay-hash503-off-off-v1`, two120second children,
+  420second service cap, only child-start PYTHONHASHSEED changed. Zero optimizer
+  updates; require effective equal hash probes; preserve all closed evidence.

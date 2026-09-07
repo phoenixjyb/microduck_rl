@@ -1,6 +1,7 @@
 # F1-L: paired motor-aware lateral-velocity continuation
 
-Status: **predeclared, not executed**. User authorized the next gait-training
+Status: **training complete; evaluation orchestration stopped**. Predeclared
+source `e0cb4f4c44d5cd548fe5aee4458c59cda4510adf`. User authorized the next gait-training
 step after the frozen heading-hold diagnostic. Simulation only; this does not
 admit obstacle training, hopping, or an integrated controller.
 
@@ -104,3 +105,87 @@ explicit resumed iteration/common-step/Adam state; unchanged historical defaults
 fresh heading-command trace identity; absolute and per-joint paired motor gates;
 reference-before-training, initial-state mismatch, first numerical failure,
 runtime failure, no retry and exact retained manifest coverage.
+
+## Retained training and interrupted evaluation
+
+Remote regression also passed698 tests (12.08s, same two warnings, no skips).
+Service `microduck-rl-f1l-e0cb4f4-s463.service` ran September7
+13:06:51–13:18:35 Shanghai. All three parent references completed400steps
+without safety failures, followed by both smokes and both500-update pilots.
+
+| Arm | Updates | Training seconds | Fall windows | Maximum fall fraction/window | Final checkpoint SHA256 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Control | 500 | 289.362 | 8 | 1/256 | `d01385604edd6b8ff3d053062536aa1c3126997dc3110d0e01df232b37aea2f7` |
+| Lateral | 500 | 291.659 | 8 | 1/256 | `95717faf177fd83da446433d22091a71a1e7f78c148e83645b9b1ef1fffe9ef4` |
+
+Both final checkpoints are model8998 with common step216000. All26 saved
+post-update checkpoints plus4initial snapshots were verified finite in the
+local mirror, including exact update labels and saved common steps. All four
+initial snapshots were also checked against the original parent: actor, critic,
+normalizers and Adam match exactly, with only the declared next-iteration label.
+Control/treatment smoke durations were6.552/6.654s. Each arm retained75 finite
+TensorBoard scalar tags; the treatment lateral penalty was active (final pilot
+episode-rate metric-0.260035), while control was identically zero. No training
+gross guard fired. Maximum sampled training GPU temperatures were58/56°C;
+these are sampled values, not continuous peaks. Training falls and small rated
+speed exposure are not deterministic-evaluation acceptance.
+
+Parent467/479/487 and control467 reports were retained. The service then failed
+**before launching treatment467**, at the between-child `check_host()` call:
+
+`ValueError: idle/cool GPU required`
+
+The preceding no-compute-PID and protected-service checks passed. That error
+combines utilization/temperature/memory conditions; the raw rejected telemetry
+was not retained, so its precise triggering value is unknown. Subsequent
+read-only checks found0% GPU use,45–46°C,12MiB and no compute PID. Transient
+utilization telemetry after child exit is plausible, not proven. Neither
+`lateral-s467.log` nor its JSON exists in the original run; the treatment
+evaluation was not attempted. The retained decision remains
+**runtime-failure-stop**, with no pairs and no causal policy decision.
+
+Original evidence:72payload files,162,237,955bytes plus manifest, mirrored under
+`artifacts/diagnostics/f1l-lateral-paired-s463-v1` locally; all local payload
+hashes match the remote-generated manifest. The original remote directory and
+all its files remain immutable.
+
+- Original manifest SHA256: `44ce65ffec5252acd91bece8224d7e4487ef91f64a9a996ae1c69d00eecd553f`.
+- Original decision SHA256: `541cb79c4254f5116be939a17963529c017ceb39c0cdab48254baa9c0f83331c`.
+- Control467 report SHA256: `89a5f592615879b351d9d94fccf4dab6500da34d8623dd3b2f3dab784ba067ca`.
+
+## Separately predeclared evaluation-only closeout
+
+Do not rerun the failed campaign, any training, any existing evaluation, or
+alter its manifest/decision. Complete only the **never-started treatment467**
+as a separate retained user service/output, using the unchanged model8998,
+controller, seeds, first-attempt protocol, raw trace audit and numerical gates.
+Reference parent467/control467 are reused by exact hashes; no cherry-picking.
+This finishes the first numerical pair, not the remaining479/487 matrix.
+
+- New directory: `artifacts/experiments/f1l-lateral-s467-evaluation-closeout-v1`.
+- New source must be clean and pushed. The closeout verifies every original
+  payload hash, exact interrupted boundary and absence of an earlier treatment
+  attempt. It reads but cannot append to the original output.
+- Before launch, require two consecutive zero-utilization GPU samples one
+  second apart, with a10second total probe window. Retain all samples. Any
+  compute PID, protected service active, memory>=100MiB or temperature>=80°C
+  fails immediately: never wait through or stop an unrelated workload. Only
+  nonzero utilization with no compute PID and otherwise safe state can settle.
+  Each read subprocess has a timeout capped by the remaining probe budget.
+- The child still runs the original strict idle-host check. One90second child,
+  one180second user service, start before September7 17:00 Shanghai. The earlier
+  unexecuted14:30 draft window expired; the user's16:20 follow-up renews this
+  bounded closeout only, with no numerical or checkpoint changes. No retry,
+  optimizer step, gain change or additional seed. If readiness fails again,
+  retain the failure and stop.
+- Numerical failure remains numerical-gate-stop; a clean pair is at most
+  paired-case-support-only. All obstacle, hop, integrated-stability and physical
+  acceptance flags remain false. Verify hashes and publish both the failed
+  original evidence and separate closeout result without relabeling either.
+
+Closeout prelaunch local regression: **711 passed**,11.62s, no skips, same two
+existing warnings. New checks cover transient telemetry, two consecutive idle
+samples, immediate refusal of another workload/protected service/high memory or
+temperature, per-command deadline bounds, one child only, immutable original
+manifest refusal, no replay, and failure after comparison reverting the overall
+decision to runtime-failure-stop.

@@ -132,3 +132,14 @@ gate or claim of completed hopping is authorized by this work window.
   `artifacts/experiments/f1m-replay-hash503-off-off-v1`, two120second children,
   420second service cap, only child-start PYTHONHASHSEED changed. Zero optimizer
   updates; require effective equal hash probes; preserve all closed evidence.
+- Startup-hash control completed23:20:43, source
+  `7ded54a4cad06a6aa9c46eeb76ea77b10affb252`, service
+  `microduck-rl-replay-hash503-7ded54a.service`. Both cases absolute-safe with
+  identical before/after hash probes; decision `startup-hash-controlled-divergence`,
+  28,526 differing leaves. All10 payloads mirrored and full decision reproduced
+  on both hosts. GPU idle; no training or third case launched. Stop further
+  determinism-setting trials. Next chunk is CPU-only implementation/tests of
+  the descriptive within-rollout motor measurement contract described in the
+  startup-hash document; fresh recording data needs a separate predeclaration
+  and launch gate. Original rejection, numerical thresholds and pilot2 gate
+  remain unchanged. Paired pilots used this window:1/3.

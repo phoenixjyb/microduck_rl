@@ -226,3 +226,9 @@ gate or claim of completed hopping is authorized by this work window.
   Historical randomized-model equivalence, full action-pipeline binding and
   behavioral retention remain false; no GPU work or skill promotion. The
   reconstruction report is separate from all earlier immutable evidence.
+- CPU slice2c executes the installed action manager against isolated synthetic
+  buffers, proving reconstructed column/offset/encoder-bias handling and the
+  difference between raw-history reset and processed-target refresh. Local
+  regression1038 passed. Normal environment source order processes fresh
+  actions before application; no ordinary-training defect or safe stop is
+  inferred from the out-of-order diagnostic. All admission gates remain shut.

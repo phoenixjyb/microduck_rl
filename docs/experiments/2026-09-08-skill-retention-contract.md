@@ -240,3 +240,56 @@ Next bounded CPU slice: resolve the reconstructed policy action pipeline
 (ordered targets, scale/default offsets and reset behavior) with synthetic
 CPU state and the actual installed manager, while keeping that evidence
 separate from the historical randomized actuator state and behavioral gates.
+
+## Slice2c: installed action manager, synthetic CPU state
+
+`action_pipeline_audit.py` uses the actual `Entity` target resolver/writer,
+`ActionManager` and `JointPositionAction`, but supplies only isolated synthetic
+CPU buffers for default positions, encoder bias and target positions. An
+already-initialized Entity is refused. No actuator execution, scene/environment
+reset, physics, policy inference or CUDA initialization takes place. Original
+source/assets and all105 campaign payloads are verified before the audit; the
+rebuilt declarations match the immutable slice2a report.
+
+Fourteen positive/negative one-hot probes establish the reconstructed input
+column-to-joint order. Additional probes confirm the saved configuration's
+scale1, construction-time default offset and no manager-level clipping. The
+saved runner clipping configuration is also None; the wrapper itself is not
+executed in these probes. The actual target transform is:
+
+```text
+position_target = raw_action * 1 + default_joint_position_at_construction
+                  - current_encoder_bias
+```
+
+Encoder bias is read at each apply call; the default offset is a clone captured
+when the term is constructed, not a live view of a subsequently changed
+default-position buffer. The probes preserve caller actions and torch RNG.
+
+| Sequence tested in CPU buffers | Observed result |
+| --- | --- |
+| Process zero, then apply | Configured posture minus encoder bias, not zero joint angles or a proven safe stand |
+| Selective/full manager reset | Selected raw/current/previous histories clear; processed-target cache remains |
+| Apply immediately after reset, without new processing | Previous processed target is reused; this is a deliberate out-of-order diagnostic |
+| Process fresh zero after reset, then apply | Stale processed target is replaced with the configured posture/bias target |
+
+The normal installed environment's **source ordering** processes fresh actions
+before the decimation/application loop. That source check is separate from
+the executed manager probes; the full environment is not executed here.
+Consequently, the reset-only observation is not evidence that ordinary
+training applied stale targets or an explanation of the F1-Y rejection.
+
+Future skill transitions must include a fresh processed command before the
+next target application, plus separate actuator-delay/state and observation
+history handling. A manager reset or zero action is not a validated stop or
+stable landing. No production manager/reset code has been changed, and the
+earlier reconstruction/binding reports are not upgraded or overwritten.
+
+Mac output `artifacts/audits/f1y-action-pipeline-synthetic-cpu-v1.json`,30,706
+bytes, SHA256
+`c453ace1ccef3e01379d854b6f766600f21ce34fff252127aeadbfc40aba5107`.
+Decision `synthetic-action-pipeline-only-not-retention`; full environment reset,
+historical randomized actuator state, safe-stop, closed-loop retention and
+transition/admission flags remain false. Local regression1038 passed, including
+19 action audit tests;17 occurrences of the existing actuator/site warning.
+Remote independent reproduction remains a separate gate.

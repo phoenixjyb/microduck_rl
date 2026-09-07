@@ -24,7 +24,7 @@ hopping, maintain a separate retention ledger:
 | Track | Required before integrated promotion | Current boundary |
 | --- | --- | --- |
 | Stand/stop/disturbance recovery | First-attempt stability and motor evaluation of the proposed integrated controller | Not established by straight walking |
-| Route/speed tracking | Per-env approach/recovery speed, heading, lateral displacement and motor gates | F1-R rejected; frozen heading A/B next |
+| Route/speed tracking | Per-env approach/recovery speed, heading, lateral displacement and motor gates | Frozen heading A/B reduced drift; speed/lateral gates still fail |
 | Obstacle avoidance | Clean pass, collision, timeout and route/speed recovery by placement/speed bin | Historical specialists are not universal acceptance |
 | Hop/landing | Independent H1 survival, drift, spring and motor gates | H1-T rejected; no validated hop to claim retained |
 | Skill transitions | Matched mechanics, bounded command/action transitions and all earlier retention tests | Not yet admitted |

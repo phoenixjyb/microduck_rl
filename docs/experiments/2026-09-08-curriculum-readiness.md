@@ -142,3 +142,9 @@ four cells each, and all eight document/source links resolve. This was a
 programmatic render/content check, not a screenshot-based UI inspection.
 No historical evaluator, controller, packet layout, test threshold or policy
 artifact was changed by this documentation slice.
+
+Source delivery: `fb26e0f8367f34fa98ed834401a95415bcfe226e` was pushed to the
+feature branch and fast-forwarded on100.100 after clean-source/idle-GPU and
+inactive-protected-service checks. The same136 focused CPU tests passed there
+in5.97s. GPU remained0%,45C,12MiB with no compute PID; both protected SYSTEM
+services remained inactive and the worktree clean. No GPU job was launched.

@@ -123,13 +123,15 @@ def test_real_task_config_has_no_obstacle_and_pins_body_commands():
     assert "microduck_motor_step_stream" in cfg.metrics
 
 
-def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(monkeypatch):
+@pytest.mark.parametrize("retain_route_trace", [False, True])
+def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(monkeypatch, retain_route_trace):
     import mjlab.envs
     import mjlab.rl
     import mjlab.tasks.registry
     from mjlab_microduck.motor_step_stream import MotorStepStream
 
     raw_data = NS(root_link_lin_vel_w=torch.full((8, 3), .1),
+                  root_link_pos_w=torch.zeros(8, 3),
                   root_link_lin_vel_b=torch.full((8, 3), .1),
                   root_link_quat_w=torch.tensor([[1., 0., 0., 0.]]).repeat(8, 1),
                   actuator_force=torch.full((8, 14), .1), joint_vel=torch.ones(8, 14))
@@ -151,6 +153,7 @@ def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(mon
             done[0] = self.raw.steps == 2
             self.raw._microduck_motor_step_stream.capture(raw_data, done)
             if done.any():
+                raw_data.root_link_pos_w.fill_(999.)
                 raw_data.root_link_lin_vel_w.fill_(999.)
                 raw_data.root_link_lin_vel_b.fill_(999.)
                 raw_data.actuator_force.fill_(0.)
@@ -166,12 +169,18 @@ def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(mon
     monkeypatch.setattr(control.MotorStepStream, "from_robot", lambda *args, **kwargs:
         MotorStepStream(8, control.JOINTS, tuple(range(14)), device="cpu", cost_cfg=control.MotorStepCostCfg()))
     monkeypatch.setattr(control, "sha256", lambda _: control.ACTOR_SHA256)
-    report = control.run_control(device="cpu")
+    report = control.run_control(device="cpu", retain_route_trace=retain_route_trace)
     assert env.steps == 3 and env.closed
     assert report["sample_steps"] == 3 and report["terminal_steps"] == [2]
     assert report["groups"]["all"]["body_forward_mean"] == pytest.approx(.1)
     assert "settled" not in report["groups"] and report["classification"] == "safety-or-coverage-stop"
     assert report["motor_stream"]["trainer_integration_validated"] is False
+    if retain_route_trace:
+        assert len(report["route_trace"]["position"]) == 3
+        assert torch.tensor(report["route_trace"]["position"]).abs().max() == 0
+        assert report["route_trace"]["last_sample_cross_route_m"] == [0.]*8
+    else:
+        assert "route_trace" not in report
 
 
 @pytest.mark.parametrize("failure", [None, "expired", "source", "actor", "runtime", "dependency", "busy", "existing", "simulation", "safety"])

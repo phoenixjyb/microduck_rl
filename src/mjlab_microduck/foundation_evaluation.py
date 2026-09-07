@@ -76,10 +76,10 @@ def validate_speed_classification(report):
     require(report["classification"] == derived, "speed classification agrees with measurements")
 
 
-def candidate_failures(report, parent):
+def candidate_failures(report, parent, *, protocol=PROTOCOL, seeds=SEEDS):
     canonical(report); canonical(parent)  # reject NaN/Infinity before comparisons
-    require(report["protocol"] == parent["protocol"] == PROTOCOL
-            and report["seed"] == parent["seed"] in SEEDS, "paired F1 identity")
+    require(report["protocol"] == parent["protocol"] == protocol
+            and report["seed"] == parent["seed"] in seeds, "paired F1 identity")
     require(report["num_envs"] == parent["num_envs"] == 8, "eight held-out environments")
     validate_speed_classification(report)
     validate_speed_classification(parent)

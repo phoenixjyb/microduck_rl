@@ -88,7 +88,8 @@ def runtime_identity():
     return dict(versions=versions, dependencies=dependencies)
 
 
-def train(mode, output):
+def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
+          stop_at=TRAIN_STOP, max_seconds=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
     from mjlab.utils.os import dump_yaml
@@ -106,7 +107,9 @@ def train(mode, output):
             try: os.fsync(fd)
             finally: os.close(fd)
 
-    cfg, agent = prepare_config(mode)
+    cfg, agent = config_factory(mode)
+    seconds = MODES[mode][2] if max_seconds is None else max_seconds
+    require(seconds > 30 and stop_at.tzinfo is not None, "bounded explicit training window")
     configure_torch_backends()
     torch.manual_seed(agent.seed)
     dump_yaml(output / "params/env.yaml", asdict(cfg))
@@ -136,7 +139,7 @@ def train(mode, output):
                     and bool(torch.isfinite(runner.alg.storage.returns).all()), "finite raw returns")
         runner.alg.compute_returns = checked_returns
         require(wrapped.get_observations()["actor"].shape == (NUM_ENVS, 61), "61D actor retained")
-        runner.save(str(output / "initial.pt"), dict(protocol=PROTOCOL, before_updates=True))
+        runner.save(str(output / "initial.pt"), dict(protocol=protocol, before_updates=True))
         stream = MotorStepStream.from_robot(env.scene["robot"], NUM_ENVS, device=env.device,
                                           cost_cfg=MotorStepCostCfg())
         env._microduck_motor_step_stream = stream
@@ -147,8 +150,8 @@ def train(mode, output):
         started = time.monotonic()
 
         def guarded_step(actions):
-            require(dt.datetime.now(dt.timezone.utc) < TRAIN_STOP, "training closeout deadline")
-            require(time.monotonic()-started < MODES[mode][2]-30, "bounded training runtime")
+            require(dt.datetime.now(dt.timezone.utc) < stop_at, "training closeout deadline")
+            require(time.monotonic()-started < seconds-30, "bounded training runtime")
             require(bool(torch.isfinite(actions).all()), "finite actions before step")
             command = env.command_manager.get_command("twist")
             require(bool(torch.allclose(command, command.new_tensor([.3, 0., 0.]).expand_as(command),

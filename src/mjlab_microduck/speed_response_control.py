@@ -135,7 +135,20 @@ def summarize(velocities, commands, legacy_force, legacy_speed, pre_force, pre_s
     return result
 
 
-def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOCOL):
+def route_position_rows(position, origin, route):
+    """Actual base-link positions projected onto the fixed initial route frame."""
+    require(position.shape == origin.shape == (route.shape[0], 3)
+            and route.shape[1:] == (2,), "route position shapes")
+    require(all(bool(torch.isfinite(x).all()) for x in (position, origin, route)), "finite route positions")
+    require(bool(torch.allclose(route.norm(dim=-1), torch.ones_like(route[:, 0]),
+                                atol=1e-5, rtol=0)), "unit position route")
+    delta = position[:, :2] - origin[:, :2]
+    cross = torch.stack((-route[:, 1], route[:, 0]), -1)
+    return torch.stack(((delta*route).sum(-1), (delta*cross).sum(-1)), -1).detach().clone()
+
+
+def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOCOL,
+                retain_route_trace=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
@@ -158,6 +171,8 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
         q = robot.data.root_link_quat_w
         yaw = torch.atan2(2 * (q[:, 0]*q[:, 3] + q[:, 1]*q[:, 2]), 1 - 2*(q[:, 2].square()+q[:, 3].square()))
         route = torch.stack((yaw.cos(), yaw.sin()), -1).clone()
+        origin = robot.data.root_link_pos_w.detach().clone() if retain_route_trace else None
+        positions = []
         observer = RecoveryMeasurement(NUM_ENVS, SPEED, STEP_DT)
         data = {k: [] for k in ("velocities", "commands", "legacy_force", "legacy_speed", "pre_force", "pre_speed")}
         terminals = []
@@ -165,6 +180,8 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
             for step in range(STEPS):
                 velocities = velocity_rows(robot.data.root_link_lin_vel_w, robot.data.root_link_lin_vel_b,
                                            robot.data.root_link_quat_w, route)
+                if retain_route_trace:
+                    positions.append(route_position_rows(robot.data.root_link_pos_w, origin, route).cpu())
                 phase = torch.full((NUM_ENVS,), 0 if step < SETTLE else 2, device=device, dtype=torch.long)
                 observer.begin(step, phase, velocities[:, 1])
                 command = env.command_manager.get_command("twist").detach().clone()
@@ -190,6 +207,16 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
                            measurement=observer.report(), protocol=protocol, seed=seed)
         report.update(task=TASK, checkpoint_sha256=sha256(checkpoint), motor_stream=stream.provenance(),
                       actor_observation_shape=list(observations["actor"].shape))
+        if retain_route_trace:
+            p, v = torch.stack(positions).double(), torch.stack(data["velocities"]).double()
+            report["route_trace"] = dict(protocol="initial-route-pre-control-v1",
+                sampling="pre-control-step; final post-step position not sampled; no reset continuation",
+                position_columns=["route_forward_m", "cross_route_m"],
+                velocity_columns=["body_forward_mps", "route_forward_mps", "cross_route_mps", "heading_rad"],
+                position=p.tolist(), velocity=v.tolist(),
+                last_sample_cross_route_m=p[-1, :, 1].tolist(),
+                max_abs_cross_route_m=p[:, :, 1].abs().max(0).values.tolist(),
+                signed_cross_route_velocity_mean_mps=v[:, :, 2].mean(0).tolist())
         return report
     finally:
         env.close()

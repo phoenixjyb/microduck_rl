@@ -1,6 +1,6 @@
 # F1-M same-source OFF/OFF replay control
 
-Status: predeclared, not run. Zero optimizer updates; tonight's paired-pilot
+Status: **completed; safe same-source recording-disabled reports diverge**. Zero optimizer updates; tonight's paired-pilot
 count stays1/3. This is a measurement control, not a retry of the closed
 motor-timing experiment and not another reward-weight revision.
 
@@ -101,3 +101,50 @@ typed comparison, separate hash-probe reporting, source/recording/settings
 refusal, first-unsafe stop, two-case ordering, no optimizer call, deadline
 refusal and immutable manifest coverage. The three newly inspected runtime
 helper hashes match between local and100.100. `git diff --check` passes.
+
+## Retained result: September7 23:05 Shanghai
+
+Source `79074f7b446a1a1ac854335855a9f2b10ceebce5`; service
+`microduck-rl-replay-off-off-79074f7-s503.service` ran23:05:13–23:05:53 and
+completed normally. Remote regression also passed760 tests in17.81s with the
+same two existing warnings, no skips. Normal exit means a retained comparison,
+not an accepted policy or exact repeatability.
+
+Both cases completed400steps/8env with no absolute safety failure and no
+motor_trace field. Their full reports differ at28,563 typed JSON leaves.
+First changed velocity is step3/environment0/body-forward; first position
+change is step4/environment0/route-forward. Maximum per-sample differences:
+body-forward0.049969m/s, route-forward0.060063m/s, cross-route0.091312m/s,
+heading0.060312rad; maximum route/cross position differences0.012718/0.027555m.
+The decision is `recording-disabled-same-source-divergence`, not a solver-cause
+diagnosis. This shows raw motor-history recording is not necessary for the
+observed divergence in the current same-source execution path.
+
+All captured numerical settings match across the two before/after snapshots:
+Torch float32,1intra-op/16inter-op threads, deterministic algorithms false,
+cuDNN enabled but benchmark/deterministic false, both precision options `none`,
+CUDA uninitialized before and initialized afterward. `PYTHONHASHSEED` is unset
+at child entry and becomes503 during environment construction in each. The
+fixed-string hash probes differ between processes and do not change after
+seeding, confirming that interpreter-start hash identity was not controlled.
+No setting was changed during this diagnostic. Hash variation is a measured
+remaining factor, not proof that it caused the simulation differences.
+
+All10 payloads (7,261,512bytes plus manifest) are mirrored under
+`artifacts/diagnostics/f1m-replay-off-off-s503-v1`; hashes/bytes and exact file
+coverage verified. CPU recomputation reproduces the complete deterministic
+comparison, including all differences, trace extrema and fingerprint verdict.
+Both historical F1-M and failed timing manifests/payloads were verified unchanged
+before and after the control; checkpoint sentinels remain intact.
+
+- Manifest: `2d0b1c5b572eccdce205e9fe51f35c20dfebf4fef32545ac9c95f7ae82590d90`.
+- Decision: `8557576964007fa6978cc3da3f0cd9c313e78409fd25f1c053b08d180d4d622b`.
+- First report: `6df1b35d789b3d2822e98fe2b493f9267949c6323bbb6fd80aa8ea8f567a422a`.
+- Second report: `cf0f5b4c632aadec6aadb996cb7d2f2c6156a0fdf6af951a5422b8f6186029c4`.
+
+GPU returned idle,0%,46C,12MiB; no new training or third case was launched.
+This protocol is closed. The smallest justified next control is to pin only
+`PYTHONHASHSEED=503` **before child interpreter startup**, keep motor-history
+recording OFF and every physics/policy/Torch setting unchanged, and compare
+two fresh cases in a new predeclared directory. Do not claim that this will
+fix MuJoCo Warp, or alter the old decision if the next control matches.

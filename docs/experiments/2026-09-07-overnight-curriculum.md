@@ -119,3 +119,11 @@ gate or claim of completed hopping is authorized by this work window.
   `mjlab_microduck.foundation_replay_control`, output
   `artifacts/experiments/f1m-replay-off-off-s503-v1`, exactly two sequential
   evaluation cases,420second cap, no backend changes and no optimizer updates.
+- OFF/OFF control completed at23:05:53, source
+  `79074f7b446a1a1ac854335855a9f2b10ceebce5`, service
+  `microduck-rl-replay-off-off-79074f7-s503.service`. Both cases absolute-safe;
+  decision `recording-disabled-same-source-divergence`,28,563 differing leaves.
+  All10 payloads mirrored and the decision independently reproduced on CPU.
+  Backend fingerprints match except process-start Python hash identity, which
+  was observed uncontrolled. Before any third/new case, predeclare the single
+  startup-hash control; no reward/precision/physics changes or pilot2 admitted.

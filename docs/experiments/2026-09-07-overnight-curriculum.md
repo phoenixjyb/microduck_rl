@@ -99,3 +99,15 @@ gate or claim of completed hopping is authorized by this work window.
   [F1-M motor timing](2026-09-07-f1m-motor-timing.md); output
   `artifacts/experiments/f1m-motor-timing-s503-v1`,600second service cap,
   parent/control/motor seed503 only, zero optimizer updates.
+- Timing diagnostic closed at its first parent case. Source
+  `dbbeb8c8e708dd99968d6dde6330531baa5e2d1b`; service
+  `microduck-rl-f1m-timing-dbbeb8c-s503.service`; decision
+  `runtime-failure-stop` at exact historical replay identity. Parent was
+  absolute-safe and internally self-consistent, but diverged first at step3;
+  control/treatment timing cases were never started. All five new payloads
+  mirrored and verified. See the motor-timing document for exact hashes.
+- Current next step: read-only initialization/seeding/backend inspection,
+  followed only if justified by a separately predeclared same-source OFF/OFF
+  parent503 measurement control. No timing-directory retry, gate relaxation,
+  third ON case or paired pilot2 before that measurement-validity issue is
+  resolved. Continue bounded CPU evidence/retention work in the meantime.

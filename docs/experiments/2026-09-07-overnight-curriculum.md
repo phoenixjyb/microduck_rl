@@ -1,6 +1,6 @@
 # Bounded MicroDuck work through September8 07:00 Shanghai
 
-Latest CPU handoff (September8 around04:10 Shanghai): all3/3 paired pilots are
+Latest CPU handoff (September8 around04:00 Shanghai): all3/3 paired pilots are
 closed; no further GPU work this window. The retention-plan checker now covers
 four skills, all12 directed requests and16 interruption/history/sensor cases.
 Initial coverage has72 unbound reference slots, with all behavioral/launch

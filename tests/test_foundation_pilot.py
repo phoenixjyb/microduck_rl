@@ -80,7 +80,7 @@ def test_finite_gradient_hook_is_identity_and_rejects_nan():
 
 
 def report():
-    return dict(protocol=f1.PROTOCOL, seed=SEEDS[0], num_envs=8, safety_failures=[],
+    value = dict(protocol=f1.PROTOCOL, seed=SEEDS[0], num_envs=8, safety_failures=[],
         speed_mps=.3, step_dt_s=.02, sample_steps=400, startup_steps=100, settled_steps=300,
         terminal_steps=[], body_mean_in_band_all_envs=True, route_mean_in_band_all_envs=True,
         stable_route_window_all_envs=True, stable_route_response=dict(
@@ -89,8 +89,12 @@ def report():
             environments=[dict(environment=i, terminal=False, first_recovery_step=100,
                 sampled_recovery_span_s=5.98, stable_recovery_latency_s=.5, status="recovered-in-window") for i in range(8)]),
         classification="straight-response-within-both-criteria", groups={"settled":dict(
+        steps=300, legacy_rated_speed_exceed_fraction=0., pre_reset_rated_speed_exceed_fraction=0.,
         heading_abs_max=.1, cross_route_abs_per_env_mean=[.02]*8, legacy_torque_p99=.5,
         cross_route_abs_mean=.02, body_forward_per_env_mean=[.3]*8, route_forward_per_env_mean=[.3]*8)})
+    value["groups"]["all"] = deepcopy(value["groups"]["settled"])
+    value["groups"]["all"]["steps"] = 400
+    return value
 
 
 @pytest.mark.parametrize("key,value", [("heading_abs_max", .3),
@@ -123,4 +127,15 @@ def test_gate_cannot_hide_bad_env_or_motor_in_pool(key,value):
 def test_contradictory_speed_labels_or_window_evidence_fail_closed(change):
     parent,candidate = report(),report()
     change(candidate)
+    with pytest.raises(ValueError): candidate_failures(candidate,parent)
+
+
+@pytest.mark.parametrize("group", ["all", "settled"])
+@pytest.mark.parametrize("key,value", [("legacy_torque_p99", .605),
+    ("legacy_rated_speed_exceed_fraction", .00001), ("pre_reset_rated_speed_exceed_fraction", .00001),
+    ("steps", 299)])
+def test_stale_safe_label_cannot_bypass_absolute_motor_gate(group,key,value):
+    parent,candidate = report(),report()
+    parent["groups"]["settled"]["legacy_torque_p99"] = .59
+    candidate["groups"][group][key] = value
     with pytest.raises(ValueError): candidate_failures(candidate,parent)

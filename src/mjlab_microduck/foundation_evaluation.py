@@ -27,6 +27,14 @@ def validate_speed_classification(report):
         return
     require(report["sample_steps"] == 400 and report["startup_steps"] == 100
             and report["settled_steps"] == 300 and report["terminal_steps"] == [], "complete safe response")
+    for name, steps in (("all", 400), ("settled", 300)):
+        group = report["groups"][name]
+        require(group["steps"] == steps, "motor window coverage")
+        require(type(group["legacy_torque_p99"]) in (int, float)
+                and 0 <= group["legacy_torque_p99"] <= .60, "safe label agrees with absolute torque gate")
+        for key in ("legacy_rated_speed_exceed_fraction", "pre_reset_rated_speed_exceed_fraction"):
+            require(type(group[key]) in (int, float) and group[key] == 0.,
+                    "safe label agrees with zero rated-speed exceedance")
     settled = report["groups"]["settled"]
     flags = []
     for key in ("body_forward_per_env_mean", "route_forward_per_env_mean"):

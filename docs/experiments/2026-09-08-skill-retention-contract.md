@@ -306,3 +306,78 @@ external sensor behavior. Do not mark a skill admitted from these synthetic
 probes or start collecting new GPU rollouts. The plan must identify missing
 evidence explicitly; accepted walking/hopping or safe-stop behavior cannot be
 manufactured from a saved checkpoint, source-level order or manager reset.
+
+## Slice3: retention-plan coverage and explicit unbound evidence
+
+`mjlab_microduck.skill_retention_plan` is a standard-library-only checker. It
+reads and verifies retained file references, but never loads a policy, runs
+physics, evaluates a numerical report, or admits a skill. The tracked initial
+plan is `2026-09-08-retention-plan-v1.json`. Its entries are deliberately empty:
+the earlier F1-Y partial binding and synthetic action probes are not complete
+skill descriptors or behavioral-retention evidence.
+
+The fixed coverage catalog requires:
+
+- Four separate skill records: foundation, stop/recovery, obstacle, hop. Each
+  needs a byte-verified descriptor, its original numerical protocol, a composed
+  controller retention procedure and the resulting retention report. A supplied
+  original protocol must have the same bytes/hash as the descriptor's protocol.
+  The new retention report need not equal the original checkpoint's report.
+- All12 directed requests between those four skills, each with procedure and
+  report. Reverse direction is independent. This is a request matrix, **not**
+  permission to switch directly: incompatible or unsupported requests need an
+  explicit refusal or a separately tested route through stance/landing.
+- Sixteen cross-cutting cases: fresh commands/actions before application;
+  actuator delay/internal state; action history/processed cache; observation
+  history/normalizer handling; stop/stance and restart/speed reacquisition;
+  interruption before takeoff, in air and during landing; stale, missing and
+  invalid structured input plus recovery; permitted slowdown inside avoidance;
+  nominal speed before/after; per-placement/speed-bin/worst-seed reporting; and
+  independent training with untouched confirmation seeds.
+
+An interrupted airborne hop cannot be treated as an instantaneous zero-action
+stop. Its procedure must address abort/landing and subsequent stable stance.
+These procedures must cover the applicable directed requests and phases, not
+just mention a generic reset. The checker audits references, not the meaning
+or completeness of text inside a referenced procedure; that remains review and
+eventual numerical work. No new thresholds replace any original F/S/O/H gates.
+
+Absent/null known references produce explicit gaps; unknown keys, malformed
+references, tampered bytes and symlinks are errors. A complete descriptor pair
+is compared on all six existing static fields. Missing descriptors stay
+unknown; rigid-versus-sprung or interface differences cannot become a match
+from a shared14-action dimension. A complete *reference* catalog can still
+contain mismatches and is never a behavioral pass. Every result keeps original
+gate verification, runtime binding, retention, safe-stop, policy acceptance,
+transition, GPU collection, training and physical-motion flags false.
+
+The initial plan has72 **unbound reference slots**, not72 failed behavioral
+tests and not a claim that no historical protocols or reports exist. Original
+protocol/evidence retrieval and actual per-skill descriptor derivation remain
+unfinished. Four semantic gates stay unresolved even for fully populated
+synthetic test fixtures. The report records its canonical plan hash and the
+checker/descriptor-verifier source hashes. JSON duplicate keys, non-JSON numeric
+constants and inputs over1MiB are refused; CLI outputs are exclusive-create.
+
+Reproduce without a GPU or rollout, from the repository root, writing only to
+an existing audit directory outside the closed campaign roots:
+
+```bash
+CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1 .venv/bin/python -m mjlab_microduck.skill_retention_plan \
+  --root . --plan docs/experiments/2026-09-08-retention-plan-v1.json \
+  --output artifacts/audits/skill-retention-plan-v1.json
+```
+
+This is still the CPU-only remainder of the exhausted3/3 pilot window. Next
+bounded work may bind original per-skill protocols and inventory historical
+artifacts, preserving rejected status and mechanics groups. Do not populate
+missing behavioral evidence with synthetic action tests, rerun GPU evaluations,
+or launch another training revision before a separately authorized window.
+
+Local validation:59 new focused tests and1097 regression tests passed, with17
+occurrences of the existing actuator/site warning; `git diff --check` passed.
+Initial audit `artifacts/audits/skill-retention-plan-v1.json`,9847bytes, SHA256
+`092352bc4287b74bb9b7c7cc4a934059eef8a906be1a0e1b8efd462e7e86da05`,
+decision `incomplete-reference-coverage`. This artifact preserves all72 unbound
+slots and the four semantic gaps. Source hashes and exact reference verification
+make this reproducible planning evidence, not a new behavior evaluation.

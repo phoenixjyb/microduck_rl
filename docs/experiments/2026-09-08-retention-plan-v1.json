@@ -1,0 +1,11 @@
+{
+  "schema": "skill-retention-plan-v1",
+  "skills": {
+    "foundation": {},
+    "stop-recovery": {},
+    "obstacle": {},
+    "hop": {}
+  },
+  "transitions": {},
+  "cases": {}
+}

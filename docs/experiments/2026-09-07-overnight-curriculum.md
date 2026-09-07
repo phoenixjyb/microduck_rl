@@ -1,5 +1,13 @@
 # Bounded MicroDuck work through September8 07:00 Shanghai
 
+Latest CPU handoff (September8 around04:10 Shanghai): all3/3 paired pilots are
+closed; no further GPU work this window. The retention-plan checker now covers
+four skills, all12 directed requests and16 interruption/history/sensor cases.
+Initial coverage has72 unbound reference slots, with all behavioral/launch
+authority false. See [retention contract](2026-09-08-skill-retention-contract.md)
+slice3. Continue only bounded CPU protocol/artifact inventory until07:00; the
+deadline and protected-service rules below are unchanged.
+
 User request: continue the next training round and plan the curriculum well,
 working until07:00. Window ends **2026-09-07T23:00:00Z**. This is a bounded
 simulation research campaign, not a promise to complete every skill overnight.

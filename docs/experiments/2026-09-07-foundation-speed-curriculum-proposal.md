@@ -1,5 +1,11 @@
 # Foundation speed curriculum proposal
 
+**Subsequent execution:** the user approved a one-hour F1 pilot after the
+original overnight window. See the
+[fixed-.30 pilot result](2026-09-07-f1-fixed030-pilot.md):500 updates completed,
+but held-out speed/heading/lateral gates failed. This original proposal is
+historical context, not a fresh launch instruction or acceptance of F1.
+
 **Status: design only; not an approved or launch-ready training experiment.**
 This proposal is within the overnight curriculum-design scope. Updating the
 locomotion actor is outside the currently frozen-gait recovery-PPO scope and

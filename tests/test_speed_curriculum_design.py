@@ -37,3 +37,32 @@ def test_reward_arithmetic_must_not_ignore_lateral_and_vertical_motion():
     reward = track_linear_velocity(env, math.sqrt(.15), "twist")
     assert reward.item() == pytest.approx(math.exp(-(.09**2 + .1**2 + .1**2) / .15))
     assert reward.item() < math.exp(-.09**2 / .15)
+
+
+@pytest.mark.parametrize("variance", [.15, .05])
+def test_proposed_reward_sensitivity_is_analytic_not_an_acceptance_claim(variance):
+    # .05 is a design candidate only. Do not mutate any registered task.
+    speed = torch.tensor([.21, .222, .27, .30], dtype=torch.float64, requires_grad=True)
+    velocity = torch.stack((speed, torch.zeros_like(speed), torch.zeros_like(speed)), -1)
+    command = torch.tensor([.3, 0., 0.], dtype=torch.float64).expand(4, 3)
+    env = NS(scene={"robot": NS(data=NS(root_link_lin_vel_b=velocity))},
+             command_manager=NS(get_command=lambda name: command))
+    reward = track_linear_velocity(env, math.sqrt(variance), "twist")
+    gradient, = torch.autograd.grad(reward.sum(), speed)
+    expected = torch.exp(-(.3-speed).square()/variance)
+    torch.testing.assert_close(reward, expected)
+    torch.testing.assert_close(gradient, 2*(.3-speed)/variance*expected)
+    cfg,_ = prepare_config()
+    assert cfg.rewards["track_linear_velocity"].params["std"] == pytest.approx(math.sqrt(.15))
+    assert reward[-1].item() == 1. and gradient[-1].item() == 0.
+
+
+def test_absolute_lateral_speed_alone_cannot_identify_route_drift():
+    # Identical existing absolute-speed summaries can come from drift or sway.
+    drift = torch.full((400,), .1, dtype=torch.float64)
+    sway = drift.clone(); sway[1::2] *= -1
+    assert drift.abs().mean() == sway.abs().mean()
+    assert drift.sum().item()*.02 == pytest.approx(.8)
+    assert sway.sum().item()*.02 == 0.
+    # Velocity integration is only an illustrative counterexample; future
+    # simulation should retain actual projected positions as well.

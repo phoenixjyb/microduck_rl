@@ -137,7 +137,18 @@ SHA256 `62a3bf5a34abda909246205011a54c1c7261f571ba7ddc9e5afce2a8ea502bf2`.
 The output records exact extractor/helper source hashes and never writes inside
 the closed evidence root or overwrites an existing report. Local regression
 995 passed,3 existing actuator/site warnings, including45 binding tests and
-the real retained-artifact check. Remote reproduction is a separate gate.
+the real retained-artifact check. Implementation commit
+`6d60bf13764e7db0971edf26c1a9ed5c286cb45c` was pushed and fast-forwarded on
+100.100 only after clean-branch, idle-GPU and inactive-protected-service checks.
+Remote focused regression158 passed in9.07s. Its independently generated
+`artifacts/audits/f1y-retained-skill-binding-v1.json` has exactly the same
+SHA256 and bytes as the Mac report. GPU remained0%,45C,12MiB; no training,
+simulation rollout, service restart or skill transition was performed.
+
+Next CPU step: inspect the historical robot/actuator assets and resolved mapping
+evidence behind these gaps. Preserve the partial report unchanged; any later
+reconstruction or expanded inventory gets a separate versioned artifact, not
+an overwrite or an automatic upgrade to a complete descriptor.
 
 The later behavior sequence remains foundation gait, stop/recovery, frozen-gait
 structured obstacle supervision, one-axis obstacle diversity, separate hop

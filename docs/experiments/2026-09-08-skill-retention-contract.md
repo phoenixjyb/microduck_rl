@@ -292,4 +292,17 @@ Decision `synthetic-action-pipeline-only-not-retention`; full environment reset,
 historical randomized actuator state, safe-stop, closed-loop retention and
 transition/admission flags remain false. Local regression1038 passed, including
 19 action audit tests;17 occurrences of the existing actuator/site warning.
-Remote independent reproduction remains a separate gate.
+Implementation `a36f9c25623a3ea031da3cf84874c92f21f6749a` was pushed and
+fast-forwarded on100.100 after clean-branch/idle-GPU/inactive-protected-service
+checks. Remote focused201 tests passed in9.64s with14 occurrences of the same
+actuator/site warning. Its independently generated audit report matches the
+Mac SHA256 exactly. GPU remained0%,45C,12MiB and the worktree stayed clean.
+
+Next bounded CPU slice: a fail-closed retention-plan checker and evidence-gap
+inventory. Require original per-skill numerical protocols, compatible mechanics
+and interfaces, directed transitions, fresh command processing, actuator-delay
+and observation-history handling, interruption/stop cases and stale/missing
+external sensor behavior. Do not mark a skill admitted from these synthetic
+probes or start collecting new GPU rollouts. The plan must identify missing
+evidence explicitly; accepted walking/hopping or safe-stop behavior cannot be
+manufactured from a saved checkpoint, source-level order or manager reset.

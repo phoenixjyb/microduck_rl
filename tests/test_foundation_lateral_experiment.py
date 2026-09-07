@@ -83,6 +83,17 @@ def test_heading_trace_identity_is_explicit_for_new_protocol():
         exp.validate_controller_trace(r,True,protocol=exp.PROTOCOL,seeds=exp.SEEDS,checkpoint_sha="wrong")
 
 
+def test_safety_stop_without_performance_flags_stays_numerically_rejected():
+    p,c,l=good(),good(),good()
+    l.update(safety_failures=["all-legacy-torque","settled-legacy-torque"],classification="safety-or-coverage-stop")
+    for key in ("body_mean_in_band_all_envs","route_mean_in_band_all_envs","stable_route_window_all_envs"):
+        del l[key]
+    l["groups"]["settled"]["legacy_torque_p99"]=.601
+    result=exp.paired_decision(p,c,l)
+    assert "all-legacy-torque" in result["failures"] and "settled-legacy-torque" in result["failures"]
+    assert not result["policy_acceptance"]
+
+
 def test_child_timeout_and_insufficient_budget(tmp_path,monkeypatch):
     monkeypatch.setattr(exp,"OUTPUT",tmp_path);monkeypatch.setattr(exp,"check_host",lambda:{})
     calls=[]

@@ -66,8 +66,11 @@ def paired_decision(parent,control,lateral):
     failures += ["matched-control:"+f for f in motor_failures(lateral,control)]
     control_failures = candidate_failures(control,parent,protocol=PROTOCOL,seeds=SEEDS)
     # State all failed speed gates, rather than hiding them behind the first label.
-    for flag in ("body_mean_in_band_all_envs","route_mean_in_band_all_envs","stable_route_window_all_envs"):
-        if not lateral[flag]: failures.append(flag+"-failed")
+    # Safety-stop summaries intentionally omit performance-only flags. Preserve
+    # their numerical rejection rather than throwing a reporting KeyError.
+    if not lateral["safety_failures"]:
+        for flag in ("body_mean_in_band_all_envs","route_mean_in_band_all_envs","stable_route_window_all_envs"):
+            if not lateral[flag]: failures.append(flag+"-failed")
     return dict(seed=parent["seed"],failures=failures,control_failures=control_failures,
                 policy_acceptance=False,independent_training_seeds=1)
 

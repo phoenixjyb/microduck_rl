@@ -189,3 +189,72 @@ samples, immediate refusal of another workload/protected service/high memory or
 temperature, per-command deadline bounds, one child only, immutable original
 manifest refusal, no replay, and failure after comparison reverting the overall
 decision to runtime-failure-stop.
+
+## Completed single-case simulation and CPU reporting repair
+
+Closeout source `22afcfa71ccd899da5c6cade69f9a56bb29e0754` passed711 tests on
+100.100 (12.19s, same warnings). Original72payload hashes were verified before
+launch. Service `microduck-rl-f1l-closeout-22afcfa-s467.service` ran16:23:30–16:23:52
+Shanghai. The new idle gate passed, and the treatment simulation completed all
+400steps for8first episodes with no terminal events. Its report was retained
+before comparison. No optimizer or second GPU case ran.
+
+The comparison then exposed a reporting bug introduced in F1-L:
+`KeyError: 'body_mean_in_band_all_envs'`. The underlying evaluator intentionally
+omits performance-only flags on safety-stop reports. F1-L's extra diagnostic
+flag loop assumed their presence. The fix preserves the existing safety/motor
+failure list and inspects those flags only on safe reports; it does not loosen
+any numerical gate, rewrite a report or repeat simulation. A regression test
+now exercises a safety report with the flags absent. The closeout service's
+runtime-failure decision remains immutable and is not presented as success.
+
+Closeout evidence:4payload files,1,725,615bytes plus manifest, mirrored to
+`artifacts/diagnostics/f1l-lateral-s467-evaluation-closeout-v1` locally and
+verified by hash. The original run remains separate and unchanged.
+
+- Closeout manifest SHA256: `6212bd8d80d9fc4749ac681830f8c1c2e183b9200a212419458635c14d1a86fb`.
+- Closeout runtime-decision SHA256: `6292ee090a66d35f318d9fde58d5aaff9319f8f8d29d681d389a1215e79d78a9`.
+- Treatment467 report SHA256: `3761e3239f410c8d311ad1bbe7534789b524769e9c89540c19ff33ae5aba797d`.
+
+### Descriptive first-pair result from the retained data
+
+| Settled metric | Matched control | Lateral penalty |
+| --- | ---: | ---: |
+| Body-forward mean (m/s) | 0.274032 | 0.273867 |
+| Route-forward mean (m/s) | 0.273372 | 0.272809 |
+| Absolute cross-route speed (m/s) | 0.073549 | 0.062914 |
+| Worst absolute heading (rad) | 0.161791 | 0.149291 |
+| Pooled torque-utilization p99 | 0.552639 | 0.600343 |
+| Mean squared utilization proxy | 0.0397375 | 0.0457654 |
+| Mean absolute mechanical power (W per actuator sample) | 0.138296 | 0.164584 |
+| Stable route-speed response within deadline | 2/8 | 2/8 |
+
+The treatment reduced absolute lateral speed by about14.5%, but every
+environment remained above the0.05m/s limit (0.059003–0.069088). Speed and
+stable-window recovery did not materially improve. Pooled torque rose about8.6%;
+the treatment also exceeded the absolute0.60 gate in both all-sample
+(0.601859) and settled(0.600343) windows. Mechanical power rose about19.0% and
+squared load about15.2%. Multiple named-joint nonregression gates failed against
+both parent and control. The small absolute-threshold excess is not rounded
+away, and the substantially worse load/power tails are not hidden by it.
+
+Thus the stored case is a **numerical rejection**, not an accepted gait or an
+obstacle/stability/hop improvement. The additional479/487 treatment/control
+cases remain unexecuted, consistent with first-pair stopping. Keep both trained
+checkpoints as research assets; do not replace a retained skill with this one.
+
+### CPU-only reproducible reconciliation
+
+`python -m mjlab_microduck.foundation_lateral_reconcile --source <exact SHA>`
+requires `CUDA_VISIBLE_DEVICES=''`, verifies both original manifests and the
+exact report hash, then reruns the unchanged numerical comparison with the
+safe-report flag bug corrected. Output is a new
+`artifacts/experiments/f1l-lateral-s467-cpu-reconciliation-v1` directory; neither
+failed service's evidence is overwritten. It executes zero simulation steps
+and zero optimizer updates. Tests explicitly forbid training/simulation calls,
+check immutable evidence refusal, and reject output reuse.
+
+Local post-fix regression: **715 passed**,13.07s, no skips, same two existing
+warnings. The next learning proposal must address the observed motor-load
+tradeoff before broader obstacle work; no further training or GPU attempt is
+part of this reconciliation. Hopping and integrated stabilization remain gated.

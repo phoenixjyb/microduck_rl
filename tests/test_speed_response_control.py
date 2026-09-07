@@ -125,7 +125,8 @@ def test_real_task_config_has_no_obstacle_and_pins_body_commands():
 
 @pytest.mark.parametrize("retain_route_trace", [False, True])
 @pytest.mark.parametrize("adapt_commands", [False, True])
-def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(monkeypatch, retain_route_trace, adapt_commands):
+@pytest.mark.parametrize("retain_motor_trace", [False, True])
+def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(monkeypatch, retain_route_trace, adapt_commands, retain_motor_trace):
     import mjlab.envs
     import mjlab.rl
     import mjlab.tasks.registry
@@ -188,12 +189,20 @@ def test_control_loop_stops_on_startup_terminal_before_reset_state_can_enter(mon
         MotorStepStream(8, control.JOINTS, tuple(range(14)), device="cpu", cost_cfg=control.MotorStepCostCfg()))
     monkeypatch.setattr(control, "sha256", lambda _: control.ACTOR_SHA256)
     report = control.run_control(device="cpu", retain_route_trace=retain_route_trace,
-                                 command_adapter=Adapter() if adapt_commands else None)
+                                 command_adapter=Adapter() if adapt_commands else None,
+                                 retain_motor_trace=retain_motor_trace)
     assert env.steps == 3 and env.closed
     assert report["sample_steps"] == 3 and report["terminal_steps"] == [2]
     assert report["groups"]["all"]["body_forward_mean"] == pytest.approx(.1)
     assert "settled" not in report["groups"] and report["classification"] == "safety-or-coverage-stop"
     assert report["motor_stream"]["trainer_integration_validated"] is False
+    if retain_motor_trace:
+        from mjlab_microduck.motor_trace_audit import audit_motor_trace
+        assert torch.tensor(report["motor_trace"]["force_nm"]).shape == (3, 8, 14)
+        assert torch.allclose(torch.tensor(report["motor_trace"]["force_nm"]), torch.full((3, 8, 14), .1))
+        assert audit_motor_trace(report)["decision"] == "incomplete-or-unsafe-no-timing-diagnosis"
+    else:
+        assert "motor_trace" not in report
     if adapt_commands:
         trace = report["command_trace"]
         assert trace["inference_and_simulation_steps"] == 3

@@ -154,7 +154,7 @@ def route_position_rows(position, origin, route):
 
 
 def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOCOL,
-                retain_route_trace=False, command_adapter=None):
+                retain_route_trace=False, command_adapter=None, retain_motor_trace=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
@@ -224,6 +224,12 @@ def run_control(*, device="cuda:0", checkpoint=ACTOR, seed=SEED, protocol=PROTOC
                            command_targets=torch.stack(issued_rows) if issued_rows else None)
         report.update(task=TASK, checkpoint_sha256=sha256(checkpoint), motor_stream=stream.provenance(),
                       actor_observation_shape=list(observations["actor"].shape))
+        if retain_motor_trace:
+            # Serialize the same already-collected samples AFTER the rollout.
+            # No new callback, force query, physics step or actor input.
+            from mjlab_microduck.motor_trace_audit import pack_motor_trace
+            report["motor_trace"] = pack_motor_trace(torch.stack(data["pre_force"]),
+                                                      torch.stack(data["pre_speed"]))
         if retain_route_trace:
             p, v = torch.stack(positions).double(), torch.stack(data["velocities"]).double()
             report["route_trace"] = dict(protocol="initial-route-pre-control-v1",

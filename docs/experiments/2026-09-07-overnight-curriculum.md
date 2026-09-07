@@ -95,3 +95,7 @@ gate or claim of completed hopping is authorized by this work window.
   aggregate motor quantiles cannot establish the timing of the regressions.
   Do not spend paired pilot2 until this evidence is closed and a single-axis
   hypothesis is justified. Higher curriculum stages and hopping remain gated.
+  Protocol and refusal rules are in
+  [F1-M motor timing](2026-09-07-f1m-motor-timing.md); output
+  `artifacts/experiments/f1m-motor-timing-s503-v1`,600second service cap,
+  parent/control/motor seed503 only, zero optimizer updates.

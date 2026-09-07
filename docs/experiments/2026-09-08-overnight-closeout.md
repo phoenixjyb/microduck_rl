@@ -78,3 +78,11 @@ Preparation validation: the inventory's three totals reconcile exactly and its
 inspection verified the four-row/four-column pilot table and all four links.
 No screenshot-based UI check was performed. Local lifecycle/regression checks
 passed1217 tests; this is source/evidence validation, not new policy evaluation.
+
+Cross-host source verification: commit `24864da3e1a248efd3083545fa46d5e2c728a1a3`
+was pushed to the exact feature branch and fast-forwarded onto a clean100.100
+worktree. With CUDA hidden, the focused freshness/lifecycle, obstacle-observation,
+hierarchical-obstacle and retention-plan suite passed155 tests in5.74s there.
+The preceding live check found no running Duck unit or compute process, GPU0%
+at45C/12MiB, and both protected SYSTEM services inactive. These remain
+pre-deadline observations; they do not complete the final boundary checklist.

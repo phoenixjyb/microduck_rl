@@ -63,10 +63,10 @@ class HeadingHold:
                                            protocol=DELIVERY, step=step)
 
 
-def validate_controller_trace(report, enabled):
+def validate_controller_trace(report, enabled, *, protocol=PROTOCOL, seeds=SEEDS, checkpoint_sha=MODEL_SHA):
     canonical(report)
-    require(report["protocol"] == PROTOCOL and report["seed"] in SEEDS
-            and report["checkpoint_sha256"] == MODEL_SHA, "frozen heading diagnostic identity")
+    require(report["protocol"] == protocol and report["seed"] in seeds
+            and report["checkpoint_sha256"] == checkpoint_sha, "frozen heading diagnostic identity")
     controller = HeadingHold(enabled)
     require(report["command_adapter"] == controller.provenance(), "exact controller constants")
     audit_trace(report)

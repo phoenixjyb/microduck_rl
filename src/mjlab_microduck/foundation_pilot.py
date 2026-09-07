@@ -52,16 +52,18 @@ def prepare_config(mode):
     return cfg, agent
 
 
-def restore_parent(runner, path):
+def restore_parent(runner, path, *, parent_iteration=7998, parent_step=PARENT_STEP):
     """Resume ALL learned state, advance update label once, retain saved env time."""
     runner.load(str(path), strict=True, map_location=runner.device)
-    require(runner.current_learning_iteration == 7998, "parent update identity")
-    require(runner.env.unwrapped.common_step_counter == PARENT_STEP, "parent curriculum time")
+    require(type(parent_iteration) is int and parent_iteration >= 0
+            and type(parent_step) is int and parent_step >= 0, "explicit parent time")
+    require(runner.current_learning_iteration == parent_iteration, "parent update identity")
+    require(runner.env.unwrapped.common_step_counter == parent_step, "parent curriculum time")
     rates = {g["lr"] for g in runner.alg.optimizer.param_groups}
     require(len(rates) == 1 and all(math.isfinite(x) and x > 0 for x in rates), "restored optimizer rate")
     # PPO's Python learning_rate is not serialized; synchronize it with restored Adam.
     runner.alg.learning_rate = next(iter(rates))
-    runner.current_learning_iteration = START_ITERATION
+    runner.current_learning_iteration = parent_iteration+1
 
 
 def training_failures(row):
@@ -89,7 +91,8 @@ def runtime_identity():
 
 
 def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
-          stop_at=TRAIN_STOP, max_seconds=None):
+          stop_at=TRAIN_STOP, max_seconds=None, parent=ACTOR,
+          parent_iteration=7998, parent_step=PARENT_STEP):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
     from mjlab.utils.os import dump_yaml
@@ -118,14 +121,15 @@ def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
     try:
         # The wrapper performs the first reset. Apply the parent's completed
         # domain curricula there, rather than one episode later after load().
-        env.common_step_counter = PARENT_STEP
+        env.common_step_counter = parent_step
         wrapped = RslRlVecEnvWrapper(env, clip_actions=agent.clip_actions)
         runner = DurableRunner(wrapped, asdict(agent), str(output), "cuda:0")
-        restore_parent(runner, ACTOR)
+        restore_parent(runner, parent, parent_iteration=parent_iteration, parent_step=parent_step)
         for model in (runner.alg.actor, runner.alg.critic):
             for parameter in model.parameters(): parameter.register_hook(finite_gradient)
-        # Observe unsanitized manager output before the repository's existing NaN patch.
-        # Finite runs are identical; a masked nonfinite value must not look healthy.
+        # Check manager output before the repository wrapper. Installed manager
+        # code can still sanitize individual terms; new terms must reject raw
+        # corruption inside their callable (see lateral_cost), before that point.
         from mjlab_microduck.tasks import mdp
         def checked_rewards(dt):
             result = mdp._orig_reward_compute(env.reward_manager, dt)
@@ -202,11 +206,11 @@ def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
 
         wrapped.step, runner.alg.update = guarded_step, guarded_update
         runner.learn(agent.max_iterations, init_at_random_ep_len=True)
-        final = output / f"model_{START_ITERATION+agent.max_iterations-1}.pt"
+        final = output / f"model_{parent_iteration+agent.max_iterations}.pt"
         require(final.is_file() and updates == agent.max_iterations, "complete bounded update count")
         return dict(status="training-complete-not-accepted", updates=updates,
             final_checkpoint=str(final), final_sha256=sha256(final),
-            common_step=env.common_step_counter, parent_step=PARENT_STEP,
+            common_step=env.common_step_counter, parent_step=parent_step,
             wall_seconds=time.monotonic()-started, motor_stream=stream.provenance())
     finally:
         env.close()

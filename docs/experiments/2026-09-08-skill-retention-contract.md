@@ -67,7 +67,13 @@ Local validation:60 focused synthetic tests passed; the foundation, command,
 motor, obstacle-supervisor and retention regression set passed950 tests with
 three existing actuator/site warnings. `git diff --check` passed. Ruff is not
 installed in the frozen local environment; no dependency was installed to run
-it. Remote CPU validation remains a separate source-delivery check.
+it. Implementation/evidence commit
+`7401415190f2e928caa65dd7ee769b35364812c5` was pushed to the fork. After
+confirming a clean exact branch, no running Duck service/compute PID and both
+protected SYSTEM services inactive,100.100 fast-forwarded to that exact commit.
+Its CPU-only compatibility/yaw/migration/inference regression passed113 tests
+in8.47s; the remote worktree remained clean. This verifies source delivery and
+CPU checks, not any live policy switch or behavioral retention.
 
 ## Remaining bounded CPU slices
 

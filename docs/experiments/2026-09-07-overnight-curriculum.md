@@ -143,3 +143,9 @@ gate or claim of completed hopping is authorized by this work window.
   startup-hash document; fresh recording data needs a separate predeclaration
   and launch gate. Original rejection, numerical thresholds and pilot2 gate
   remain unchanged. Paired pilots used this window:1/3.
+- CPU descriptive contract implemented in `motor_measurement_contract.py`;
+  [scope and six-case predeclaration](2026-09-07-f1m-descriptive-motor.md).
+  It reconstructs each new rollout's raw motor/route/command evidence and
+  reports all repeat ranges without causal or acceptance claims. Fresh data
+  require a tested pushed `foundation_motor_replicates` runner; no collection
+  has started merely because the CPU contract exists. Pilot usage remains1/3.

@@ -1,6 +1,6 @@
 # Bounded MicroDuck work through September8 07:00 Shanghai
 
-Latest CPU handoff (September8 around05:25 Shanghai): all3/3 paired pilots are
+Latest CPU handoff (September8 around05:55 Shanghai): all3/3 paired pilots are
 closed; no further GPU work this window. The retention-plan checker covers
 four skills, all12 directed requests and16 interruption/history/sensor cases;
 its72 unbound slots remain explicit. The selected H1-T checkpoint/config/report
@@ -13,10 +13,13 @@ failure reproduces on CPU. No capped/far case or stop/stance validation is
 implied. The [curriculum readiness matrix](2026-09-08-curriculum-readiness.md)
 now separates demonstrated behavior, rejection and missing acceptance. It also
 records the validity-versus-freshness gap without changing the frozen packet
-or controller. Next bounded CPU work: specify a non-wired external freshness
-envelope and its per-phase test cases; do not invent an operational age limit,
-expand actor observations, or launch a new behavior rollout. The07:00 deadline
-and protected-service rules below are unchanged.
+or controller. A [non-wired freshness metadata contract](2026-09-08-external-freshness-contract.md)
+and synthetic CPU tests now distinguish age, replay, invalid estimates and
+per-phase evidence obligations. No operational age limit, receiver wiring,
+actor-observation change or motion command is selected. Next bounded CPU work:
+review receiver lifecycle/adversarial cases and prepare final evidence closeout;
+no new behavior rollout. The07:00 deadline and protected-service rules below
+are unchanged.
 
 User request: continue the next training round and plan the curriculum well,
 working until07:00. Window ends **2026-09-07T23:00:00Z**. This is a bounded

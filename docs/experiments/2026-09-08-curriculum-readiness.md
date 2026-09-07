@@ -111,6 +111,11 @@ Define clock/age bounds, per-phase response and reacquisition semantics in a
 separate tested contract before integration; no numeric age limit is selected
 here. Closing this source-design gap still would not prove closed-loop safety.
 
+The subsequent [non-wired freshness contract](2026-09-08-external-freshness-contract.md)
+specifies metadata, replay/age checks and per-phase test obligations. Its CPU
+prototype selects no operational age limits and returns no motion command.
+It is not receiver integration or acceptance evidence for this readiness table.
+
 ## Retained evidence and immediate handoff
 
 - [F1-Y closed pilot](2026-09-08-f1y-command-support.md): numerical stop at the

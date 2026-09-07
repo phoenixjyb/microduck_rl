@@ -111,3 +111,11 @@ gate or claim of completed hopping is authorized by this work window.
   parent503 measurement control. No timing-directory retry, gate relaxation,
   third ON case or paired pilot2 before that measurement-validity issue is
   resolved. Continue bounded CPU evidence/retention work in the meantime.
+- Read-only seed/backend inspection completed: mjlab seeds the configured
+  generators but warns MuJoCo Warp is not fully deterministic; process-start
+  Python hash seeding and complete historical backend fingerprints were not
+  established. The separately predeclared next control is
+  [same-source OFF/OFF parent503](2026-09-07-f1m-replay-control.md), module
+  `mjlab_microduck.foundation_replay_control`, output
+  `artifacts/experiments/f1m-replay-off-off-s503-v1`, exactly two sequential
+  evaluation cases,420second cap, no backend changes and no optimizer updates.

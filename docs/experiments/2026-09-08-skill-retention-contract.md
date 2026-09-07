@@ -208,3 +208,35 @@ verify the same source on100.100 and retain its independent CPU reconstruction.
 Compare source/assets/config/mapping identities exactly; retain any compiled
 numeric differences descriptively, without a tolerance-based policy pass or
 another GPU experiment.
+
+### Independent100.100 reconstruction
+
+Source `d9eb4f70ddb86f4cbdf3cb49b77d6bc7e8cf83c3` was pushed and
+fast-forwarded only after a clean exact branch, no Duck process/GPU workload
+and inactive protected SYSTEM services were verified. Remote focused182 tests
+passed in9.28s with one existing actuator/site warning. The independent Linux
+report is91,870 bytes, SHA256
+`59b801970e97036c1bf66be345ac46855ab8f6b71c2dd532c0e383f13e4fd1eb`.
+It is retained at the same audit-relative path on100.100 and mirrored without
+overwrite as `artifacts/audits/f1y-robot-only-cpu-reconstruction-v1-linux.json`
+on the Mac. GPU remained idle0%,45C,12MiB.
+
+Read-only exact recursive comparison found **11 differing scalar leaves**,
+all in `reconstructed_robot.arrays.body_inertia`. Every other field matches
+exactly, including136 source identities,227 dependency hashes, package
+versions, configuration-match evidence, dimensions, names, indices, timing
+and the other selected compiled arrays. Inertia differences are at indices
+`[1,1]`, `[1,2]`, `[3,0]`, `[3,2]`, `[4,0]`, `[6,1]`, `[10,0]`, `[10,2]`,
+`[12,0]`, `[12,2]`, `[13,0]`. Maximum absolute difference is
+`1.0842021724855044e-19` at `[10,0]`: Mac
+`0.0003210675976941665`, Linux `0.0003210675976941666`.
+
+This is descriptive cross-host compiler output, not a tolerance-based pass,
+established cause of the earlier rollout divergence, bit-exact compilation
+claim or historical-training-model equivalence. Neither report is normalized
+or overwritten to hide the differences. Both remain outside skill admission.
+
+Next bounded CPU slice: resolve the reconstructed policy action pipeline
+(ordered targets, scale/default offsets and reset behavior) with synthetic
+CPU state and the actual installed manager, while keeping that evidence
+separate from the historical randomized actuator state and behavioral gates.

@@ -389,3 +389,76 @@ focused207 tests passed in6.09s with14 existing actuator/site warnings. Its
 independently generated9847-byte report matches the Mac SHA256 exactly. GPU
 remained0%,45C,12MiB, both protected SYSTEM services inactive and the worktree
 clean. No controller, actuator, GPU rollout or training service was launched.
+
+## Slice4: retained H1-T evidence and original protocol inventory
+
+`retained_hop_inventory.py` audits a selected11-file set: H1-T5999 checkpoint,
+saved environment/agent YAML, all six historical evaluation JSONs, paired
+H1-P5999 JSON and original H1-T/H1-P comparison. The checkpoint and eight
+decision/report hashes match the September5 ledger. The two YAML hashes are
+new quiescent inventory observations, not independent historical provenance.
+No checkpoint is deserialized and no YAML object is constructed in this audit.
+
+The tracked inventory is `2026-09-08-h1t-retained-inventory.json`, SHA256
+`dc2d351c73e1b16c2b75d3ff2a76a04dea8e66d8748986ec0c14510b5b65a4cb`.
+All11 selected payloads,4,967,886bytes, are mirrored on the Mac under
+`artifacts/retained/h1t-seed67-v1/`, preserving their original repo-relative
+paths. Remote originals are unchanged. This is not a complete training or
+evaluation-directory backup: intermediate checkpoints, baseline checkpoint
+bytes, CSVs and raw rollout samples are outside this selected inventory.
+
+Before importing the old CPU summary reducers, the audit verifies current bytes
+of `hop_evaluation.py`, `hop_revision_gate.py` and
+`scripts/evaluate_hop_checkpoint.py` against Git blobs at
+`aa48f178cc9cb5791ee95e520cf6ef9fc14b2456`. It does not execute the rollout
+script. The original seeds211/223/227,128 environments and six cycles remain
+unchanged. All six full H1 summary decisions reproduce as rejected. The paired
+final causal decision reproduces as `stop`, including every metric, criterion,
+status, report hash and checkpoint identity. Only the two reader-local report
+locations are normalized to relative paths for cross-host comparison; original
+stored host paths are checked first and no checkpoint metadata is normalized.
+
+At5999, the original full H1 failure set is:
+
+| Gate | Retained observation | Original full H1 criterion |
+| --- | ---: | --- |
+| Minimum episode pass fraction | 0 | At least0.80 |
+| Total falls | 4 | Zero |
+| Maximum per-seed drift p95 | 0.476065069437027m | At most0.10m |
+| Maximum rated-speed exposure | 0.005710565485060215 | Zero |
+| Maximum near-stall fraction | 0.0030487352050840855 | At most0.0025 |
+
+The separate causal revision gate still fails episode pass above zero, drift
+below0.30m and rated-speed non-regression. Its looser drift diagnostic must not
+replace full H1 acceptance. Likewise the old sprung H1 torque ceiling0.90 is
+not the rigid foundation ceiling0.60: do not pool those mechanics or import
+the looser limit into an integrated controller. The measured99.35% minimum
+cycle success is evidence of hopping events, not an accepted hopping skill.
+
+Output `artifacts/audits/h1t-retained-summary-inventory-v1.json`,26,182bytes,
+SHA256 `5a1cbe0dff6fc8e644d230ef2fe0cd6c2d785a31de9f512a797d1bd67666ea7a`.
+It keeps `descriptor=null`, identifies the declared sprung-K3900 group and
+leaves effective mechanics, raw rollout reconstruction, historical config
+identity, behavioral retention and every admission/transition/training/motion
+flag false. The earlier72-slot retention plan is not filled with this rejection
+inventory: a historical summary audit is not a composed-controller retention
+report or a complete descriptor.
+
+Reproduce using the Mac mirror as `--root`, or the remote repository as `--root`:
+
+```bash
+CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1 .venv/bin/python -m mjlab_microduck.retained_hop_inventory \
+  --root artifacts/retained/h1t-seed67-v1 --repo . \
+  --output artifacts/audits/h1t-retained-summary-inventory-v1.json
+```
+
+No H1/Locked/H2, video, new GPU run or policy switching is authorized. Next
+bounded CPU slice: inventory the historical obstacle/stop-recovery protocols
+and retained terminal decisions, keeping prerequisite failures separate from
+skill acceptance and preserving the frozen low-level actor identity.
+
+Local validation:23 new inventory tests,32 combined hop/inventory tests and1129
+regression tests passed in42.69s with17 occurrences of the existing actuator/
+site warning. Tests cover all11 payload tampering cases, manifest replacement,
+exact non-path causal comparison, retained rejection and refusal to deserialize
+checkpoints. `git diff --check` passed. No new raw rollout samples were collected.

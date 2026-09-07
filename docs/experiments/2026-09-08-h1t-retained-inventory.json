@@ -1,0 +1,81 @@
+{
+  "historical_protocol_source": "aa48f178cc9cb5791ee95e520cf6ef9fc14b2456",
+  "payloads": {
+    "artifacts/evaluations/h1p-k3900-e7b15bb-s67-diagnostic/iteration-5999/hop-checkpoint-evaluation.json": {
+      "bytes": 8216,
+      "path": "artifacts/evaluations/h1p-k3900-e7b15bb-s67-diagnostic/iteration-5999/hop-checkpoint-evaluation.json",
+      "sha256": "99907a27954ba31b2d39fcdf427e0c947b4f1ddbb9b9dc82096ff92f411494c3"
+    },
+    "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/h1t-vs-h1p-causal-gate.json": {
+      "bytes": 4331,
+      "path": "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/h1t-vs-h1p-causal-gate.json",
+      "sha256": "2e8731a7e1fb552f7badbd46b082cee75f10e3412341f9c17d7db55e5fcb5ef8"
+    },
+    "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-1000/hop-checkpoint-evaluation.json": {
+      "bytes": 8150,
+      "path": "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-1000/hop-checkpoint-evaluation.json",
+      "sha256": "582ed7fc660249f7948f71c0dadcf02e7334ba3603fc44e95300ee1ddabedca9"
+    },
+    "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-2000/hop-checkpoint-evaluation.json": {
+      "bytes": 8212,
+      "path": "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-2000/hop-checkpoint-evaluation.json",
+      "sha256": "ac9a4086902c5f375e7f9ca266f4084f6ffb42bffadb05e22745168e44a97a3f"
+    },
+    "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-3000/hop-checkpoint-evaluation.json": {
+      "bytes": 8206,
+      "path": "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-3000/hop-checkpoint-evaluation.json",
+      "sha256": "0d2798143d80b1dbcfbbb31746e3356764fad4a6ca32e492fa8cabc3c025930d"
+    },
+    "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-4000/hop-checkpoint-evaluation.json": {
+      "bytes": 8199,
+      "path": "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-4000/hop-checkpoint-evaluation.json",
+      "sha256": "4564a4e98f532481a1e23a1238727c8b17244ddbce1ec3ae8b3997d0e37526f2"
+    },
+    "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-500/hop-checkpoint-evaluation.json": {
+      "bytes": 8088,
+      "path": "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-500/hop-checkpoint-evaluation.json",
+      "sha256": "adf5a64612bbd76c3d5e12070d52fa2a4c85f39e0508a50b243bbf30c92b517b"
+    },
+    "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-5999/hop-checkpoint-evaluation.json": {
+      "bytes": 8188,
+      "path": "artifacts/evaluations/h1t-k3900-117c881-s67-diagnostic/iteration-5999/hop-checkpoint-evaluation.json",
+      "sha256": "867e1c9c1b4ba4d4a1385bd72a4ef8cdf9ff60120f70a3077e6e1b89c8ac91be"
+    },
+    "logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-47-06_h1t-k3900-117c881-s67-6000x256/model_5999.pt": {
+      "bytes": 4843445,
+      "path": "logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-47-06_h1t-k3900-117c881-s67-6000x256/model_5999.pt",
+      "sha256": "454bd7db3da50896c2b00cebd72ea7eecf1fee3e9802a6ee03693e8fa858040a"
+    },
+    "logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-47-06_h1t-k3900-117c881-s67-6000x256/params/agent.yaml": {
+      "bytes": 1345,
+      "path": "logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-47-06_h1t-k3900-117c881-s67-6000x256/params/agent.yaml",
+      "sha256": "be58c10d28cc2387758d7ea9812060737dce13ba59f5e4c6943dcf21d6a4a2d5"
+    },
+    "logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-47-06_h1t-k3900-117c881-s67-6000x256/params/env.yaml": {
+      "bytes": 61506,
+      "path": "logs/rsl_rl/hop_k3900_h1t/2026-09-05_15-47-06_h1t-k3900-117c881-s67-6000x256/params/env.yaml",
+      "sha256": "b4ddbe82ffa3ac026ad92a3e54fdd0aad2f57f09614f8b9fe44bad1ca07329f3"
+    }
+  },
+  "protocol_sources": {
+    "scripts/evaluate_hop_checkpoint.py": {
+      "bytes": 12824,
+      "git_blob": "ae62e6c2a09fe0a010232339486b7edd570e74f4",
+      "path": "scripts/evaluate_hop_checkpoint.py",
+      "sha256": "edf66e93f2ce3030e68534be1adf76349f7276e4c80650c3ccd7c47d55beff45"
+    },
+    "src/mjlab_microduck/hop_evaluation.py": {
+      "bytes": 12976,
+      "git_blob": "d58b413476215774bf9b89a98e5d42d788bbf242",
+      "path": "src/mjlab_microduck/hop_evaluation.py",
+      "sha256": "30d532b296487769cd5e53e3cc0f008d7969234dedb5ae7df39961db52895649"
+    },
+    "src/mjlab_microduck/hop_revision_gate.py": {
+      "bytes": 8298,
+      "git_blob": "0e2d44be142b482fdd114625c402ac4201abcfeb",
+      "path": "src/mjlab_microduck/hop_revision_gate.py",
+      "sha256": "b6d00739903311c4e00e28b309c6fb5bd3f1080bab7fec8cc83b8022d4c219fa"
+    }
+  },
+  "schema": "retained-hop-inventory-v1"
+}

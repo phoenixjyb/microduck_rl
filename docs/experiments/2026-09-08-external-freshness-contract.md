@@ -123,3 +123,9 @@ occurrences of the existing actuator/site warning. `git diff --check` passed.
 Programmatic Markdown-to-HTML verification confirmed two tables (10 and7 rows,
 two cells each) and both links resolve. No screenshot-based UI check was made.
 A source search found no production importer of the new module.
+
+Source `bf56a065896d80afb4969f7ef8d256265f1159df` was pushed and fast-forwarded
+on100.100 after exact clean-source, idle-GPU/no-running-Duck and inactive-
+protected-service checks. The same138 focused CPU tests passed there in5.69s.
+GPU remained0%,45C,12MiB with no compute PID; both protected SYSTEM services
+remained inactive and the worktree clean. No receiver or policy was deployed.

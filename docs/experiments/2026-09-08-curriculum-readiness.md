@@ -143,7 +143,8 @@ window and fully predeclared experiment.
 Validation:136 focused CPU tests passed locally, covering the existing obstacle
 packet/phase behavior, retention-plan checker and retained H1/recovery audits.
 The Markdown was rendered to HTML: the readiness table has seven rows with
-four cells each, and all eight document/source links resolve. This was a
+four cells each, and all nine document/source links resolve after adding the
+freshness-contract link. This was a
 programmatic render/content check, not a screenshot-based UI inspection.
 No historical evaluator, controller, packet layout, test threshold or policy
 artifact was changed by this documentation slice.

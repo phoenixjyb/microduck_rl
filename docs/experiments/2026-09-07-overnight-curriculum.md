@@ -193,3 +193,9 @@ gate or claim of completed hopping is authorized by this work window.
   It is not launched; only after its actual-command/actor delivery tests and
   all operational gates may it consume final slot3. Keep all reward settings
   at F1-N control, all old numerical gates, and all closed rejected evidence.
+- F1-Y implementation is ready for remote verification, not launched. Local
+  regression890 passed; actual upstream sampler/observation-manager CPU tests
+  verify both yaw signs reach the actor and commands change only at resets.
+  The observer is read-only and all historical fixed-command callers retain
+  their defaults. Next: remote tests, frozen sampler/PPO/history hashes and
+  idle exact-source checks, then the single capped slot3 campaign if all pass.

@@ -1,6 +1,6 @@
 # F1-Y: predeclared continuation yaw-command support
 
-Status: **predeclared only; not implemented or launched**. Two of three paired
+Status: **implemented and locally tested; not launched**. Two of three paired
 pilot slots have been consumed. This is the final possible pilot this window;
 do not launch it simply because time remains or rerun a failed service.
 
@@ -84,3 +84,31 @@ Entire cap plus90s must fit before September8 07:00 Shanghai; no GPU launch
 after06:00. Preserve100.98/FilmBrain and unrelated workloads. After this slot,
 continue CPU evidence and curriculum/retention work only. No harder obstacles,
 H2, MP4, raw perception, physical motion or claim of accepted hopping.
+
+## Implementation gate evidence
+
+`foundation_yaw_experiment.py` retains the F1-N campaign's fixed sequence,
+same-parent restoration, full checkpoint/counter validation and original
+numerical gates, with the single command-range contrast above. It also pins
+the inspected upstream uniform sampler and PPO implementation and verifies
+the complete closed F1-N manifest before each child. Historical runners and
+closed evidence are not rewritten or rerun.
+
+The optional `YawCommandObserver` validates live sampler modes/ranges and
+reward weights, compares raw actor input against the current sampled command
+before PPO acts, checks the original PPO transition afterward, then verifies
+physics entry uses that same command. It does not refresh observations,
+sample commands/noise, change actions or alter RNG state. After a step, it
+requires commands to remain identical in every non-reset environment. Each
+24-step window retains actual yaw min/max/sign counts and reset counts in
+`command-activity.jsonl`, with exact aggregate reconciliation before evaluation.
+Both signs must actually reach the treatment actor; control must remain zero.
+
+Local regression890 passed,3 existing actuator/site warnings. Focused tests
+exercise the original command sampler and installed observation manager on
+CPU (synthetic sensor data, no physics), including episode reset sampling,
+same-step actor/transition delivery, unchanged default fixed-command guard,
+one-sided/stale/misconfigured input rejection, and first-failure sequencing.
+The actual GPU smoke remains a separate gate. Remote CPU tests, pinned
+runtime/history, pushed clean exact source and idle-host checks are still
+required before the one authorized slot3 launch.

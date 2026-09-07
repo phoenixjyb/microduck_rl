@@ -101,9 +101,26 @@ def checked_reward_compute(env, step_dt, observer=None):
     return result
 
 
+def checked_training_act(algorithm, env, observations, original_act, validator):
+    validator.before_actor(env, observations)
+    actions = original_act(observations)
+    validator.after_actor(env, algorithm.transition.observations, actions)
+    return actions
+
+
+def check_training_command(env, validator=None):
+    command = env.command_manager.get_command("twist")
+    if validator is not None:
+        validator.before_step(env, command)
+    else:
+        require(bool(torch.allclose(command, command.new_tensor([.3, 0., 0.]).expand_as(command),
+                                    atol=1e-6, rtol=0)), "fixed training command")
+
+
 def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
           stop_at=TRAIN_STOP, max_seconds=None, parent=ACTOR,
-          parent_iteration=7998, parent_step=PARENT_STEP, reward_observer=None):
+          parent_iteration=7998, parent_step=PARENT_STEP, reward_observer=None,
+          command_validator=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
     from mjlab.utils.os import dump_yaml
@@ -152,6 +169,11 @@ def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
         runner.alg.compute_returns = checked_returns
         require(wrapped.get_observations()["actor"].shape == (NUM_ENVS, 61), "61D actor retained")
         runner.save(str(output / "initial.pt"), dict(protocol=protocol, before_updates=True))
+        if command_validator is not None:
+            original_act = runner.alg.act
+            def checked_act(observations):
+                return checked_training_act(runner.alg, env, observations, original_act, command_validator)
+            runner.alg.act = checked_act
         stream = MotorStepStream.from_robot(env.scene["robot"], NUM_ENVS, device=env.device,
                                           cost_cfg=MotorStepCostCfg())
         env._microduck_motor_step_stream = stream
@@ -165,12 +187,12 @@ def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
             require(dt.datetime.now(dt.timezone.utc) < stop_at, "training closeout deadline")
             require(time.monotonic()-started < seconds-30, "bounded training runtime")
             require(bool(torch.isfinite(actions).all()), "finite actions before step")
-            command = env.command_manager.get_command("twist")
-            require(bool(torch.allclose(command, command.new_tensor([.3, 0., 0.]).expand_as(command),
-                                        atol=1e-6, rtol=0)), "fixed training command")
+            check_training_command(env, command_validator)
             stream.begin(stream.next_step, phase)
             result = original_step(actions)
             obs, rewards, dones, _ = result
+            if command_validator is not None:
+                command_validator.after_step(env, dones.bool())
             sample = stream.consume(dones.bool())
             require(bool(torch.isfinite(rewards).all()) and all(bool(torch.isfinite(x).all())
                     for x in obs.values()), "finite returned training tensors")
@@ -222,6 +244,8 @@ def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
             wall_seconds=time.monotonic()-started, motor_stream=stream.provenance())
         if reward_observer is not None:
             result["reward_observer"] = reward_observer.finish(updates*agent.num_steps_per_env)
+        if command_validator is not None:
+            result["command_validator"] = command_validator.finish(updates*agent.num_steps_per_env)
         return result
     finally:
         env.close()

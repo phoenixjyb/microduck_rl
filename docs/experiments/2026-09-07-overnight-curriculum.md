@@ -175,3 +175,8 @@ gate or claim of completed hopping is authorized by this work window.
   Implement/test/push the new `foundation_neck_experiment` runner before any
   launch; consume pilot slot2 on launch and keep one GPU workload at a time.
   No claim that head smoothing will fix knee/speed/balance failures.
+- F1-N implementation complete; local CPU regression850 passed. Read-only live
+  reward evidence, fixed checkpoint cadence/counters, child-start hash seeds and
+  first-failure immutable closeout are tested. Still not launched; next verify
+  remote CPU/runtime/source and idle gates, then run slot2 once. Preserve every
+  closed rejection and do not promote any skill from implementation tests.

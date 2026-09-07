@@ -1,6 +1,6 @@
 # F1-N: predeclared matched neck-action smoothing pilot
 
-Status: predeclared, **not implemented or launched**. This reserves the second
+Status: implemented and locally tested, **not launched**. This reserves the second
 paired-pilot slot of the current window; a launch consumes that slot even if
 it stops early. Current launched paired experiments:1/3.
 
@@ -106,3 +106,22 @@ because time remains; it needs evidence and a separate predeclaration. Even a
 successful second pilot plus one independent confirmation would not supply
 the required three independent training seeds for final promotion tonight.
 No physical motion, raw perception, H2, video or harder obstacle training.
+
+## Implementation gate evidence
+
+`foundation_neck_experiment.py` implements the fixed sequence and immutable
+manifest, with child-start hash seeds and matched backend fingerprints.
+`neck_reward_observer.py` reads the original action cache before compute and
+checks the reward manager's consumed weighted value afterward. It changes no
+action, cache, reset, reward function, or RNG state. It retains every24-step
+window, checks live neck/motor/lateral weights, and requires aggregate nonzero
+activity. Consumed-buffer arithmetic uses1e-6 tensor reconstruction precision,
+not a relaxed performance threshold. The inspected installed reward-manager
+file is pinned by SHA256 before launch. Checkpoint cadence, saved environment
+counters and finite actor/critic/optimizer tensors are verified before evaluation.
+
+Local CPU regression:850 passed,3 existing actuator/site mapping warnings.
+Tests cover the single config axis, original cache/mapping, consumed reward,
+fixed checkpoint/counter corruption, child hash/caps, first-failure stop,
+immutable manifests and original motor/speed/route gates. Remote frozen-runtime,
+CPU tests and clean idle launch gates remain separate requirements.

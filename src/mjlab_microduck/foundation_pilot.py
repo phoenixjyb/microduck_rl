@@ -90,9 +90,20 @@ def runtime_identity():
     return dict(versions=versions, dependencies=dependencies)
 
 
+def checked_reward_compute(env, step_dt, observer=None):
+    """Optional read-only observer around the unchanged raw reward compute."""
+    from mjlab_microduck.tasks import mdp
+    if observer is not None: observer.before_reward(env)
+    result = mdp._orig_reward_compute(env.reward_manager, step_dt)
+    require(bool(torch.isfinite(result).all()) and all(bool(torch.isfinite(x).all())
+            for x in env.reward_manager._episode_sums.values()), "finite raw rewards")
+    if observer is not None: observer.after_reward(env)
+    return result
+
+
 def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
           stop_at=TRAIN_STOP, max_seconds=None, parent=ACTOR,
-          parent_iteration=7998, parent_step=PARENT_STEP):
+          parent_iteration=7998, parent_step=PARENT_STEP, reward_observer=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
     from mjlab.utils.os import dump_yaml
@@ -132,10 +143,7 @@ def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
         # corruption inside their callable (see lateral_cost), before that point.
         from mjlab_microduck.tasks import mdp
         def checked_rewards(dt):
-            result = mdp._orig_reward_compute(env.reward_manager, dt)
-            require(bool(torch.isfinite(result).all()) and all(bool(torch.isfinite(x).all())
-                    for x in env.reward_manager._episode_sums.values()), "finite raw rewards")
-            return result
+            return checked_reward_compute(env, dt, reward_observer)
         env.reward_manager.compute = checked_rewards
         def checked_returns(obs):
             mdp._orig_compute_returns(runner.alg, obs)
@@ -208,10 +216,13 @@ def train(mode, output, *, config_factory=prepare_config, protocol=PROTOCOL,
         runner.learn(agent.max_iterations, init_at_random_ep_len=True)
         final = output / f"model_{parent_iteration+agent.max_iterations}.pt"
         require(final.is_file() and updates == agent.max_iterations, "complete bounded update count")
-        return dict(status="training-complete-not-accepted", updates=updates,
+        result = dict(status="training-complete-not-accepted", updates=updates,
             final_checkpoint=str(final), final_sha256=sha256(final),
             common_step=env.common_step_counter, parent_step=parent_step,
             wall_seconds=time.monotonic()-started, motor_stream=stream.provenance())
+        if reward_observer is not None:
+            result["reward_observer"] = reward_observer.finish(updates*agent.num_steps_per_env)
+        return result
     finally:
         env.close()
 

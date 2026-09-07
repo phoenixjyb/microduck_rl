@@ -12,11 +12,15 @@ in an earlier one.
 ## Capability graph
 
 September7 integration boundary: the historical milestones below do not
-constitute one fully validated combined robot. F1/F1-R still fail current
+constitute one fully validated combined robot. F1/F1-R/F1-L still fail current
 straight-speed/route/motor-nonregression gates; H1-T is rejected and periodic
 hopping is parked. Exact-geometry obstacle specialists remain retained only
 within their named historical envelopes. See the current
 [heading-hold diagnostic](experiments/2026-09-07-heading-hold-diagnostic.md).
+The subsequent [F1-L continuation](experiments/2026-09-07-f1l-lateral-continuation.md)
+reduced lateral motion in its first held-out pair but increased motor load and
+was rejected. Its final comparison was recovered from stored data on CPU;
+neither gait promotion nor a further seed sweep is admitted.
 
 For the requested capable obstacle avoider with stabilization and eventual
 hopping, maintain a separate retention ledger:
@@ -24,7 +28,7 @@ hopping, maintain a separate retention ledger:
 | Track | Required before integrated promotion | Current boundary |
 | --- | --- | --- |
 | Stand/stop/disturbance recovery | First-attempt stability and motor evaluation of the proposed integrated controller | Not established by straight walking |
-| Route/speed tracking | Per-env approach/recovery speed, heading, lateral displacement and motor gates | Frozen heading A/B reduced drift; speed/lateral gates still fail |
+| Route/speed tracking | Per-env approach/recovery speed, heading, lateral displacement and motor gates | Heading improved; F1-L lateral gain failed motor limits and retained speed deficits |
 | Obstacle avoidance | Clean pass, collision, timeout and route/speed recovery by placement/speed bin | Historical specialists are not universal acceptance |
 | Hop/landing | Independent H1 survival, drift, spring and motor gates | H1-T rejected; no validated hop to claim retained |
 | Skill transitions | Matched mechanics, bounded command/action transitions and all earlier retention tests | Not yet admitted |

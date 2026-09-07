@@ -258,3 +258,33 @@ Local post-fix regression: **715 passed**,13.07s, no skips, same two existing
 warnings. The next learning proposal must address the observed motor-load
 tradeoff before broader obstacle work; no further training or GPU attempt is
 part of this reconciliation. Hopping and integrated stabilization remain gated.
+
+### Final retained closeout
+
+CPU reconciliation executed successfully at source
+`67e729eda8f722250f5a1a9b021588020d26a790`, after the same715 tests passed on
+100.100 (12.18s, no skips, same warnings). It retained **numerical-gate-stop**
+with28 failed labels, including both absolute torque windows, lateral-motion
+and parent/control motor nonregression failures. No GPU simulation or optimizer
+work was repeated. An independent local run reproduced the exact ordered pair
+decision from the retained report.
+
+- CPU decision SHA256: `62bc0a47c7c314309e24779e714a607b25dc3a5864cceeec77ac4dc4d86f0fe5`.
+- CPU manifest SHA256: `a8047e6905217ef3fb4e9241120e3f189d17e44841ffc78ff97b69def649459e`.
+- CPU evidence directory: `artifacts/experiments/f1l-lateral-s467-cpu-reconciliation-v1`
+  on100.100; matching local mirror under `artifacts/diagnostics/`.
+
+All77payload files (163,966,063bytes) plus three manifests across the original
+training, closeout and CPU reconciliation are retained and hash-verified in
+the local mirrors. The reconciliation also reverified the original72 and
+closeout4 payloads on100.100. Neither runtime-failure decision was overwritten.
+The idle-gate evidence contains two0%-utilization/no-PID samples at46°C/12MiB,
+1.034seconds apart, with both protected services inactive. Final host check:
+no compute PID,0% utilization,46°C,12MiB, both protected services still inactive.
+
+This chunk is closed. Do not promote the treatment, spend the remaining seed
+matrix, or claim stabilization/hopping retention from this experiment. The next
+predeclaration should address motor-load regression while preserving the gained
+lateral control, using a matched control and unchanged physical/evaluation
+limits; merely increasing the lateral penalty or accepting slower recovery is
+not supported by this result.

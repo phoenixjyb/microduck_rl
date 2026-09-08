@@ -48,6 +48,22 @@ def test_snapshot_preserves_rng_and_copies_state_without_observation_or_step(ses
     assert report['complete_internal_state'] is False
 
 
+def test_actual_installed_warp_bridge_is_copied_without_mutation():
+    import warp as wp
+    from mjlab.sim.sim_data import TorchArray
+    wp.init()
+    values = torch.arange(12,dtype=torch.float32).reshape(2,6)
+    bridge = TorchArray(wp.from_torch(values))
+    record = reset.tensor_record(bridge)
+    assert record == dict(shape=[2,6],dtype='torch.float32',values=values.tolist())
+    values.zero_()
+    assert record['values'][1][5] == 11
+
+
+def test_arbitrary_duck_typed_tensor_adapter_is_not_trusted():
+    with pytest.raises(ValueError): reset.tensor_record(NS(detach=lambda:torch.zeros(8,1)))
+
+
 @pytest.mark.parametrize('change',['seed','time','counter','shape','nan','rng','cuda','model','admission'])
 def test_corrupt_reset_receipt_fails_closed(session,change):
     report = synthetic_report(session[0].unwrapped)

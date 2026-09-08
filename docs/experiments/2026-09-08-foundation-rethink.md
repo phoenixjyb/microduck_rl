@@ -418,3 +418,14 @@ Validation: **352 focused CPU/regression tests passed in17.75 s**, CUDA hidden,
 including reset snapshot nonmutation, corrupt evidence, empty-field shapes,
 strict actor restoration, campaign readers and disposable-process lifecycle
 checks. No GPU map or optimizer was started by this slice.
+
+Remote CPU follow-up at `b0dac8276580aef70294c846e7576009a5cd8001`:
+350 tests passed and2 optional Mac-path checkpoint tests skipped in18.77 s.
+Actual native CPU construction then caught an adapter mismatch before any actor
+step: mjlab's ModelBridge exposes `TorchArray` proxies, not Tensor subclasses.
+The reset reader now explicitly unwraps only that installed adapter via its
+read-only `detach` method; a real CPU Warp-bridge regression accompanies the fix.
+The initial failure JSON remains in
+`artifacts/evaluations/foundation-command-map-native-cpu-b0dac82`; its diagnostic
+wrapper also attempted an unsupported closure label, leaving an unsealed failed
+directory. It is not a map result and will not be reused or called successful.

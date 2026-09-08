@@ -16,6 +16,11 @@ TIMING = 'after wrapper reset and saved common-time restore; before first policy
 
 
 def tensor_record(value):
+    # The installed simulator bridge returns a TorchArray proxy, not a Tensor
+    # subclass. Its public detach method delegates to the shared tensor without
+    # advancing physics or writing the array; only accept that known adapter.
+    from mjlab.sim.sim_data import TorchArray
+    if isinstance(value,TorchArray): value = value.detach()
     require(isinstance(value,torch.Tensor) and value.layout == torch.strided and value.numel() <= 2_000_000,
             'bounded sampled tensor')
     data = value.detach().cpu().contiguous()

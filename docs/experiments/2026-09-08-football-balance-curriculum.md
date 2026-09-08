@@ -143,6 +143,8 @@ but was updated on September9 to the September10 cutoff above at15-minute cadenc
 The CPU motion decomposition and B0 geometry fixture are complete. The
 [relaxed contact-wrench check](2026-09-09-football-b0-wrench-probe.md) rejects
 the nominal frozen pose. The subsequent [bounded adjusted stance](2026-09-09-football-b0-adjusted-stance.md)
-has local idealized contact-force feasibility, but not compliant contact stability
-or motor acceptance. Next bind the motor/contact dynamics and the smallest flat-stance
+has local idealized contact-force feasibility. A separately declared
+[0.5-cap allocation](2026-09-09-football-b0-margin-allocation.md) adds modeled
+friction margin at the same saved pose, but not compliant contact stability or
+motor acceptance. Next bind the motor/contact dynamics and the smallest flat-stance
 lesson. No football optimizer or balanced rolling policy is running at this update.

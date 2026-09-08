@@ -27,6 +27,7 @@ import yaml
 from mjlab_microduck import foundation_command_map as mapping
 from mjlab_microduck import foundation_command_session as native
 from mjlab_microduck import foundation_command_capture as core
+from mjlab_microduck import foundation_reset_evidence as reset_evidence
 from mjlab_microduck.first_attempt_smoke import canonical, require
 from mjlab_microduck.gpu_idle_gate import SERVICES, wait_idle
 
@@ -155,18 +156,31 @@ def live_gpu(pid):
     return sample
 
 
+def _signal_owned_group(proc,sig):
+    try:
+        os.killpg(proc.pid,sig)
+    except ProcessLookupError:
+        pass
+    except PermissionError:
+        # Darwin can expose a just-killed, unreaped leader as EPERM. A poll
+        # before killpg still races with its death. Reap, then retry the group
+        # signal so surviving descendants are not silently ignored. Persistent
+        # permission errors or a still-live leader remain real failures.
+        proc.wait(timeout=2)
+        try: os.killpg(proc.pid,sig)
+        except ProcessLookupError: pass
+
+
 def _kill_owned_group(proc):
     """Only the group created for this child; never other GPU PIDs or services."""
     # Reap an already dead leader first. On macOS, signaling an unreaped killed
     # process group can return EPERM rather than ESRCH; do not mask the cause.
     proc.poll()
-    try: os.killpg(proc.pid,signal.SIGTERM)
-    except ProcessLookupError: pass
+    _signal_owned_group(proc,signal.SIGTERM)
     try: proc.wait(timeout=2)
     except subprocess.TimeoutExpired: pass
     # Also clear surviving descendants when the group leader has already exited.
-    try: os.killpg(proc.pid,signal.SIGKILL)
-    except ProcessLookupError: pass
+    _signal_owned_group(proc,signal.SIGKILL)
     proc.wait(timeout=2)
 
 
@@ -248,6 +262,7 @@ def verify_cell(path,cell):
     hex_id(loading['actor_state_sha256'],64)
     require(runtime['complete_runtime_equivalence_verified'] is False
             and runtime['selected_pins'] == native.runtime_identity(),'selected runtime evidence')
+    reset_evidence.validate(runtime['reset_evidence'],cell,device='cuda:0',common_step=loading['common_step'])
     cfg,agent = core.prepare_config(cell)
     for name,value in (('env',cfg),('agent',agent)):
         require(raw[name+'.yaml'].decode() == yaml.dump(asdict(value),sort_keys=False),'parameterized configuration evidence')

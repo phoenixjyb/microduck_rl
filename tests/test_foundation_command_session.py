@@ -13,6 +13,7 @@ from mjlab_microduck import foundation_command_capture as core
 from mjlab_microduck import foundation_command_map as mapping
 from test_checkpoint_inference_audit import model_state
 from test_foundation_command_capture import session
+from test_foundation_reset_evidence import augment
 
 CELL = mapping.Cell(503,.1,'original')
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,6 +97,8 @@ def native_stubs(session,tmp_path,monkeypatch):
     loading = dict(common_step=192000,actor_state_sha256=core.actor_digest(actor),checkpoint_sha256=sha(path))
     def make_env(**kwargs):
         assert kwargs['device'] == 'cpu' and kwargs['cfg'].scene.num_envs == 8
+        augment(env,kwargs['cfg'].seed)
+        env.cfg = kwargs['cfg']
         calls.append('env'); return env
     def make_wrapper(actual,**kwargs):
         assert actual is env and kwargs['clip_actions'] is None

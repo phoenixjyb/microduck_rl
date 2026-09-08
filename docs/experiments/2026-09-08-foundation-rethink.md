@@ -391,3 +391,30 @@ it running without supervision.
 The supervised-child `--help` entry point also passed with CUDA hidden.
 Markdown-to-HTML table/local-link validation and staged whitespace review passed;
 no screenshot-based visual review, native rollout or remote validation was run.
+
+## Slice5: sampled reset evidence and cleanup race regression
+
+The native session now retains initial per-environment qpos/qvel and encoder
+bias, selected model fields plus the event manager's expanded randomization
+fields, live CoM ranges, reset/common-time counters and available Python,
+NumPy and Torch RNG states inside `runtime.json`. Sampling happens after wrapper
+reset and saved common-time restoration, before the first actor input; it calls
+neither observation recomputation nor a physics step. Empty derived fields
+(for example, zero tendons) retain explicit shapes. The campaign reader checks
+this metadata in addition to its existing hashes and trace reconciliation.
+
+This is sampled starting-condition evidence, **not a complete replay state**:
+Warp RNG and all internal solver/history buffers are not exported. It does not
+prove deterministic physics, full runtime equivalence or policy acceptance.
+Native host construction and the reviewed service launch plan remain pending.
+
+CPU tests reproduced a Darwin race where a watchdog-killed child becomes a
+zombie between `poll` and cleanup's signal. Reaping only before the signal was
+insufficient. On EPERM cleanup now waits for that owned leader and retries the
+group signal, preserving descendant cleanup; persistent permission errors still
+fail. No external workload or GPU service was involved in these tests.
+
+Validation: **352 focused CPU/regression tests passed in17.75 s**, CUDA hidden,
+including reset snapshot nonmutation, corrupt evidence, empty-field shapes,
+strict actor restoration, campaign readers and disposable-process lifecycle
+checks. No GPU map or optimizer was started by this slice.

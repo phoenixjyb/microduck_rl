@@ -19,6 +19,7 @@ import yaml
 
 from mjlab_microduck import foundation_command_capture as core
 from mjlab_microduck import foundation_command_map as mapping
+from mjlab_microduck import foundation_reset_evidence as reset_evidence
 from mjlab_microduck.checkpoint_inference_audit import audit_actor_state
 from mjlab_microduck.first_attempt_smoke import canonical, require
 from mjlab_microduck.foundation_pilot import runtime_identity
@@ -96,6 +97,7 @@ Construction failures inside the native constructor itself need process teardown
     env = env_type(cfg=cfg,device=device)
     try:
         wrapped = wrapper_type(env,clip_actions=agent.clip_actions)
+        reset_common_step = env.common_step_counter
         # Match the retained wrapper-then-load order without loading optimizer.
         env.common_step_counter = loading['common_step']
         actor = actor.to(device)
@@ -103,6 +105,8 @@ Construction failures inside the native constructor itself need process teardown
         stream = MotorStepStream.from_robot(env.scene['robot'],8,device=device,cost_cfg=MotorStepCostCfg())
         env._microduck_motor_step_stream = stream
         runtime = dict(selected_pins=before,complete_runtime_equivalence_verified=False)
+        runtime['reset_evidence'] = reset_evidence.snapshot(env,cell,reset_common_step=reset_common_step)
+        reset_evidence.validate(runtime['reset_evidence'],cell,device=device,common_step=loading['common_step'])
         yield dict(wrapped=wrapped,actor=actor,stream=stream,loading=loading,runtime=runtime,
                    config_yaml=config_yaml,native_backend='mjlab',device=device)
         require(runtime_identity() == before, "selected runtime changed during capture")

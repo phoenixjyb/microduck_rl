@@ -19,6 +19,7 @@ from mjlab_microduck import foundation_command_capture as core
 from mjlab_microduck import foundation_command_map as mapping
 from test_foundation_command_capture import session
 from test_foundation_command_map import trace
+from test_foundation_reset_evidence import synthetic_report
 
 CPU_ENV = {'PATH':os.defpath,'CUDA_VISIBLE_DEVICES':'','OMP_NUM_THREADS':'1'}
 
@@ -126,7 +127,8 @@ def cell_output(session,tmp_path,monkeypatch):
             loading=dict(checkpoint_sha256=mapping.CHECKPOINTS[cell.policy],saved_iteration=7998,common_step=192000,
                          strict_actor_restore=True,optimizer_restored=False,critic_restored=False,policy_acceptance=False,
                          actor_state_sha256=core.actor_digest(actor)),
-            runtime=dict(selected_pins=native.runtime_identity(),complete_runtime_equivalence_verified=False),
+            runtime=dict(selected_pins=native.runtime_identity(),complete_runtime_equivalence_verified=False,
+                         reset_evidence=synthetic_report(wrapped.unwrapped,cell,device='cuda:0')),
             config_yaml={k:yaml.dump(asdict(v),sort_keys=False) for k,v in (('env',cfg),('agent',agent))})
     # Deliberately label synthetic evidence as the factory for adversarial reader
     # tests. The reader still cannot independently prove actual native execution.
@@ -153,7 +155,7 @@ def test_reconciled_cell_rescores_raw_and_does_not_admit_native_execution(cell_o
     assert report['native_execution_independently_verified'] is False
 
 
-@pytest.mark.parametrize('change',['missing','hash','identity','score','journal','config','native','runtime','count','extra','failed'])
+@pytest.mark.parametrize('change',['missing','hash','identity','score','journal','config','native','runtime','reset','count','extra','failed'])
 def test_cell_tampering_fails_even_when_attacker_rehashes_metadata(cell_output,change):
     path,cell = cell_output
     if change == 'missing': (path/'manifest.json').unlink()
@@ -161,7 +163,7 @@ def test_cell_tampering_fails_even_when_attacker_rehashes_metadata(cell_output,c
     else:
         name = {'hash':'score.json','identity':'launch.json','score':'score.json','journal':'frames.jsonl',
                 'config':'env.yaml','native':'decision.json','runtime':'runtime.json','count':'capture.json',
-                'failed':'manifest.json'}[change]
+                'failed':'manifest.json','reset':'runtime.json'}[change]
         if change == 'config': (path/name).write_text('changed: true')
         elif change == 'journal':
             rows = (path/name).read_text().splitlines(); row = json.loads(rows[0]); row['step'] = 1
@@ -172,6 +174,7 @@ def test_cell_tampering_fails_even_when_attacker_rehashes_metadata(cell_output,c
             elif change == 'identity': value['cell']['seed'] = 509
             elif change == 'native': value['native_factory_used'] = False
             elif change == 'runtime': value['complete_runtime_equivalence_verified'] = True
+            elif change == 'reset': value['reset_evidence']['common_step_before_action'] = 0
             elif change == 'count': value['step_calls_completed'] = 2
             elif change == 'failed': value['status'] = 'runtime-failure-stop'
             (path/name).write_text(json.dumps(value))
@@ -320,6 +323,23 @@ def test_watchdog_start_failure_does_not_orphan_an_already_started_cpu_child(tmp
             campaign.supervised_process([sys.executable,'-c','import time; time.sleep(30)'],tmp_path/'startup.log',
                 cwd=tmp_path,env=CPU_ENV,lock_fd=fd,timeout=5,monitor=lambda pid:{})
     assert len(created) == 1 and created[0].poll() is not None
+
+
+@pytest.mark.parametrize('persistent',[False,True])
+def test_cleanup_reaps_racing_zombie_but_does_not_hide_real_permission_error(monkeypatch,persistent):
+    from types import SimpleNamespace
+    events = []
+    proc = SimpleNamespace(pid=12345,wait=lambda **k:events.append('reap'))
+    def signal_group(pid,sig):
+        assert pid == 12345
+        events.append('signal')
+        if len(events) == 1 or persistent: raise PermissionError('fixture')
+        raise ProcessLookupError('reaped fixture')
+    monkeypatch.setattr(campaign.os,'killpg',signal_group)
+    if persistent:
+        with pytest.raises(PermissionError): campaign._signal_owned_group(proc,campaign.signal.SIGTERM)
+    else: campaign._signal_owned_group(proc,campaign.signal.SIGTERM)
+    assert events == ['signal','reap','signal']
 
 
 def test_watchdog_kills_cpu_child_while_telemetry_callback_is_blocked(tmp_path):

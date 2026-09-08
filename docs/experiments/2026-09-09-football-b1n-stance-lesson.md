@@ -274,3 +274,73 @@ Next: bind and test per-world BAM/delay/reset state and terminal capture to this
 boundary, then verify actual CUDA behavior under a separately bounded integration
 probe before the declared optimizer smoke. Full source-bound evaluator assembly
 and all existing launch/retention gates remain required.
+
+## Per-world motor and command-delay state
+
+`stance_control_state.py` now supplies two separate components for the pending
+GPU runtime. `StanceActionDelay` implements the declared ten-leg limiter in
+batched Torch, preserves four nominal head/neck targets, and owns a per-world
+three-substep FIFO. The caller sets targets once per policy tick, peeks before
+computing motor proposals, and advances only accepted physical-step rows.
+Closed rows retain target/correction/FIFO state; explicit selective resets clear
+only selected rows. Invalid input faults the instance rather than permitting
+an episode reset to erase the error.
+
+`BamStateCommit` calls the actual stock BAM computation on a shallow actuator/model
+copy with separately owned motor history, firmware actuator object and cloned
+friction/damping model fields. Immutable motor parameters and freshly solved
+input forces are read, not altered. Only live rows with finite proposals within
+the existing 0.36 Nm gate commit torque history, effective voltage/gain and model
+friction/damping. Invalid numerical output commits nothing and faults the job;
+excessive finite torque returns a rejected-row mask for the transition layer.
+The full caller must still write only accepted ctrl rows, shift their queues,
+integrate them and capture refreshed state. This module does none of that physics
+or contact capture itself. All-closed batches skip BAM computation.
+
+The wrapper requires the exact repository FrictionDR adapter, XL330 m6 voltage-
+controlled actuator, nominal 7.5 V / 0.1 drop gain / 6 V floor, unit gain/friction
+scales, kp200 and dt0.002. No startup resampling or episode randomization is
+admitted. Changed nominal tensors, replaced motor history, or unexpanded/replaced
+model fields are rejected. Reset clears selected motor history and controlled
+DOF friction/damping without changing unrelated DOFs or sibling worlds. Native
+or Warp ctrl and simulator reset remain the full runtime's responsibility.
+
+The BAM 1.0.1 write-set audit is guarded by these exact installed source hashes:
+
+- `bam/mjlab.py`:
+  `af3de252939ca868712423979c2ab52e198d382d7aca613b5b33c77d74baa440`.
+- `bam/actuator.py`:
+  `6927d7b2341cbaca0e5d872fae4ddce6200056885310d9ee5acaba1f34e09c13`.
+- `bam/dynamixel/actuator.py`:
+  `8d3ed39d68758981204901dd18dcce11dcb107b842067e036d2b8ac7b1411cec`.
+
+During local validation, the first type guard incorrectly expected the base
+voltage-controlled class. Read-only inspection confirmed the actual
+`bam.dynamixel.actuator.XL330Actuator` subclass, which inherits the audited
+compute functions; the guard now requires that exact class. An independent
+reference fixture replaced an invalid attempt to deepcopy native MjsActuator
+handles. Neither adjustment changed the motor model or an installed library.
+
+Tests use two owned CPU tensor worlds from actual native robot force snapshots,
+not GPU worlds or a new hold rollout. They compare live rows across successive
+calls with a separate direct-BAM reference, verify frozen rejected/inactive rows,
+selective reset, finite-output atomicity, limiter agreement with NumPy, and delay
+advancement on exactly the accepted motor rows. These components still do not
+admit learned stance or GPU training.
+
+Local validation: all 14 new control tests passed. The broader selection had
+498 passes and one failure in the unchanged
+`test_surviving_cpu_descendant_closes_the_cell_instead_of_advancing` test.
+Its deliberately orphaned CPU child was detected as intended, but macOS returned
+`PermissionError: [Errno 1] Operation not permitted` during the subsequent
+SIGKILL group cleanup, masking the expected rejection. A focused rerun reproduced
+that error; a later read-only-instrumented run passed without emitting a permission
+error. The two failed-run process groups (38919 and 41178) were absent on later
+inspection. This is retained as an intermittent cleanup issue, not a proven fix
+or a fully green local regression result. No supervisor behavior was weakened or
+changed; validate the unchanged process-group tests on Linux before GPU use.
+
+Next unfinished integration: first-terminal physical/contact evidence capture,
+full live-mask wiring with refreshed Warp state and ctrl/actuator/reset ordering,
+then bounded actual CUDA validation and the declared disposable optimizer smoke.
+Keep the source-bound evaluator and all numerical/launch gates unchanged.

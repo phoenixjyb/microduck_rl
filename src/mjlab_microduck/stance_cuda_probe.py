@@ -35,6 +35,7 @@ PACKAGES = {'mjlab': 'mjlab', 'mujoco-warp': 'mujoco_warp', 'better-actuator-mod
 VERSIONS = {'torch': '2.9.1', 'warp-lang': '1.12.0', 'mujoco': '3.10.0',
             'mjlab': '1.3.0', 'mujoco-warp': '3.8.1', 'better-actuator-models': '1.0.1'}
 BAD_LOG = re.compile(r'\b(?:warning|warn|overflow|nan|inf(?:inity)?|nonfinite)\b', re.I)
+STARTUP_INFO = '[mdp] Patches 1-2 active: NaN-safe reward/advantage'
 
 
 def digest(path):
@@ -102,7 +103,10 @@ def check_window(now=None):
 def check_log(path):
     if not path.exists(): return
     raw = supervisor.file_bytes(path, limit=16*1024*1024, allow_empty=True)
-    match = BAD_LOG.search(raw.decode('utf-8', errors='replace'))
+    # This exact source-bound startup declaration is not a numeric observation.
+    # Do not exempt prefixes, suffixes, other NaN-safe text, or actual warnings.
+    lines = raw.decode('utf-8', errors='replace').splitlines()
+    match = BAD_LOG.search('\n'.join(line for line in lines if line != STARTUP_INFO))
     require(match is None, 'numerical/backend warning in retained child log')
 
 

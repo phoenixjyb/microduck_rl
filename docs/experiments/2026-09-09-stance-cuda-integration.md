@@ -80,3 +80,17 @@ ran on Warp CPU. Tests that synthesize CUDA-shaped metadata are explicitly schem
 fixtures, never published CUDA evidence. Fault, drift, warning and overwrite
 tests use synthetic inputs and do not change external services. Linux validation
 and the real CUDA attempt are pending at this predeclaration.
+
+### Preflight correction before any GPU attempt
+
+Source `5c1bf5dcff56e5bdef7c3983d53d6b97e54d6168` passed557 Linux CPU tests
+(two expected missing-checkpoint skips) in25.72s. CPU preparation succeeded,
+but its startup output exposed a false positive: the existing exact informational
+line `[mdp] Patches 1-2 active: NaN-safe reward/advantage` matched the NaN log guard.
+No GPU child or service was launched from that source. Its exclusive launch
+manifest remains retained, unused, under `stance-cuda-probe-5c1bf5dcff56`.
+
+The guard now exempts only that exact complete source-bound startup line. Added
+regression cases retain refusal for appended warnings and subsequent non-finite
+observations. All other warning and numeric checks are unchanged. The corrected
+source requires a new manifest, new CPU validation and its own unique service.

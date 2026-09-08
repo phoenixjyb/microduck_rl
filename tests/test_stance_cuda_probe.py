@@ -70,6 +70,16 @@ def test_normal_log_and_missing_initial_log_are_allowed(tmp_path):
     probe.check_log(path)
 
 
+@pytest.mark.parametrize('extra', ['', '\nvalue NaN', ' WARNING: failure', '\nnonfinite state'])
+def test_exact_startup_declaration_does_not_mask_failures(tmp_path, extra):
+    path = tmp_path/'child.log'
+    path.write_text(probe.STARTUP_INFO+extra+'\n')
+    if extra:
+        with pytest.raises(ValueError, match='retained child log'): probe.check_log(path)
+    else:
+        probe.check_log(path)
+
+
 def test_launch_requires_full_service_budget_plus_closeout():
     probe.check_window(probe.CUTOFF-probe.SERVICE_SECONDS-probe.CLOSEOUT_SECONDS-1)
     with pytest.raises(ValueError, match='closeout window'):

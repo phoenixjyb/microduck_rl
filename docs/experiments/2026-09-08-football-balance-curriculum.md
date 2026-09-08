@@ -154,3 +154,7 @@ checks the actual training computation and motor-mode spec before integrated
 contact tests. Native and training BAM adapters are not interchangeable without
 checking constraint indexing and m6 friction semantics. This component probe
 bypasses command delay, writes no native controls and is not a B1 standing result.
+
+The subsequent [flat-floor hold diagnostic](2026-09-09-football-flat-hold.md)
+predeclares a single one-second native rollout with fixed delay and explicit
+abort gates. Even a complete diagnostic is not learned B1 or ball balancing.

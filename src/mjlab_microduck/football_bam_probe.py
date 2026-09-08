@@ -45,7 +45,7 @@ def native_snapshot(model, data):
     )
 
 
-def build_component_fixture():
+def build_component_fixture(*, flat_floor=False):
     """Fresh suspended full robot, motor spec conversion, explicit CPU binding.
 
     Private BAM fields are deliberately localized here. This is not a substitute
@@ -59,6 +59,10 @@ def build_component_fixture():
     require(cfg.vin_range == (6.5, 8.2) and cfg.vin_drop_gain_range == (0., .2)
             and cfg.vin_min == 6., 'declared startup ranges')
     spec = mujoco.MjSpec.from_file(str(ROBOT_XML))
+    require(type(flat_floor) is bool, 'explicit floor choice')
+    if flat_floor:
+        spec.worldbody.add_geom(name='hold_floor', type=mujoco.mjtGeom.mjGEOM_PLANE,
+            size=[2, 2, .1], friction=[.6, 0, 0], condim=3)
     names = [j.name for j in spec.joints if j.type == mujoco.mjtJoint.mjJNT_HINGE]
     require(len(names) == 14 and len(set(names)) == 14, 'exact rigid 14-hinge robot')
     actuator = cfg.build(None, list(range(14)), names)

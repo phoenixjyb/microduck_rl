@@ -97,3 +97,27 @@ eight stance tests cover analytic load solutions, unilateral refusal, bounded
 pose changes, asset hashes, all-coordinate gravity differentiation, free-root
 balance and explicit non-execution of dynamics. CPU source tests and ideal
 static feasibility do not accept a learned controller or a physical motor load.
+
+## Retained local report and next handoff
+
+Source `e79aadf` was committed and pushed to the exact fork feature branch. The
+allowlisted Mac CPU run retained
+`artifacts/diagnostics/football-b0a-stance-local-e79aadf.json`, SHA256
+`d15226a8eacb69a347f4ece725528ecb102e9fde05e69e9035cb861c6e5bebf6`.
+It includes exact Git/probe hashes, NumPy/SciPy/MuJoCo/Python versions, all fixture
+mesh/XML hashes, pose, contact forces and ideal joint torques. The two foot
+pyramid utilizations are0.99811 and1.00000: the second has essentially no slack.
+This is an existence witness at the boundary, not a robust load allocation.
+
+Three bounded SSH attempts in this heartbeat timed out; two ping probes received
+no replies. The Mac route to the host is via `feth3199`, with direct SSH port22;
+no proxy jump, routing edit or service action was used. Remote state and the
+older interrupted report remain unknown. Do not infer that a newer commit was
+installed there. On reconnection, reconcile first, then fast-forward only a clean
+idle worktree and run the targeted Linux CPU tests before any GPU work.
+
+Next unfinished local chunk: declare a margin-aware force allocation diagnostic
+without rewriting this minimum-normal-force result, then bind the actual BAM
+actuator/contact dynamics and predeclare B1 flat stance. B0-A need not be repeated
+to occupy the GPU. The September10 07:30 cutoff and all original skill gates stay
+unchanged; no new optimizer, policy checkpoint or video was produced here.

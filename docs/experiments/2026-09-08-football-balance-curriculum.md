@@ -81,10 +81,10 @@ calibrated servo thermal safety are different claims.
 
 ## Retention and overnight priority
 
-First finish the [frozen foundation speed map](2026-09-08-foundation-rethink.md)
-with tested remote CPU/runtime/source and service-timeout gates. Use its evidence
-to choose the smallest next gait/stance training lesson. No selected moving
-speed band or standing controller is currently admitted by that unfinished map.
+The [frozen foundation speed map](2026-09-09-foundation-command-map-results.md)
+is complete and must not be repeated. Diagnose its retained traces and use that
+evidence to choose the smallest next gait/stance training lesson. No moving
+speed band or standing controller is admitted by the completed map.
 Do not spend the night launching unrelated reward changes just to occupy the GPU.
 
 Ball work may proceed independently through B0 analysis and tested simulator

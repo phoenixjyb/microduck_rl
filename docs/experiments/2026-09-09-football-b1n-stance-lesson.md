@@ -219,3 +219,52 @@ tests passed in 6.36 s, with no skips. The retained first-hold input was present
 Post-test checks again showed an idle GPU at 46 C and both protected services
 inactive. This completes Linux CPU validation of this chunk; GPU integration
 and the declared disposable smoke remain unrun.
+
+## Warp Euler candidate/commit integration boundary
+
+`stance_warp_integrator.py` introduces a narrow integration-state boundary, not
+the complete GPU environment. Read-only inspection of installed MuJoCo Warp
+3.8.1 found no per-world pause argument in `forward.step` or mjlab's
+`Simulation.step`. Changing timestep to zero is not the proposed solution: the
+forward solver also consumes timestep. Shared installed modules remain unchanged.
+
+The new adapter calls stock Euler with separate candidate arrays for `qpos`,
+`qvel`, `time` and `qacc_warmstart`. It validates every candidate before committing
+any field, then commits only live rows. Closed committed rows retain their exact
+bits while live rows use the unchanged stock Euler result. All-closed batches
+skip the integrator call. Nonfinite input/output faults the adapter and requires
+job closeout. Explicit Torch/Warp synchronization favors correctness; this is
+not CUDA-graph-ready or a throughput claim. The supported plant has no activation,
+flex, tendon, mocap or equality state and uses Euler, matching the intended rigid
+stance scope. This does not freeze motor/delay state by itself.
+
+The private write-set dependency is guarded by the installed version and exact
+source SHA256 pins; changing either file requires a new audit:
+
+- `mujoco_warp/_src/forward.py`:
+  `c764b6da0b55c05f97b9368f7c77d4826cbafafe93a15f682a878eef7f9e3de3`.
+- `mujoco_warp/_src/smooth.py`:
+  `63b2d4093745762309bb335826a1f741a1baab26d93277ba92859fea1495880f`.
+
+Important boundary: the batch's forward/contact calculations can still run for
+closed worlds. Candidate integration arithmetic can also run for them, but those
+outputs never become committed physical state. This is not a whole-solver skip
+or a frozen shared contact array. The full runtime must separately own the first
+terminal observations/contacts, mask BAM torque history, friction/damping and
+target-delay updates, and refresh live derived state after commit. An integration
+mask alone still does not admit the stance environment or a training launch.
+
+Eleven focused tests passed on Warp's **CPU** backend in 12.98 s. The component
+fixture is a free sphere, not the Duck or football task. It checks exact agreement
+with stock Euler for live rows, unchanged closed rows over four commits, zero
+calls for an all-closed batch, no buffer aliasing, source/shape guards, and no
+partial commit on nonfinite candidate output. Both the synthetic-acceleration
+damping-disabled path and a real forward solve with implicit Euler damping were
+tested. No CUDA, robot-contact or learned-balance result is inferred.
+The broader local CPU regression selection passed 485 tests in 24.71 s;
+Markdown rendering and relative-link checks also passed.
+
+Next: bind and test per-world BAM/delay/reset state and terminal capture to this
+boundary, then verify actual CUDA behavior under a separately bounded integration
+probe before the declared optimizer smoke. Full source-bound evaluator assembly
+and all existing launch/retention gates remain required.

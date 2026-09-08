@@ -491,3 +491,9 @@ showed no compute PID, 0% / 12 MiB / 46 C, and both protected system services
 inactive. No CUDA probe, optimizer, full hold or ball rollout ran. Next work is
 the source-bound CUDA validation/diagnostic entrypoint and complete evaluator;
 use explicit `cuda:0` device identity and independently bounded launch guards.
+
+The next [bounded CUDA integration probe](2026-09-09-stance-cuda-integration.md)
+is now implemented and predeclared, with reviewed dependency Python tree pins
+and168 focused local CPU tests passing. It has no optimizer or capability
+admission. Complete Linux CPU validation and the exact leased/retained service
+attempt before moving on to full evaluator and PPO adapter work.

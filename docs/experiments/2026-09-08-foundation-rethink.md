@@ -310,3 +310,84 @@ effective reset/RNG evidence, complete the sequential-map driver and its
 failure-prefix checks, then establish an authorized runtime window with an
 exclusive idle-GPU guard and external hard process timeout. This commit is
 diagnostic development, **not launch-ready** and not a newly trained capability.
+
+## Development slice 4: sequential supervision and evidence reconciliation
+
+[`foundation_command_campaign.py`](../../src/mjlab_microduck/foundation_command_campaign.py)
+adds the sequential driver, launch-plan validation, read-only host/source/GPU
+checks, an advisory GPU lease, a supervised per-cell process and a raw-evidence
+reader. [CPU tests](../../tests/test_foundation_command_campaign.py) exercise
+the complete fixed order and failure boundaries without native GPU execution.
+The public campaign entry is a Python API, not an installed service or scheduler.
+The module CLI is only its supervised child and requires an inherited lease and
+the exact byte-pinned parent plan. No current launch plan or time window has
+been created, and no child was launched on100.100 in this development slice.
+
+The launch plan must identify the exact clean feature-branch commit, Linux
+machine ID, both pinned checkpoint paths, an explicit UTC start/deadline window
+and reviewed environment-local runtime file hashes. Required source-file pins
+include the environment, observation/metrics managers, entity data and RSL MLP.
+These are a minimum selected-file scope, **not complete runtime equivalence**;
+review the real host's dependency/asset coverage before supplying a launch plan.
+Source, selected runtime and checkpoint bytes are checked before and after each
+cell and before final closeout. The parent hides CUDA; only its guarded child
+selects CUDA0. An environment allowlist excludes API/connector credentials and
+Python/preload/library-path injection. Its compatibility with the actual Linux
+runtime remains to be validated; inherited user environments are not assumed
+equivalent to this cleaner execution environment.
+
+The fixed destination is
+`artifacts/evaluations/foundation-command-map-v1` in the authorized worktree.
+It must not exist; neither closed nor partial output is reused. Cells execute
+in the predeclared seed/speed/policy order. The reader rehashes the exact bytes
+it deserializes, reconciles all journal rows against the tensor trace, checks
+loading/configuration/capture identity and recomputes the numerical score and
+ordered prefix. A renamed, partial, altered or failed manifest cannot become a
+successful cell merely by presenting a decision JSON. Even reconciled evidence
+does not independently prove native physics or admit a policy.
+
+Performance misses remain failed descriptive cells and may continue through
+the fixed matrix. A terminal, motor safety/coverage failure, child error,
+evidence mismatch, source change or exhausted reserve stops without retries,
+replacement seeds or later cells. Per-cell receipts are durable before the
+next cell. Runtime failures retain a separate campaign failure record and the
+unverified/unexecuted suffix, preserving partial child artifacts. A complete
+18-cell map still grants no training or physical admission.
+
+The shared Duck lease is advisory: it prevents cooperating jobs from racing,
+but cannot reserve the GPU against arbitrary external allocators. Two idle
+samples are required before and after each child. While the child is active,
+read-only probes require both protected services inactive, no foreign compute
+PID and GPU temperature below80 C. A conflict stops only the owned Duck process
+group; no foreign PID is killed and no service is started/stopped. Sampling
+cannot promise zero overlap with an independently launched workload.
+
+A separate watchdog kills the owned child group at the120 s cell cap even if
+its native call or the supervisor's telemetry callback blocks. A zero-exit child
+with surviving group members is a runtime failure, not successful cleanup.
+Already dead leaders are reaped before cleanup signals: CPU testing on macOS
+found and fixed an EPERM cleanup edge case for a watchdog-killed zombie.
+Tests also confirm that an unrelated disposable CPU process remains alive.
+Logs, child PID/timing and available telemetry are retained on failure; a hard
+kill may leave only the already-synced journal, never a passing cell manifest.
+
+**The whole-service hard cap is still an external launch requirement.** The
+driver checks a2400 s total budget and180 s closeout reserve, but an actual user
+service must independently enforce `RuntimeMaxSec=2400` and group-wide cleanup
+(`KillMode=control-group`) if the supervisor itself hangs or is terminated.
+No service definition was installed or invoked by these tests.
+
+Remaining before GPU execution: review/bind the host-specific launch manifest,
+effective reset/RNG evidence and clean child-environment compatibility; validate
+on the remote CPU; establish the user-approved window and retained hard-capped
+service. No scheduler, optimizer, video, raw perception or robot motion is added.
+
+Slice4 validation: **328 focused CPU/regression tests passed in19.70 s** with
+CUDA hidden, including62 new campaign tests and the existing checkpoint,
+capture, scorer, curriculum, command-delivery, recovery and idle-GPU coverage.
+The process tests use disposable CPU sleepers, not simulation or training.
+Watchdog-start failure also reaps an already launched child rather than leaving
+it running without supervision.
+The supervised-child `--help` entry point also passed with CUDA hidden.
+Markdown-to-HTML table/local-link validation and staged whitespace review passed;
+no screenshot-based visual review, native rollout or remote validation was run.

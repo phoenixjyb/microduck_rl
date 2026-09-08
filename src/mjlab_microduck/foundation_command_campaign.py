@@ -66,11 +66,11 @@ def parse(raw):
     return result
 
 
-def file_bytes(path, *, limit=64*1024*1024):
+def file_bytes(path, *, limit=64*1024*1024, allow_empty=False):
     path = native._plain_path(path)
-    require(path.is_file() and 0 < path.stat().st_size <= limit,'bounded regular evidence file')
+    require(path.is_file() and (0 if allow_empty else 1) <= path.stat().st_size <= limit,'bounded regular evidence file')
     with path.open('rb') as source: raw = source.read(limit+1)
-    require(0 < len(raw) <= limit,'bounded file read')
+    require((0 if allow_empty else 1) <= len(raw) <= limit,'bounded file read')
     return raw
 
 
@@ -118,7 +118,9 @@ def preflight(plan):
         return subprocess.check_output(['git',*args],text=True,timeout=5).strip()
     require(git('branch','--show-current') == BRANCH and git('rev-parse','HEAD') == plan.source
             and not git('status','--porcelain'),'clean exact feature source')
-    pins = {name:digest(file_bytes(ROOT/name)) for name in plan.runtime_files}
+    # Empty package __init__.py files are real runtime inputs: pin them too so
+    # replacing an empty initializer with executable code invalidates the plan.
+    pins = {name:digest(file_bytes(ROOT/name,allow_empty=True)) for name in plan.runtime_files}
     require(pins == plan.runtime_files,'reviewed runtime file hashes')
     for policy,path in plan.checkpoints.items():
         require(digest(file_bytes(ROOT/path)) == mapping.CHECKPOINTS[policy],'frozen checkpoint pin')

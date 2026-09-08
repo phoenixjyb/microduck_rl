@@ -45,6 +45,15 @@ def test_json_duplicate_keys_and_nan_are_refused():
         with pytest.raises(ValueError): campaign.parse(raw)
 
 
+def test_empty_runtime_source_can_be_pinned_but_empty_evidence_is_refused(tmp_path):
+    path = tmp_path/'__init__.py'; path.touch()
+    with pytest.raises(ValueError): campaign.file_bytes(path)
+    assert campaign.file_bytes(path,allow_empty=True) == b''
+    assert campaign.digest(campaign.file_bytes(path,allow_empty=True)) == campaign.digest(b'')
+    path.write_text('changed = True\n')
+    assert campaign.digest(campaign.file_bytes(path,allow_empty=True)) != campaign.digest(b'')
+
+
 def test_child_environment_does_not_inherit_secrets_or_python_injection(monkeypatch):
     for name in ('FIXTURE_API_SECRET','PYTHONPATH','LD_PRELOAD','LD_LIBRARY_PATH'):
         monkeypatch.setenv(name,'synthetic-not-a-secret')

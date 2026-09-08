@@ -429,3 +429,24 @@ The initial failure JSON remains in
 `artifacts/evaluations/foundation-command-map-native-cpu-b0dac82`; its diagnostic
 wrapper also attempted an unsupported closure label, leaving an unsealed failed
 directory. It is not a map result and will not be reused or called successful.
+
+At `0f03f052368dfa496b0936097b357cf87f1c887a`, native CPU construction succeeded
+in0.94 s after imports, with no policy steps and Torch CUDA uninitialized. The
+sealed evidence is at `artifacts/evaluations/foundation-command-map-native-cpu-0f03f05`.
+The recorder captured15 model fields (including two empty tendon fields), all
+eight initial states and the available RNG states. The full remote allowlisted
+CPU regression then passed352 tests with2 optional Mac-path skips in18.68 s.
+
+Host launch review expands the selected byte pins to Python sources in mjlab,
+rsl_rl and mujoco_warp plus the Warp bridge/context/code-generation and version
+files. This still excludes some native libraries/assets and is explicitly not
+complete runtime equivalence. Review found eight genuinely empty package
+initializers; runtime hashing now accepts and pins empty source bytes rather
+than omitting those files. Empty checkpoint/report evidence remains rejected.
+The failed draft plan preflight wrote no launch plan and started no GPU process.
+
+The single frozen-map invocation will use the exact reviewed feature SHA,
+machine ID and checkpoint paths, a clean CPU-only parent, the shared advisory
+GPU lease and an independent `RuntimeMaxSec=2400`, `KillMode=control-group`
+user service. It must finish before September8 23:30 UTC. No optimizer is part
+of this map; a safety/coverage failure closes its prefix without a rerun.

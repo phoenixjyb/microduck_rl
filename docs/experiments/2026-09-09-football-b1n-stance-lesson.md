@@ -398,3 +398,17 @@ physical state, apply the common live mask to BAM/delay/ctrl/Euler accounting,
 capture first terminals before any reset, and expose the exact actor/critic
 observations. Then verify actual CUDA under a bounded retained probe, assemble
 the source-bound evaluator, and only afterward consider the predeclared smoke.
+
+Linux confirmation at exact source `59b75170da9ab74eaa3be3de5de12e1207163774`:
+the broader stance, football, foundation and launch-guard regression selection
+passed **512 tests with two skips in 32.45 s** on 100.100, with CUDA hidden and
+an allowlisted environment. This includes all 15 new contact-evidence tests.
+The two skips at `test_foundation_command_session.py:80` require separately
+retained checkpoint inputs and do not establish actor-loading acceptance.
+The remote worktree was clean after fast-forwarding to the exact published
+feature-branch source. GPU checks during validation showed no compute process,
+0% utilization, 12 MiB used and 46 C; both protected system services remained
+inactive and unchanged. No optimizer or CUDA probe was launched. The existing
+continuation task was verified active through September10 07:30 Asia/Shanghai;
+the next work remains the complete stance runtime and source-bound evaluation,
+not a repeated contact fixture or a claimed rolling-football capability.

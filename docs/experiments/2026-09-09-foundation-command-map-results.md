@@ -106,7 +106,9 @@ No protected service or unrelated workload was changed.
    are complete and the job plus closeout fits before07:30. Do not advance
    obstacle RL on the failed map or claim rejected H1-T hopping is retained.
 
-The overnight authorization still ends September9 07:30 Asia/Shanghai.
+The map's original window ended September9 07:30 Asia/Shanghai. The user renewed
+the separate curriculum work through September10 07:30; see the current football
+curriculum. This does not reopen the completed map.
 No raw-camera RL, physical motion,100.98 work or protected-service restoration.
 
 Closeout validation:355 focused local CPU/regression tests passed in18.56 s

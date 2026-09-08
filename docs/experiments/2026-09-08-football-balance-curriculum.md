@@ -142,6 +142,7 @@ same-thread continuation retains ID `microduck-curriculum-through-sep-9-07-30`,
 but was updated on September9 to the September10 cutoff above at15-minute cadence.
 The CPU motion decomposition and B0 geometry fixture are complete. The
 [relaxed contact-wrench check](2026-09-09-football-b0-wrench-probe.md) rejects
-the nominal frozen pose; next adjust the pose, test contact-constrained
-equilibrium, then motor-demand checks and the smallest flat-stance
+the nominal frozen pose. The subsequent [bounded adjusted stance](2026-09-09-football-b0-adjusted-stance.md)
+has local idealized contact-force feasibility, but not compliant contact stability
+or motor acceptance. Next bind the motor/contact dynamics and the smallest flat-stance
 lesson. No football optimizer or balanced rolling policy is running at this update.

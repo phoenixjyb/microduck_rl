@@ -62,3 +62,10 @@ Local validation:8 new native fixture tests and the complete focused regression
 set passed375 tests in18.72 s with CUDA hidden. Changed Markdown documents were
 rendered to HTML and their tables/local links checked programmatically. No
 screenshot, force-bearing simulation, GPU evaluation or training was performed.
+
+The fixed/free geometry report from100.100 at source `980661c` is retained as
+`artifacts/evaluations/football-b0-contact-980661c.json` and mirrored locally under
+`artifacts/diagnostics/`. Both copies have SHA256
+`a0aa7d6c82154ba8424ad3e77540705eedca6c7ddd919b5f1ca6862b023c2150`.
+The subsequent [point-wrench diagnostic](2026-09-09-football-b0-wrench-probe.md)
+tests this frozen pose without claiming load-bearing or learned balance.

@@ -10,7 +10,7 @@ evidence; stance, supporting loads and rolling dynamics are still unverified.
 
 User requirement, September8: stand on a rolling football and stabilize while
 preserving walking, obstacle avoidance, stabilization and eventual hopping.
-The renewed work window ends **September9 07:30 Asia/Shanghai**, or September8
+The September9 renewal extends the work window to **September10 07:30 Asia/Shanghai**, or September9
 23:30 UTC. This authorizes gated simulation/development, not physical motion or
 unconditional GPU use. Keep100.98 and unrelated services/workloads untouched.
 
@@ -112,7 +112,7 @@ tests in16.41 s with CUDA hidden. The curriculum was rendered to HTML and its
 table/local links checked programmatically; no rendered robot or policy rollout
 is claimed. These tests do not solve the remaining full-robot B0 feasibility gate.
 
-## Overnight handoff: remote CPU gate closed, GPU gate still pending
+## Historical handoff at 58b1f29 (superseded by the completed map above)
 
 At source `58b1f293c7df7520d899ba09e4c772f69ae7dd49`,100.100 ran the football,
 foundation-map and historical regression set in the allowlisted child environment
@@ -137,9 +137,11 @@ the Mac under `artifacts/diagnostics/foundation-command-map-cpu-preflight-58b1f2
 - Original checkpoint: `logs/rsl_rl/run_motor_aware/2026-09-02_22-45-55_stage2-motor-aware-4096x3000-36667ee/model_7998.pt`.
 - Narrow checkpoint: `artifacts/experiments/f1r-width-paired-s421-v1/narrow-pilot/model_8498.pt`.
 
-The same-thread continuation `microduck-curriculum-through-sep-9-07-30` is active
-at15-minute cadence, with the fixed cutoff above and quiet-unless-material updates.
-Next close the effective reset/RNG evidence and reviewed runtime manifest, then
-use the existing guarded driver under a hard-capped user service. No GPU map,
-optimizer run or football-balancing policy has started in this handoff. Do not
-skip those remaining gates simply because the remote CPU tests passed.
+That historical handoff preceded the completed map; do not repeat it. The existing
+same-thread continuation retains ID `microduck-curriculum-through-sep-9-07-30`,
+but was updated on September9 to the September10 cutoff above at15-minute cadence.
+The CPU motion decomposition and B0 geometry fixture are complete. The
+[relaxed contact-wrench check](2026-09-09-football-b0-wrench-probe.md) rejects
+the nominal frozen pose; next adjust the pose, test contact-constrained
+equilibrium, then motor-demand checks and the smallest flat-stance
+lesson. No football optimizer or balanced rolling policy is running at this update.

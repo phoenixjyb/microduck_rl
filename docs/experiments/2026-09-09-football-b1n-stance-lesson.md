@@ -479,3 +479,15 @@ bounded actual CUDA integration probe with retained numerical/log diagnostics.
 Finish the full source-bound evaluator and PPO/launcher adapter before the
 declared disposable64-env/16-iteration smoke. No optimizer was launched here;
 do not repeat the closed native hold or promote to football balancing.
+
+Linux confirmation at exact source `cf0f5a0d2076c8a65e62272944b15f49dd1cf6ea`:
+**525 tests passed with two skips in 31.37 s** in the broader stance, football,
+foundation and launch-supervision selection, with CUDA hidden and an allowlisted
+environment. All new full-robot Warp CPU and body-frame checks ran. The two
+skips are the unchanged separately retained checkpoint inputs at
+`test_foundation_command_session.py:80`, not stance failures or actor admission.
+The worktree was fast-forwarded from clean exact `081e074`; post-test telemetry
+showed no compute PID, 0% / 12 MiB / 46 C, and both protected system services
+inactive. No CUDA probe, optimizer, full hold or ball rollout ran. Next work is
+the source-bound CUDA validation/diagnostic entrypoint and complete evaluator;
+use explicit `cuda:0` device identity and independently bounded launch guards.

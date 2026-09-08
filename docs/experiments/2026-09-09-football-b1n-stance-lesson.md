@@ -4,8 +4,9 @@ Protocol `football-b1n-nominal-stance-v1`. The fixed-target CPU hold aborted for
 forward tilt; its source, report and unchanged stops are retained in the
 [hold experiment](2026-09-09-football-flat-hold.md). This declaration creates a
 separate specialist, not an alteration or promotion of any gait/hop actor.
-**CPU integration only: GPU environment integration, complete evaluator and
-launch manifest are not yet implemented or admitted. Do not launch training.**
+**CPU integration only: the caller-owned Warp loop is now implemented and tested
+on CPU. Actual CUDA validation, complete evaluator and launch manifest remain
+unrun or unfinished. Do not launch training.**
 
 ## Plant, reset and control
 
@@ -412,3 +413,69 @@ inactive and unchanged. No optimizer or CUDA probe was launched. The existing
 continuation task was verified active through September10 07:30 Asia/Shanghai;
 the next work remains the complete stance runtime and source-bound evaluation,
 not a repeated contact fixture or a claimed rolling-football capability.
+
+## Caller-owned full-robot Warp loop
+
+`stance_warp_runtime.py` connects normal mjlab Entity/BAM initialization, the
+owned action limiter/FIFO, fresh forward solves, staged motor state, masked
+Euler commits, substep rewards/stops and first-terminal contact retention.
+It uses the actual full-collision Duck on a flat floor, not a primitive sphere
+or a CPU tensor bridge posing as initialized Entity data. The runtime remains
+unregistered with PPO and has no optimizer, checkpoint loader or service launcher.
+CPU execution of this Warp path does not establish CUDA behavior or throughput.
+
+The compiled plant matches the native hold's motor gear, force range, armature,
+contact dimensions and friction arrays. The first implementation fixed voltage
+before `edit_spec`, accidentally lowering the compiled force ceiling from about
+1.06755 to 0.97642 Nm. An exact-spec regression caught that mismatch. The corrected
+path compiles the historical motor specification first, then fixes the exclusively
+owned initialization configuration at 7.5 V / 0.1 drop before normal initialize.
+The independent 0.36 Nm pre-step gate is unchanged. Only the caller FIFO supplies
+the three-step delay; stock delay is disabled so it is not applied twice. Exact
+joint-name matching also avoids the irrelevant site-namespace warning.
+
+The loop applies one common accepted-world mask to BAM history, model friction,
+controls, FIFO and committed integration state. Each accepted step gets a
+new-control solve, stock Euler candidate/commit and a refreshed post-step solve
+before reward and failure accounting. The physical clock is checked against
+exact accepted float32 timestep additions; integer counters govern episode gates.
+Previously closed worlds are explicitly excluded from subsequent policy ticks,
+including a world already at step2500. Their motor, physical and cached
+observation fields remain unchanged while live siblings continue. First terminals
+are owned records; an explicit selective reset returns the old records before
+clearing selected rows, never auto-resets an evaluation attempt. The external
+evaluator must retain the returned boundary prefixes and reset evidence.
+
+Finite field/contact/constraint checks run before integration. The binding
+requires the dense solver and a CCD pool equal to full shared contact capacity;
+accepted broadphase/contact counts and per-world constraints must fit. Warp has
+no native `warning.number` array: the false warning tensor is **not** proof that
+all backend warnings were supervised. Actual GPU log/numerical supervision and
+source/runtime/asset-bound evaluation remain required before any launch. A fault
+closes the runtime and cannot be erased by reset; it does not promise rollback
+of the entire control-and-solver transaction.
+
+The nonzero angular-velocity test also caught a pre-existing native-audit frame
+bug: `mjOBJ_BODY` selects the rotated inertial frame, whereas `mjOBJ_XBODY`
+selects the regular body frame. This is confirmed by the installed MuJoCo3.10.0
+read-only experiment and its [upstream implementation](https://github.com/google-deepmind/mujoco/blob/3.10.0/src/engine/engine_core_util.c#L768).
+`stance_native_runtime.py` now uses XBODY, matching the already-declared body-frame
+observation and Warp Entity data. For the synthetic body angular velocity
+(0.2,-0.3,0.4), the old inertial reading was approximately
+(-0.29810,0.09879,0.43746). A new regression distinguishes the two frames; zero
+velocity alone could not expose this bug. No retained hold trace, gait actor,
+hop actor, trained normalizer or historical acceptance result was rewritten.
+
+Local validation: **129 focused CPU tests passed in 6.44 s**, including twelve
+new runtime/mask tests and one native-frame regression. Short real-robot Warp
+tests exercise at most two controller ticks, delayed targets, finite reward,
+normal initialization, and exact compiled plant fields. Explicit synthetic
+tilt, excessive torque, near-timeout, nonfinite solve and wrong-clock injections
+test refusal/isolation behavior, not policy skill or a completed five-second
+attempt. Rotated nonzero-velocity tests check body-frame observation conventions.
+
+Next: validate this exact chunk on Linux, then predeclare and run a separately
+bounded actual CUDA integration probe with retained numerical/log diagnostics.
+Finish the full source-bound evaluator and PPO/launcher adapter before the
+declared disposable64-env/16-iteration smoke. No optimizer was launched here;
+do not repeat the closed native hold or promote to football balancing.

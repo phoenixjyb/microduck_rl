@@ -5,6 +5,17 @@ import pytest
 from mjlab_microduck import stance_native_runtime as runtime
 
 
+def test_angular_velocity_uses_regular_body_not_rotated_inertia_axes():
+    env = runtime.NativeStanceRuntime()
+    env.data.qpos[3:7] = [np.cos(.1), 0, np.sin(.1), 0]
+    env.data.qvel[:6] = [.1, -.2, .3, .2, -.3, .4]
+    mujoco.mj_forward(env.model, env.data)
+    regular = env.data.xmat[env.root_body_id].reshape(3, 3).T @ env.data.cvel[env.root_body_id, :3]
+    inertial = env.data.ximat[env.root_body_id].reshape(3, 3).T @ env.data.cvel[env.root_body_id, :3]
+    assert not np.allclose(regular, inertial)
+    assert np.allclose(env.observations()['actor'][3:6], regular/5, atol=1e-12)
+
+
 def test_one_native_policy_tick_has_ten_steps_and_delayed_bounded_targets():
     env = runtime.NativeStanceRuntime()
     initial = env.observations()

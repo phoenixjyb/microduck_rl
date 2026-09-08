@@ -90,7 +90,9 @@ class NativeStanceRuntime:
         mujoco.mju_quat2Mat(rotation, self.data.qpos[3:7])
         gravity_body = rotation.reshape(3, 3).T @ np.array([0., 0., -1.])
         local_velocity = np.zeros(6)
-        mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_BODY,
+        # BODY uses inertial axes (ximat); XBODY is the regular body frame
+        # (xmat), matching projected gravity and the declared actor convention.
+        mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_XBODY,
                                 self.root_body_id, local_velocity, 1)
         actor = lesson.actor_observation(gravity_body, local_velocity[:3],
             self.data.qpos[self.qpos_ids]-self.nominal, self.data.qvel[self.dofs], self.correction)

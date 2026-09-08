@@ -73,13 +73,20 @@ def physical_failures(state, episode_steps):
 class StanceTransition:
     """Owns exactly one policy tick's accounting across up to ten physics calls."""
 
-    def __init__(self, episode_steps, correction, correction_change):
+    def __init__(self, episode_steps, correction, correction_change, *, initial_live=None):
         if episode_steps.ndim != 1 or episode_steps.dtype != torch.long:
             raise ValueError('episode counters must be one-dimensional int64')
-        if ((episode_steps < 0) | (episode_steps >= EPISODE_STEPS)).any():
-            raise ValueError('episode counters require unfinished episodes')
         n = episode_steps.numel(); self.device = episode_steps.device
         if n == 0: raise ValueError('nonempty batch required')
+        if initial_live is None:
+            initial_live = torch.ones(n, dtype=torch.bool, device=self.device)
+        if (initial_live.shape != (n,) or initial_live.dtype != torch.bool
+                or initial_live.device != self.device):
+            raise ValueError('initial live mask must match episode counters')
+        if ((episode_steps < 0) | (episode_steps > EPISODE_STEPS)
+                | (initial_live & (episode_steps == EPISODE_STEPS))).any():
+            raise ValueError('episode counters require unfinished live episodes')
+        self.participating = initial_live.detach().clone()
         for name, value, bound in (('correction', correction, .2),
                                    ('correction change', correction_change, .02)):
             if (value.shape != (n, 10) or value.device != self.device
@@ -98,7 +105,7 @@ class StanceTransition:
 
     @property
     def live(self):
-        return ~(self.terminated | self.timed_out)
+        return self.participating & ~(self.terminated | self.timed_out)
 
     @torch.no_grad()
     def reject_pre_step_state(self, state):

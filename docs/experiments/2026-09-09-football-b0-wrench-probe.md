@@ -65,3 +65,24 @@ On September9 the user renewed simulation/curriculum work through **September10
 was updated rather than duplicated. It preserves the GPU lease, independent job
 timeouts, checkpoint retention and protected-service boundaries. The previous
 September9 cutoff is superseded; no protected service restoration is authorized.
+
+## Retained evidence and remote handoff
+
+Code commit `24e061c083ac1479f410ae926b150997950026a7` was pushed to the fork
+feature branch and the clean100.100 worktree fast-forwarded to it. On that host,
+the targeted football and foundation CPU set passed137 tests in13.83 s under an
+allowlisted environment with CUDA hidden. Preflight found no GPU compute PID
+and both protected system services inactive; this was not a training launch.
+
+Local native report: `artifacts/diagnostics/football-b0-wrench-local-24e061c.json`,
+SHA256 `4be3fb9f72865b9c0c5eff9d2ed751786e5af49944d1b9378043237a1eac3034`.
+It includes the code source hash, runtime versions, geometry and both results.
+It is Mac evidence, not a claim of bitwise Linux equivalence.
+
+SSH subsequently timed out during the bounded CPU report-generation request,
+then again during read-only reconciliation. Remote output
+`artifacts/evaluations/football-b0-wrench-24e061c.json` is therefore **unconfirmed**;
+check existence, completeness, source and hash before retrying. Do not overwrite
+it or assume a job is running. No GPU job was launched. Recheck connection,
+processes and services before the next simulation/training launch; do not alter
+network settings or protected services to repair access.

@@ -4,7 +4,7 @@ Protocol `football-b1n-nominal-stance-v1`. The fixed-target CPU hold aborted for
 forward tilt; its source, report and unchanged stops are retained in the
 [hold experiment](2026-09-09-football-flat-hold.md). This declaration creates a
 separate specialist, not an alteration or promotion of any gait/hop actor.
-**Reference components only: environment integration, complete evaluator and
+**CPU integration only: GPU environment integration, complete evaluator and
 launch manifest are not yet implemented or admitted. Do not launch training.**
 
 ## Plant, reset and control
@@ -162,13 +162,13 @@ and final-checkpoint campaign checks still belong to the complete evaluator.
 Runtime audit: mjlab's stock manager environment performs all decimation substeps
 before its termination/reward managers. It also documents one-substep-old derived
 quantities at those managers. Using that loop unchanged would violate this
-lesson's refreshed per-substep stops and reward accounting. The next implementation
+lesson's refreshed per-substep stops and reward accounting. The GPU implementation
 must bind the new transition component to fresh post-step state, check proposed
 BAM torques before applying them, preserve first-terminal state, and physically
 skip/freeze closed worlds until reset. An accounting live mask alone does not
 prove that the simulator stopped evolving those worlds. Do not monkeypatch the
 shared installed environment or claim the CPU component checks validate this
-not-yet-written integration.
+not-yet-written GPU integration.
 
 The current broad local CPU regression set passed466 tests in24.22 s. The new
 scorer also read the exact retained native hold file and rejected its first tilt
@@ -177,3 +177,37 @@ trace is now backed up on100.100 at the same `artifacts/diagnostics/` relative
 path and verified against its original SHA256
 `6bd04008ac8161f55f7a3c77c45b10ccee58c37cba6d4e8de5c5107ca2ea768f`.
 The real-trace test must run on Linux, not be counted as an optional-input skip.
+
+## Native CPU runtime integration
+
+`stance_native_runtime.py` now connects the fixed-scale observations, rate/soft-
+limited targets, three-physics-step delay, real BAM computation and substep
+transition accounting to one owned native MuJoCo world. It refreshes derived
+state after integration, retains every boundary, and checks an invalid existing
+state or excessive proposed torque before another physics step. The first failure
+breaks decimation immediately; calling step again on a closed world is refused.
+Observations and trace reads do not advance the model. A normal episode needs an
+explicit reset; a numerical/programming fault closes the audit instance and
+cannot be cleared by episode reset. Reset clears native state/control, motor
+friction/damping, previous motor torque, target correction and delay history.
+
+This is deliberately not registered as a training task or presented as a GPU
+backend. Short CPU integration tests cover a10-substep policy tick, target-delay
+timing, an injected first-substep tilt, pre-step state/torque rejection, and an
+independent live world advancing without changing a closed sibling. No full
+hold rollout, optimizer, candidate evaluation, ball training or physical motion
+was run. Synthetic failure injections are tests of control flow, not capability.
+
+The correction-change bridge allows only1e-14 rad of subtraction roundoff at
+the declared0.02-rad target-slew boundary, then represents the cost input within
+that bound. This does not change physical torque, speed, tilt or historical
+acceptance thresholds. GPU vector-world isolation, normal runtime initialization
+and source-bound evaluator/launch assembly remain the next requirements.
+
+Validation of this integration: the local CPU regression selection passed
+474 tests in 23.68 s, including eight native-runtime tests and the unchanged
+retained first-hold rejection test. These counts establish software behavior,
+not learned stance. Read-only host checks at this update found a clean remote
+`07770335cf3e172b1754560b45a1f9e7c3117414`, no GPU compute process,
+0% utilization / 12 MiB / 46 C, and both protected system services inactive.
+No optimizer job or service change was made.

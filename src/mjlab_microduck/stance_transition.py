@@ -101,6 +101,17 @@ class StanceTransition:
         return ~(self.terminated | self.timed_out)
 
     @torch.no_grad()
+    def reject_pre_step_state(self, state):
+        """Fail an already-invalid boundary without counting an unexecuted step."""
+        if self.applied_calls >= DECIMATION:
+            raise ValueError('closed policy tick cannot inspect another boundary')
+        state.validate(self.reward.numel(), self.device)
+        new_failure = self.live & physical_failures(state, self.episode_steps)
+        self.reward -= 2*new_failure.to(self.reward.dtype)
+        self.terminated |= new_failure
+        return new_failure.clone()
+
+    @torch.no_grad()
     def reject_proposed_torque(self, proposed):
         """Before physics: reject excessive proposed motor torque without a substep."""
         if self.applied_calls >= DECIMATION:

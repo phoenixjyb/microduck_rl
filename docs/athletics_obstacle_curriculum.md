@@ -9,6 +9,13 @@ The curriculum is deliberately sequential. A policy advances only after a
 retained, multi-seed evaluation passes. A later skill must not hide a regression
 in an earlier one.
 
+September8 addition: [football balancing](experiments/2026-09-08-football-balance-curriculum.md)
+is a separate B0–B6 track: plant feasibility, flat stance, fixed-ball support,
+prescribed rolling, free rolling, perturbations and mounting/dismounting with
+retention. This is a new requirement, not an achieved capability or a renamed
+ball-kicking/roller-foot task. The renewed simulation/development window ends
+September9 07:30 Asia/Shanghai; old expired campaign windows below remain historical.
+
 ## Capability graph
 
 September7 integration boundary: the historical milestones below do not

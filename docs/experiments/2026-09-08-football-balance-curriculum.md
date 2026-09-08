@@ -158,3 +158,10 @@ bypasses command delay, writes no native controls and is not a B1 standing resul
 The subsequent [flat-floor hold diagnostic](2026-09-09-football-flat-hold.md)
 predeclares a single one-second native rollout with fixed delay and explicit
 abort gates. Even a complete diagnostic is not learned B1 or ball balancing.
+
+That first hold aborted for forward tilt. The next
+[B1-N nominal stance declaration](2026-09-09-football-b1n-stance-lesson.md)
+uses a separate44D proprioceptive actor and bounded leg-target corrections.
+The CPU observation/action reference is tested; the registered environment,
+reward/evaluator integration and launch manifest remain prerequisites, not
+completed training or permission to skip the GPU gate.

@@ -148,3 +148,9 @@ has local idealized contact-force feasibility. A separately declared
 friction margin at the same saved pose, but not compliant contact stability or
 motor acceptance. Next bind the motor/contact dynamics and the smallest flat-stance
 lesson. No football optimizer or balanced rolling policy is running at this update.
+
+The next [CPU BAM component binding](2026-09-09-football-bam-component-binding.md)
+checks the actual training computation and motor-mode spec before integrated
+contact tests. Native and training BAM adapters are not interchangeable without
+checking constraint indexing and m6 friction semantics. This component probe
+bypasses command delay, writes no native controls and is not a B1 standing result.

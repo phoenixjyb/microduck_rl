@@ -65,3 +65,27 @@ intermittent Darwin cleanup failure remains recorded in B0-A; a passing run
 does not establish its root cause or repair. Both changed Markdown documents
 rendered to HTML and their local links passed structural checks; no robot video
 or dynamic balance visualization was generated.
+
+## Retained report and next gate
+
+Code source `bd5502e` was committed and pushed to the exact fork feature branch.
+The allowlisted native Mac CPU report is retained at
+`artifacts/diagnostics/football-b0m-margin-local-bd5502e.json`, SHA256
+`077d6c8f87b2373eef1d5e8afb9b77bf3c86b02f5f108958dc8709bfb6f7e048`.
+It retains both allocations, their named ideal torque comparison, original input
+hash, pose/asset hashes and exact current code/runtime versions. The source
+input remains byte-identical and no pose search was repeated by B0-M.
+
+Both bounded SSH attempts during this heartbeat timed out, so current remote
+branch, GPU occupancy and protected-service state could not be confirmed.
+No remote worktree, service, GPU job or network setting was changed. The older
+remote wrench report remains unconfirmed. On reconnect, reconcile that report
+without overwriting it, verify host/GPU/service state and a clean branch, then
+fast-forward the feature worktree. Install the exact retained B0-A input only
+after checking the destination, verify its hash, and require the real-input
+Linux test to run rather than count an optional skip as a validation pass.
+
+The next local implementation target is a pinned BAM/contact-dynamics fixture
+and an explicitly declared B1 flat-stance lesson. Do not spend GPU time rerunning
+the closed speed map, B0-A or B0-M, or claim these algebraic results as learned
+football balance. The existing September10 07:30 cutoff remains unchanged.

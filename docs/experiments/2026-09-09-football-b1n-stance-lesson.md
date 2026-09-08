@@ -353,3 +353,48 @@ Next unfinished integration: first-terminal physical/contact evidence capture,
 full live-mask wiring with refreshed Warp state and ctrl/actuator/reset ordering,
 then bounded actual CUDA validation and the declared disposable optimizer smoke.
 Keep the source-bound evaluator and all numerical/launch gates unchanged.
+
+## First-terminal contact evidence
+
+`stance_contact_evidence.py` now reads the active prefix of Warp's shared contact
+buffer into owned tensors and decodes contact-frame force/torque with the installed
+upstream helper. It validates broadphase/contact counts, per-world constraint
+capacity, world/rigid-geom IDs, finite active constraint forces, and included
+constraint addresses before decoding. Pyramidal contiguous rows and elliptic
+per-axis addresses are checked separately, including negative elliptic addresses.
+Stale contact/constraint padding is not evidence. No installed decoder was edited.
+The helper is pinned to MuJoCo Warp 3.8.1 and `support.py` SHA256
+`3ac8475d5e41318d8289601ad41493245d95d2138023d47e0462f04b6c67b94a`.
+
+`contact_summary` preserves the native hold's definitions: sum nonnegative
+normal force for each floor/foot pair in either geom order; any other pair with
+distance <= 0 is forbidden. Geometry IDs must remain bound to the compiled model
+and asset manifest. The reader does **not** call forward or prove freshness; the
+full runtime must own the required fresh forward solve and numerical diagnostics.
+It is not a complete Warp warning/overflow detector or an integrated stepping loop.
+
+`FirstTerminalContacts` retains one owned, immutable first-attempt record per
+world, including qpos/qvel, the supplied physical snapshot, physics counter,
+contact positions/frames/friction/forces, and an actual excessive torque proposal
+when applicable. No reset/overwrite API exists. A new terminal flag must agree
+with a physical/proposed-torque failure or an exact step-2500 timeout. Invalid
+later rows cannot leave an earlier partial ledger update. Returned records are
+copies, so subsequent solver-buffer reuse or consumer changes cannot rewrite
+the first terminal. This small ledger does not retain a complete trajectory,
+validate source/checkpoint identity, or replace the declared held-out evaluator.
+
+Validation: 15 new contact/evidence tests passed within 116 focused local CPU
+stance/BAM/hold tests in 7.27 s. Actual Warp CPU contact forces for a simple
+two-sphere/floor fixture match native MuJoCo in both pyramidal and elliptic modes
+within rtol1e-4 / atol1e-5. These are primitive contact fixtures, not a Duck hold
+rollout or CUDA parity result. Ledger tests use explicitly synthetic rigid-Duck-
+shaped states with those contacts, exercise ownership/first-terminal/timeout and
+malformed-evidence behavior, and do not claim a trained policy. Read-only user
+service inspection found only historical exited/failed Duck units, none running;
+the GPU was idle and protected system services remained inactive.
+
+The next integration step is the complete caller-owned loop: read fresh Warp
+physical state, apply the common live mask to BAM/delay/ctrl/Euler accounting,
+capture first terminals before any reset, and expose the exact actor/critic
+observations. Then verify actual CUDA under a bounded retained probe, assemble
+the source-bound evaluator, and only afterward consider the predeclared smoke.

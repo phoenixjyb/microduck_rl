@@ -1,5 +1,9 @@
 # Football balance: a separate simulation curriculum
 
+Latest foundation evidence: the [completed frozen map](2026-09-09-foundation-command-map-results.md)
+does not admit a moving-speed band. Continue ball B0 geometry and distinct stance
+work; do not promote a walking policy to ball balancing from that result.
+
 User requirement, September8: stand on a rolling football and stabilize while
 preserving walking, obstacle avoidance, stabilization and eventual hopping.
 The renewed work window ends **September9 07:30 Asia/Shanghai**, or September8
@@ -32,6 +36,14 @@ the selected robot's actual full foot pads, ankle/hip reach, joint limits,
 contact normals, support forces, reset penetration and motor loading. Keep the
 same declared robot mechanics throughout each experiment. A larger support ball
 may be a separately named scaffold; shrinking it later is a new difficulty axis.
+
+A September9 CPU-only geometry inspection compiled `scene_walk.xml`, reset its
+STAND keyframe and called `mj_forward` without stepping. Compiled rigid-walk sole
+mesh world bounds span approximately54 mm forward by41.2 mm lateral per foot;
+foot sites are at y=+/-41.82 mm. The pad inner edges are near+/-21.22 mm and outer
+edges near+/-62.43 mm. Thus foot-center normals are not actual sphere-contact
+normals. This nominal geometry (robot mass0.73724 kg) neither solves ball stance
+nor transfers the rigid-walk controller to a full-collision or sprung plant.
 
 ## Progression
 

@@ -1,5 +1,9 @@
 # Foundation rethink: diagnose, then teach distinct capabilities
 
+Current follow-up: the single GPU map has [completed with18 performance misses
+and no admitted band](2026-09-09-foundation-command-map-results.md). The sections
+below retain their historical design/development status; do not relaunch the map.
+
 Status: CPU audit, experiment design and locally tested diagnostic implementation.
 The user approved development after the overnight closeout. No GPU evaluation, optimizer, scheduling, remote
 deployment or physical motion is authorized by this document. Source inspected:

@@ -95,3 +95,35 @@ The combined football/foundation-map/launch-guard regression set passed165
 tests in16.41 s with CUDA hidden. The curriculum was rendered to HTML and its
 table/local links checked programmatically; no rendered robot or policy rollout
 is claimed. These tests do not solve the remaining full-robot B0 feasibility gate.
+
+## Overnight handoff: remote CPU gate closed, GPU gate still pending
+
+At source `58b1f293c7df7520d899ba09e4c772f69ae7dd49`,100.100 ran the football,
+foundation-map and historical regression set in the allowlisted child environment
+with CUDA hidden: **337 passed,2 skipped in18.75 s**. The two optional real-model
+tests expect Mac mirror paths. Both actors were separately strictly restored on
+CPU from their actual Linux paths, preserving their declared hashes and saved
+iterations/common-step counters; CUDA remained uninitialized.
+
+The host's initial check showed no running Duck service or compute PID, GPU0 at
+0% utilization/45 C/12 MiB, and both protected services inactive. Historical
+failed/exited services were left unchanged. Recheck all live state before GPU use.
+The fork branch and training worktree were fast-forwarded to the same exact
+tested source. HTTPS publishing failed authentication; the existing SSH transport
+worked without changing stored credentials or Git remote configuration.
+
+Retained on100.100 under
+`artifacts/evaluations/foundation-command-map-cpu-preflight-58b1f29`, mirrored on
+the Mac under `artifacts/diagnostics/foundation-command-map-cpu-preflight-58b1f29`:
+
+- `actor-loading.json`: SHA256 `4c14beee2ee543f77a8505c680b936539b889fe9ecb1c882713171b1dbf38d75`.
+- `cpu-tests.json`: SHA256 `3ecd071dc76c7baf48f73c3b902b79463e418b25baf0722a786d72d3151c69e1`.
+- Original checkpoint: `logs/rsl_rl/run_motor_aware/2026-09-02_22-45-55_stage2-motor-aware-4096x3000-36667ee/model_7998.pt`.
+- Narrow checkpoint: `artifacts/experiments/f1r-width-paired-s421-v1/narrow-pilot/model_8498.pt`.
+
+The same-thread continuation `microduck-curriculum-through-sep-9-07-30` is active
+at15-minute cadence, with the fixed cutoff above and quiet-unless-material updates.
+Next close the effective reset/RNG evidence and reviewed runtime manifest, then
+use the existing guarded driver under a hard-capped user service. No GPU map,
+optimizer run or football-balancing policy has started in this handoff. Do not
+skip those remaining gates simply because the remote CPU tests passed.

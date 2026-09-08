@@ -211,3 +211,11 @@ not learned stance. Read-only host checks at this update found a clean remote
 `07770335cf3e172b1754560b45a1f9e7c3117414`, no GPU compute process,
 0% utilization / 12 MiB / 46 C, and both protected system services inactive.
 No optimizer job or service change was made.
+
+The clean Linux worktree was then fast-forwarded to exact
+`ae122b5177504075cfcb833ad43cef07a428aecd`. With CUDA hidden, all 76 focused
+native-runtime, transition, evaluation, observation/action, flat-hold and BAM
+tests passed in 6.36 s, with no skips. The retained first-hold input was present.
+Post-test checks again showed an idle GPU at 46 C and both protected services
+inactive. This completes Linux CPU validation of this chunk; GPU integration
+and the declared disposable smoke remain unrun.

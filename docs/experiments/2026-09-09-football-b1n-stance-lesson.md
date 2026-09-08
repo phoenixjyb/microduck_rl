@@ -340,6 +340,15 @@ inspection. This is retained as an intermittent cleanup issue, not a proven fix
 or a fully green local regression result. No supervisor behavior was weakened or
 changed; validate the unchanged process-group tests on Linux before GPU use.
 
+Linux confirmation at exact source `ddd7a8c3f9e1846c92ca333eff8fa8784d44bf1b`:
+the same broad regression selection passed 497 tests with two skips in 23.32 s.
+All new motor/delay tests and the unchanged process-group supervision tests
+passed. Both skips were the previously documented separately retained checkpoint
+inputs at `test_foundation_command_session.py:80`; they are not model-loading
+acceptance. CUDA was hidden. The post-test branch was clean and the GPU remained
+idle at 0% / 12 MiB / 46 C with no compute process; both protected system services
+remained inactive. The macOS cleanup issue is not claimed fixed by this Linux run.
+
 Next unfinished integration: first-terminal physical/contact evidence capture,
 full live-mask wiring with refreshed Warp state and ctrl/actuator/reset ordering,
 then bounded actual CUDA validation and the declared disposable optimizer smoke.

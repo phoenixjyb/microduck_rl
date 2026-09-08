@@ -1,5 +1,10 @@
 # Frozen foundation command map: completed, no admitted band
 
+Follow-up: [CPU motion decomposition](2026-09-09-foundation-motion-decomposition.md)
+is complete; the original performance decision is unchanged. Football development
+has reached a separate [B0 geometry fixture](2026-09-09-football-b0-contact-fixture.md),
+not a stance or free-ball balance result.
+
 The single predeclared map completed on100.100 from September9 00:13:05 to
 00:19:38 Asia/Shanghai at source `ddca61c484812aa64f83e00fca9e81a92b6fabc8`.
 Service `microduck-foundation-map-v1-ddca61c.service` exited0, with its independent

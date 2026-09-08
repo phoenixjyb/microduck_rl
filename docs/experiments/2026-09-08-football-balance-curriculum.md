@@ -4,6 +4,10 @@ Latest foundation evidence: the [completed frozen map](2026-09-09-foundation-com
 does not admit a moving-speed band. Continue ball B0 geometry and distinct stance
 work; do not promote a walking policy to ball balancing from that result.
 
+The [B0 full-collision contact fixture](2026-09-09-football-b0-contact-fixture.md)
+now has tested fixed/free geometry candidates. This is unstepped near-contact
+evidence; stance, supporting loads and rolling dynamics are still unverified.
+
 User requirement, September8: stand on a rolling football and stabilize while
 preserving walking, obstacle avoidance, stabilization and eventual hopping.
 The renewed work window ends **September9 07:30 Asia/Shanghai**, or September8

@@ -45,3 +45,36 @@ machine identity and CUDA hidden.
 
 Results and their exact output hash will be appended after the tested CPU run.
 No training revision is selected by this analysis design alone.
+
+## Completed CPU result
+
+Source `aa146af` passed117 focused CPU tests locally and the same117 on100.100
+(13.80 s /13.56 s). The original Linux host then reconciled all18 cells and
+produced `artifacts/evaluations/foundation-command-map-v1-motion-decomposition.json`,
+mirrored locally under `artifacts/diagnostics/`. SHA256:
+`c781d6c97237231f56f5b82574eea62c91b51b722a25cfb6412079686f8ff0a9`.
+No CUDA device, simulator session or policy was used by this analysis.
+
+Settled group averages across24 per-environment summaries:
+
+| Command | Actor | Forward bias m/s | Demeaned lateral energy fraction | Raw absolute lateral m/s | Explanatory boxcar absolute lateral m/s |
+| --- | --- | --- | --- | --- | --- |
+| .10 | Original | -.01663 | .9898 | .07734 | .01213 |
+| .10 | Narrow | +.02215 | .9526 | .07185 | .01874 |
+| .20 | Original | -.05480 | .9931 | .07756 | .01149 |
+| .20 | Narrow | -.01679 | .9723 | .07434 | .01554 |
+| .30 | Original | -.09145 | .9829 | .07766 | .01435 |
+| .30 | Narrow | -.03225 | .9457 | .07716 | .02009 |
+
+The energy fractions are averages of per-environment ratios, not a pooled ratio.
+Dominant lateral bins span approximately3.17–3.67 Hz. Most lateral mean-square
+velocity is variation around each environment's mean; it cannot be described
+simply as constant sideways drift. The fixed boxcar attenuates much of that
+variation, but it is not a replacement acceptance signal. Individual signed
+drift still exists, and forward bias survives averaging. Contact phase and a
+causal mechanism are not established. All18 original performance misses remain.
+
+Next learning design must distinguish mean-speed bias from lateral oscillation
+and named-joint loading, instead of assuming longer fixed-speed practice fixes
+all three. Ball B0 geometry may proceed independently; no optimizer or obstacle
+promotion is authorized by these explanatory statistics alone.

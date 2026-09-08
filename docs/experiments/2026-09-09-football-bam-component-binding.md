@@ -65,3 +65,34 @@ The latest bounded SSH attempt returned `No route to host` for 100.100. Current
 remote GPU/service state remains unknown; no remote process, service, network
 setting or training worktree was changed. The interrupted remote B0 wrench
 report still needs reconciliation on reconnect before any rerun or overwrite.
+
+## Retained component evidence and next gate
+
+Source `5491e93` is pushed to the fork feature branch. The exclusive, fsynced
+local report is `artifacts/diagnostics/football-bam-component-local-5491e93.json`,
+SHA256 `d453d65c9c06ef469137b092ed2eaa4732e30e5ba895c6d90ba478e827af6211`.
+It records full source/asset/parameter hashes, selected startup, compiled motor
+settings and runtime versions: MuJoCo 3.10.0, Torch 2.9.1,
+better-actuator-models 1.0.1, mjlab 1.3.0.
+
+Zero error produced zero motor torque. The +/-0.02 rad position errors produced
+approximately +/-0.0112381 Nm; the suspended-state friction budgets ranged from
+0.00944753 to 0.01191645 Nm. These are component samples at zero velocity with
+no torque applied, not supported robot loads, available motor capacity or
+thermal acceptance. All native controls/state remained unchanged; time stayed 0.
+
+Direct component import emitted an existing task-registration circular-import
+warning involving `bam.mjlab`, followed by task registrations. This does not
+invalidate the inspected component return values, but this run is not evidence
+that the complete training registry or normal initialization is healthy. Retain
+the warning and verify the normal Linux training import/initialization path
+before a launch; do not suppress it or claim a source fix here.
+
+The next bounded chunk is a separately declared flat-floor native contact/hold
+fixture, using this exact motor computation and an explicit command-delay path.
+Declare its 0.002 s step, short duration, reset/placement geometry, forbidden
+contacts, finite-state/torque/speed/tilt abort rules and per-step motor/contact
+recording before executing it. A successful short hold is still only a fixture
+check, not a learned B1 controller. A B1 optimizer needs its own complete lesson
+protocol and a verified exclusive Linux GPU window. Do not repeat the closed
+speed map or static allocations to fill time while the host is unreachable.

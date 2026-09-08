@@ -4,9 +4,10 @@ Protocol `football-b1n-nominal-stance-v1`. The fixed-target CPU hold aborted for
 forward tilt; its source, report and unchanged stops are retained in the
 [hold experiment](2026-09-09-football-flat-hold.md). This declaration creates a
 separate specialist, not an alteration or promotion of any gait/hop actor.
-**CPU integration only: the caller-owned Warp loop is now implemented and tested
-on CPU. Actual CUDA validation, complete evaluator and launch manifest remain
-unrun or unfinished. Do not launch training.**
+**Short CUDA integration passed: the caller-owned Warp loop ran the source-bound
+two-world normal/isolation/reset probe on100.100. Complete evaluation and the
+PPO/launcher adapter remain unfinished; no optimizer or learned stance is
+admitted. Do not launch training before the remaining smoke gates.**
 
 ## Plant, reset and control
 
@@ -497,3 +498,13 @@ is now implemented and predeclared, with reviewed dependency Python tree pins
 and168 focused local CPU tests passing. It has no optimizer or capability
 admission. Complete Linux CPU validation and the exact leased/retained service
 attempt before moving on to full evaluator and PPO adapter work.
+
+CUDA confirmation: corrected source `f42a21cf592184276b89a4be17620e87a7fe6941`
+passed the unique retained two-world probe in20.305s, after212 Linux checks.
+The [probe evidence and exact hashes](2026-09-09-stance-cuda-integration.md)
+record actual `cuda:0`, first-terminal isolation, selective reset, no foreign GPU
+owner, peak sampled50 C, and idle closeout. Raw evidence is mirrored on the Mac.
+Next unfinished chunk: bind complete first-attempt trajectory evidence to source,
+runtime, actor/checkpoint and episode identity, then implement/test the declared
+PPO adapter and disposable64-env/16-iteration smoke. Do not repeat this successful
+integration probe or the closed hold merely to fill the authorized window.

@@ -264,6 +264,12 @@ tested. No CUDA, robot-contact or learned-balance result is inferred.
 The broader local CPU regression selection passed 485 tests in 24.71 s;
 Markdown rendering and relative-link checks also passed.
 
+Linux confirmation at exact source `54311fe2256669be796c45b997ad9d329450185e`:
+87 focused stance/Warp/native/BAM/hold tests passed in 14.20 s with CUDA hidden
+and no skips. The installed private-source pins matched. After testing the
+worktree was clean, no GPU compute process existed, telemetry was
+0% / 12 MiB / 46 C, and both protected system services remained inactive.
+
 Next: bind and test per-world BAM/delay/reset state and terminal capture to this
 boundary, then verify actual CUDA behavior under a separately bounded integration
 probe before the declared optimizer smoke. Full source-bound evaluator assembly

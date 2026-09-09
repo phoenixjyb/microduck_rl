@@ -6,6 +6,7 @@ import torch
 from mjlab_microduck import stance_checkpoint as cp
 from mjlab_microduck import stance_attempt_trace as trace
 from mjlab_microduck import stance_evaluation_bundle as bundle
+from mjlab_microduck import stance_plant_evidence as plant
 from mjlab_microduck.first_attempt_smoke import canonical
 
 
@@ -20,12 +21,12 @@ def inputs():
         architecture=deepcopy(cp.ARCHITECTURE))
     raw = cp.encode(actor, critic, meta)
     # Source/runtime values below are explicit synthetic provenance fixtures.
-    runtime = (canonical({'source': 'd'*40, 'synthetic': True})+'\n').encode()
+    env = WarpStanceRuntime(2, device='cpu')
+    runtime = plant.runtime_bytes('d'*40, env.native)
     binding = dict(protocol=trace.PROTOCOL, source='d'*40, runtime_sha256=sha256(runtime).hexdigest(),
         checkpoint_sha256=sha256(raw).hexdigest(), checkpoint_iteration=128,
         evaluation_seed=541, worlds=2, capture_device='cpu')
     launch = bundle.launch_bytes(binding, meta); binding['launch_sha256'] = sha256(launch).hexdigest()
-    env = WarpStanceRuntime(2, device='cpu')
     recorder = trace.FirstAttemptTrace(binding, env.snapshot())
     obs = env.observations()['actor']; actions = cp.infer(actor, obs)
     recorder.append(env.step(actions), obs, actions)
@@ -40,12 +41,28 @@ def test_exclusive_durable_bundle_and_recomputed_receipts(tmp_path, inputs):
                                 checkpoint_identity=inputs['checkpoint_identity']) == score
     assert score['strict_checkpoint_checked'] and score['deterministic_actor_replay_checked']
     assert score['actor_replay_max_abs_error'] == 0
+    assert score['compiled_plant_checked'] and score['nominal_reset_checked']
     assert not score['provenance_validated'] and not score['checkpoint_admitted']
     assert not score['learned_stance_accepted'] and not score['physical_motion_authorized']
     before = {p.name: p.read_bytes() for p in directory.iterdir()}
     with pytest.raises(FileExistsError): bundle.write_bundle(directory, **inputs)
     assert before == {p.name: p.read_bytes() for p in directory.iterdir()}
     assert not torch.cuda.is_initialized()
+
+
+def test_rehashed_false_plant_refused_before_publication(tmp_path, inputs):
+    import json
+    changed = deepcopy(inputs)
+    runtime = json.loads(changed['runtime_raw']); runtime['plant']['qids'].reverse()
+    changed['runtime_raw'] = (canonical(runtime)+'\n').encode()
+    changed['binding']['runtime_sha256'] = sha256(changed['runtime_raw']).hexdigest()
+    changed['launch_raw'] = bundle.launch_bytes(
+        {k: v for k, v in changed['binding'].items() if k != 'launch_sha256'}, changed['checkpoint_identity'])
+    changed['binding']['launch_sha256'] = sha256(changed['launch_raw']).hexdigest()
+    changed['payload']['binding'] = deepcopy(changed['binding'])
+    with pytest.raises(ValueError, match='compiled plant mismatch'):
+        bundle.write_bundle(tmp_path/'owned', **changed)
+    assert not (tmp_path/'owned').exists()
 
 
 @pytest.mark.parametrize('name', ['trace.pt', 'checkpoint.pt', 'runtime.json', 'launch.json', 'score.json', 'restore.json'])

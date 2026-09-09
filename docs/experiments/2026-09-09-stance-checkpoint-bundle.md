@@ -109,3 +109,7 @@ transition/timeout semantics, full training-state saves and bounded launch
 assembly. Then run the declared disposable64-world/16-iteration smoke and use
 measured timing before the fresh nominal-stance pilot. Do not rerun closed CUDA
 or native-hold probes, relax historical gates, or claim learned football balance.
+
+The subsequent [compiled plant and recorded-state checks](2026-09-09-stance-plant-evidence.md)
+introduce explicit v2 bundle/launch schemas and strengthen the runtime semantics.
+The v1 coverage statement above is retained as historical evidence.

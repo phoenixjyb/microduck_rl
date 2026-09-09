@@ -518,6 +518,10 @@ those bindings and the PPO adapter before the declared disposable smoke.
 
 Strict fresh-model restoration and exclusive hash-bound file bundles are now
 implemented in the [checkpoint/bundle component](2026-09-09-stance-checkpoint-bundle.md).
+
+The next [compiled plant and recorded-state component](2026-09-09-stance-plant-evidence.md)
+adds CPU reset, joint/observation mapping and terminal contact-summary checks to
+the v2 bundle. It is not a new trained capability or authorization to start PPO.
 It uses the installed RSL5.0.1 model API and preserves caller RNG state. Replayed
 actions must agree with the restored deterministic actor; copied filenames or
 positive receipts alone are insufficient. Full compiled-plant/reset/contact

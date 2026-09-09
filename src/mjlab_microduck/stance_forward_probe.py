@@ -238,15 +238,41 @@ def child(source, launch_sha, fd):
     checked(source, launch_sha)
 
 
-def verify(root):
+def verify(root, *, report_sha256=None):
     expected = {'launch.json', 'child.log'} | {f'batch-{n}.json' for n in WORLDS} | {
         f'input-{n}.pt' for n in WORLDS} | {f'output-{n}-{i}.pt' for n in WORLDS for i in range(8)}
-    require({p.name for p in root.iterdir()} == expected, 'exact complete forward inventory')
+    report = None
+    if report_sha256 is not None:
+        host.supervisor.hex_id(report_sha256, 64)
+        raw = host.supervisor.file_bytes(root/'report.json')
+        require(sha256(raw).hexdigest() == report_sha256, 'independent completed report hash')
+        report = host.supervisor.parse(raw)
+        require(set(report['files']) == expected, 'exact completed manifest')
+    require({p.name for p in root.iterdir()} == expected | ({'report.json'} if report else set()),
+            'exact complete forward inventory')
     require(sum(p.stat().st_size for p in root.iterdir()) < TOTAL_LIMIT, 'retained forward quota')
+    if report:
+        # Verify every file before any tensor deserialization. Recheck each
+        # descriptor at loading time as well; never remove the original report.
+        for name in sorted(expected):
+            raw = host.supervisor.file_bytes(root/name, limit=SNAPSHOT_LIMIT, allow_empty=name == 'child.log')
+            require(sha256(raw).hexdigest() == report['files'][name], 'completed input file hash: '+name)
+        launch = host.supervisor.parse(host.supervisor.file_bytes(root/'launch.json'))
+        require(report['protocol'] == launch['protocol'] == PROTOCOL
+                and report['training_admitted'] is False and report['child']['returncode'] == 0
+                and report['launch_sha256'] == report['files']['launch.json'], 'completed forward identity')
+        host.supervisor.hex_id(launch['source'], 40)
+        require(launch['worlds'] == list(WORLDS) and launch['graph_order'] == list(ORDER)
+                and launch['seed'] == 523 and launch['motor_preparations_per_batch'] == 1
+                and launch['integration_steps'] == launch['optimizer_steps'] == 0
+                and launch['training_admitted'] is launch['physical_motion_authorized'] is False,
+                'completed forward protocol')
     summaries = []
     def load(descriptor, name):
         raw = host.supervisor.file_bytes(root/name, limit=SNAPSHOT_LIMIT)
         require(descriptor == dict(file=name, sha256=sha256(raw).hexdigest()), 'raw forward evidence hash')
+        if report:
+            require(descriptor['sha256'] == report['files'][name], 'report-bound raw forward evidence')
         return torch.load(io.BytesIO(raw), map_location='cpu', weights_only=True)
     for n in WORLDS:
         r = host.supervisor.parse(host.supervisor.file_bytes(root/f'batch-{n}.json'))
@@ -269,8 +295,12 @@ def verify(root):
         decided = comparison(samples)
         require(decided == r['comparison'], 'independently recomputed forward comparison')
         summaries.append(dict(worlds=n, **decided))
-    return dict(protocol=PROTOCOL, batches=summaries, decision='forward-diagnostic-complete',
-                training_admitted=False, graph_equivalence_established=False, physical_motion_authorized=False)
+    result = dict(protocol=PROTOCOL, batches=summaries, decision='forward-diagnostic-complete',
+                  training_admitted=False, graph_equivalence_established=False, physical_motion_authorized=False)
+    if report:
+        require(report['result'] == result and report['decision'] == result['decision'],
+                'unchanged completed forward decision')
+    return result
 
 
 def supervise(source, launch_sha):

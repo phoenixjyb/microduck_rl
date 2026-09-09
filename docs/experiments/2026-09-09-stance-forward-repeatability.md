@@ -330,3 +330,52 @@ new section has two tables and eleven rows; the complete document has three
 tables and fifteen rows). `git diff --check` passed. A fresh remote readback
 still showed a clean implementation worktree, the completed service with no PID,
 no GPU compute process, and both protected system services inactive.
+
+## Reproducible secondary row report
+
+`python -m mjlab_microduck.stance_forward_diagnosis` now implements the read-only
+inspection. The completed-report path added to `stance_forward_probe.verify`
+accepts an independent report hash, verifies the complete manifest before any
+tensor load, rechecks descriptors, input value hashes and replay controls, and
+recomputes the original decision without removing or rewriting `report.json`.
+The existing pre-report live-supervisor verification path is unchanged.
+
+The derived report retains all seven call-0 comparisons at each batch size:
+raw row differences, differences after unique-DOF alignment, bit-versus-numeric
+distinctions, and per-coordinate dynamics maxima with world/DOF provenance and
+separate translational/rotational units. It rejects ambiguous or non-friction
+rows rather than attempting general contact matching. It always returns
+`diagnostic-only`, with graph equivalence, training admission and physical-motion
+authority false. No simulator or optimizer runs during this analysis.
+
+```sh
+CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=1 .venv/bin/python \
+  -m mjlab_microduck.stance_forward_diagnosis \
+  --input artifacts/evaluations/stance-forward-ee3e856286e2 \
+  --report-sha256 8d9222a8d02fb1a56d16de4fab44cc19918a42331c6f91bf3e0429dc24865de9 \
+  --output artifacts/evaluations/stance-forward-ee3e856286e2-row-diagnosis-v1.json
+```
+
+The Mac generated **141,740 bytes**, SHA256
+`82246f34a066dda2792b8c4ce5d28aeb89d72209bba920dcf0df22cfa3296eee`.
+Both batches reproduce the force-only aligned differences documented above:
+140 and 2,378 differing scalar values, respectively. Original raw decisions
+remain unchanged. Exact-source Linux tests and independent regeneration are
+required before claiming cross-machine delivery of this new report.
+
+The [qualification review draft](2026-09-09-stance-equivalence-review.md) separates
+wrapper contracts, forward arithmetic, loaded trajectories and trained-skill
+acceptance. It does not invent tolerances from observed errors or authorize a
+new GPU trial. The next CPU-only step is coverage of exact stop-boundary and
+first-failure-freeze contracts, while the independent numerical budget remains
+an explicit prerequisite for a future tolerance-based gate.
+
+Local implementation checks: the initial combined forward suites passed 37
+tests in 21.05s. After correcting the secondary pair label to `cross` whenever
+the eager reference is compared with a graph call, the five-suite regression
+selection passed **87 tests in 22.27s**. New coverage includes all-input hash
+checks before loading, report semantic revalidation, missing/extra/symlink files,
+unique-row and finite checks, signed zero, immutable original decisions,
+coordinate units, deterministic regeneration and safe output placement.
+Both Markdown documents rendered with balanced tables and valid local links;
+`git diff --check` passed. These are CPU checks, not new runtime acceptance.

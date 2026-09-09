@@ -76,6 +76,14 @@ Local validation:183 focused CPU tests passed in11.59s, including37 new capture,
 replay, binding and serialization cases. Markdown HTML rendering and local-link
 checks passed. Linux exact-source confirmation is pending at this commit.
 
+Linux confirmation at implementation source
+`1832d287f6a2a82eeb55627200823670eedefc2a`:249 CPU tests passed in20.70s with
+no skips, using the frozen environment and an allowlist with CUDA hidden. The
+selection includes the37 new trace tests, all stance components and shared GPU
+process supervision. Post-test Git was clean; GPU telemetry was0% /12 MiB /44 C,
+no compute PID existed, and both protected system services remained inactive.
+No service or GPU workload was launched or changed in this chunk.
+
 Next integrate this recorder with a source/runtime/plant-bound artifact writer,
 strict fresh-actor checkpoint loading and the exact held-out matrix, then finish
 the PPO adapter and launch guards. Retain the CUDA probe unchanged; do not rerun

@@ -221,12 +221,23 @@ class WarpStanceRuntime:
             self.faulted = True
             raise
 
+    def _control_snapshot(self):
+        """Owned optional evidence; never included in the actor observation."""
+        return {name: value.detach().clone() for name, value in dict(
+            correction=self.delay.correction, target=self.delay.target, queue=self.delay.queue,
+            previous=self.motor.previous, voltage=self.motor.voltage, kp=self.motor.kp,
+            friction=self.motor.fields['dof_frictionloss'], damping=self.motor.fields['dof_damping'],
+            ctrl=self._view('ctrl')[:, self.ctrl_ids]).items()}
+
     @torch.no_grad()
-    def step(self, actions):
+    def step(self, actions, *, capture_control=False):
         self._healthy()
         if not self.live.any(): raise RuntimeError('all stance worlds closed; explicit reset required')
         try:
+            if type(capture_control) is not bool: raise ValueError('boolean control capture flag')
+            evidence = dict(initial=self._control_snapshot(), proposals=[]) if capture_control else None
             correction, change = self.delay.set_actions(actions, self.live)
+            if evidence is not None: evidence['after_action'] = self._control_snapshot()
             # Cached physical fields are current already; refresh the correction
             # portion for still-live worlds without performing an extra solve.
             self._observations['actor'][self.live, -10:] = correction[self.live]/.2
@@ -238,16 +249,30 @@ class WarpStanceRuntime:
                 if not tick.live.any(): break
                 pos = self._view('qpos')[:, self.qids]; vel = self._view('qvel')[:, self.dofs]
                 zeros = torch.zeros_like(pos)
-                proposal = self.motor.compute(ActuatorCmd(self.delay.peek(), zeros, zeros, pos, vel), tick.live)
+                command = ActuatorCmd(self.delay.peek(), zeros, zeros, pos, vel)
+                if evidence is not None:
+                    captured = dict(before_steps=self.steps.clone(), live=tick.live.clone(),
+                        command={k: getattr(command, k).detach().clone() for k in
+                                 ('position_target', 'velocity_target', 'effort_target', 'pos', 'vel')})
+                proposal = self.motor.compute(command, tick.live)
                 rejected = tick.reject_proposed_torque(proposal['torque_nm'])
                 if not torch.equal(rejected, proposal['rejected']) or not torch.equal(tick.live, proposal['accepted']):
                     raise ValueError('motor and physics live masks disagree')
                 self._capture(tick, proposal['torque_nm'])
                 accepted = tick.live.clone()
-                if not accepted.any(): break
+                if evidence is not None:
+                    captured.update({k: v.detach().clone() for k, v in proposal.items()})
+                if not accepted.any():
+                    if evidence is not None:
+                        captured['committed'] = self._control_snapshot()
+                        evidence['proposals'].append(captured)
+                    break
                 ctrl = self._view('ctrl')
                 ctrl[accepted.nonzero().flatten()[:, None], self.ctrl_ids[None]] = proposal['torque_nm'][accepted]
                 self.delay.advance(accepted)
+                if evidence is not None:
+                    captured['committed'] = self._control_snapshot()
+                    evidence['proposals'].append(captured)
                 # Same order as native audit: motor -> new-control solve -> Euler
                 # -> fresh post-step solve -> stops/reward. Closed physical arrays
                 # and motor/FIFO rows do not commit any candidate updates.
@@ -268,6 +293,9 @@ class WarpStanceRuntime:
             result = tick.result()
             result.update(observation=self.observations(), boundaries=boundaries,
                           terminal_records=deepcopy(self.terminal), optimizer_launched=False)
+            if evidence is not None:
+                evidence['final'] = self._control_snapshot()
+                result['control_evidence'] = evidence
             return result
         except Exception:
             self.faulted = True

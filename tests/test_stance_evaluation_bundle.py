@@ -7,6 +7,7 @@ from mjlab_microduck import stance_checkpoint as cp
 from mjlab_microduck import stance_attempt_trace as trace
 from mjlab_microduck import stance_evaluation_bundle as bundle
 from mjlab_microduck import stance_plant_evidence as plant
+from mjlab_microduck import stance_control_evidence as control
 from mjlab_microduck.first_attempt_smoke import canonical
 
 
@@ -29,8 +30,11 @@ def inputs():
     launch = bundle.launch_bytes(binding, meta); binding['launch_sha256'] = sha256(launch).hexdigest()
     recorder = trace.FirstAttemptTrace(binding, env.snapshot())
     obs = env.observations()['actor']; actions = cp.infer(actor, obs)
-    recorder.append(env.step(actions), obs, actions)
+    result = env.step(actions, capture_control=True)
+    recorder.append(result, obs, actions)
     return dict(payload=recorder.payload(), binding=binding, checkpoint_raw=raw,
+        control_evidence=dict(protocol=control.PROTOCOL, binding=deepcopy(binding),
+                              ticks=[trace.owned(result['control_evidence'])]),
         checkpoint_identity=meta, runtime_raw=runtime, launch_raw=launch)
 
 
@@ -42,6 +46,8 @@ def test_exclusive_durable_bundle_and_recomputed_receipts(tmp_path, inputs):
     assert score['strict_checkpoint_checked'] and score['deterministic_actor_replay_checked']
     assert score['actor_replay_max_abs_error'] == 0
     assert score['compiled_plant_checked'] and score['nominal_reset_checked']
+    assert score['delayed_motor_targets_checked'] and score['motor_proposals_checked'] == 10
+    assert not score['bam_outputs_recomputed']
     assert not score['provenance_validated'] and not score['checkpoint_admitted']
     assert not score['learned_stance_accepted'] and not score['physical_motion_authorized']
     before = {p.name: p.read_bytes() for p in directory.iterdir()}
@@ -65,7 +71,7 @@ def test_rehashed_false_plant_refused_before_publication(tmp_path, inputs):
     assert not (tmp_path/'owned').exists()
 
 
-@pytest.mark.parametrize('name', ['trace.pt', 'checkpoint.pt', 'runtime.json', 'launch.json', 'score.json', 'restore.json'])
+@pytest.mark.parametrize('name', ['trace.pt', 'control.pt', 'checkpoint.pt', 'runtime.json', 'launch.json', 'score.json', 'restore.json'])
 def test_tampered_file_refused_before_replay(tmp_path, inputs, name):
     directory = tmp_path/'owned'; digest, _ = bundle.write_bundle(directory, **inputs)
     (directory/name).write_bytes((directory/name).read_bytes()+b'corrupt')
@@ -86,6 +92,29 @@ def test_actor_disagreement_rejected_before_creating_directory(tmp_path, inputs)
     changed = deepcopy(inputs); changed['payload']['ticks'][0]['actions'][0, 0] += .01
     with pytest.raises(ValueError, match='restored actor'): bundle.write_bundle(tmp_path/'owned', **changed)
     assert not (tmp_path/'owned').exists()
+
+
+def test_control_disagreement_rejected_before_creating_directory(tmp_path, inputs):
+    changed = deepcopy(inputs)
+    changed['control_evidence']['ticks'][0]['proposals'][0]['command']['position_target'][0, 0] += .1
+    with pytest.raises(ValueError, match='delayed target'): bundle.write_bundle(tmp_path/'owned', **changed)
+    assert not (tmp_path/'owned').exists()
+
+
+def test_rehashed_control_corruption_still_fails_semantic_replay(tmp_path, inputs):
+    import io
+    import json
+    directory = tmp_path/'owned'; bundle.write_bundle(directory, **inputs)
+    changed = deepcopy(inputs['control_evidence'])
+    changed['ticks'][0]['proposals'][0]['committed']['queue'][0, 0, 4] += .1
+    buffer = io.BytesIO(); torch.save(changed, buffer); raw = buffer.getvalue()
+    (directory/'control.pt').write_bytes(raw)
+    manifest = json.loads((directory/'manifest.json').read_bytes())
+    manifest['files']['control.pt'] = dict(sha256=sha256(raw).hexdigest(), bytes=len(raw))
+    manifest_raw = (canonical(manifest)+'\n').encode(); (directory/'manifest.json').write_bytes(manifest_raw)
+    with pytest.raises(ValueError, match='FIFO shift'):
+        bundle.verify_bundle(directory, sha256(manifest_raw).hexdigest(),
+            binding=inputs['binding'], checkpoint_identity=inputs['checkpoint_identity'])
 
 
 @pytest.mark.parametrize('key', ['runtime_raw', 'launch_raw', 'checkpoint_raw'])

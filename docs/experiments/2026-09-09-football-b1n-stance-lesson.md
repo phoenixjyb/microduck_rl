@@ -522,6 +522,10 @@ implemented in the [checkpoint/bundle component](2026-09-09-stance-checkpoint-bu
 The next [compiled plant and recorded-state component](2026-09-09-stance-plant-evidence.md)
 adds CPU reset, joint/observation mapping and terminal contact-summary checks to
 the v2 bundle. It is not a new trained capability or authorization to start PPO.
+
+The [control-path evidence component](2026-09-09-stance-control-evidence.md) follows
+with opt-in correction/FIFO and motor-commit replay in explicit v3 bundles. It
+does not independently recompute BAM solver outputs or admit a trained policy.
 It uses the installed RSL5.0.1 model API and preserves caller RNG state. Replayed
 actions must agree with the restored deterministic actor; copied filenames or
 positive receipts alone are insufficient. Full compiled-plant/reset/contact

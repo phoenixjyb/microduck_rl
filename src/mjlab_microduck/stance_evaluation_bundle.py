@@ -11,11 +11,12 @@ from mjlab_microduck import foundation_command_campaign as files
 from mjlab_microduck import stance_attempt_trace as trace
 from mjlab_microduck import stance_checkpoint as checkpoint
 from mjlab_microduck import stance_plant_evidence as plant
+from mjlab_microduck import stance_control_evidence as control
 from mjlab_microduck.first_attempt_smoke import canonical, require
 
-PROTOCOL = 'football-b1n-evaluation-bundle-v2'
-LAUNCH_PROTOCOL = 'football-b1n-evaluation-inputs-v2'
-NAMES = {'launch.json', 'runtime.json', 'checkpoint.pt', 'trace.pt', 'restore.json', 'score.json'}
+PROTOCOL = 'football-b1n-evaluation-bundle-v3'
+LAUNCH_PROTOCOL = 'football-b1n-evaluation-inputs-v3'
+NAMES = {'launch.json', 'runtime.json', 'checkpoint.pt', 'trace.pt', 'control.pt', 'restore.json', 'score.json'}
 ATOL, RTOL = 1e-6, 1e-5
 
 
@@ -54,7 +55,7 @@ def actor_replay(payload, actor, score):
             'actor_replay_max_abs_error': maximum, 'actor_replay_atol': ATOL, 'actor_replay_rtol': RTOL}
 
 
-def write_bundle(directory, payload, *, binding, checkpoint_raw, checkpoint_identity, runtime_raw, launch_raw):
+def write_bundle(directory, payload, *, control_evidence, binding, checkpoint_raw, checkpoint_identity, runtime_raw, launch_raw):
     """Publish manifest last, fsync every file; retain any partial failed directory.
 
     Caller must own the output path and retain the returned manifest hash outside
@@ -63,8 +64,11 @@ def write_bundle(directory, payload, *, binding, checkpoint_raw, checkpoint_iden
     actor, restore, compiled = checked_inputs(binding, checkpoint_raw, checkpoint_identity, runtime_raw, launch_raw)
     raw, receipt = trace.encode(payload, binding)
     score = {**actor_replay(payload, actor, receipt['score']), **plant.check_trace(payload, compiled)}
+    control_raw, control_receipt = control.encode(control_evidence, payload, compiled)
+    score.update(control_receipt)
     data = {'launch.json': launch_raw, 'runtime.json': runtime_raw, 'checkpoint.pt': checkpoint_raw,
-            'trace.pt': raw, 'restore.json': (canonical(restore)+'\n').encode(), 'score.json': (canonical(score)+'\n').encode()}
+            'trace.pt': raw, 'control.pt': control_raw,
+            'restore.json': (canonical(restore)+'\n').encode(), 'score.json': (canonical(score)+'\n').encode()}
     directory = files.native._plain_path(directory)
     directory.mkdir(exist_ok=False)
     files.native._fsync_dir(directory.parent)
@@ -94,7 +98,7 @@ def verify_bundle(directory, expected_manifest_sha256, *, binding, checkpoint_id
             'exact bundle inventory')
     data = {}
     for name in sorted(NAMES):
-        limit = trace.MAX_TRACE_BYTES if name == 'trace.pt' else checkpoint.LIMIT
+        limit = control.LIMIT if name == 'control.pt' else trace.MAX_TRACE_BYTES if name == 'trace.pt' else checkpoint.LIMIT
         data[name] = files.file_bytes(directory/name, limit=limit)
         require(manifest['files'][name] == dict(sha256=sha256(data[name]).hexdigest(), bytes=len(data[name])),
                 'bundle byte identity mismatch: '+name)
@@ -103,5 +107,6 @@ def verify_bundle(directory, expected_manifest_sha256, *, binding, checkpoint_id
     score = trace.verify(data['trace.pt'], manifest['files']['trace.pt']['sha256'], binding)
     payload = torch.load(io.BytesIO(data['trace.pt']), map_location='cpu', weights_only=True)
     score = {**actor_replay(payload, actor, score), **plant.check_trace(payload, compiled)}
+    score.update(control.verify(data['control.pt'], manifest['files']['control.pt']['sha256'], payload, compiled))
     require(canonical(files.parse(data['score.json'])) == canonical(score), 'recomputed score mismatch')
     return score

@@ -85,3 +85,7 @@ Next: bind the remaining action-delay/motor state and exact held-out evaluation
 matrix; finish PPO transition/timeout handling, complete resumable training-state
 saves and guarded launch assembly. Only then run the predeclared disposable
 64-world/16-iteration smoke and use measured timing before the fresh stance pilot.
+
+The subsequent [control-path evidence component](2026-09-09-stance-control-evidence.md)
+adds opt-in action/delay and motor-commit recording/replay in explicit v3 bundles.
+The coverage and results above describe the earlier v2 implementation.

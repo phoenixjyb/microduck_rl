@@ -68,6 +68,15 @@ replay also passed under a caller's `meta` default device, without allocating on
 CUDA. Markdown HTML and relative-link checks passed. Exact-source Linux
 confirmation is next.
 
+Exact-source Linux confirmation at
+`ce560dd431560d29dc6920382715332f65a3b4ba`: all 359 CPU tests passed in
+32.64s with no skips, including shared process-supervision checks. CUDA was
+hidden in the allowlisted test environment. Post-test source was clean on the
+exact feature branch; GPU0 remained at 0% / 12 MiB / 44 C with no compute PID.
+Both protected system services remained inactive. No optimizer, GPU service,
+trained checkpoint, video or physical motion occurred. The newly instrumented
+CUDA path still needs its separately supervised integration/smoke gate.
+
 Next assemble the four-checkpoint/three-seed evaluation runner, PPO transitions
 and timeout bootstrap semantics, resumable optimizer/RNG saves and guarded launch
 inputs. Before any optimizer pilot, run the predeclared disposable64-world/

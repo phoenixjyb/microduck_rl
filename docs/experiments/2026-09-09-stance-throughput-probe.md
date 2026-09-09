@@ -166,3 +166,7 @@ comparison evidence may lead to a separately predeclared optimized training
 smoke that measures optimizer and durable-evidence overhead at the planned batch.
 Graph remains opt-in and unused by normal training. No new weights were trained,
 no prior skill policy was changed, and no pilot, video or physical motion was run.
+
+The next chunk provides [hash-bound CPU prefix diagnosis and the same-input
+forward isolation predeclaration](2026-09-09-stance-forward-repeatability.md).
+The original rejected comparison above is unchanged.

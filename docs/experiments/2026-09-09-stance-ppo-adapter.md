@@ -92,3 +92,7 @@ simulation-state retention before supporting real resume. Then run the disposabl
 64-world/16-iteration smoke, inspect measured cost/finite metrics and predeclare
 the bounded fresh pilot. No new hop, obstacle composition or ball-balance
 acceptance is claimed by this CPU precursor.
+
+The subsequent [held-out matrix and collection component](2026-09-09-stance-heldout-matrix.md)
+fixes all twelve cases and their numerical aggregation, while leaving live GPU
+allocation, seed initialization and independent supervision to the guarded launcher.

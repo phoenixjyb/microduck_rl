@@ -531,6 +531,10 @@ The [CPU PPO precursor](2026-09-09-stance-ppo-adapter.md) adds explicit terminal
 bootstrap, selective reset, finite GAE/update checks and a learner-only fixture
 codec. Synthetic optimizer continuation is not real simulation resume, the
 declared smoke or pilot, or a new learned Duck capability.
+
+The [held-out matrix component](2026-09-09-stance-heldout-matrix.md) implements
+the twelve-case plan, no-reset collection and retained-bundle decision replay.
+It does not allocate a GPU or assert that the full evaluation has been run.
 It uses the installed RSL5.0.1 model API and preserves caller RNG state. Replayed
 actions must agree with the restored deterministic actor; copied filenames or
 positive receipts alone are insufficient. Full compiled-plant/reset/contact

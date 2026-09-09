@@ -81,6 +81,10 @@ on this evidence alone.
 
 ## Predeclared next experiment: same-input forward only
 
+The original v1 design below was not launched. CPU implementation inspection
+found reset-only `nefc=nf=0`: it would test unconstrained dynamics. The v2
+amendment and earlier user-requested cutoff are declared below before GPU launch.
+
 Protocol: `football-b1n-same-input-forward-v1`. Implementation and its CPU tests
 are still required; this document is **not a launch-ready source-bound plan**.
 Before any launch, bind the reviewed implementation commit, runtime hashes,
@@ -175,3 +179,58 @@ same-input GPU isolation specified but not implemented or launched. The numerica
 root cause, graph equivalence, optimized training smoke, full pilot timing and
 learned stance capability remain open. No weights or protected services were
 changed by this chunk.
+
+## Implementation amendment before GPU launch (v2)
+
+`stance_forward_probe.py` implements `football-b1n-same-input-forward-v2`.
+The user has replaced the previous working window with **September 9 14:00
+Shanghai (06:00 UTC)**. This module enforces that earlier deadline independently
+of the older shared helper, retaining a 180-second service budget and 600-second
+closeout reserve. The existing continuation schedule has the same new cutoff.
+
+CPU evidence at two worlds showed reset `nefc=[0,0]`, `nf=[0,0]`, and zero foot
+support. One genuine BAM proposal for the delayed nominal target, zero velocity
+and effort targets, was accepted with exactly zero torque. After committing that
+control and solving forward once, `nefc=nf=[14,14]`, physics steps remained zero
+and time remained zero. This preparation is now mandatory before the snapshot:
+exactly one motor preparation per batch, no policy tick or Euler call. Trials
+then restore the same fully prepared model/data contents, with **no further BAM
+updates**. Every recorded output must contain 14 friction rows per world.
+This exercises the pre-Euler friction solve, not a loaded-contact trajectory or
+stance performance. v1 was superseded before launch, not rescored as passing.
+
+The first CPU snapshot test rejected a metadata mismatch: `wp.clone` packs the
+storage strides of singleton broadcast axes (for example `model.body_mass`),
+although logical bytes were unchanged. Snapshot metadata now records the original
+simulator allocation layout, while the packed CPU backup supplies its exact
+logical bytes. The complete original allocation/static signature is checked
+before every restore. No byte, layout or input-hash check is waived.
+
+The launch plan binds the source, frozen dependency trees, compiled plant,
+snapshot schema and hash protocol. CUDA-specific scratch snapshots cannot have
+known hashes before GPU allocation: the child must exclusively retain and hash
+the actual full snapshot **before any measured call**, and independently check
+that same hash after every restore. The CPU supervisor rehashes the retained
+snapshot and raw outputs, checks every receipt and recomputes all 28 pairs per
+batch. Preparation is documented separately from the eight measured calls.
+
+All 461 owned model/data arrays are enumerated in the current two-world CPU
+binding (15,011,239 logical bytes). The 256 MiB per-snapshot and 1 GiB total limits
+remain unchanged and are checked on actual allocated sizes, not extrapolated
+from two worlds. Outputs retain active rows and contacts in original order.
+The graph is opt-in only inside this disposable diagnostic. Existing runtime
+defaults, installed libraries, policies, rewards and physical stop thresholds
+remain unchanged. The post-run numerical classifications and no-admission
+boundaries are the same as v1.
+
+Implementation validation initially exposed the stride mismatch (one failure and
+six dependent fixture errors), then the empty-constraint nonfinite-test fixture
+(one failure). Read-only CPU inspection preceded both changes. After v2 motor
+preparation, all 11 initial focused tests passed in 9.13s. The earlier-deadline
+test and broader exact-source validation must pass before launch.
+
+The completed 16-test forward-probe suite plus throughput, prefix-diagnosis and
+runtime regressions passed all 63 checks in 15.90s on the Mac. Input-hash/order
+tampering, missing raw files, active nonfinite values, empty-friction trials,
+storage ceilings and the earlier cutoff all fail closed. Exact-source Linux
+regressions remain the mandatory next check before the v2 GPU service.

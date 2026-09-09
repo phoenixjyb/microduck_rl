@@ -10,6 +10,21 @@ from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
 from test_stance_attempt_trace import binding
 
 
+def test_standalone_import_does_not_skip_task_discovery():
+    import os
+    import subprocess
+    import sys
+    result = subprocess.run([sys.executable, '-c',
+        'from mjlab_microduck.stance_plant_evidence import reference; '
+        'import torch; assert reference()["topology"][:3] == [21, 20, 14]; '
+        'assert not torch.cuda.is_initialized()'],
+        env={k: v for k, v in os.environ.items() if k in ('HOME', 'USER', 'PATH', 'CUDA_VISIBLE_DEVICES', 'OMP_NUM_THREADS')},
+        capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stdout+result.stderr
+    assert 'Failed to load task package' not in result.stdout+result.stderr
+    assert 'circular import' not in result.stdout+result.stderr
+
+
 @pytest.fixture(scope='module')
 def sample():
     env = WarpStanceRuntime(2, device='cpu')

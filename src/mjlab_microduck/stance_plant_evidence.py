@@ -7,6 +7,7 @@ from hashlib import sha256
 
 import mujoco
 import torch
+import mjlab  # Initialize task discovery before flat_hold imports bam.mjlab.
 
 from mjlab_microduck.first_attempt_smoke import canonical, require
 from mjlab_microduck.football_contact_fixture import FEET

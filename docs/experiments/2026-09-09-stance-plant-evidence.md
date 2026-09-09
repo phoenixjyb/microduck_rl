@@ -49,6 +49,28 @@ Local focused validation:257 CPU tests passed in14.29s, including36 new plant/
 bundle cases. Markdown HTML and local-link checks passed. Exact-source Linux
 confirmation follows; no GPU or optimizer was launched.
 
+At initial implementation `be6757603ae160d2de7a68731c5cbd5175a5521e`, Linux
+passed323 CPU tests in23.93s with no skips. An additional fresh-process audit
+found an import-order warning hidden by test collection's earlier imports:
+`flat_hold` imports `bam.mjlab` before mjlab task discovery completes. This new
+module now initializes mjlab first, with a fresh-interpreter regression test;
+historical probe files and installed libraries are untouched.
+
+Exact native compilation is platform-specific. Mac/Linux assets, topology,
+addresses, ranges, options and float32 nominal reset matched. Selected native
+double arrays differed only in body inertia (maximum1.0843e-19), inertial
+quaternions (2.8936e-15), geometry size (1.2317e-16), position (1.3878e-17) and
+quaternion (1.5544e-15). These tiny differences explain distinct exact descriptor
+hashes: Mac `7f60b2de94229b92f6bfa6be5009b3fcc165ee9a9de5cc01697bc08afd58069b`,
+Linux `15cec59fb2aa1e0e90a53293c256a174d4912b3f345d1a382da273f109046cb5`.
+Do not round away this identity difference. Linux-produced bundles must be
+verified against the matching Linux compile/runtime; Mac replay fails closed
+at the exact plant gate. Cross-platform bundle acceptance is not claimed.
+
+After the import-order regression fix, local validation passed258 CPU tests
+in22.15s, including37 new cases in this chunk. Updated Markdown HTML checks
+passed. Linux confirmation of this exact follow-up source is next.
+
 Next: bind the remaining action-delay/motor state and exact held-out evaluation
 matrix; finish PPO transition/timeout handling, complete resumable training-state
 saves and guarded launch assembly. Only then run the predeclared disposable

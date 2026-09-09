@@ -78,4 +78,43 @@ The focused local learner/checkpoint/legacy-smoke selection passed **77 tests in
 72.31 seconds**, including 128 actual CPU optimizer updates against an explicitly
 synthetic environment, strict purpose rejection, export verification and failed
 supervisor closeout. This is source/CPU evidence, not CUDA or learning-quality
-evidence. Exact-source Linux regression and the retained GPU run remain pending.
+evidence.
+
+## Exact-source validation and live launch
+
+Implementation `c8f6b994a2991e400bf6478b967c30e9b618db6a` passed **638 Linux
+CPU tests in 90.44 seconds**, with CUDA hidden and no skips/deselections:
+`tests/test_stance*.py`, `tests/test_gpu_idle_gate.py` and
+`tests/test_foundation_command_campaign.py`. Both working trees were clean on
+the exact feature branch. The prelaunch GPU had no compute owner, 12 MiB used
+and temperature 46 C; both protected system services were inactive.
+
+The retained service `microduck-stance-eager-c8f6b994a299.service` became active
+at **2026-09-09 14:31:52 Asia/Shanghai**, with supervisor PID 578821,
+`RuntimeMaxUSec=16min`, and child PID 579082. The explicit launch deadline is
+1788938762 (15:26:02 Shanghai), with the shorter independent process/service
+caps still binding. This is one interactive continuation, not a renewed
+unattended automation. Keep the training worktree frozen at the implementation
+commit while this service runs; later documentation commits do not change it.
+
+Early readback confirmed four completed real PPO updates and durable
+`model_3.pt`; its receipt recorded 22.7374 seconds for the first four collection/
+update/evidence loops and finite value loss 0.2031911, surrogate loss -0.0099726,
+and entropy 2.1946226. The only GPU compute PID was 579082; sampled utilization
+was 35%, memory 331 MiB and temperature 53 C. Both protected services remained
+inactive. This is progress evidence, **not a completed run or learned stance**.
+
+Retain the live directory `artifacts/evaluations/stance-eager-learning-c8f6b994a299`:
+
+| Retained input / early export | SHA256 |
+| --- | --- |
+| launch.json | `ece74214db87462aec318c18dd52522d7bb03ddf85e1d4b0ef0cef9cd63b03ad` |
+| runtime.json | `4800855b1c957ef59cca4be715454cea4310035f68e81c83463a39ead59ac2ed` |
+| initial.pt | `cedae3042523289aeea3d07df6195a23c6061c3681d7dec2f45ddab2cfe5cfe7` |
+| model_3.pt | `8f5860699477907876d5c1416c138acb14457c7298a12d47278db22f87753824` |
+
+The initializer's logical model-state hash is
+`fcbff244d146c21b6b044db67d2a9ff98fa16ae397cba661527987eeeba4e2ce`;
+it is distinct from the serialized file hash. Final completion, the full
+post-run inventory mirror, training-trend summary and any frozen-policy
+performance evaluation are still pending at this live-launch record.

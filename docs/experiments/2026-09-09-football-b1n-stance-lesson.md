@@ -515,3 +515,10 @@ pre-action observations, frozen duplicates and exact serialized trace hashes.
 It is a tested evaluator component, not complete launch/restore/contact provenance
 or a384-attempt held-out matrix. All policy-admission flags remain false. Finish
 those bindings and the PPO adapter before the declared disposable smoke.
+
+Strict fresh-model restoration and exclusive hash-bound file bundles are now
+implemented in the [checkpoint/bundle component](2026-09-09-stance-checkpoint-bundle.md).
+It uses the installed RSL5.0.1 model API and preserves caller RNG state. Replayed
+actions must agree with the restored deterministic actor; copied filenames or
+positive receipts alone are insufficient. Full compiled-plant/reset/contact
+provenance, exact held-out matrix and PPO/launcher assembly remain unfinished.

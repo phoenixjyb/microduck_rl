@@ -88,3 +88,8 @@ Next integrate this recorder with a source/runtime/plant-bound artifact writer,
 strict fresh-actor checkpoint loading and the exact held-out matrix, then finish
 the PPO adapter and launch guards. Retain the CUDA probe unchanged; do not rerun
 it as a substitute for completing the remaining implementation.
+
+The subsequent [strict checkpoint and file-bundle implementation](2026-09-09-stance-checkpoint-bundle.md)
+now supplies fresh stock models, exact evaluation-weight restoration, immutable
+manifest-last publication and actor/score replay. This closes those component
+tasks, not the remaining plant/reset/contact provenance or full matrix gates.

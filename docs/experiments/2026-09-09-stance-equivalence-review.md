@@ -154,3 +154,18 @@ The combined new and existing transition/Warp-runtime selection passed **115
 tests in 7.41s** on the Mac with CUDA hidden. Assertions check exact booleans,
 counters and frozen tensors, not a new numeric tolerance. `git diff --check`
 passed. Exact-source Linux regressions are the remaining delivery check.
+
+At pushed test source `e706cf53d37cf3605dae3fe838f8db674881e833`, all **598 Linux
+stance, GPU-idle and foundation-campaign tests passed in 66.15s**, without skips
+or deselection and with CUDA hidden. This adds 82 cases to the previous 516-test
+selection: 80 predicate/accounting tests and two synthetic-boundary real CPU
+wrapper cases. The diff from the previous evidence tip contains only tests and
+this document; the entire production `src` tree is unchanged. No failed
+predicate, threshold change or runtime fix was needed.
+
+This CPU boundary task is complete. It strengthens wrapper qualification only;
+it does not close the independent numerical-budget, loaded-contact, full
+trajectory, optimizer-timing or learned-skill gates above. Do not rerun the
+completed GPU probes or enable graph training as a consequence of these tests.
+Any remaining work before 14:00 must be bounded, justified CPU review or evidence
+closeout, not an invented acceptance tolerance or an unpredeclared GPU job.

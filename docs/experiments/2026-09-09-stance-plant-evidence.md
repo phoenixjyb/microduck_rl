@@ -71,6 +71,16 @@ After the import-order regression fix, local validation passed258 CPU tests
 in22.15s, including37 new cases in this chunk. Updated Markdown HTML checks
 passed. Linux confirmation of this exact follow-up source is next.
 
+Linux confirmation at `195aaa7bb8fd3f30f827c79a2874eff11322ea12`:324 CPU
+tests passed in30.08s, with no skips, including the fresh-interpreter regression
+and shared process-supervision checks. Fresh standalone descriptor generation on
+both hosts emitted no task-discovery/circular-import warning and retained the
+respective exact hashes above. CUDA was hidden throughout testing. Post-test
+100.100 was clean on the exact feature branch; GPU0 was0% /12 MiB /45 C with no
+compute PID. Both protected system services remained inactive. No GPU service,
+optimizer, trained checkpoint, physical motion or learned-skill acceptance was
+introduced by this chunk.
+
 Next: bind the remaining action-delay/motor state and exact held-out evaluation
 matrix; finish PPO transition/timeout handling, complete resumable training-state
 saves and guarded launch assembly. Only then run the predeclared disposable

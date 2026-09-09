@@ -94,6 +94,15 @@ bundle cases. The builder forces CPU device placement without changing the
 caller's default device and refuses non-float32 initialization. Markdown HTML,
 table and relative-link checks passed. Exact-source Linux confirmation is next.
 
+Linux confirmation at implementation source
+`802084ec6c742dc7b5bb888107f83954c6a11307`:287 CPU tests passed in22.22s,
+with no skips. This includes the38 new checkpoint/bundle checks, all stance
+components and shared process supervision. The selected RSL source pins and
+fresh seed521 state hash matched on Linux. CUDA was hidden in the allowlisted
+test environment. Post-test Git was clean; GPU0 remained0% /12 MiB /44 C with
+no compute PID, and both protected system services remained inactive. No GPU
+job, optimizer, service mutation or new trained stance checkpoint occurred.
+
 Remaining before training: complete the compiled-plant/reset/contact binding and
 the exact four-checkpoint/three-seed/128-world evaluation matrix; finish PPO
 transition/timeout semantics, full training-state saves and bounded launch

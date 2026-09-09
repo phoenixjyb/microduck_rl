@@ -526,6 +526,11 @@ the v2 bundle. It is not a new trained capability or authorization to start PPO.
 The [control-path evidence component](2026-09-09-stance-control-evidence.md) follows
 with opt-in correction/FIFO and motor-commit replay in explicit v3 bundles. It
 does not independently recompute BAM solver outputs or admit a trained policy.
+
+The [CPU PPO precursor](2026-09-09-stance-ppo-adapter.md) adds explicit terminal
+bootstrap, selective reset, finite GAE/update checks and a learner-only fixture
+codec. Synthetic optimizer continuation is not real simulation resume, the
+declared smoke or pilot, or a new learned Duck capability.
 It uses the installed RSL5.0.1 model API and preserves caller RNG state. Replayed
 actions must agree with the restored deterministic actor; copied filenames or
 positive receipts alone are insufficient. Full compiled-plant/reset/contact

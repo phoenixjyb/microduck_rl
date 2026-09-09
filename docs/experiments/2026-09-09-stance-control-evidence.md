@@ -82,3 +82,7 @@ and timeout bootstrap semantics, resumable optimizer/RNG saves and guarded launc
 inputs. Before any optimizer pilot, run the predeclared disposable64-world/
 16-iteration smoke and measure the changed runtime's cost. This control recorder
 does not itself authorize multi-seed promotion, hopping or rolling-ball balance.
+
+The [CPU PPO adapter and learner codec](2026-09-09-stance-ppo-adapter.md) now cover
+terminal bootstrap/reset semantics and synthetic learner continuation. They do
+not yet provide real simulation resume or the production GPU training launcher.

@@ -223,6 +223,13 @@ All **57 focused tests passed in 7.23s** on the Mac with CUDA hidden. Markdown
 HTML/table and local-link checks plus `git diff --check` passed. Exact-source
 Linux regressions remain the delivery check before closing this renewed chunk.
 
+At pushed implementation `0807bb776a9b98fdfac90ce2c82ba81cf8bab79a`, the exact-source
+Linux stance/GPU-idle/foundation selection passed **621 tests in 66.05s**, without
+skips or deselection, with CUDA hidden. The 23 new contact-audit cases account for
+the increase from 598. This bounded helper/test chunk is complete; the existing
+runtime, policies, thresholds and original experiment decisions remain unchanged.
+No new GPU job or unattended continuation was created.
+
 Remaining prerequisite: general multipoint spatial correspondence needs an
 independent distance/frame budget, ambiguity handling and a retained loaded-input
 protocol. This conservative audit intentionally does not guess those budgets,

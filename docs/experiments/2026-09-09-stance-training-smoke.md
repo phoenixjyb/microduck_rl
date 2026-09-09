@@ -164,3 +164,9 @@ this result, and no reward or numerical acceptance gate has changed.
 
 The next bounded implementation and measurement are predeclared in the
 [forward-graph throughput probe](2026-09-09-stance-throughput-probe.md).
+That probe has now completed: collection was 1.85x faster at 64 worlds and
+4.75x at 512, but even eager repeats were not bitwise identical, so its unchanged
+differential gate rejected the comparison. Graph is not enabled in training.
+The next gate is numerical repeatability/equivalence diagnosis, followed only
+on acceptance by a separately predeclared optimized training smoke; the full
+pilot remains closed.

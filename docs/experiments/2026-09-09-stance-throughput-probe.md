@@ -90,3 +90,79 @@ reported in those two subprocess checks. Both passed when rerun serially in
 21.34s without increasing their limits. The six-case/raw-prefix focused suite
 also passed16 tests in66.29s. Final binding-owner checks and the full Linux
 suite must pass before the source-bound GPU comparison; no timeout is waived.
+
+## Executed result: faster collection, differential rejected
+
+The final focused suite passed 16 tests in 8.24s. At exact pushed source
+`f2ff27e434f4add09bba040bb69d6d7fe2927b26`, all 460 Linux stance, GPU-idle and
+foundation-campaign tests passed in 46.72s, without skips or deselection.
+Only then was `microduck-stance-throughput-f2ff27e434f4.service` launched.
+Its sequential child completed successfully in 62.018s, with peak sampled GPU
+temperature 55 C. Both protected system services remained inactive. Successful
+process completion is not numerical acceptance: the recomputed decision is
+`differential-rejected`, with training and full-pilot timing admission false.
+
+| Worlds | Eager mean, seconds | Graph, seconds | Collection speedup | Eager repeat exact | Graph exact gate |
+| --- | --- | --- | --- | --- | --- |
+| 64 | 5.105381 | 2.761106 | 1.8490x | false | false |
+| 512 | 14.280239 | 3.005673 | 4.7511x | false | false |
+
+Each time measures 24 policy ticks, not an end-to-end training update. At 512
+worlds, graph collection alone extrapolates to 1,538.904s (25.648 minutes) for
+512 updates. Optimizer, journal and checkpoint overhead remain unmeasured;
+this does not establish that a full pilot fits its 30-minute cap. The separate
+instrumented GPU tick attributed 0.708s to eager `_forward` versus 0.086s for
+graph at 512 worlds, consistent with reduced forward dispatch cost, but subject
+to profiler overhead and the exploratory fixed case order.
+
+### Read-only rejection diagnosis
+
+After validating artifact hashes, weights-only CPU inspection of the four
+retained ticks in every case found identical initial qpos/qvel, physics-step
+counts and soft-limit masks within each pair. However, both eager/eager and
+eager/graph comparisons already diverged numerically at the first post-Euler
+boundary. At 512 worlds, eager/eager maximum first-boundary qpos difference was
+`1.824743264475237e-12`, versus `2.0656412778180533e-12` for eager/graph.
+These are real numerical differences, not merely serialized-file differences.
+
+Maximum absolute differences over the complete four-tick retained prefixes:
+
+| Worlds / comparison | qpos (mixed coordinates) | qvel (mixed coordinates/s) | Foot support (N) | Torque (Nm) | Actor observation | Critic observation |
+| --- | --- | --- | --- | --- | --- | --- |
+| 64 eager/eager | 3.79980e-5 | 0.00397968 | 0.0353193 | 0.000194165 | 0.000397967 | 0.00353193 |
+| 64 eager/graph | 3.79980e-5 | 0.00398065 | 0.0353069 | 0.000194211 | 0.000398065 | 0.00353071 |
+| 512 eager/eager | 0.000141054 | 0.00995786 | 0.402495 | 0.000485705 | 0.000995786 | 0.0402495 |
+| 512 eager/graph | 5.07534e-5 | 0.00787467 | 0.171662 | 0.000383772 | 0.000787467 | 0.0171662 |
+
+Across these prefixes, checked discrete fields were exact in all four pairs:
+terminated, timed_out, live, executed_steps, episode_steps, boundary
+physics_steps and soft_limit_mask, plus hard_limit, forbidden_contact and
+warning flags. This limited agreement does not establish full-trajectory
+contact-record equality, safety equivalence or learned capability. CPU diagnosis
+left CUDA uninitialized. Eager numerical nonrepeatability is observed; its root
+cause is not established, and this sample cannot establish graph equivalence or
+identify a graph-specific regression. No tolerance was introduced and the
+rejected decision remains unchanged.
+
+### Retained evidence and next gate
+
+`artifacts/evaluations/stance-throughput-f2ff27e434f4/` is retained on 100.100
+and the Mac: 33 report-hashed files plus the report itself, 34 files totaling
+63,619,159 bytes. This includes all six case records, 24 raw prefix files,
+launch metadata, child log and deterministic decision. Both copies were
+independently checked against exact inventory and every file hash.
+
+| Evidence | SHA256 |
+| --- | --- |
+| launch.json | `d2503736fd4d0bbff2115e70b68d7d3c840fa39d8309525728321e1780025c5f` |
+| decision.json | `ff7c37cc1f75a494f59da6aa089060687ea37100e914117c3bb94e5a254fbc58` |
+| report.json | `b9c1ab3b2148a851389e87dc91c9a0dfda00734e11390d0e25ef955b99832373` |
+
+Next, characterize baseline repeatability and the first divergence using the
+immutable prefixes, then predeclare an independently justified equivalence
+protocol before another GPU comparison. Do not choose tolerances merely to pass
+these observed values or relax physical stop thresholds. Only accepted software
+comparison evidence may lead to a separately predeclared optimized training
+smoke that measures optimizer and durable-evidence overhead at the planned batch.
+Graph remains opt-in and unused by normal training. No new weights were trained,
+no prior skill policy was changed, and no pilot, video or physical motion was run.

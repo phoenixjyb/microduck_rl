@@ -1,7 +1,8 @@
 """Caller-owned B1-N Warp loop; not a registered PPO task or launch admission.
 
 Entity/BAM initialization is real. Physics uses raw Warp arrays with explicit
-Torch/Warp synchronization, without CUDA graphs or installed-library changes.
+Torch/Warp synchronization and eager forward by default. An opt-in captured
+forward candidate preserves all checks; no installed-library changes are made.
 The CPU device is the integration audit backend; CUDA needs its own retained test.
 """
 
@@ -65,6 +66,7 @@ class WarpStanceRuntime:
         self.n = nworld; self.device = torch.device(device)
         self.wp_device = wp.get_device(device)
         self.faulted = False
+        self.forward_graph = None
         self.entity = build_entity()
         self.native = self.entity.compile()
         nd = mujoco.MjData(self.native)
@@ -126,9 +128,25 @@ class WarpStanceRuntime:
     def _healthy(self):
         if self.faulted: raise RuntimeError('faulted stance runtime requires job closeout')
 
+    def enable_forward_graph(self):
+        """Explicit candidate path; default eager physics and all checks remain."""
+        self._healthy()
+        if self.forward_graph is not None: raise ValueError('forward graph already bound')
+        try:
+            from mjlab_microduck.stance_forward_graph import ForwardGraph
+            self._sync()
+            self.forward_graph = ForwardGraph(self.model, self.data, self.wp_device)
+            self._sync()
+        except Exception:
+            self.faulted = True
+            raise
+
     def _forward(self):
         self._sync()
-        with wp.ScopedDevice(self.wp_device): mjwarp.forward(self.model, self.data)
+        if self.forward_graph is None:
+            with wp.ScopedDevice(self.wp_device): mjwarp.forward(self.model, self.data)
+        else:
+            self.forward_graph.run(self.model, self.data)
         self._sync()
         for name in ('qpos', 'qvel', 'qacc', 'qacc_warmstart', 'time', 'ctrl',
                      'qfrc_bias', 'qfrc_constraint', 'qfrc_actuator', 'cvel', 'xquat'):

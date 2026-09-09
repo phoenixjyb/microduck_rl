@@ -161,3 +161,6 @@ bounded throughput improvements while preserving every physical stop and
 terminal record. Measure the actual planned batch before judging whether a
 fresh pilot fits its reviewed budget. No second training job is predeclared by
 this result, and no reward or numerical acceptance gate has changed.
+
+The next bounded implementation and measurement are predeclared in the
+[forward-graph throughput probe](2026-09-09-stance-throughput-probe.md).

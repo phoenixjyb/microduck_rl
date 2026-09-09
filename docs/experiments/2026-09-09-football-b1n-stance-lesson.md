@@ -508,3 +508,10 @@ Next unfinished chunk: bind complete first-attempt trajectory evidence to source
 runtime, actor/checkpoint and episode identity, then implement/test the declared
 PPO adapter and disposable64-env/16-iteration smoke. Do not repeat this successful
 integration probe or the closed hold merely to fill the authorized window.
+
+The next [first-attempt trajectory recorder/replay component](2026-09-09-stance-attempt-trace.md)
+now consumes actual runtime snapshots and reconciles per-world terminal prefixes,
+pre-action observations, frozen duplicates and exact serialized trace hashes.
+It is a tested evaluator component, not complete launch/restore/contact provenance
+or a384-attempt held-out matrix. All policy-admission flags remain false. Finish
+those bindings and the PPO adapter before the declared disposable smoke.

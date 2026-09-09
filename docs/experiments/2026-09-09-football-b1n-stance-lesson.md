@@ -4,10 +4,11 @@ Protocol `football-b1n-nominal-stance-v1`. The fixed-target CPU hold aborted for
 forward tilt; its source, report and unchanged stops are retained in the
 [hold experiment](2026-09-09-football-flat-hold.md). This declaration creates a
 separate specialist, not an alteration or promotion of any gait/hop actor.
-**Short CUDA integration passed: the caller-owned Warp loop ran the source-bound
-two-world normal/isolation/reset probe on100.100. Complete evaluation and the
-PPO/launcher adapter remain unfinished; no optimizer or learned stance is
-admitted. Do not launch training before the remaining smoke gates.**
+**The [disposable 64-world/16-update training smoke](2026-09-09-stance-training-smoke.md)
+completed on100.100 using CUDA physics and CPU PPO. Its saved weights and
+failure records are verified, but no learned stance is admitted. The full pilot
+and held-out matrix have not run; measured throughput must justify the declared
+pilot budget before launching it. Smoke weights must not become its parent.**
 
 ## Plant, reset and control
 

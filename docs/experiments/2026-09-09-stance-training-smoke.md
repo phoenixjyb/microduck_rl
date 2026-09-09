@@ -95,3 +95,69 @@ subprocess. After exact-source Linux tests, permit one separately named attempt
 under the corrected commit and the same unchanged numerical protocol, seed,
 budgets and limits. This is a diagnosed launcher correction, not an automatic
 retry or restart of the failed unit; do not overwrite the failed evidence.
+
+### Corrected attempt: completed disposable CUDA-physics training smoke
+
+Corrected implementation `d7eb23c0eb117d7bbf15b8e0ab08c6e325051d73` passed
+all 444 Linux CPU tests in 44.23s, without deselection or skips. The independently
+timed `microduck-stance-smoke-d7eb23c0eb11.service` completed successfully:
+MainPID 0, ExecMainStatus 0, active/exited (retained receipt, not running).
+Only child PID 376926 owned CUDA; protected system services remained inactive.
+
+The run completed all 16 PPO updates and 384 policy ticks across 64 worlds.
+The child took 99.858s including initialization/closeout; the collection/update/
+evidence loop took 90.215s. All optimizer metrics were finite. Final metrics:
+value loss 0.0666856, surrogate loss -0.0212075, entropy 2.1062493. These are
+training diagnostics, not held-out scores or independent performance acceptance.
+
+The 380 retained episode terminations all crossed the unchanged 0.35-rad tilt
+stop. Mean duration among terminated episodes was 537.121 physics steps
+(1.074s); this excludes unfinished episodes and is not a frozen-policy result.
+No episode reached the five-second timeout. Maximum recorded tilt was
+0.351771 rad, including the first failure boundary; no subsequent failed-world
+motion is inferred or permitted before the explicit training reset.
+Maximum applied motor torque was 0.1393695 Nm, maximum joint speed 0.700503 rad/s,
+and soft-limit exposure was 0 of 3,416,504 executed joint samples. There were no
+recorded torque, joint-speed, root-speed, height, hard-limit, forbidden-contact,
+support-loss or proposed-torque terminal causes. This short nominal smoke does
+not establish real motor safety, thermal limits or learned balance.
+
+The independently sampled GPU temperature peaked at 57 C. After completion,
+readback was 0% utilization, 12 MiB, 48 C with no compute PID. Both protected
+services remained inactive and no unrelated service was changed.
+
+Retain `artifacts/evaluations/stance-training-smoke-d7eb23c0eb11` on both hosts:
+421 hashed files plus the final report (12,128,312 bytes total), including
+initial weights, all 16 update weight exports, all 384 tick records, update
+receipts and source/runtime/launch metadata. A separate post-run Linux CPU
+verification restored every export and checked exact inventory and every hash;
+CUDA stayed uninitialized. The Mac copy independently matched all file hashes
+and the final report hash. Neither copy is a simulator-resume checkpoint.
+
+| Evidence | SHA256 |
+| --- | --- |
+| launch.json | `1de98f53ed11034acb1855517b7e3c839cbb355495a3168e54febcb7ac92e861` |
+| runtime.json | `e676cb51f373d6d7929e1968376c9339535135813e947a75893c78c0b89a5de3` |
+| completed.json | `9512edea14d77b6465539082f1b880799d3413f40bb48e5786001d20fe7b4f4d` |
+| report.json | `f6b1163311dff30461d672d1124304e486e3439e6e62786ca137e13ac974f46d` |
+| initial.pt | `c000342aa527199d038c9f92ee967a5c10c30b1a61585d4aefa10d0ad9d8556c` |
+| model_15.pt | `3450ae340826af1d0584a55e496c5131c65db38fa199b2961fabd1d41aa5b0fe` |
+
+Decision: `disposable-training-smoke-complete-not-capability`. Do not reuse
+these smoke weights as a pilot parent or admit stance, hopping, obstacle
+composition or football balance from this run. Existing skill policies remain
+untouched. No full pilot, held-out matrix, MP4, raw perception or physical motion
+was launched by this chunk.
+
+### Next gate: measured throughput before a fresh pilot
+
+Measured cost was approximately 5.64s per update at 64 worlds. Even holding
+that cost constant, 512 updates would take approximately 48.1 minutes, beyond
+the declared 30-minute pilot service cap. This is an arithmetic scenario, not
+a measured prediction at 512 worlds; larger-batch performance remains unknown.
+Do not silently lengthen the cap, shorten the experiment or launch an unsafe
+pilot. Next profile the collection/synchronization/evidence path and test
+bounded throughput improvements while preserving every physical stop and
+terminal record. Measure the actual planned batch before judging whether a
+fresh pilot fits its reviewed budget. No second training job is predeclared by
+this result, and no reward or numerical acceptance gate has changed.

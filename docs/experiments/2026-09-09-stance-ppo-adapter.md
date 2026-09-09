@@ -96,3 +96,9 @@ acceptance is claimed by this CPU precursor.
 The subsequent [held-out matrix and collection component](2026-09-09-stance-heldout-matrix.md)
 fixes all twelve cases and their numerical aggregation, while leaving live GPU
 allocation, seed initialization and independent supervision to the guarded launcher.
+
+The subsequent [disposable training smoke](2026-09-09-stance-training-smoke.md)
+completed 16 real updates with CPU PPO and CUDA physics. Its separate smoke
+subclass does not expand this CPU fixture's world/update bounds or grant the
+learner-only codec permission to resume a simulator. Full-pilot timing and
+held-out stance acceptance remain open gates.

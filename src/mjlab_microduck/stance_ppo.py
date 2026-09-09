@@ -83,12 +83,12 @@ class CpuStanceLearner:
         require(type(n) is int and 2 <= n <= 8, 'bounded CPU fixture worlds')
         self._initialize(n)
 
-    def _initialize(self, n):
+    def _initialize(self, n, *, seed=523):
         """Shared CPU optimizer implementation; subclasses declare their bounds."""
         checkpoint.runtime_check()
         root = distribution('rsl-rl-lib').locate_file('rsl_rl')
         require({k: sha256((root/k).read_bytes()).hexdigest() for k in PINS} == PINS, 'reviewed PPO/storage sources')
-        self.n = n; self.seed = 523; self.faulted = False; self.updates = 0; self.phase = 'empty'
+        self.n = n; self.seed = seed; self.faulted = False; self.updates = 0; self.phase = 'empty'
         self.restored_fixture_only = False
         self.actor, self.critic = checkpoint.fresh_models(self.seed)
         self.initial_hash = checkpoint.state_hash(checkpoint.states_of(self.actor, self.critic))

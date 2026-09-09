@@ -34,7 +34,7 @@ def runtime_check():
 
 def fresh_models(seed):
     """Stock CPU initialization, isolated from caller CPU RNG; no optimizer."""
-    require(type(seed) is int and seed in (521, 523), 'predeclared fresh initialization seed')
+    require(type(seed) is int and seed in (521, 523, 563), 'predeclared fresh initialization seed')
     require(torch.get_default_dtype() == torch.float32, 'declared float32 initialization')
     runtime_check()
     with torch.device('cpu'), torch.random.fork_rng(devices=[]):
@@ -74,11 +74,13 @@ def validate_identity(identity, *, evaluation):
         size = 40 if key == 'source' else 64
         require(type(identity[key]) is str and re.fullmatch('[0-9a-f]{'+str(size)+'}', identity[key]) is not None,
                 'checkpoint hash identity: '+key)
-    require(identity['purpose'] in ('pilot', 'smoke'), 'checkpoint purpose')
+    require(identity['purpose'] in ('pilot', 'smoke', 'eager-learning'), 'checkpoint purpose')
     pilot = identity['purpose'] == 'pilot'
-    require(type(identity['training_seed']) is int and identity['training_seed'] == (521 if pilot else 523)
-            and type(identity['worlds']) is int and identity['worlds'] == (512 if pilot else 64), 'matched seed/worlds')
-    require(type(identity['iteration']) is int and -1 <= identity['iteration'] < (512 if pilot else 16), 'bounded saved iteration')
+    seed, worlds, updates = {'pilot': (521, 512, 512), 'smoke': (523, 64, 16),
+                             'eager-learning': (563, 64, 128)}[identity['purpose']]
+    require(type(identity['training_seed']) is int and identity['training_seed'] == seed
+            and type(identity['worlds']) is int and identity['worlds'] == worlds, 'matched seed/worlds')
+    require(type(identity['iteration']) is int and -1 <= identity['iteration'] < updates, 'bounded saved iteration')
     if evaluation:
         require(pilot and identity['iteration'] in CHECKPOINTS, 'only declared pilot checkpoints may be evaluated')
     actor, critic = fresh_models(identity['training_seed'])

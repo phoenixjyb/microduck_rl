@@ -197,6 +197,15 @@ def child_environment():
 
 def supervised_process(command,log,*,cwd,env,lock_fd,timeout=120,monitor=live_gpu,guard=lambda:None):
     require(type(timeout) in (int,float) and 0 < timeout <= CELL_SECONDS,'bounded child timeout')
+    return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,timeout=timeout,monitor=monitor,guard=guard)
+
+
+def supervised_stance_smoke(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard=lambda:None):
+    """Separate fixed 900-second stance smoke; frozen-map bounds stay unchanged."""
+    return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,timeout=900,monitor=monitor,guard=guard)
+
+
+def _timed_process(command,log,*,cwd,env,lock_fd,timeout,monitor,guard):
     started = time.monotonic(); samples = []
     finished,expired = threading.Event(),threading.Event()
     with native._plain_path(log).open('xb') as output:

@@ -89,3 +89,7 @@ Real simulator resume still requires physical/motor/FIFO/solver-state retention;
 the learner-only codec does not provide it. Preserve protected services,100.98
 and historical checkpoints; do not replay old closed diagnostics or admit ball
 balance from infrastructure tests.
+
+The next bounded implementation is the separately declared
+[disposable training smoke](2026-09-09-stance-training-smoke.md); its completion
+does not substitute for this held-out matrix.

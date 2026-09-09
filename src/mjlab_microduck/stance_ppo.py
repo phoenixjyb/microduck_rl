@@ -77,8 +77,14 @@ class CpuStanceLearner:
     Learner RNG is isolated; no Python/NumPy/CUDA RNG or simulator state is saved.
     """
 
+    UPDATE_LIMIT = 2
+
     def __init__(self, n=2):
         require(type(n) is int and 2 <= n <= 8, 'bounded CPU fixture worlds')
+        self._initialize(n)
+
+    def _initialize(self, n):
+        """Shared CPU optimizer implementation; subclasses declare their bounds."""
         checkpoint.runtime_check()
         root = distribution('rsl-rl-lib').locate_file('rsl_rl')
         require({k: sha256((root/k).read_bytes()).hexdigest() for k in PINS} == PINS, 'reviewed PPO/storage sources')
@@ -129,7 +135,7 @@ class CpuStanceLearner:
         """Return the pre-reset result so callers can retain terminal diagnostics."""
         self._healthy()
         try:
-            require(self.updates < 2 and self.phase in ('empty', 'collecting') and self.storage.step < STEPS, 'collecting PPO phase')
+            require(self.updates < self.UPDATE_LIMIT and self.phase in ('empty', 'collecting') and self.storage.step < STEPS, 'collecting PPO phase')
             require(env.n == self.n and str(env.device) == 'cpu' and env.live.all(), 'live matching CPU environment')
             require(not self.restored_fixture_only or getattr(env, 'synthetic_ppo_fixture', False) is True,
                     'restored learner cannot resume simulator; synthetic fixture only')
@@ -168,7 +174,7 @@ class CpuStanceLearner:
             require(all(type(v) in (float, int) and math.isfinite(v) for v in metrics.values()), 'finite optimizer metrics')
             checkpoint.validate_states(checkpoint.states_of(self.actor, self.critic), *checkpoint.fresh_models(self.seed))
             self.updates += 1; self.phase = 'empty'
-            return dict(metrics=metrics, completed_updates=self.updates, cpu_fixture_only=True,
+            return dict(metrics=metrics, completed_updates=self.updates, cpu_fixture_only=type(self) is CpuStanceLearner,
                         checkpoint_admitted=False, physical_motion_authorized=False)
         except Exception:
             self.faulted = True

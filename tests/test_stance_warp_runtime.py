@@ -195,3 +195,28 @@ def test_timeout_exact_boundary_is_not_failure_and_cannot_advance(env):
     before = freeze_fields(env)
     with pytest.raises(RuntimeError, match='all stance worlds closed'): env.step(torch.zeros(2, 10))
     for key, value in freeze_fields(env).items(): assert torch.equal(value, before[key])
+
+
+@pytest.mark.parametrize('boundary', ['height_below', 'support_equal'])
+def test_exact_pre_step_failure_freezes_physics_motor_fifo_and_preserves_sibling(env, boundary):
+    # Synthetic cached-state/control-flow fixtures, not real low-height/support
+    # trajectories. The live sibling still executes actual CPU Warp substeps.
+    if boundary == 'height_below':
+        env.state.height[0] = torch.nextafter(torch.tensor(.08), torch.tensor(-float('inf')))
+    else:
+        env.steps[0] = 50; env._view('time')[0] = .1
+        env.state.support[0] = torch.tensor([.01, 1.])
+    initial_steps = int(env.steps[0]); initial_physics = {
+        name: env._view(name)[0].clone() for name in (*STATE_FIELDS, 'ctrl')}
+    r = env.step(torch.zeros(2, 10))
+    assert r['executed_steps'].tolist() == [0, 10]
+    assert r['terminated'].tolist() == [True, False] and r['reward'][0] == -2
+    assert r['terminal_records'][0]['physics_step'] == initial_steps
+    for name, value in initial_physics.items(): assert torch.equal(env._view(name)[0], value), name
+    frozen = freeze_fields(env); terminal = r['terminal_records'][0]
+    r2 = env.step(torch.ones(2, 10))
+    assert r2['executed_steps'].tolist() == [0, 10]
+    assert env.steps.tolist() == [initial_steps, 20]
+    assert r2['reward'][0] == 0 and not r2['terminated'][0]
+    assert r2['terminal_records'][0] == terminal
+    for name, value in freeze_fields(env).items(): assert torch.equal(value, frozen[name]), name

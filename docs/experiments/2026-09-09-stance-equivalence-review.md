@@ -119,3 +119,38 @@ No new Duck work starts at or after that time. Retain completed evidence and
 confirm no owned compute job is running. Leave protected system services and
 100.98 untouched. This draft does not extend that window or authorize physical
 motion, video, raw perception, a new pilot, or a changed curriculum success gate.
+
+## CPU boundary-contract implementation
+
+The next CPU task above is now implemented in
+`tests/test_stance_stop_boundaries.py` and two additional Warp-runtime tests.
+No production implementation, threshold, reward, action, observation or policy
+file was changed. The 80 new predicate/accounting cases cover:
+
+- The immediately adjacent float32 values below, equal to and above the tilt
+  and height limits. The equality cases remain allowed for these strict stops.
+- All fourteen torque and joint-velocity components, both signs, at adjacent
+  **magnitudes**. Equality is allowed; the next greater magnitude is rejected.
+- Each signed root-velocity axis and a three-nonzero-component vector whose
+  realized float32 norms are exactly adjacent to 1 m/s. This distinguishes the
+  full 3D norm from planar speed or a componentwise maximum.
+- Each foot's support at adjacent values around 0.01 N and integer steps 49,
+  50 and 51. Support equal to 0.01 N is rejected beginning at step 50, not before.
+- Pre-step support checks at step 49 versus the refreshed post-step-50 check,
+  torque-proposal rejection without a physics count, one-time failure penalties,
+  and failure-versus-timeout precedence at the final episode boundary.
+
+Two additional real CPU Warp wrapper cases inject a cached height immediately
+below its limit or support exactly at its step-50 limit. The failed world executes
+zero physical substeps. Its physical state, motor state, FIFO and observations
+remain frozen across the next policy tick, its terminal record is preserved, and
+the independent live sibling executes twenty actual CPU substeps. These are
+explicit synthetic boundary/control-flow injections, **not** naturally occurring
+low-height/support trajectories, a completed hold, CUDA evidence or learned
+balance. Existing post-step-failure, selective-reset and timeout tests are reused
+instead of duplicating those contracts.
+
+The combined new and existing transition/Warp-runtime selection passed **115
+tests in 7.41s** on the Mac with CUDA hidden. Assertions check exact booleans,
+counters and frozen tensors, not a new numeric tolerance. `git diff --check`
+passed. Exact-source Linux regressions are the remaining delivery check.

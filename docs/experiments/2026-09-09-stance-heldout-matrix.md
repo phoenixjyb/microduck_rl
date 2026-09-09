@@ -68,9 +68,19 @@ actual short CPU traces, first failure, wall-budget partial capture and refusal
 of bad resets or existing output. No test reports a trained policy passing H1/B1.
 
 Local validation passed all 358 CPU regression tests in 27.10s, including 28 new
-matrix/worker cases. Markdown HTML and relative-link checks passed. Exact-source
-Linux confirmation follows. No GPU allocation, optimizer or full matrix run
-occurred; the only new physical traces were short CPU test fixtures.
+matrix/worker cases. Markdown HTML and relative-link checks passed.
+
+On 100.100, implementation commit
+`4afc79c6ac9327a87013f5ed7c46adc17558f0af` passed all 424 CPU regression tests
+in 36.70s with `CUDA_VISIBLE_DEVICES` empty, including the 66 shared campaign
+supervisor tests. The exact feature branch was clean after testing. GPU readback
+was 0% utilization, 12 MiB and 44 degrees C, with no compute PID. Both protected
+system services (`recomo-ai-mission-vllm.service` and
+`recomo-ai-mission-subject-model-worker.service`) remained inactive.
+
+No GPU allocation, optimizer or full matrix run occurred; the only new physical
+traces were short CPU test fixtures. These checks validate infrastructure, not
+learned standing, hopping or football balance.
 
 Next assemble the source/runtime/asset/seed-bound GPU adapter and independently
 timed single-workload launcher, then the declared disposable64-world/16-iteration

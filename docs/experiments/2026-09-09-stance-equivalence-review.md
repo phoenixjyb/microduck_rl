@@ -169,3 +169,61 @@ trajectory, optimizer-timing or learned-skill gates above. Do not rerun the
 completed GPU probes or enable graph training as a consequence of these tests.
 Any remaining work before 14:00 must be bounded, justified CPU review or evidence
 closeout, not an invented acceptance tolerance or an unpredeclared GPU job.
+
+## Renewed bounded chunk: contact-candidate audit
+
+After the 14:00 window expired, the user requested the next chunk. That is
+treated as one renewed CPU development task, not an extension of unattended
+training. The expired continuation schedule was deleted after confirming the
+retained forward job had no PID, the GPU had no compute process, the original
+report hashes remained intact, and protected services were inactive. No service
+or policy was changed, and no new GPU window was assumed.
+
+`stance_contact_correspondence.audit_contacts` adds an in-memory CPU structural
+audit for the loaded-contact comparison prerequisite. It validates complete
+finite tables and forms candidate groups using world, **ordered** geom pair,
+contact dimension and included/excluded status. Allocation addresses and spatial
+coordinates are not silently substituted for persistent contact identities.
+
+- A unique key on both sides gives a **candidate**, not proof that the same
+  physical point was matched. Large point or frame changes remain visible in
+  the raw comparison. Physical identity is always reported as unestablished.
+- Missing groups, repeated points on a geom pair, geom-order reversals,
+  dimension changes or included/excluded changes prevent comparison of the
+  entire table. A few matching rows cannot hide unresolved rows elsewhere.
+- Both-empty tables return `no-contact-evidence`, not a successful loaded test.
+  Per-world counts remain explicit; an empty world is not a passing stance trial.
+- For unambiguous structural candidates, copies are compared while retaining
+  original row indices, ordered input value hashes, signed-zero differences and
+  every raw field. Frame and force vectors are not transformed; their component
+  differences are not claimed to be common-world-frame physical force errors.
+
+The helper has no simulator, optimizer, file loader, GPU launcher or acceptance
+path. A future file-backed caller must authenticate its input manifest before
+deserializing tensors; the in-memory value hashes alone do not authenticate an
+archived file. It always reports `diagnostic-only`, no physical contact identity,
+no graph equivalence, no training admission and no physical-motion authority.
+Normal stance dynamics and stops do not call this helper and are unchanged.
+
+Tests cover multi-world row reordering, duplicates despite distinct positions,
+missing groups, flipped geom order, contact-dimension and inclusion changes,
+empty tables, signed zero, changed allocation addresses, large point/frame
+changes, invalid schema/dtypes/sentinels/worlds, nonfinite data and resource/device
+bounds. One shared real CPU Warp fixture has two loaded spheres on a floor in
+two worlds; its four active contacts remain structurally identifiable after row
+reordering. This is **not a loaded MicroDuck trajectory or CUDA equivalence test**.
+
+The initial selection had 32 passes and one fixture-wiring failure: the new test
+unpacked three values from the existing four-value, two-world fixture. Inspection
+confirmed its native/model/data contract before correcting the test. No simulator
+fix was needed. The corrected three-suite selection passed 52 tests in 8.17s;
+the final selection including five resource/world-bound tests is recorded below.
+
+All **57 focused tests passed in 7.23s** on the Mac with CUDA hidden. Markdown
+HTML/table and local-link checks plus `git diff --check` passed. Exact-source
+Linux regressions remain the delivery check before closing this renewed chunk.
+
+Remaining prerequisite: general multipoint spatial correspondence needs an
+independent distance/frame budget, ambiguity handling and a retained loaded-input
+protocol. This conservative audit intentionally does not guess those budgets,
+run nearest-neighbor assignment or make the original graph rejection pass.

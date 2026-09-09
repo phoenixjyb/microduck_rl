@@ -37,7 +37,7 @@ CUDA_VISIBLE_DEVICES= OMP_NUM_THREADS=1 .venv/bin/python \
 The actual Mac result is 1,076,349 bytes, SHA256
 `898403098bb6435419a3dbcc871553dd472493b905fdea01c29ca0dc9d8ecb0b`.
 Its original report and all original raw files remain unchanged. Source-bound
-Linux regeneration and regression results will be recorded below after push.
+Linux regeneration produced the identical bytes and hash, as recorded below.
 
 Observed in all four pairs (64 eager/eager, 64 eager/graph, 512 eager/eager,
 512 eager/graph):
@@ -159,5 +159,19 @@ comparison, nonfinite rejection, contact ordering, chronological divergence,
 hash-before-deserialization, input immutability, deterministic regeneration and
 no-admission behavior. Synthetic bundles are test fixtures, not physical evidence.
 Markdown HTML rendering, table structure, local links and `git diff --check`
-passed. Linux exact-source regressions and independent report regeneration are
-the remaining delivery checks, not a new GPU experiment.
+passed.
+
+At pushed source `8feabd98e46047d0092e610349fb1b806758ed27`, all 479 Linux stance,
+GPU-idle and foundation-campaign tests passed in 48.48s without skips or
+deselection. The 19 new tests are CPU diagnostic checks, not CUDA evidence.
+Independent regeneration on 100.100, with CUDA hidden, produced the identical
+1,076,349-byte diagnosis and SHA256 shown above. The analyzer's own source SHA256
+is `8533a247c111419fdfa17572024bba62eb3a0691f5ff41c7dc88166c273b3c8b`.
+All three inspected installed source hashes also matched on 100.100.
+The report is retained outside the immutable probe directory on both machines.
+
+Delivery state: CPU diagnosis complete and cross-machine reproducible;
+same-input GPU isolation specified but not implemented or launched. The numerical
+root cause, graph equivalence, optimized training smoke, full pilot timing and
+learned stance capability remain open. No weights or protected services were
+changed by this chunk.

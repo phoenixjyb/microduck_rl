@@ -118,3 +118,25 @@ The initializer's logical model-state hash is
 it is distinct from the serialized file hash. Final completion, the full
 post-run inventory mirror, training-trend summary and any frozen-policy
 performance evaluation are still pending at this live-launch record.
+
+### Completed run and verified backup
+
+Subsequent readback confirmed MainPID 0, active/exited, Result success and
+ExecMainStatus 0. All **128 updates** completed in **735.963 seconds** of child
+time (726.225 seconds for the collection/update/evidence loop). The final
+checkpoint is `model_127.pt`, SHA256
+`46cd52b53f7b8b9fb220aed96d78cd961423c606e906a4df7330422ae4786e93`.
+The final report SHA256 is
+`fc7356c3f3763bc3bf6e800e65adb1826cabe5a86b0705e6c3fbf3607dcd4948`.
+Its decision is `eager-learning-complete-not-capability`.
+
+All **3,334 files / 86,811,418 bytes** are now mirrored on the Mac. The complete
+3,333-entry report inventory matches; CPU verification also checked all 129
+weight exports, 128 update receipts and 3,072 tick records. Peak sampled GPU
+temperature was 57 C. Later readback showed no compute PID, 12 MiB used, 44 C,
+and both protected services inactive. No other training job was started.
+
+Final optimizer diagnostics were value loss 5.5634247, surrogate -0.0057042,
+and entropy 3.5306112. These finite training losses do not establish improved
+standing. The next step is the separately predeclared
+[frozen initializer/final evaluation](2026-09-09-stance-eager-evaluation.md).

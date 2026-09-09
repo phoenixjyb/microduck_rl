@@ -17,6 +17,7 @@ from mjlab_microduck.stance_evaluation import score_attempt
 from mjlab_microduck.stance_transition import PhysicsState, EPISODE_STEPS, physical_failures
 
 PROTOCOL = 'football-b1n-first-attempt-trace-v1'
+EAGER_PROTOCOL = 'football-b1n-eager-first-attempt-trace-v1'
 SEEDS = (541, 547, 557)
 CHECKPOINTS = (128, 256, 384, 511)
 MAX_TRACE_BYTES = 512*1024*1024
@@ -44,7 +45,7 @@ def validate_binding(binding):
     require(set(binding) == {'protocol', 'source', 'runtime_sha256', 'checkpoint_sha256',
         'launch_sha256', 'checkpoint_iteration', 'evaluation_seed', 'worlds', 'capture_device'},
         'exact trace binding fields')
-    require(binding['protocol'] == PROTOCOL, 'trace binding protocol')
+    require(binding['protocol'] in (PROTOCOL, EAGER_PROTOCOL), 'trace binding protocol')
     for key in ('source', 'runtime_sha256', 'checkpoint_sha256', 'launch_sha256'):
         require(type(binding[key]) is str and re.fullmatch(
             '[0-9a-f]{'+('40' if key == 'source' else '64')+'}', binding[key]) is not None,
@@ -52,7 +53,8 @@ def validate_binding(binding):
     require(type(binding['worlds']) is int and 1 <= binding['worlds'] <= 128, 'bounded trace worlds')
     require(type(binding['evaluation_seed']) is int and binding['evaluation_seed'] in SEEDS,
             'predeclared evaluation seed')
-    require(type(binding['checkpoint_iteration']) is int and binding['checkpoint_iteration'] in CHECKPOINTS,
+    iterations = CHECKPOINTS if binding['protocol'] == PROTOCOL else (-1, 127)
+    require(type(binding['checkpoint_iteration']) is int and binding['checkpoint_iteration'] in iterations,
             'predeclared checkpoint iteration')
     require(binding['capture_device'] in ('cpu', 'cuda:0'), 'explicit capture device')
 
@@ -233,7 +235,7 @@ def replay(payload, expected_binding):
             rejected_proposed_torque=None if proposed is None else torch.tensor(proposed, dtype=torch.float32))
         require(scored['complete_first_attempt'] == (terminal is not None), 'terminal/complete score agreement')
         attempts.append(dict(world_id=row, **scored))
-    return dict(protocol=PROTOCOL, binding=deepcopy(expected_binding), attempts=attempts,
+    return dict(protocol=expected_binding['protocol'], binding=deepcopy(expected_binding), attempts=attempts,
         complete_attempts=sum(a['complete_first_attempt'] for a in attempts),
         numerical_passes=sum(a['candidate_pass'] for a in attempts),
         trajectory_continuity_validated=True, provenance_validated=False,

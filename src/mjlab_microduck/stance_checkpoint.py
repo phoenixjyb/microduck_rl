@@ -117,9 +117,21 @@ def encode(actor, critic, identity):
 
 def load_evaluation(raw, expected_sha256, expected_identity):
     """Hash before CPU weights-only loading; build new models, never partial load."""
+    return _load(raw, expected_sha256, expected_identity, evaluation=True)
+
+
+def load_eager_diagnostic(raw, expected_sha256, expected_identity):
+    """Separate initializer/final comparison; does not admit a pilot checkpoint."""
+    require(expected_identity['purpose'] == 'eager-learning'
+            and type(expected_identity['iteration']) is int
+            and expected_identity['iteration'] in (-1, 127), 'only eager initializer/final diagnostic')
+    return _load(raw, expected_sha256, expected_identity, evaluation=False)
+
+
+def _load(raw, expected_sha256, expected_identity, *, evaluation):
     require(type(raw) is bytes and 0 < len(raw) <= LIMIT, 'bounded checkpoint bytes')
     require(sha256(raw).hexdigest() == expected_sha256, 'checkpoint byte hash mismatch')
-    actor, critic = validate_identity(expected_identity, evaluation=True)
+    actor, critic = validate_identity(expected_identity, evaluation=evaluation)
     value = torch.load(io.BytesIO(raw), map_location='cpu', weights_only=True)
     require(set(value) == {'identity', 'states'} and value['identity'] == expected_identity, 'checkpoint metadata mismatch')
     validate_states(value['states'], actor, critic)

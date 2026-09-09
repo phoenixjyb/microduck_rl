@@ -40,7 +40,9 @@ def checked_inputs(binding, cp_raw, cp_identity, runtime_raw, launch_raw):
     runtime = files.parse(runtime_raw)
     compiled = plant.checked_runtime(runtime, binding['source'])
     require(cp_identity['iteration'] == binding['checkpoint_iteration'], 'checkpoint/trace iteration mismatch')
-    actor, receipt = checkpoint.load_evaluation(cp_raw, binding['checkpoint_sha256'], cp_identity)
+    loader = (checkpoint.load_eager_diagnostic if binding['protocol'] == trace.EAGER_PROTOCOL
+              else checkpoint.load_evaluation)
+    actor, receipt = loader(cp_raw, binding['checkpoint_sha256'], cp_identity)
     return actor, receipt, compiled
 
 

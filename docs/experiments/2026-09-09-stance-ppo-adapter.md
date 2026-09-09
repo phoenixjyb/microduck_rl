@@ -78,6 +78,14 @@ PPO/learner-codec cases. Markdown HTML and relative-link checks passed.
 Exact-source Linux confirmation follows. No GPU or real-Duck optimizer run
 occurred; only the explicitly synthetic optimizer fixtures updated weights.
 
+Linux confirmation at `945609bb7e096ab8513c2a75a34ca2324928f0b4`: all 396
+CPU tests passed in 33.21s, with no skips, including shared process supervision.
+The same uninterrupted-versus-restored synthetic continuation test passed on
+Linux. CUDA was hidden in the allowlisted test environment. Post-test source
+was clean on the exact feature branch; GPU0 was 0% / 12 MiB / 45 C with no
+compute PID. Both protected system services remained inactive. No GPU job,
+real-Duck optimization, trained stance checkpoint or physical motion occurred.
+
 Remaining before the declared GPU smoke: assemble the exact held-out evaluator,
 runtime/launch manifest and timed GPU adapter; implement separately validated
 simulation-state retention before supporting real resume. Then run the disposable

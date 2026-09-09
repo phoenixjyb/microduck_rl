@@ -2,8 +2,9 @@
 
 The [six-case throughput probe](2026-09-09-stance-throughput-probe.md) remains
 `differential-rejected`. Its faster graph candidate is not enabled in training.
-This chunk adds an offline, tested diagnosis of immutable evidence and specifies
-the next bounded experiment. It does not launch another GPU job or train weights.
+The initial chunk added an offline, tested diagnosis of immutable evidence and
+specified the next bounded experiment. The v2 implementation and completed
+forward-only GPU isolation are recorded below. No weights were trained.
 
 ## Reproducible CPU diagnosis
 
@@ -234,3 +235,98 @@ runtime regressions passed all 63 checks in 15.90s on the Mac. Input-hash/order
 tampering, missing raw files, active nonfinite values, empty-friction trials,
 storage ceilings and the earlier cutoff all fail closed. Exact-source Linux
 regressions remain the mandatory next check before the v2 GPU service.
+
+## Completed v2 same-input isolation
+
+Implementation source: `ee3e856286e2228edb821ce1e5a89f4940c674c8` on
+`feat/athletics-obstacle-curriculum`. Before launch, the exact-source Linux
+stance, GPU-idle and foundation-campaign suite passed **495 tests in 54.78s**,
+without skips or deselection, with CUDA hidden. The preceding pending statements
+are historical prelaunch records, not the current execution state.
+
+The retained user service `microduck-stance-forward-ee3e856286e2.service`
+completed with `Result=success`, `ExecMainStatus=0`, and `MainPID=0`.
+Its child took 13.662719s; peak sampled GPU temperature was 48 C. The service's
+`active/exited` state is its retained completion record, not a running workload.
+The post-run GPU check found no compute PIDs, 0% utilization, 12 MiB allocated
+and 45 C. Both protected system services remained inactive and were not changed.
+
+Retained on both the Mac and 100.100:
+`artifacts/evaluations/stance-forward-ee3e856286e2/` contains **23 files,
+105,383,394 bytes**. Exact inventory and every raw file SHA256 were verified on
+both machines; the Mac inspection did not initialize CUDA. The inventory includes
+both complete input snapshots, sixteen raw output tables, both batch reports,
+launch metadata, child log and the final report. No original evidence was edited.
+
+| Evidence | SHA256 |
+| --- | --- |
+| `launch.json` | `66af91aadd2f8b19d7c3de0dad03e2beb4a57c3836d8c6f0cdff575ac8515ea7` |
+| `report.json` | `8d9222a8d02fb1a56d16de4fab44cc19918a42331c6f91bf3e0429dc24865de9` |
+| 64-world input logical-value hash | `9799e01cce3d82759a82f2a764ad893d2db504d2f556df91e916e535031d009b` |
+| 512-world input logical-value hash | `d9c0815108768e166fc820fe6e89d40971fe823f25c68e4c8a0beade49348ac4` |
+
+The input snapshots contain 21,308,455 and 66,810,919 logical array bytes,
+respectively. Their value hashes are not their serialized `.pt` file hashes;
+the latter are separately bound by `report.json.files` and batch descriptors.
+
+Both batches classified **`forward-baseline-nonrepeatable`**. At each size, zero
+of six eager/eager, zero of six graph/graph and zero of sixteen cross-mode pairs
+were bit-identical. Only the `constraints` and `dynamics` groups differed.
+Positions, velocities, time, warmstart, ordered contacts and solver counters
+were unchanged. All worlds had 14 friction rows and one solver iteration.
+There was no integration or optimizer step. This establishes that variation can
+occur within forward dynamics, without trajectory accumulation or learning.
+
+Maximum absolute differences across all 28 pairs per batch:
+
+| Field | 64 worlds | 512 worlds |
+| --- | ---: | ---: |
+| `qacc` | 4.036924110550899e-7 | 6.820483804403921e-7 |
+| `qacc_smooth` | 7.397179615509231e-7 | 1.155451514023298e-6 |
+| `qfrc_bias` | 1.862645149230957e-9 | 3.725290298461914e-9 |
+| `qfrc_actuator` | 0 | 0 |
+| `qfrc_constraint` | 1.1326322102434006e-9 | 1.4861247787933962e-9 |
+
+These are generalized-coordinate vectors with mixed translational and rotational
+components, not a single shared physical unit or an acceptance tolerance.
+
+### Secondary CPU row-alignment inspection
+
+The original raw comparison preserves row order. A separate read-only inspection
+verified that every table has exactly 14 unique DOF IDs of friction type 1, then
+sorted copies by DOF ID. Comparing calls 1 through 7 against call 0, the aligned
+`type`, `id`, `J`, `D`, `aref` and `state` fields matched exactly at both sizes.
+Thus the raw Jacobian and diagonal-weight discrepancies in this sample were row
+permutations, not changed coefficients. Aligned constraint forces still differed:
+140 scalar values at 64 worlds (maximum 9.895175789864652e-10), and 2,378 at 512
+worlds (maximum 1.4861247787933962e-9). These counts aggregate seven comparisons;
+they are neither independent trials nor counts of failing worlds.
+
+The alignment is explanatory only: it does **not** modify the recorded gate,
+sort simulator inputs, waive bitwise mismatches, or establish equivalence. Bias
+and smooth-acceleration differences also occur upstream of the constraint solve,
+so constraint row reordering alone is not a complete causal explanation.
+
+Pinned `smooth.py` SHA256
+`63b2d4093745762309bb335826a1f741a1baab26d93277ba92859fea1495880f`
+contains `_cfrc_backward` at line 1219 and an atomic parent-force accumulation at
+line 1233. `rne` calls this backward pass before `_qfrc_bias` (lines 1273-1274).
+That is a concrete upstream candidate, **not proof that this particular kernel
+caused all observed differences**. Installed library source was not patched.
+
+Next bounded work is a tested, hash-bound CPU report for this secondary
+alignment and a reviewable numerical-equivalence protocol. Such a protocol must
+separate row identity, continuous physical quantities, discrete stop decisions,
+full loaded-contact trajectories and eager baseline variability. It must not set
+tolerances merely to pass these observed numbers. No further GPU probe is
+required to preserve or explain the current result. Any later GPU experiment
+requires its own predeclaration, idle lease and enough time before the **September
+9 14:00 Shanghai** cutoff. Graph training, optimized optimizer-smoke timing, full
+pilot admission and learned football balance all remain unaccepted.
+
+Evidence-closeout validation: all 16 forward-probe tests passed again on the Mac
+in 11.05s with CUDA hidden. Markdown rendering and local-link checks passed (the
+new section has two tables and eleven rows; the complete document has three
+tables and fifteen rows). `git diff --check` passed. A fresh remote readback
+still showed a clean implementation worktree, the completed service with no PID,
+no GPU compute process, and both protected system services inactive.

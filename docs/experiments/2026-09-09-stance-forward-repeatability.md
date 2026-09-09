@@ -379,3 +379,21 @@ unique-row and finite checks, signed zero, immutable original decisions,
 coordinate units, deterministic regeneration and safe output placement.
 Both Markdown documents rendered with balanced tables and valid local links;
 `git diff --check` passed. These are CPU checks, not new runtime acceptance.
+
+At pushed implementation source `a67d9f4304c6846ace404550c85686893e160ebf`, the
+exact-source Linux stance/GPU-idle/foundation selection passed **516 tests in
+64.20s**, without skips or deselection. Independent CPU-only regeneration on
+100.100 produced the identical **141,740-byte** report and SHA256
+`82246f34a066dda2792b8c4ce5d28aeb89d72209bba920dcf0df22cfa3296eee`.
+All source evidence was rehashed before and after analysis on each machine.
+The new derived report is durable outside the immutable input directory on both
+hosts; it was generated independently, not copied as a substitute for validation.
+The remote checkout remained clean, GPU0 had no compute PIDs (0% utilization,
+12 MiB, 45 C), and both protected system services remained inactive.
+
+The row-diagnosis chunk is complete. No new policy, GPU run, tolerance-based
+admission or single-kernel causal claim resulted. Read-only review of existing
+tests found broad stop coverage and the step-49/50 support-grace check, but no
+systematic adjacent-float below/equal/above sweep of every continuous stop.
+That focused CPU boundary coverage is the next bounded task; do not rerun this
+completed diagnosis or mutate its evidence to obtain another outcome.

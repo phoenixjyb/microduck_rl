@@ -20,6 +20,7 @@ from mjlab_microduck.first_attempt_smoke import canonical, require
 
 supervisor = host.supervisor
 PROTOCOL = 'football-b1n-disposable-training-smoke-v1'
+MODULE = 'mjlab_microduck.stance_training_smoke'
 WORLDS, UPDATES, SEED = 64, 16, 523
 CHILD_SECONDS, SERVICE_SECONDS, CLOSEOUT_SECONDS = 900, 960, 600
 
@@ -258,7 +259,7 @@ def supervise(source, launch_sha):
                 host.check_log(root/'child.log')
                 require(host.identity(source) == launch['inputs'], 'live smoke source/runtime drift')
             report['child'] = supervisor.supervised_stance_smoke(
-                [str(host.ROOT/'.venv/bin/python'), '-m', __name__, 'child', '--source', source,
+                [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
                  '--launch-sha256', launch_sha, '--lock-fd', str(fd)], root/'child.log', cwd=host.ROOT,
                 env=supervisor.child_environment(), lock_fd=fd, guard=guard)
             host.check_log(root/'child.log')

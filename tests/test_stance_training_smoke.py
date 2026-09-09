@@ -3,6 +3,8 @@ from contextlib import contextmanager
 from copy import deepcopy
 import json
 import os
+import subprocess
+import sys
 import time
 
 import pytest
@@ -176,6 +178,7 @@ def test_supervisor_guard_retains_failure_and_does_not_retry(tmp_path, monkeypat
     def lease(): yield 4
     monkeypatch.setattr(smoke.supervisor, 'gpu_lease', lease)
     def process(command, log, **kw):
+        assert command[1:4] == ['-m', 'mjlab_microduck.stance_training_smoke', 'child']
         assert kw['lock_fd'] == 4 and kw['env']['CUDA_VISIBLE_DEVICES'] == '0'
         assert command[-2:] == ['--lock-fd', '4']
         log.write_text('WARNING: synthetic failure' if bad else 'synthetic normal')
@@ -183,6 +186,8 @@ def test_supervisor_guard_retains_failure_and_does_not_retry(tmp_path, monkeypat
         return {'synthetic_process': True}
     monkeypatch.setattr(smoke.supervisor, 'supervised_stance_smoke', process)
     monkeypatch.setattr(smoke, 'verify_completed', lambda *a: {'synthetic': True})
+    # Exercise the namespace used by python -m, not only normal import naming.
+    monkeypatch.setattr(smoke, '__name__', '__main__')
     if bad:
         with pytest.raises(ValueError): smoke.supervise('a'*40, 'b'*64)
     else: smoke.supervise('a'*40, 'b'*64)
@@ -197,3 +202,13 @@ def test_inherited_lock_must_really_be_held(tmp_path, monkeypatch):
     with smoke.supervisor.gpu_lease() as fd: smoke.inherited_lease(fd)
     with (tmp_path/'gpu.lock').open('r') as f:
         with pytest.raises(ValueError, match='not held'): smoke.inherited_lease(f.fileno())
+
+
+def test_real_module_cli_help_is_importable_without_cuda():
+    result = subprocess.run([sys.executable, '-m', smoke.MODULE, '--help'],
+        capture_output=True, text=True, timeout=30,
+        env={k: v for k, v in os.environ.items() if k in
+             ('HOME', 'USER', 'PATH', 'CUDA_VISIBLE_DEVICES', 'OMP_NUM_THREADS')})
+    assert result.returncode == 0, result.stderr
+    assert '{prepare,supervise,child}' in result.stdout
+    assert '__spec__ is None' not in result.stderr

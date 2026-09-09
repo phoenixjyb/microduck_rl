@@ -66,3 +66,32 @@ deselected; that test remains required on Linux. Markdown HTML parsing passed.
 Exact-source Linux verification and retained launch remain pending at this
 predeclaration. Synthetic optimizer tests do not establish live CUDA execution
 or learned skill.
+
+### First launch: closed before simulator initialization
+
+Implementation `a89cfdf0899d7747dfdf1358aa2f605500e4c6d0` passed all 443 Linux
+regression tests in 37.25s, with no skips. Its prepared launch passed CPU-only
+host/runtime/plant checks. The retained service then exited unsuccessfully before
+importing the child module: the `python -m` supervisor used its runtime
+`__name__` (`__main__`) as the child module instead of the canonical import name.
+Exact error: `Error while finding module specification for '__main__'
+(ValueError: __main__.__spec__ is None)`. There were no simulator, optimizer or
+checkpoint outputs, and subsequent GPU readback was idle, 12 MiB, 45 C; both
+protected services remained inactive.
+
+Retain the unchanged failed directory `artifacts/evaluations/stance-training-smoke-a89cfdf0899d`:
+
+- Launch SHA256: `5fb5d2e477ebe88f3ca55be58545fd907ed5027c786b1a41ceec3d83f1256245`.
+- Runtime SHA256: `b04b28ef35d33581c264d418656d3084218579473790bbf3a9c49754ae243a57`.
+- Child log SHA256: `07b2cd129725a1b2d90e96062509f5acdd85b7c8dc2483a80d512117c9e94b8b`.
+- Failure report SHA256: `9526dfb23caf903f62516200f17e85ca55a338df4f4993f41e6233d9b58584c1`.
+
+All four files are mirrored on the Mac under the same relative path with
+matching hashes. The corrected smoke suite passed 20 local tests in 15.69s.
+
+The correction binds a literal module name. Tests now check the exact child
+command under a simulated `__main__` namespace and run real CLI help in a CPU
+subprocess. After exact-source Linux tests, permit one separately named attempt
+under the corrected commit and the same unchanged numerical protocol, seed,
+budgets and limits. This is a diagnosed launcher correction, not an automatic
+retry or restart of the failed unit; do not overwrite the failed evidence.

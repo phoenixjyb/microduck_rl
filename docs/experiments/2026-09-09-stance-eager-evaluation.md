@@ -79,3 +79,90 @@ The complete training archive was mirrored to the same relative path on the Mac:
 all 3,333 files it hashes. CPU verification restored and checked every export and
 receipt before selecting final checkpoint SHA256
 `46cd52b53f7b8b9fb220aed96d78cd961423c606e906a4df7330422ae4786e93`.
+
+## Completed frozen evaluation
+
+Exact implementation `bd099638f52b8b44c05d0d7c9f02f62f0538417c` passed **665
+Linux CPU tests in 96.11 seconds**, without skips or deselections. Before launch
+the GPU was idle at 12 MiB / 46 C, with no compute owner and both protected
+system services inactive. The user service
+`microduck-stance-eval-bd099638f52b.service` started at **2026-09-09 16:50:10
+Asia/Shanghai**, supervisor PID 711795 and sole GPU child PID 712047. It completed
+with MainPID 0, Result success, ExecMainStatus 0 and active/exited retained state.
+The child took **354.216 seconds**; peak sampled GPU temperature was **56 C**.
+The GPU was subsequently idle at 12 MiB / 45 C, with protected services still
+inactive. No optimizer, follow-on job, video or service restoration ran.
+
+The unchanged scorer and full bundle replay completed all **768 first attempts**:
+
+| Frozen weights | Evaluation seed | Mean first-attempt duration | Hard failures | Full stance passes |
+| --- | --- | --- | --- | --- |
+| Fresh initializer | 541 | 1.164516 s | 128 / 128 | 0 / 128 |
+| Fresh initializer | 547 | 1.164609 s | 128 / 128 | 0 / 128 |
+| Fresh initializer | 557 | 1.164438 s | 128 / 128 | 0 / 128 |
+| Final iteration 127 | 541 | 5.000000 s | 0 / 128 | 0 / 128 |
+| Final iteration 127 | 547 | 5.000000 s | 0 / 128 | 0 / 128 |
+| Final iteration 127 | 557 | 5.000000 s | 0 / 128 | 0 / 128 |
+
+Every final-policy attempt reached the five-second endpoint and passed all
+individual stance gates **except final upright tilt**. Across the 384 final
+attempts, final-second tilt p95 ranged **7.95283 to 8.13340 degrees**, above the
+unchanged **0.0873 rad (approximately 5 degrees)** limit. Other worst-case final
+metrics were:
+
+- Maximum planar displacement: **0.01224868 m**, below 0.02 m.
+- Final-second planar-speed p95: at most **0.00161868 m/s**, below 0.03 m/s.
+- Final-second minimum height: at least **0.11518921 m**, above 0.105 m.
+- Both-foot support after the required settling interval: **100%**, above 99%.
+- Soft-limit joint-time exposure: **0%**, below 1%.
+- No first-attempt hard failure in any final case.
+
+This establishes a useful **nominal simulated stability improvement** over the
+same policy initializer, but not an accepted upright stance. Five-second results
+are horizon-censored; nominal repeats do not establish disturbance recovery,
+independent-training-seed replication, physical motor safety or football balance.
+The deterministic decision is **`final-numerical-rejected`**, not a GPU/runtime
+failure. Do not relax the upright limit or promote this checkpoint.
+
+### Retained hashes
+
+Directory: `artifacts/evaluations/stance-eager-evaluation-bd099638f52b`.
+The completed remote archive contains **59 files / 2,299,673,891 bytes**.
+
+| Artifact | SHA256 |
+| --- | --- |
+| launch.json | `2e1b7ba2cc4805f4bf012aba1d572bc00e7ebf8563769c71173ba82ddc5bf969` |
+| report.json | `a6f4e4ca5e7e81f8bed8ce2f5226e08422ad581836c727140356c0423bb2e297` |
+| comparison.json | `9a3c524195a06ca646d711cfcb9a73485b131e22543da0349263e77e62c34b67` |
+| initial-seed-541/manifest.json | `705b774d86191d7268c8cba6df6c9579ac78e777604dbb6aa21396be81a75c1c` |
+| initial-seed-547/manifest.json | `60b0a2ff480f3a32dae52c08192f38282ab74bde9d1f3de38a25526126db7462` |
+| initial-seed-557/manifest.json | `0f9515ce8dbb6cbb7499395d6d5217b8af56e6ef33f284ba4e3278f49316bd46` |
+| final-seed-541/manifest.json | `35e66a0dba891cf4c90e14b04f4e70ee7b41a491dda87e6ea8f1ca9ff3edb337` |
+| final-seed-547/manifest.json | `6a332b99f14fe75b180719b3cc1510dac6625e06331b521b4476086041176d5e` |
+| final-seed-557/manifest.json | `5e807992758bd06cf69ab32ef208c432e7090bd36af7649192b45087a3dbc7cb` |
+
+The GPU worker replayed each retained bundle and the CPU supervisor separately
+reverified all six bundles and recomputed the comparison before publication.
+The training archive was also rechecked unchanged. A separate post-run Linux
+process, with CUDA hidden, independently verified the pinned report and launch
+hashes, every top-level recorded hash, all six bundle manifests and their full
+trace/control/actor/plant replay, the deterministic comparison, and the immutable
+training archive again. It completed in **42.17 seconds**, reproduced all 768
+attempts and `final-numerical-rejected`, and confirmed CUDA remained uninitialized.
+
+The 2.3 GB evaluation mirror to the Mac is still transferring at this record;
+do not call that copy complete or independently verified yet. The original
+remote evidence is complete and verified. The separate 86.8 MB training archive
+mirror described above is complete and verified on both hosts.
+
+### Next bounded lesson
+
+Target the remaining steady lean while retaining the successful five-second
+hold, foot support and motor limits. The existing reward already rewards
+uprightness; this single short training seed does not by itself establish that
+the reward needs redesign. Predeclare the next training budget and checkpoint
+evaluation before spending more GPU time. These weight exports are **not**
+optimizer/simulator-resume checkpoints: a longer fresh run or an explicitly
+designed weight-initialized run must be identified honestly and separately.
+Do not move on to perturbations or ball support before the applicable stance
+and replication gates are satisfied.

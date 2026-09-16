@@ -218,6 +218,42 @@ These are real gaps found by reading the current source. None is optional.
 6. **Focused tests** for the new path, plus the unchanged existing stance
    regression set. Linux exact-source confirmation remains the launch gate.
 
+## Prerequisite status
+
+This section records implementation and validation only. It is not an
+experiment result, and it changes no seed, threshold, gate or decision rule
+above.
+
+Implemented at commit `3d7e286b`:
+
+- the weight-initialization path (`stance_lean_lesson.LeanStanceLearner`) with
+  the seed-571 allowlist, the `lean-lesson` checkpoint purpose, and the three
+  loaders;
+- the parent byte hash is checked *before* deserialization, so a corrupted or
+  substituted export is refused rather than loaded, and the archive is
+  byte-identical after a load;
+- evaluation admission is purpose-exact, so the retained pilot evaluation path
+  still refuses `lean-lesson` exports and the lean path refuses pilot ones.
+
+Validation:
+
+- Local focused CPU regression: 192 passed, 2 errors across the eleven
+  checkpoint/evaluation files. Both errors are the pre-existing
+  `eager collection deadline` wall-clock budget in `test_stance_eager_learning.py`
+  and reproduce unchanged on stashed, unmodified source — they are not caused by
+  this work. Ten new tests in `tests/test_stance_lean_lesson.py` pass.
+- **Exact-source Linux CPU regression: 610 passed in 92.44 s** at `3d7e286b`
+  on 100.100 with `CUDA_VISIBLE_DEVICES` empty and CUDA never initialized.
+
+Still outstanding before any launch, and deliberately not fabricated here:
+
+1. **The measured throughput probe.** The watchdog and service cap are still
+   undeclared. No cap has been written into the source, because the estimate
+   above must not be used to size it.
+2. **The CUDA supervisor and child.** They land with the probe, not before.
+3. A clean feature branch, pinned dependencies and assets, the compiled plant,
+   and an independently retained launch SHA.
+
 ## What this does not authorize
 
 No physical motion. No claim of learned stance, football balance, disturbance

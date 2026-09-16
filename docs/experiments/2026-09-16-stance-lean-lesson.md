@@ -176,10 +176,15 @@ weight-initialized policy will run near-full 250-tick episodes from update 0.
 The real cost is likely higher.
 
 Therefore: **a separately declared measured throughput probe must run first**
-and its measurement, not this estimate, must set the service cap. If the probe
-does not leave a safe margin inside the authorization window, the budget is
-reduced or the run is not launched — the budget is not to be exceeded by
-weakening the stop.
+and its measurement, not this estimate, must set the service cap. That probe is
+now itself predeclared as the
+[lean-lesson throughput probe](2026-09-16-stance-lean-lesson-throughput-probe.md)
+(protocol `football-b1n-lean-lesson-throughput-v1`), which measures collection on
+CUDA0 under the frozen parent policy and the CPU optimizer term on the host, and
+derives the caps from the measured worst case with a declared 1.25 safety factor.
+If the probe does not leave a safe margin inside the authorization window, the
+budget is reduced or the run is not launched — the budget is not to be exceeded
+by weakening the stop.
 
 The existing 900 s child watchdog and 960 s service cap are **too short for
 this budget** and must be re-declared for the measured duration, keeping the
@@ -247,10 +252,13 @@ Validation:
 
 Still outstanding before any launch, and deliberately not fabricated here:
 
-1. **The measured throughput probe.** The watchdog and service cap are still
-   undeclared. No cap has been written into the source, because the estimate
-   above must not be used to size it.
-2. **The CUDA supervisor and child.** They land with the probe, not before.
+1. **The measured throughput probe.** Predeclared and implemented as the
+   [lean-lesson throughput probe](2026-09-16-stance-lean-lesson-throughput-probe.md),
+   but **not yet run**: it needs the GPU host and a declared launch window. The
+   watchdog and service cap remain undeclared. No cap has been written into the
+   source, because the estimate above must not be used to size it.
+2. **The CUDA supervisor and child for the lean-lesson run itself.** They land
+   once the probe's measurement exists, so the caps are known numbers.
 3. A clean feature branch, pinned dependencies and assets, the compiled plant,
    and an independently retained launch SHA.
 

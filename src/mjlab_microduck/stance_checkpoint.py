@@ -24,6 +24,30 @@ ARCHITECTURE = dict(actor_dim=44, critic_dim=50, action_dim=10,
     hidden_dims=[128, 128, 64], activation='elu', obs_normalization=False,
     gaussian_std_type='scalar', initial_std=.3, evaluation_output='deterministic-mean')
 
+# Lean-lesson: a weight-initialized continuation, declared in
+# docs/experiments/2026-09-16-stance-lean-lesson.md. The parent export is pinned by
+# byte hash and iteration so only the reviewed frozen weights can initialize a run,
+# and the resulting identity can never be mistaken for a fresh initializer.
+LEAN_SEED, LEAN_WORLDS, LEAN_UPDATES = 571, 64, 256
+LEAN_CHECKPOINTS = (64, 128, 192, 255)
+LEAN_PARENT_SHA256 = '46cd52b53f7b8b9fb220aed96d78cd961423c606e906a4df7330422ae4786e93'
+LEAN_PARENT_SOURCE = 'c8f6b994a2991e400bf6478b967c30e9b618db6a'
+LEAN_PARENT_FILE = 'model_127.pt'
+LEAN_PARENT_ITERATION = 127
+LEAN_PURPOSE = 'lean-lesson'
+FRESH_PURPOSES = ('pilot', 'smoke', 'eager-learning')
+PURPOSES = FRESH_PURPOSES + (LEAN_PURPOSE,)
+# purpose -> (training seed, worlds, update budget)
+SCOPE = {'pilot': (521, 512, 512), 'smoke': (523, 64, 16), 'eager-learning': (563, 64, 128),
+         LEAN_PURPOSE: (LEAN_SEED, LEAN_WORLDS, LEAN_UPDATES)}
+BASE_IDENTITY_KEYS = {'protocol', 'source', 'runtime_sha256', 'training_launch_sha256',
+    'purpose', 'training_seed', 'worlds', 'iteration', 'initial_state_sha256', 'architecture'}
+PARENT_IDENTITY_KEY = 'parent_checkpoint_sha256'
+# Which iterations each evaluation path may admit. Keyed by purpose so that a
+# purpose can never borrow another's evaluable iterations: the retained pilot
+# evaluation path keeps rejecting eager-learning and lean-lesson exports.
+EVALUABLE = {'pilot': CHECKPOINTS, LEAN_PURPOSE: LEAN_CHECKPOINTS}
+
 
 def runtime_check():
     require(version('rsl-rl-lib') == '5.0.1', 'reviewed RSL version')
@@ -34,7 +58,7 @@ def runtime_check():
 
 def fresh_models(seed):
     """Stock CPU initialization, isolated from caller CPU RNG; no optimizer."""
-    require(type(seed) is int and seed in (521, 523, 563), 'predeclared fresh initialization seed')
+    require(type(seed) is int and seed in (521, 523, 563, 571), 'predeclared fresh initialization seed')
     require(torch.get_default_dtype() == torch.float32, 'declared float32 initialization')
     runtime_check()
     with torch.device('cpu'), torch.random.fork_rng(devices=[]):
@@ -66,25 +90,41 @@ def states_of(actor, critic):
 
 
 def validate_identity(identity, *, evaluation):
-    require(set(identity) == {'protocol', 'source', 'runtime_sha256', 'training_launch_sha256',
-        'purpose', 'training_seed', 'worlds', 'iteration', 'initial_state_sha256', 'architecture'},
-        'exact checkpoint identity')
+    require(type(identity) is dict, 'checkpoint identity mapping')
+    purpose = identity.get('purpose')
+    require(purpose in PURPOSES, 'checkpoint purpose')
+    lean = purpose == LEAN_PURPOSE
+    keys = BASE_IDENTITY_KEYS | ({PARENT_IDENTITY_KEY} if lean else set())
+    require(set(identity) == keys, 'exact checkpoint identity')
     require(identity['protocol'] == PROTOCOL and identity['architecture'] == ARCHITECTURE, 'declared stance architecture')
-    for key in ('source', 'runtime_sha256', 'training_launch_sha256', 'initial_state_sha256'):
+    hashed = ('source', 'runtime_sha256', 'training_launch_sha256', 'initial_state_sha256')
+    for key in hashed + ((PARENT_IDENTITY_KEY,) if lean else ()):
         size = 40 if key == 'source' else 64
         require(type(identity[key]) is str and re.fullmatch('[0-9a-f]{'+str(size)+'}', identity[key]) is not None,
                 'checkpoint hash identity: '+key)
-    require(identity['purpose'] in ('pilot', 'smoke', 'eager-learning'), 'checkpoint purpose')
-    pilot = identity['purpose'] == 'pilot'
-    seed, worlds, updates = {'pilot': (521, 512, 512), 'smoke': (523, 64, 16),
-                             'eager-learning': (563, 64, 128)}[identity['purpose']]
+    seed, worlds, updates = SCOPE[purpose]
     require(type(identity['training_seed']) is int and identity['training_seed'] == seed
             and type(identity['worlds']) is int and identity['worlds'] == worlds, 'matched seed/worlds')
     require(type(identity['iteration']) is int and -1 <= identity['iteration'] < updates, 'bounded saved iteration')
     if evaluation:
-        require(pilot and identity['iteration'] in CHECKPOINTS, 'only declared pilot checkpoints may be evaluated')
+        # `evaluation` names the exact purpose the calling evaluation path admits.
+        # `True` is the retained pilot evaluation path. Naming a purpose keeps the
+        # lean-lesson checkpoints evaluable by their own path while the pilot path
+        # continues to refuse them, and vice versa.
+        admitted = 'pilot' if evaluation is True else evaluation
+        require(admitted in EVALUABLE and purpose == admitted
+                and identity['iteration'] in EVALUABLE[admitted],
+                'only declared '+str(admitted)+' checkpoints may be evaluated')
     actor, critic = fresh_models(identity['training_seed'])
-    require(state_hash(states_of(actor, critic)) == identity['initial_state_sha256'], 'exact fresh initializer identity')
+    fresh = state_hash(states_of(actor, critic))
+    if lean:
+        require(identity[PARENT_IDENTITY_KEY] == LEAN_PARENT_SHA256, 'pinned lean-lesson parent export')
+        # The whole point of the purpose: a lean-lesson run starts from reviewed frozen
+        # weights, so its declared start must never coincide with a fresh initializer.
+        require(identity['initial_state_sha256'] != fresh,
+                'a lean-lesson start must not equal a fresh initializer')
+    else:
+        require(fresh == identity['initial_state_sha256'], 'exact fresh initializer identity')
     return actor, critic
 
 
@@ -126,6 +166,53 @@ def load_eager_diagnostic(raw, expected_sha256, expected_identity):
             and type(expected_identity['iteration']) is int
             and expected_identity['iteration'] in (-1, 127), 'only eager initializer/final diagnostic')
     return _load(raw, expected_sha256, expected_identity, evaluation=False)
+
+
+def load_lean_lesson(raw, expected_sha256, expected_identity):
+    """Lean-lesson exports; a weight-initialized continuation, never a resume."""
+    require(expected_identity['purpose'] == LEAN_PURPOSE
+            and expected_identity['iteration'] in (-1,)+LEAN_CHECKPOINTS,
+            'only declared lean-lesson checkpoints')
+    actor, info = _load(raw, expected_sha256, expected_identity, evaluation=False)
+    return actor, dict(info, weight_initialized=True,
+        parent_checkpoint_sha256=LEAN_PARENT_SHA256, optimizer_restored=False,
+        simulator_restored=False, replay_restored=False)
+
+
+def load_lean_evaluation(raw, expected_sha256, expected_identity):
+    """Lean-lesson evaluation exports, on their own path.
+
+    Deliberately separate from ``load_evaluation``: the retained pilot evaluation
+    path must keep refusing lean-lesson exports, and this path must refuse pilot
+    ones, so iteration labels are never aliased across purposes.
+    """
+    require(expected_identity['purpose'] == LEAN_PURPOSE, 'lean-lesson evaluation export')
+    return _load(raw, expected_sha256, expected_identity, evaluation=LEAN_PURPOSE)
+
+
+def load_lean_parent(raw, expected_sha256, expected_identity):
+    """Load the pinned frozen weight export that initializes a lean-lesson run.
+
+    Returns *trainable* models. This is weight initialization, not a resume: no Adam
+    state, rollout storage, simulator state or RNG state is restored. The caller must
+    keep that distinction explicit in the run identity.
+    """
+    require(type(raw) is bytes and 0 < len(raw) <= LIMIT, 'bounded checkpoint bytes')
+    require(expected_sha256 == LEAN_PARENT_SHA256, 'pinned lean-lesson parent export')
+    require(sha256(raw).hexdigest() == expected_sha256, 'parent checkpoint byte hash mismatch')
+    require(type(expected_identity) is dict and expected_identity.get('purpose') == 'eager-learning'
+            and expected_identity.get('iteration') == LEAN_PARENT_ITERATION
+            and expected_identity.get('source') == LEAN_PARENT_SOURCE,
+            'frozen parent is the reviewed eager final export')
+    actor, critic = validate_identity(expected_identity, evaluation=False)
+    value = torch.load(io.BytesIO(raw), map_location='cpu', weights_only=True)
+    require(set(value) == {'identity', 'states'} and value['identity'] == expected_identity,
+            'parent checkpoint metadata mismatch')
+    validate_states(value['states'], actor, critic)
+    return dict(actor=actor, critic=critic, parent_checkpoint_sha256=expected_sha256,
+        parent_state_sha256=state_hash(value['states']), weight_initialized=True,
+        optimizer_restored=False, simulator_restored=False, replay_restored=False,
+        normalization_restored=False, checkpoint_admitted=False)
 
 
 def _load(raw, expected_sha256, expected_identity, *, evaluation):

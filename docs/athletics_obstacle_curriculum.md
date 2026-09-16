@@ -16,6 +16,16 @@ retention. This is a new requirement, not an achieved capability or a renamed
 ball-kicking/roller-foot task. The renewed simulation/development window ends
 September9 07:30 Asia/Shanghai; old expired campaign windows below remain historical.
 
+September16 addition: the B1-N stance track's
+[residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) is a
+**predeclaration, not a result**. The completed frozen initializer/final
+comparison decided `final-numerical-rejected`: the iteration-127 export held a
+stable, almost drift-free stance and cleared every gate except tilt. The lesson
+exists only to separate an optimizer-budget explanation from a
+mechanical-feasibility one, and it changes exactly one axis — budget and
+starting weights. Its 0.0873 rad tilt gate is unchanged and is not to be
+relaxed, and no reward coefficient is touched.
+
 ## Capability graph
 
 September7 integration boundary: the historical milestones below do not

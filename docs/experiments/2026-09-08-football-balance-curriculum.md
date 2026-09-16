@@ -165,3 +165,15 @@ uses a separate44D proprioceptive actor and bounded leg-target corrections.
 The CPU observation/action reference is tested; the registered environment,
 reward/evaluator integration and launch manifest remain prerequisites, not
 completed training or permission to skip the GPU gate.
+
+The [residual-lean lesson](2026-09-16-stance-lean-lesson.md) is the next
+predeclaration. It follows the completed
+[frozen initializer/final comparison](2026-09-09-stance-eager-evaluation.md),
+whose `final-numerical-rejected` decision stands. Its single axis is optimizer
+budget and starting weights: a weight-initialized continuation from the frozen
+`model_127.pt` export, with the tilt gate unchanged at0.0873 rad. It is a
+declaration only — no optimizer, CUDA job, service or video has run. It adds
+its own implementation prerequisites and a required measured throughput probe,
+and it records the honest distinction that the parent is a weight export rather
+than an optimizer/simulator resume. A pass would admit only a nominal stance
+candidate; replication and disturbance recovery still precede B1.

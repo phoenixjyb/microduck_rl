@@ -166,9 +166,51 @@ Validation:
 - **Exact-source Linux CPU regression: 618 passed in 92.73 s** at `1e10cb7d` on
   100.100 with `CUDA_VISIBLE_DEVICES` empty and CUDA never initialized.
 
-**The probe itself has not been run.** It requires the GPU host and a fresh
-declared window. Until it runs, the lean-lesson `child_seconds` and
+**The probe itself has not produced a measurement.** It requires the GPU host and
+a fresh declared window. Until it runs, the lean-lesson `child_seconds` and
 `service_seconds` remain undeclared, and the lean-lesson run is not launched.
+
+## First attempt: failed, produced no measurement
+
+Attempt 1 ran on 100.100 at source `c66f707f42bd` on 2026-09-16. `prepare`
+succeeded (`launch_sha256 = aa9432d5…`, output dir
+`artifacts/evaluations/stance-lean-throughput-c66f707f42bd`, `deadline_unix =
+1789604043`). The `supervise` process then exited `status=1/FAILURE` before
+entering its `try` block: **no `child.log`, no `collection.json`, no
+`optimizer.json`, no `decision.json`, and no `report.json` were created.** The
+only surviving artifacts are `launch.json` and `parent.pt`.
+
+**This is not a measurement and is not used as one.** Nothing above is retried
+with a relaxed margin, and no number from this attempt sizes anything. The
+declared cap rule, the 1.25 safety factor, the 60 s watchdog margin, the 600 s
+closeout, the 900/960 probe caps and the 1,620 s window floor are all unchanged.
+
+Root cause, found by reproducing the check inside a real transient unit: the
+service self-check queried systemd as
+`systemctl --user show <unit> --property=KEY`. Without `--value`, systemctl
+prints `KEY=value`, so the check compared the strings `'MainPID=1282344'` and
+`'RuntimeMaxUSec=16min'` against the bare values `'1282344'` and `'16min'` and
+raised `ValueError: independently timed probe service`. Every property was in
+fact correct. The probe was refused by its own self-check, not by the host.
+
+Measured inside an identically configured transient unit
+(`RuntimeMaxSec=960`, `KillMode=control-group`, `CUDA_VISIBLE_DEVICES=` empty):
+
+| query shape | `MainPID` returns | matches the declared expectation |
+|---|---|---|
+| `--property=KEY` (attempt 1) | `MainPID=1282344` | no |
+| `-p KEY --value` (fixed) | `1282344` | yes |
+
+The environment was never the problem: `PATH` is populated, `systemctl` resolves
+to `/usr/bin/systemctl`, `CUDA_VISIBLE_DEVICES` is empty, the working directory is
+the training worktree, and `MainPID` does equal `os.getpid()`.
+
+Fix: `-p KEY --value`, which is the form already used by `stance_forward_probe`,
+`stance_throughput_probe`, `stance_training_smoke` and `live_gpu`. The check is
+extracted into `service_state`/`check_service` so it is directly testable, and two
+tests now pin it — including a faithful `systemctl` emulation that prints
+`KEY=value` unless `--value` is given. That test fails against the old query shape
+with the identical `ValueError`, and passes against the fix.
 
 ## What this does not authorize
 

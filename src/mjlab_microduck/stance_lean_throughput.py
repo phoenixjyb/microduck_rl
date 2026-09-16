@@ -297,16 +297,44 @@ def child(source, launch_sha, fd):
     host.supervisor.write_json(root/'collection.json', collection)
 
 
+SERVICE_PROPERTIES = ('MainPID', 'RuntimeMaxUSec', 'KillMode', 'ActiveState')
+# systemd's own rendering of `RuntimeMaxSec=960`. Pinned by test so the constant
+# cannot silently drift away from PROBE_SERVICE_SECONDS.
+SERVICE_RUNTIME_MAX = '16min'
+
+
+def service_unit(source):
+    return 'microduck-lean-throughput-'+source[:12]+'.service'
+
+
+def service_state(unit):
+    """Read the four properties as *values*.
+
+    ``-p KEY --value`` is the repo-wide form, used identically by
+    ``stance_forward_probe``, ``stance_throughput_probe`` and
+    ``stance_training_smoke``. Without ``--value`` systemctl prints
+    ``KEY=value``; comparing those raw strings to bare values is what made the
+    first launch fail its own self-check while every property was in fact
+    correct.
+    """
+    return {k: host.read('systemctl', '--user', 'show', unit, '-p', k, '--value')
+            for k in SERVICE_PROPERTIES}
+
+
+def check_service(source):
+    """The unit must be the one systemd is timing, and this process must be it."""
+    actual = service_state(service_unit(source))
+    require(actual == dict(MainPID=str(os.getpid()), RuntimeMaxUSec=SERVICE_RUNTIME_MAX,
+                           KillMode='control-group', ActiveState='active'),
+            'independently timed probe service')
+    return service_unit(source)
+
+
 def supervise(source, launch_sha):
     launch = checked(source, launch_sha)
     check_window(launch['deadline_unix'], launching=True)
     root = output_path(source)
-    unit = 'microduck-lean-throughput-'+source[:12]+'.service'
-    actual = {k: host.read('systemctl', '--user', 'show', unit, '--property='+k)
-              for k in ('MainPID', 'RuntimeMaxUSec', 'KillMode', 'ActiveState')}
-    require(actual == dict(MainPID=str(os.getpid()), RuntimeMaxUSec='16min',
-                           KillMode='control-group', ActiveState='active'),
-            'independently timed probe service')
+    check_service(source)
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only probe supervisor')
     require({p.name for p in root.iterdir()} == {'launch.json', 'parent.pt'},

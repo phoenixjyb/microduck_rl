@@ -7,6 +7,7 @@ worst case rather than a mean or an estimate, and that the optimizer component i
 measured on the CPU and is never physics evidence.
 """
 import hashlib
+import os
 import time
 
 import pytest
@@ -44,6 +45,9 @@ def test_declared_probe_scope_matches_the_predeclaration():
     assert probe.MAX_WINDOW_SECONDS == 3600
     assert (probe.PROBE_CHILD_SECONDS, probe.PROBE_SERVICE_SECONDS) == (900, 960)
     assert probe.PROBE_CHILD_SECONDS < probe.PROBE_SERVICE_SECONDS
+    # The declared systemd rendering must agree with the declared cap.
+    assert probe.PROBE_SERVICE_SECONDS//60 == 16
+    assert probe.SERVICE_RUNTIME_MAX == '16min'
     assert probe.PARENT_SECONDS_PER_UPDATE == 735.963/128
 
 
@@ -165,3 +169,58 @@ def test_decide_admits_nothing_and_composes_both_components(monkeypatch):
         assert decision[key] is False
     assert decision['caps']['child_seconds'] < decision['caps']['service_seconds']
     assert decision['optimizer']['stand_in'] is True
+
+
+def fake_systemctl(calls, values, pid=None):
+    """Emulate `systemctl show` faithfully: `KEY=value` unless `--value` is given.
+
+    This is the behaviour that broke the first launch, so the emulation must
+    reproduce it rather than returning convenient bare values.
+    """
+    def read(*command):
+        calls.append(command)
+        joined = ' '.join(command)
+        key = next(k for k in values if k in joined)
+        value = str(pid) if (key == 'MainPID' and pid is not None) else values[key]
+        return value if '--value' in command else key+'='+value
+    return read
+
+
+def test_service_self_check_reads_values_not_key_value_lines(monkeypatch):
+    """Regression: the first launch died here with every property correct."""
+    values = dict(MainPID='0', RuntimeMaxUSec=probe.SERVICE_RUNTIME_MAX,
+                  KillMode='control-group', ActiveState='active')
+    calls = []
+    monkeypatch.setattr(probe.host, 'read',
+                        fake_systemctl(calls, values, pid=os.getpid()))
+    assert probe.service_unit(SOURCE) == 'microduck-lean-throughput-'+SOURCE[:12]+'.service'
+    assert probe.check_service(SOURCE) == probe.service_unit(SOURCE)
+    assert len(calls) == len(probe.SERVICE_PROPERTIES)
+    # Every query must ask for the value, never the `KEY=value` line.
+    assert all('--value' in call for call in calls)
+    assert all('-p' in call for call in calls)
+    assert probe.service_state(probe.service_unit(SOURCE)) == dict(
+        MainPID=str(os.getpid()), RuntimeMaxUSec='16min', KillMode='control-group',
+        ActiveState='active')
+
+
+def test_service_self_check_refuses_a_unit_it_is_not(monkeypatch):
+    values = dict(MainPID='0', RuntimeMaxUSec=probe.SERVICE_RUNTIME_MAX,
+                  KillMode='control-group', ActiveState='active')
+    # A different MainPID means systemd is timing something other than this process.
+    monkeypatch.setattr(probe.host, 'read',
+                        fake_systemctl([], values, pid=os.getpid()+1))
+    with pytest.raises(ValueError, match='independently timed probe service'):
+        probe.check_service(SOURCE)
+    # A shorter runtime bound is not the declared probe cap.
+    shorter = dict(values, RuntimeMaxUSec='3min')
+    monkeypatch.setattr(probe.host, 'read',
+                        fake_systemctl([], shorter, pid=os.getpid()))
+    with pytest.raises(ValueError, match='independently timed probe service'):
+        probe.check_service(SOURCE)
+    # A service systemd has already reaped is not an independently timed probe.
+    dead = dict(values, ActiveState='inactive')
+    monkeypatch.setattr(probe.host, 'read',
+                        fake_systemctl([], dead, pid=os.getpid()))
+    with pytest.raises(ValueError, match='independently timed probe service'):
+        probe.check_service(SOURCE)

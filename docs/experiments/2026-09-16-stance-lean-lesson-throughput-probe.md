@@ -104,6 +104,13 @@ outside both.
 
 ## Declared window and refusal rules
 
+The probe's own caps are **fixed at 900 s child and 960 s service**, reusing the
+proven eager-learning pair. They are not the numbers this probe exists to
+produce — the caps it produces are for the 256-update lean-lesson run. The 900 s
+bound comes from the fixed `supervised_stance_smoke` wrapper; `supervised_process`
+is unusable here because it enforces `timeout <= CELL_SECONDS` (120 s), far too
+short for a nine-update probe.
+
 A **new explicit absolute launch window** is required. Authority must not be
 derived from any expired cutoff: the `CUTOFF` value baked into the older CUDA
 probe (`2026-09-09 23:30 UTC`) is expired and must not be reused. The window is
@@ -113,7 +120,8 @@ document, because a date fixed in advance is not a window anyone can honour.
 The probe **refuses to launch** unless all of the following hold:
 
 1. The remaining window exceeds `service_seconds + 600 + 60` at launch, and is at
-   most 60 minutes.
+   most 60 minutes. For this probe `service_seconds` is its own fixed **960 s**, so
+   the floor is **1,620 s (27 minutes)**.
 2. The GPU is idle, no competing compute owner holds the lease, and the
    temperature is below 80 C.
 3. `stance_cuda_probe`'s pins all match: machine ID

@@ -42,7 +42,7 @@ def test_declared_probe_scope_matches_the_predeclaration():
     assert probe.WATCHDOG_MARGIN_SECONDS == 60
     assert probe.CLOSEOUT_SECONDS == 600
     assert probe.MAX_WINDOW_SECONDS == 3600
-    assert (probe.PROBE_CHILD_SECONDS, probe.PROBE_SERVICE_SECONDS) == (600, 660)
+    assert (probe.PROBE_CHILD_SECONDS, probe.PROBE_SERVICE_SECONDS) == (900, 960)
     assert probe.PROBE_CHILD_SECONDS < probe.PROBE_SERVICE_SECONDS
     assert probe.PARENT_SECONDS_PER_UPDATE == 735.963/128
 
@@ -51,10 +51,10 @@ def test_expired_authority_is_never_a_window():
     now = int(time.time())
     probe.check_window(now+1800, launching=True)
     probe.check_window(now+3600)
-    # 660 s service + 600 s closeout + 60 s margin = 1320 s is the declared floor.
-    probe.check_window(now+1321, launching=True)
-    for offset in (-1, 0, 60, 600, 1320):
-        with pytest.raises(ValueError, match='fresh 22-to-60-minute window|in the future'):
+    # 960 s service + 600 s closeout + 60 s margin = 1620 s is the declared floor.
+    probe.check_window(now+1621, launching=True)
+    for offset in (-1, 0, 60, 600, 1320, 1620):
+        with pytest.raises(ValueError, match='fresh 27-to-60-minute window|in the future'):
             probe.check_window(now+offset, launching=True)
     for offset in (-3600, 3601, 7200):
         with pytest.raises(ValueError, match='in the future|inside 60 minutes'):

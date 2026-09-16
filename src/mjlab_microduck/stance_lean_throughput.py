@@ -64,8 +64,11 @@ WATCHDOG_MARGIN_SECONDS = 60
 CLOSEOUT_SECONDS = 600
 MAX_WINDOW_SECONDS = 3600
 # The probe's own caps. Declared generously and fixed: the probe is short, and
-# these are not the numbers it exists to produce.
-PROBE_CHILD_SECONDS, PROBE_SERVICE_SECONDS = 600, 660
+# these are not the numbers it exists to produce. 900/960 reuses the proven
+# eager-learning pair and the `supervised_stance_smoke` wrapper, whose 900 s bound
+# is fixed. `supervised_process` cannot be used here: it enforces
+# `timeout <= CELL_SECONDS` (120), which is far too short for a nine-update probe.
+PROBE_CHILD_SECONDS, PROBE_SERVICE_SECONDS = 900, 960
 # Recorded from the parent eager run, used only to show the estimate being replaced.
 PARENT_SECONDS_PER_UPDATE = 735.963/128
 
@@ -121,7 +124,7 @@ def check_window(deadline, *, launching=False):
     require(remaining <= MAX_WINDOW_SECONDS, 'one bounded job inside 60 minutes')
     if launching:
         require(remaining > PROBE_SERVICE_SECONDS+CLOSEOUT_SECONDS+WATCHDOG_MARGIN_SECONDS,
-                'measured probe needs a fresh 22-to-60-minute window')
+                'measured probe needs a fresh 27-to-60-minute window')
 
 
 class RolloutStandIn:
@@ -301,7 +304,7 @@ def supervise(source, launch_sha):
     unit = 'microduck-lean-throughput-'+source[:12]+'.service'
     actual = {k: host.read('systemctl', '--user', 'show', unit, '--property='+k)
               for k in ('MainPID', 'RuntimeMaxUSec', 'KillMode', 'ActiveState')}
-    require(actual == dict(MainPID=str(os.getpid()), RuntimeMaxUSec='11min',
+    require(actual == dict(MainPID=str(os.getpid()), RuntimeMaxUSec='16min',
                            KillMode='control-group', ActiveState='active'),
             'independently timed probe service')
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
@@ -317,11 +320,10 @@ def supervise(source, launch_sha):
                 require(time.time()+CLOSEOUT_SECONDS < launch['deadline_unix'], 'closeout boundary')
                 host.check_log(root/'child.log')
                 require(host.identity(source) == launch['inputs'], 'live probe source drift')
-            report['child'] = host.supervisor.supervised_process(
+            report['child'] = host.supervisor.supervised_stance_smoke(
                 [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
                  '--launch-sha256', launch_sha, '--lock-fd', str(fd)], root/'child.log',
-                cwd=host.ROOT, env=host.supervisor.child_environment(), lock_fd=fd,
-                timeout=PROBE_CHILD_SECONDS, guard=guard)
+                cwd=host.ROOT, env=host.supervisor.child_environment(), lock_fd=fd, guard=guard)
             host.check_log(root/'child.log')
             collection = host.supervisor.parse(host.supervisor.file_bytes(root/'collection.json'))
             # Component B runs here, in the CPU-only supervisor, not in the CUDA child.

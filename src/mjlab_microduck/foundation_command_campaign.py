@@ -205,6 +205,22 @@ def supervised_stance_smoke(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard
     return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,timeout=900,monitor=monitor,guard=guard)
 
 
+# The lean-lesson child watchdog. 1693 s is *measured*, not estimated: the
+# throughput probe's worst measured update gave a 1402 s prediction, a 1753 s
+# service cap at the declared 1.25 factor, and 1753 - 60 = 1693 s for the child.
+# See docs/experiments/2026-09-16-stance-lean-lesson-throughput-probe.md.
+# It is declared as its own wrapper so that no existing frozen bound moves:
+# `supervised_process` still caps at CELL_SECONDS and `supervised_stance_smoke`
+# still holds 900 s.
+LEAN_LESSON_CHILD_SECONDS = 1693
+
+
+def supervised_lean_lesson(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard=lambda:None):
+    """Separate fixed 1693-second lean-lesson bound, from the measured probe."""
+    return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,
+                          timeout=LEAN_LESSON_CHILD_SECONDS,monitor=monitor,guard=guard)
+
+
 def _timed_process(command,log,*,cwd,env,lock_fd,timeout,monitor,guard):
     started = time.monotonic(); samples = []
     finished,expired = threading.Event(),threading.Event()

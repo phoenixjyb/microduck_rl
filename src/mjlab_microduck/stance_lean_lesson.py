@@ -1,4 +1,4 @@
-"""Lean-lesson weight-initialized continuation: the CPU initialization path.
+"""Lean-lesson weight-initialized continuation: initialization, run and supervisor.
 
 Declared by ``docs/experiments/2026-09-16-stance-lean-lesson.md`` under protocol
 ``football-b1n-lean-lesson-v1``. That document is a predeclaration: it fixes one
@@ -22,25 +22,57 @@ good intentions:
 - the recorded ``initial_state_sha256`` is the *loaded parent* state hash, and is
   asserted to differ from a fresh initializer.
 
-What this module is not
------------------------
-There is deliberately no supervisor, no child process, no watchdog and no
-service cap here. The predeclaration requires a separately declared *measured*
-throughput probe to size those, and states plainly that the straight-line
-estimate "must not be used to size the watchdog". Until that probe runs, any cap
-written here would be an invented number, so none is written.
+Caps are measured, not invented
+-------------------------------
+The predeclaration forbids sizing the watchdog from the straight-line estimate and
+requires a separately declared *measured* probe to do it. That probe has now run
+(``docs/experiments/2026-09-16-stance-lean-lesson-throughput-probe.md``): it
+measured a 5.395445651840419 s worst collection update and a 0.07417336199432611 s
+worst CPU optimizer update, which give a 1,402 s prediction, a 1,753 s service cap
+at the declared 1.25 factor and a 1,693 s child watchdog. Those are the constants
+below. They are not rounded, and no bound is relaxed to make a run fit.
+
+One honest caveat, stated here rather than discovered mid-launch. The probe's
+collection timer covers the observation build, the policy forward pass and the
+physics step, but not ``collect_one``'s own bookkeeping or the per-tick evidence
+write. The parent's realized 5.7497 s/update shows that gap is about 0.35 s per
+update, so a 256-update run is expected near 1,490 s against the 1,663 s internal
+child deadline and the 1,693 s watchdog. The declared 1.25 factor is what covers
+that difference; the remaining headroom is roughly 11%.
 """
 
+import argparse
 from copy import deepcopy
+from hashlib import sha256
+import io
+import math
+import os
+import random
+import time
+
+import numpy as np
+import torch
 
 from mjlab_microduck import stance_checkpoint as checkpoint
-from mjlab_microduck.first_attempt_smoke import require
-from mjlab_microduck.stance_ppo import CpuStanceLearner
+from mjlab_microduck import stance_plant_evidence as plant
+from mjlab_microduck import stance_training_smoke as smoke
+from mjlab_microduck.first_attempt_smoke import canonical, require
+from mjlab_microduck.stance_ppo import CONFIG, CpuStanceLearner, STEPS
 
+host, supervisor = smoke.host, smoke.supervisor
 MODULE = 'mjlab_microduck.stance_lean_lesson'
 PROTOCOL = 'football-b1n-lean-lesson-v1'
 SEED, WORLDS, UPDATES = checkpoint.LEAN_SEED, checkpoint.LEAN_WORLDS, checkpoint.LEAN_UPDATES
 CHECKPOINTS = checkpoint.LEAN_CHECKPOINTS
+# Measured by the throughput probe; see the module docstring. Not estimates.
+CHILD_SECONDS, SERVICE_SECONDS, CLOSEOUT_SECONDS = 1693, 1753, 600
+WATCHDOG_MARGIN_SECONDS = 60
+# systemd's own rendering of `RuntimeMaxSec=1753`, read back from the host rather
+# than assumed. Guessing this string is exactly how the probe's first launch
+# failed its own self-check.
+SERVICE_RUNTIME_MAX = '29min 13s'
+MAX_WINDOW_SECONDS = 3600
+SERVICE_PROPERTIES = ('MainPID', 'RuntimeMaxUSec', 'KillMode', 'ActiveState')
 
 
 def parent_record(raw, parent_identity):
@@ -128,3 +160,273 @@ def identity(source, launch_sha, runtime_sha, learner, iteration):
         worlds=WORLDS, iteration=iteration, initial_state_sha256=learner.initial_hash,
         parent_checkpoint_sha256=learner.parent_checkpoint_sha256,
         architecture=deepcopy(checkpoint.ARCHITECTURE))
+
+
+def parent_path():
+    """The pinned frozen parent export on this host; read-only input, never written."""
+    return (host.ROOT/'artifacts/evaluations'
+            /('stance-eager-learning-'+checkpoint.LEAN_PARENT_SOURCE[:12])
+            /checkpoint.LEAN_PARENT_FILE)
+
+
+def parent_bytes(root):
+    """The copied parent archive, with its pinned hash checked before any load."""
+    raw = supervisor.file_bytes(root/'parent.pt', limit=checkpoint.LIMIT)
+    require(sha256(raw).hexdigest() == checkpoint.LEAN_PARENT_SHA256,
+            'pinned lean-lesson parent export')
+    return raw
+
+
+def started_learner_from(raw):
+    """Deserialize only after the pinned hash has been verified."""
+    digest = sha256(raw).hexdigest()
+    require(digest == checkpoint.LEAN_PARENT_SHA256, 'pinned lean-lesson parent export')
+    parent_identity = torch.load(io.BytesIO(raw), map_location='cpu', weights_only=True)['identity']
+    return started_learner(raw, parent_identity)
+
+
+def output_path(source):
+    supervisor.hex_id(source, 40)
+    return host.ROOT/'artifacts/evaluations'/('stance-lean-lesson-'+source[:12])
+
+
+def service_name(source):
+    supervisor.hex_id(source, 40)
+    return 'microduck-lean-lesson-'+source[:12]+'.service'
+
+
+def check_window(deadline, *, launching=False):
+    """A fresh absolute window. Expired authority is never a window."""
+    require(type(deadline) is int, 'explicit integer deadline')
+    now = time.time()
+    require(math.isfinite(now), 'finite clock')
+    remaining = deadline-now
+    require(remaining > 0, 'a window in the future; expired authority is not a window')
+    require(remaining <= MAX_WINDOW_SECONDS, 'one bounded job inside 60 minutes')
+    if launching:
+        require(remaining > SERVICE_SECONDS+CLOSEOUT_SECONDS+WATCHDOG_MARGIN_SECONDS,
+                'lean-lesson run needs a fresh 41-to-60-minute window')
+
+
+def plan(source, inputs, runtime_sha, deadline):
+    supervisor.hex_id(source, 40); supervisor.hex_id(runtime_sha, 64)
+    require(type(deadline) is int and deadline > 0, 'explicit integer deadline')
+    return dict(protocol=PROTOCOL, source=source, inputs=inputs, runtime_sha256=runtime_sha,
+        purpose=checkpoint.LEAN_PURPOSE, worlds=WORLDS, seed=SEED, updates=UPDATES,
+        steps_per_update=STEPS, optimizer=deepcopy(CONFIG), learner_device='cpu',
+        physics_device='cuda:0', forward_graph=False, deadline_unix=deadline,
+        child_timeout_seconds=CHILD_SECONDS, service_timeout_seconds=SERVICE_SECONDS,
+        closeout_seconds=CLOSEOUT_SECONDS, watchdog_margin_seconds=WATCHDOG_MARGIN_SECONDS,
+        checkpoints=list(range(-1, UPDATES)), common_checkpoints=list(CHECKPOINTS),
+        parent_checkpoint_sha256=checkpoint.LEAN_PARENT_SHA256,
+        parent_source=checkpoint.LEAN_PARENT_SOURCE,
+        parent_iteration=checkpoint.LEAN_PARENT_ITERATION, parent_file=checkpoint.LEAN_PARENT_FILE,
+        weight_initialized=True, optimizer_state_restored=False,
+        simulation_resume_authorized=False, pilot_parent_authorized=False,
+        learned_stance=False, physical_motion_authorized=False)
+
+
+def prepare(source, deadline):
+    """CPU-only preparation. Copies the pinned parent in as a read-only input."""
+    check_window(deadline, launching=True)
+    require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
+            'CPU-only lean-lesson preparation')
+    inputs = host.identity(source)
+    raw = supervisor.file_bytes(parent_path(), limit=checkpoint.LIMIT)
+    require(sha256(raw).hexdigest() == checkpoint.LEAN_PARENT_SHA256,
+            'pinned lean-lesson parent export')
+    # Preflight the weight installation on CPU, before any GPU allocation exists.
+    learner = started_learner_from(raw)
+    runtime = plant.runtime_bytes(source, plant.build_entity().compile())
+    root = supervisor.native._plain_path(output_path(source)); root.mkdir(exist_ok=False)
+    smoke.write_bytes(root/'parent.pt', raw)
+    smoke.write_bytes(root/'runtime.json', runtime)
+    launch = plan(source, inputs, sha256(runtime).hexdigest(), deadline)
+    supervisor.write_json(root/'launch.json', launch)
+    require(learner.updates == 0 and not torch.cuda.is_initialized(), 'preflight cannot train')
+    return dict(output=str(root), service=service_name(source),
+        launch_sha256=host.digest(root/'launch.json'),
+        parent_checkpoint_sha256=checkpoint.LEAN_PARENT_SHA256,
+        initial_state_sha256=learner.initial_hash)
+
+
+def inputs_check(source, launch_sha):
+    root = output_path(source); raw = supervisor.file_bytes(root/'launch.json')
+    require(sha256(raw).hexdigest() == launch_sha, 'independent lean-lesson launch hash')
+    launch = supervisor.parse(raw); runtime = supervisor.file_bytes(root/'runtime.json')
+    require(launch == plan(source, host.identity(source), sha256(runtime).hexdigest(),
+                          launch['deadline_unix']), 'exact lean-lesson source/runtime/plan')
+    plant.checked_runtime(supervisor.parse(runtime), source)
+    # The parent archive is read-only input and must be intact at every check.
+    parent_bytes(root)
+    return launch
+
+
+def check_service(source):
+    """Refuse a bare shell launch: verify the independently timed owner service."""
+    values = {k: host.read('systemctl', '--user', 'show', service_name(source), '-p', k, '--value')
+              for k in SERVICE_PROPERTIES}
+    require(values == dict(MainPID=str(os.getpid()), RuntimeMaxUSec=SERVICE_RUNTIME_MAX,
+                           KillMode='control-group', ActiveState='active'),
+            'independently timed lean-lesson service')
+    require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
+            'CPU-only lean-lesson supervisor')
+
+
+def run_updates(learner, bridge, root, source, launch_sha, runtime_sha, *, deadline):
+    require(type(learner) is LeanStanceLearner and learner.n == bridge.n == WORLDS
+            and learner.seed == SEED and learner.updates == 0 and learner.weight_initialized
+            and not learner.restored_fixture_only, 'fresh exact weight-initialized learner')
+    def save(iteration):
+        return smoke.save_weights(root, identity(source, launch_sha, runtime_sha, learner, iteration), learner)
+    exports = [save(-1)]; started = time.monotonic()
+    for update in range(UPDATES):
+        for tick in range(STEPS):
+            require(time.monotonic() < deadline, 'lean-lesson collection deadline')
+            result = learner.collect_one(bridge)
+            supervisor.write_json(root/f'tick-{update:03d}-{tick:02d}.json',
+                                  smoke.tick_evidence(result, update*STEPS+tick))
+        require(time.monotonic() < deadline, 'lean-lesson update deadline')
+        metrics = learner.update(); saved = save(update); exports.append(saved)
+        supervisor.write_json(root/f'update-{update:03d}.json', dict(iteration=update, **metrics,
+            elapsed_s=time.monotonic()-started, checkpoint=saved))
+        print(f'Lean-lesson completed update {update+1}/{UPDATES}', flush=True)
+    return exports
+
+
+def child(source, launch_sha, fd):
+    smoke.inherited_lease(fd); launch = inputs_check(source, launch_sha)
+    check_window(launch['deadline_unix'], launching=True)
+    require(os.environ.get('CUDA_VISIBLE_DEVICES') == '0' and torch.cuda.is_available(),
+            'explicit CUDA0 lean-lesson child')
+    host.wait_idle(); random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
+    from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
+    env = WarpStanceRuntime(WORLDS, device='cuda:0')
+    require(str(env.device) == str(env.wp_device) == 'cuda:0' and env.wp_device.is_cuda
+            and env.forward_graph is None, 'actual lean-lesson CUDA physics; no graph')
+    root = output_path(source)
+    runtime = supervisor.parse(supervisor.file_bytes(root/'runtime.json'))
+    require(plant.describe(env.native) == runtime['plant'], 'actual lean-lesson plant')
+    raw = parent_bytes(root)
+    before = sha256(raw).hexdigest()
+    learner = started_learner_from(raw)
+    exports = run_updates(learner, smoke.PhysicsBridge(env), root, source, launch_sha,
+        launch['runtime_sha256'], deadline=time.monotonic()+CHILD_SECONDS-30)
+    after = sha256(parent_bytes(root)).hexdigest()
+    require(before == after == checkpoint.LEAN_PARENT_SHA256,
+            'parent archive byte-identical after the lean lesson')
+    require(inputs_check(source, launch_sha) == launch and env.forward_graph is None,
+            'unchanged completed lean-lesson inputs')
+    supervisor.write_json(root/'completed.json', dict(protocol=PROTOCOL, launch_sha256=launch_sha,
+        completed_updates=UPDATES, checkpoints=exports, physics_device=str(env.device),
+        learner_device='cpu', forward_graph=False, seed=SEED, worlds=WORLDS,
+        purpose=checkpoint.LEAN_PURPOSE, common_checkpoints=list(CHECKPOINTS),
+        parent_checkpoint_sha256=checkpoint.LEAN_PARENT_SHA256,
+        parent_source=checkpoint.LEAN_PARENT_SOURCE, weight_initialized=True,
+        optimizer_state_restored=False, simulation_resume_authorized=False,
+        pilot_parent_authorized=False, learned_stance=False, physical_motion_authorized=False))
+
+
+def verify_completed(root, source, launch_sha, launch):
+    result = supervisor.parse(supervisor.file_bytes(root/'completed.json'))
+    require(result['protocol'] == PROTOCOL and result['launch_sha256'] == launch_sha
+        and result['completed_updates'] == UPDATES and result['seed'] == SEED
+        and result['worlds'] == WORLDS and result['physics_device'] == 'cuda:0'
+        and result['learner_device'] == 'cpu' and result['purpose'] == checkpoint.LEAN_PURPOSE
+        and result['parent_checkpoint_sha256'] == checkpoint.LEAN_PARENT_SHA256
+        and result['common_checkpoints'] == list(CHECKPOINTS)
+        and all(result[k] is False for k in ('forward_graph', 'optimizer_state_restored',
+                'simulation_resume_authorized', 'pilot_parent_authorized', 'learned_stance',
+                'physical_motion_authorized')),
+        'completed lean-lesson scope and counters')
+    require(result['weight_initialized'] is True, 'completed run was weight-initialized')
+    raw = parent_bytes(root)
+    learner = started_learner_from(raw)
+    fresh = checkpoint.state_hash(checkpoint.states_of(*checkpoint.fresh_models(SEED)))
+    models = checkpoint.fresh_models(SEED)
+    require(len(result['checkpoints']) == UPDATES+1, 'all lean-lesson checkpoints')
+    names = {'launch.json', 'runtime.json', 'parent.pt', 'child.log', 'completed.json'}
+    for iteration, saved in zip(range(-1, UPDATES), result['checkpoints']):
+        meta = identity(source, launch_sha, launch['runtime_sha256'], learner, iteration)
+        name = 'initial.pt' if iteration == -1 else f'model_{iteration}.pt'; names.add(name)
+        blob = supervisor.file_bytes(root/name, limit=checkpoint.LIMIT)
+        value = torch.load(io.BytesIO(blob), map_location='cpu', weights_only=True)
+        require(saved == dict(file=name, sha256=sha256(blob).hexdigest(), identity=meta),
+                'retained lean-lesson checkpoint hash/identity')
+        require(set(value) == {'identity', 'states'} and value['identity'] == meta,
+                'saved lean-lesson metadata')
+        checkpoint.validate_states(value['states'], *models)
+        if iteration < 0:
+            # The retained initializer must be the parent's weights, and must not
+            # be a fresh initializer. This is the weight-init claim, on the file.
+            actual = checkpoint.state_hash(value['states'])
+            require(actual == learner.initial_hash, 'retained initializer is the parent weights')
+            require(actual != fresh, 'a lean-lesson start is not a fresh initializer')
+        else:
+            names.add(f'update-{iteration:03d}.json')
+            update = supervisor.parse(supervisor.file_bytes(root/f'update-{iteration:03d}.json'))
+            require(update['iteration'] == iteration and update['completed_updates'] == iteration+1
+                and update['checkpoint'] == saved and update['checkpoint_admitted'] is False
+                and update['physical_motion_authorized'] is False
+                and update['cpu_fixture_only'] is False, 'completed lean-lesson update receipt')
+            require(update['metrics'] and all(type(v) in (int, float) and math.isfinite(v)
+                    for v in update['metrics'].values()), 'finite retained optimizer metrics')
+            for tick in range(STEPS):
+                names.add(f'tick-{iteration:03d}-{tick:02d}.json')
+                record = supervisor.parse(supervisor.file_bytes(root/f'tick-{iteration:03d}-{tick:02d}.json'))
+                require(record['tick'] == iteration*STEPS+tick and len(record['reward']) == WORLDS
+                        and len(record['terminal_records']) == WORLDS,
+                        'complete ordered lean-lesson tick records')
+    require({p.name for p in root.iterdir()} in (names, names|{'report.json'}),
+            'exact lean-lesson evidence inventory')
+    return result
+
+
+def supervise(source, launch_sha):
+    check_service(source); launch = inputs_check(source, launch_sha)
+    check_window(launch['deadline_unix'], launching=True); root = output_path(source)
+    require({p.name for p in root.iterdir()} == {'launch.json', 'runtime.json', 'parent.pt'},
+            'one fresh lean-lesson attempt')
+    report = dict(protocol=PROTOCOL, launch_sha256=launch_sha, decision='failed',
+        purpose=checkpoint.LEAN_PURPOSE, forward_graph=False, learned_stance=False,
+        pilot_parent_authorized=False, physical_motion_authorized=False)
+    try:
+        with supervisor.gpu_lease() as fd:
+            report['idle_before'] = host.wait_idle()
+            def guard():
+                check_window(launch['deadline_unix']); host.check_log(root/'child.log')
+                require(host.identity(source) == launch['inputs'], 'live lean-lesson source drift')
+            report['child'] = supervisor.supervised_lean_lesson(
+                [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
+                 '--launch-sha256', launch_sha, '--lock-fd', str(fd)], root/'child.log',
+                cwd=host.ROOT, env=supervisor.child_environment(), lock_fd=fd, guard=guard)
+            host.check_log(root/'child.log'); verify_completed(root, source, launch_sha, launch)
+            report['idle_after'] = host.wait_idle()
+            report['decision'] = 'lean-lesson-complete-not-capability'
+    except Exception as exc:
+        report.update(error_type=type(exc).__name__, error=str(exc),
+                      error_notes=getattr(exc, '__notes__', []))
+        raise
+    finally:
+        report['files'] = {p.name: host.digest(p) for p in sorted(root.iterdir()) if p.is_file()}
+        supervisor.write_json(root/'report.json', report)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('mode', choices=('prepare', 'supervise', 'child'))
+    parser.add_argument('--source', required=True)
+    parser.add_argument('--deadline-unix', type=int)
+    parser.add_argument('--launch-sha256')
+    parser.add_argument('--lock-fd', type=int)
+    args = parser.parse_args()
+    if args.mode == 'prepare':
+        print(canonical(prepare(args.source, args.deadline_unix)))
+    elif args.mode == 'supervise':
+        supervise(args.source, args.launch_sha256)
+    else:
+        child(args.source, args.launch_sha256, args.lock_fd)
+
+
+if __name__ == '__main__':
+    main()

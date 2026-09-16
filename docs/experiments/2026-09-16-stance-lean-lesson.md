@@ -289,12 +289,29 @@ Still outstanding before any launch, and deliberately not fabricated here:
    case, as tabulated above. It admitted nothing and exported no checkpoint. The
    caps are now declared numbers; they are deliberately not yet written into any
    supervisor source, because that source does not exist yet (item 2).
-2. **The CUDA supervisor and child for the lean-lesson run itself.** They land
-   once the probe's measurement exists, so the caps are known numbers — which is
-   now the case. They must use 1,693 / 1,753, not the superseded 1,472 s
-   estimate.
+2. **The CUDA supervisor and child for the lean-lesson run itself — implemented.**
+   `stance_lean_lesson` now carries `prepare` / `supervise` / `child` alongside the
+   initialization path, using **1,693 / 1,753** and not the superseded 1,472 s
+   estimate. The child bound is enforced by a new `supervised_lean_lesson`
+   wrapper (`LEAN_LESSON_CHILD_SECONDS = 1693`), added as its own function so
+   that no existing frozen bound moves: `supervised_process` still caps at
+   `CELL_SECONDS` (120 s) and `supervised_stance_smoke` still holds 900 s.
+   The window floor is 1,753 + 600 + 60 = **2,413 s**, so this run needs a fresh
+   **41-to-60-minute** window, and `RuntimeMaxUSec` must read back as
+   `29min 13s`.
 3. A clean feature branch, pinned dependencies and assets, the compiled plant,
    and an independently retained launch SHA.
+
+One measured-scope caveat is recorded here rather than left to be discovered at
+launch. The probe's collection timer covers the observation build, the policy
+forward pass and the physics step, but not `collect_one`'s own bookkeeping or the
+per-tick evidence write. The parent's realized 5.7497 s/update puts that gap at
+roughly 0.35 s per update, so a 256-update run is expected near 1,490 s against
+the 1,663 s internal child deadline (`CHILD_SECONDS - 30`) and the 1,693 s
+watchdog — about 11% headroom. The declared 1.25 factor is what covers the
+difference. This is not grounds to change any declared number: if the run
+overruns, the predeclared failure path applies, the durable completed prefix is
+preserved, and the run is diagnosed read-only rather than resumed or extended.
 
 ## What this does not authorize
 

@@ -7,7 +7,10 @@ state and RNG all start fresh. It is initialization, not a resume.
 """
 from copy import deepcopy
 from hashlib import sha256
+import math
+import os
 from pathlib import Path
+import time
 
 import pytest
 import torch
@@ -254,3 +257,136 @@ def test_pinned_parent_artifact_matches_its_declared_hash():
     assert learner.initial_hash == parent['parent_state_sha256']
     assert learner.restored_fixture_only is False
     assert learner.initial_hash != cp.state_hash(cp.states_of(*cp.fresh_models(lean.SEED)))
+
+
+def test_declared_caps_are_the_measured_numbers():
+    """The caps come from the probe's measurement, not the superseded estimate."""
+    assert (lean.CHILD_SECONDS, lean.SERVICE_SECONDS, lean.CLOSEOUT_SECONDS) == (1693, 1753, 600)
+    assert lean.WATCHDOG_MARGIN_SECONDS == 60
+    assert lean.SERVICE_SECONDS-lean.CHILD_SECONDS == lean.WATCHDOG_MARGIN_SECONDS
+    # systemd's own rendering of RuntimeMaxSec=1753, read back from the host.
+    assert lean.SERVICE_RUNTIME_MAX == '29min 13s'
+    assert lean.MAX_WINDOW_SECONDS == 3600
+    # The wrapper the supervisor actually calls carries the measured bound, so the
+    # declared number and the enforced number cannot drift apart.
+    assert lean.supervisor.LEAN_LESSON_CHILD_SECONDS == lean.CHILD_SECONDS == 1693
+    # Strictly larger than the estimate the predeclaration refuses to use.
+    assert lean.SERVICE_SECONDS > 1472
+    # And the probe's declared arithmetic reproduces these two numbers exactly.
+    assert math.ceil(1.25*(math.ceil(256*(5.395445651840419+0.07417336199432611))
+                           + math.ceil(0.03163699014112353))) == lean.SERVICE_SECONDS
+
+
+def test_window_requires_fresh_authority_and_refuses_expired(monkeypatch):
+    now = int(time.time())
+    floor = lean.SERVICE_SECONDS+lean.CLOSEOUT_SECONDS+lean.WATCHDOG_MARGIN_SECONDS
+    assert floor == 2413
+    lean.check_window(now+3600)
+    lean.check_window(now+floor+1, launching=True)
+    lean.check_window(now+3600, launching=True)
+    for offset in (-1, 0, 60, 600, 1620, floor-1, floor):
+        with pytest.raises(ValueError, match='41-to-60-minute window|in the future'):
+            lean.check_window(now+offset, launching=True)
+    for offset in (-3600, 3601, 7200):
+        with pytest.raises(ValueError, match='in the future|inside 60 minutes'):
+            lean.check_window(now+offset, launching=True)
+    with pytest.raises(ValueError, match='explicit integer deadline'):
+        lean.check_window(float(now+3600), launching=True)
+    # The stale CUDA-probe cutoff is expired and must not be reused as a window.
+    with pytest.raises(ValueError, match='in the future'):
+        lean.check_window(int(lean.host.CUTOFF), launching=True)
+
+
+def fake_systemctl(calls, values, pid=None):
+    """Emulate `systemctl show`: `KEY=value` unless `--value` is given.
+
+    This is the behaviour that failed the throughput probe's first launch, so the
+    emulation reproduces it rather than returning convenient bare values.
+    """
+    def read(*command):
+        calls.append(command)
+        joined = ' '.join(command)
+        key = next(k for k in values if k in joined)
+        value = str(pid) if (key == 'MainPID' and pid is not None) else values[key]
+        return value if '--value' in command else key+'='+value
+    return read
+
+
+def test_service_self_check_reads_values_not_key_value_lines(monkeypatch):
+    monkeypatch.setenv('CUDA_VISIBLE_DEVICES', '')
+    values = dict(MainPID='0', RuntimeMaxUSec=lean.SERVICE_RUNTIME_MAX,
+                  KillMode='control-group', ActiveState='active')
+    calls = []
+    monkeypatch.setattr(lean.host, 'read', fake_systemctl(calls, values, pid=os.getpid()))
+    assert lean.service_name(SOURCE) == 'microduck-lean-lesson-'+SOURCE[:12]+'.service'
+    lean.check_service(SOURCE)
+    assert len(calls) == len(lean.SERVICE_PROPERTIES)
+    assert all('--value' in call for call in calls)
+    assert all('-p' in call for call in calls)
+
+
+def test_service_self_check_refuses_a_unit_it_is_not(monkeypatch):
+    monkeypatch.setenv('CUDA_VISIBLE_DEVICES', '')
+    values = dict(MainPID='0', RuntimeMaxUSec=lean.SERVICE_RUNTIME_MAX,
+                  KillMode='control-group', ActiveState='active')
+    # A different MainPID: systemd is timing something other than this process.
+    monkeypatch.setattr(lean.host, 'read', fake_systemctl([], values, pid=os.getpid()+1))
+    with pytest.raises(ValueError, match='independently timed lean-lesson service'):
+        lean.check_service(SOURCE)
+    # The parent's 16-minute bound must not be accepted for this run.
+    monkeypatch.setattr(lean.host, 'read',
+                        fake_systemctl([], dict(values, RuntimeMaxUSec='16min'), pid=os.getpid()))
+    with pytest.raises(ValueError, match='independently timed lean-lesson service'):
+        lean.check_service(SOURCE)
+    monkeypatch.setattr(lean.host, 'read',
+                        fake_systemctl([], dict(values, ActiveState='inactive'), pid=os.getpid()))
+    with pytest.raises(ValueError, match='independently timed lean-lesson service'):
+        lean.check_service(SOURCE)
+
+
+def test_plan_declares_weight_initialization_and_no_admission(monkeypatch):
+    raw, meta, digest = synthetic_parent(monkeypatch)
+    deadline = int(time.time())+3600
+    value = lean.plan(SOURCE, {'machine': 'x'}, RUNTIME, deadline)
+    assert value['protocol'] == lean.PROTOCOL and value['source'] == SOURCE
+    assert value['purpose'] == cp.LEAN_PURPOSE
+    assert value['weight_initialized'] is True
+    assert value['optimizer_state_restored'] is False
+    assert value['simulation_resume_authorized'] is False
+    assert value['parent_checkpoint_sha256'] == digest
+    assert value['parent_source'] == cp.LEAN_PARENT_SOURCE
+    assert value['parent_iteration'] == cp.LEAN_PARENT_ITERATION
+    assert value['parent_file'] == cp.LEAN_PARENT_FILE
+    # Only the four declared common checkpoints are evaluable; every iteration is
+    # still retained, and no best-checkpoint search is expressible.
+    assert value['common_checkpoints'] == list(lean.CHECKPOINTS) == [64, 128, 192, 255]
+    assert value['checkpoints'] == list(range(-1, lean.UPDATES))
+    assert (value['child_timeout_seconds'], value['service_timeout_seconds']) == (1693, 1753)
+    assert value['closeout_seconds'] == 600 and value['forward_graph'] is False
+    for key in ('pilot_parent_authorized', 'learned_stance', 'physical_motion_authorized'):
+        assert value[key] is False
+
+
+def test_prepare_refuses_before_any_work(monkeypatch):
+    # An expired/short window is refused before the filesystem or CUDA is touched.
+    with pytest.raises(ValueError, match='41-to-60-minute window'):
+        lean.prepare(SOURCE, int(time.time())+600)
+    # And a CUDA-visible host is refused even with a valid window.
+    monkeypatch.setenv('CUDA_VISIBLE_DEVICES', '0')
+    with pytest.raises(ValueError, match='CPU-only lean-lesson preparation'):
+        lean.prepare(SOURCE, int(time.time())+3600)
+
+
+def test_run_updates_refuses_a_learner_that_was_not_weight_initialized(monkeypatch, tmp_path):
+    """A fresh learner is not a lean-lesson learner, and must not start a run."""
+    fresh = eager.EagerLearner()
+    assert fresh.restored_fixture_only is False and fresh.updates == 0
+    with pytest.raises(ValueError, match='fresh exact weight-initialized learner'):
+        lean.run_updates(fresh, Synthetic(), tmp_path, SOURCE, LAUNCH, RUNTIME,
+                         deadline=time.monotonic()+60)
+    # A weight-initialized learner of the wrong world count is refused too.
+    learner, _, _, _ = lean_learner(monkeypatch)
+    bridge = Synthetic(); bridge.n = lean.WORLDS+1
+    with pytest.raises(ValueError, match='fresh exact weight-initialized learner'):
+        lean.run_updates(learner, bridge, tmp_path, SOURCE, LAUNCH, RUNTIME,
+                         deadline=time.monotonic()+60)

@@ -140,6 +140,28 @@ raised to fit a budget that does not fit.
 Neither outcome admits a checkpoint. Neither outcome says anything about tilt,
 stance quality, or the 0.0873 rad gate, which remains untouched.
 
+## Implementation status
+
+Records implementation and validation only. No threshold, gate or cap rule above
+is changed.
+
+Implemented at `1e10cb7d` (`stance_lean_throughput`): the declared plan, the
+two-component measurement, the nearest-rank summarizer, the cap rule, and the
+window refusal rules.
+
+Validation:
+
+- Local focused CPU regression: **200 passed**, 2 deselected. The two deselected
+  tests are the pre-existing eager wall-clock-budget errors that reproduce on
+  unmodified source; they are unrelated to this work. Eight of the passing tests
+  are new.
+- **Exact-source Linux CPU regression: 618 passed in 92.73 s** at `1e10cb7d` on
+  100.100 with `CUDA_VISIBLE_DEVICES` empty and CUDA never initialized.
+
+**The probe itself has not been run.** It requires the GPU host and a fresh
+declared window. Until it runs, the lean-lesson `child_seconds` and
+`service_seconds` remain undeclared, and the lean-lesson run is not launched.
+
 ## What this does not authorize
 
 No physical motion. No claim of learned stance, football balance, disturbance

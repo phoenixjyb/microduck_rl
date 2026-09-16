@@ -192,6 +192,36 @@ control-group kill, the independent watchdog, and a 600 s closeout reserve. A
 new explicit absolute launch window is required; authority must not be derived
 from any expired cutoff.
 
+**Measured, not estimated.** The probe ran on 100.100 at source `4f0e61b0004a`
+on 2026-09-16. Its measurement is the only authority for the two numbers below.
+
+| Quantity | Measured | How |
+| --- | --- | --- |
+| collection, worst of 8 updates | 5.395445651840419 s | CUDA0, 64 worlds, 24 ticks, frozen parent policy |
+| optimizer, worst of 8 updates | 0.07417336199432611 s | host CPU, 64x24 samples, CUDA hidden |
+| per-update worst case | 5.469619013834745 s | sum of the two maxima |
+| setup (one reset) | 0.03163699014112353 s | measured, not assumed |
+| predicted child | 1,402 s | `ceil(256 * 5.4696…) + ceil(0.0316…)` |
+| **service cap** | **1,753 s** | `ceil(1.25 * 1,402)` |
+| **child watchdog** | **1,693 s** | `service - 60` |
+| parent estimate, superseded | 1,472 s | recorded only for comparison; never used |
+
+The declared 1.25 factor is applied to the **sum of the two maxima**, never to a
+mean; the 60 s watchdog margin and the 600 s closeout are unchanged. Provenance:
+`artifacts/evaluations/stance-lean-throughput-4f0e61b0004a`, launch SHA256
+`71a9bb69b7f419156b81577d6a6b758764cb6c13f71c5ae902f85cdf4316f150`, parent
+archive byte-identical after the probe at `46cd52b5…`. The probe admitted no
+checkpoint, exported none, and authorized no motion.
+
+One declared expectation above did **not** survive contact with measurement, and
+it is recorded rather than quietly dropped. The claim was that the 1,471.9 s
+estimate was "unreliable in the pessimistic direction" and that "the real cost is
+likely higher". It was not: the measured worst per-update cost (5.4696 s) is
+*below* the parent's 5.7497 s average. The measured cap is nevertheless larger
+than the estimate (1,753 s vs 1,472 s) because the safety factor is applied to a
+measured worst case rather than to an average. That conservatism is the intended
+effect, and it is not grounds to reduce the factor.
+
 Before GPU allocation: focused tests, exact-source Linux CPU regression, a
 clean feature branch, pinned dependencies and assets, the compiled plant, and
 an independently retained launch SHA must all pass. Check an idle GPU, no
@@ -252,13 +282,17 @@ Validation:
 
 Still outstanding before any launch, and deliberately not fabricated here:
 
-1. **The measured throughput probe.** Predeclared and implemented as the
+1. **The measured throughput probe — done.** Predeclared and implemented as the
    [lean-lesson throughput probe](2026-09-16-stance-lean-lesson-throughput-probe.md),
-   but **not yet run**: it needs the GPU host and a declared launch window. The
-   watchdog and service cap remain undeclared. No cap has been written into the
-   source, because the estimate above must not be used to size it.
+   then run on 100.100 at source `4f0e61b0004a`. It produced
+   `child_seconds = 1693` and `service_seconds = 1753` from the measured worst
+   case, as tabulated above. It admitted nothing and exported no checkpoint. The
+   caps are now declared numbers; they are deliberately not yet written into any
+   supervisor source, because that source does not exist yet (item 2).
 2. **The CUDA supervisor and child for the lean-lesson run itself.** They land
-   once the probe's measurement exists, so the caps are known numbers.
+   once the probe's measurement exists, so the caps are known numbers — which is
+   now the case. They must use 1,693 / 1,753, not the superseded 1,472 s
+   estimate.
 3. A clean feature branch, pinned dependencies and assets, the compiled plant,
    and an independently retained launch SHA.
 

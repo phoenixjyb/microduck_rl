@@ -166,9 +166,10 @@ Validation:
 - **Exact-source Linux CPU regression: 618 passed in 92.73 s** at `1e10cb7d` on
   100.100 with `CUDA_VISIBLE_DEVICES` empty and CUDA never initialized.
 
-**The probe itself has not produced a measurement.** It requires the GPU host and
-a fresh declared window. Until it runs, the lean-lesson `child_seconds` and
-`service_seconds` remain undeclared, and the lean-lesson run is not launched.
+**The probe has now produced a measurement** — see "Second attempt: measured"
+below. The two numbers it exists to produce are `child_seconds = 1693` and
+`service_seconds = 1753`; they are recorded in the
+[lean-lesson predeclaration](2026-09-16-stance-lean-lesson.md).
 
 ## First attempt: failed, produced no measurement
 
@@ -211,6 +212,80 @@ extracted into `service_state`/`check_service` so it is directly testable, and t
 tests now pin it — including a faithful `systemctl` emulation that prints
 `KEY=value` unless `--value` is given. That test fails against the old query shape
 with the identical `ValueError`, and passes against the fix.
+
+## Second attempt: measured
+
+Attempt 2 ran on 100.100 at source `4f0e61b0004a` on 2026-09-16, inside a fresh
+declared 40-minute window (`deadline_unix = 1789604594`). Same declared margins
+as attempt 1 — nothing was relaxed. `supervise` returned, the unit went
+`inactive`, and the child exited 0 after 62.795 s. Output directory
+`artifacts/evaluations/stance-lean-throughput-4f0e61b0004a`, launch SHA256
+`71a9bb69b7f419156b81577d6a6b758764cb6c13f71c5ae902f85cdf4316f150`.
+
+Component A, collection on CUDA0 under the frozen parent policy (8 measured
+updates, 2 discarded warm-ups):
+
+| | seconds |
+| --- | --- |
+| series | 5.10541, 5.02503, 5.20601, 5.19652, 5.22385, 5.26591, 5.35306, **5.39545** |
+| mean | 5.22140 |
+| median | 5.21493 |
+| p95 | 5.39545 |
+| max | 5.39545 |
+
+Setup (one reset) measured 0.031637 s. The series drifts upward by about 5.7%
+across the eight updates while the GPU warms from 48 C to 57 C, and the maximum
+is the last sample — which is exactly why the declared rule uses the maximum and
+not the mean or the median.
+
+Component B, optimizer on the host CPU with CUDA hidden (8 measured updates):
+
+| | seconds |
+| --- | --- |
+| series | 0.06976, 0.07163, 0.07116, 0.07086, 0.07075, 0.07173, 0.07137, **0.07417** |
+| mean | 0.07143 |
+| median | 0.07127 |
+| p95 | 0.07417 |
+| max | 0.07417 |
+
+On the real host the optimizer is only **1.36%** of an update. The three
+development-host runs recorded above put it at 2.02%, 7.94% and 10.61% of the
+parent's per-update total, with a spread of more than 10x across runs. The host
+figure is both smaller and far tighter (max/mean = 1.038) than anything measured
+on the development machine. Measuring component B on the same host as component
+A was therefore not a formality; the development numbers would have been a poor
+and pessimistic proxy.
+
+Derived caps, by the rule declared before any measurement:
+
+| Quantity | Value |
+| --- | --- |
+| per-update worst case | 5.469619013834745 s |
+| predicted child | 1,402 s |
+| **service cap** | **1,753 s** |
+| **child watchdog** | **1,693 s** |
+| parent estimate, superseded | 1,472 s |
+
+`decision = throughput-measured-not-a-capability`. All four of
+`checkpoint_admitted`, `training_admitted`, `learned_stance` and
+`physical_motion_authorized` are false. The parent archive is byte-identical
+after the probe at `46cd52b5…`, matching the pin. The GPU was idle before and
+after (0% utilization, 12 MiB, two consecutive idle samples, no compute PIDs,
+temperature 48 C rising to 57 C and settling back to 51 C), and neither protected
+AI Mission service was active.
+
+Recorded artifacts and their SHA256, from the supervisor's own file inventory:
+`child.log` `1afd7297…`, `collection.json` `9e4ce838…`, `decision.json`
+`45d38bcf…`, `launch.json` `71a9bb69…`, `optimizer.json` `0e4884cf…`,
+`parent.pt` `46cd52b5…`.
+
+The measurement did **not** confirm the declared expectation that the 1,471.9 s
+estimate was biased low. The measured worst per-update cost (5.4696 s) is below
+the parent's 5.7497 s average, so the estimate was if anything slightly
+pessimistic. The resulting cap is still larger than the estimate (1,753 s vs
+1,472 s) because the safety factor multiplies a measured worst case rather than
+an average. That is recorded here as a correction to the reasoning, not as a
+reason to lower the factor.
 
 ## What this does not authorize
 

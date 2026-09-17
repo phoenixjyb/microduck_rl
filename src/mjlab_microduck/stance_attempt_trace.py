@@ -18,8 +18,20 @@ from mjlab_microduck.stance_transition import PhysicsState, EPISODE_STEPS, physi
 
 PROTOCOL = 'football-b1n-first-attempt-trace-v1'
 EAGER_PROTOCOL = 'football-b1n-eager-first-attempt-trace-v1'
+LEAN_PROTOCOL = 'football-b1n-lean-first-attempt-trace-v1'
 SEEDS = (541, 547, 557)
 CHECKPOINTS = (128, 256, 384, 511)
+# The lean-lesson run's common checkpoints. Declared here rather than imported
+# from ``stance_checkpoint`` because that module imports this one; ``checkpoint``
+# re-exports this tuple, so the single literal is the only source of truth.
+LEAN_CHECKPOINTS = (64, 128, 192, 255)
+# Which checkpoint iterations each trace protocol may bind, keyed by protocol so
+# that a protocol can never borrow another's iteration labels. The retained
+# pilot path admits only 128/256/384/511, the eager diagnostic only its
+# initializer/final pair, and the lean-lesson path only its own four common
+# checkpoints. Adding a protocol here is the only way to admit a new iteration
+# set; no existing entry changes.
+ITERATIONS = {PROTOCOL: CHECKPOINTS, EAGER_PROTOCOL: (-1, 127), LEAN_PROTOCOL: LEAN_CHECKPOINTS}
 MAX_TRACE_BYTES = 512*1024*1024
 STATE_KEYS = set(PhysicsState.__dataclass_fields__)
 FRAME_KEYS = {'physics_steps', 'qpos', 'qvel', 'soft_limit_mask', 'state', 'observation'}
@@ -45,7 +57,7 @@ def validate_binding(binding):
     require(set(binding) == {'protocol', 'source', 'runtime_sha256', 'checkpoint_sha256',
         'launch_sha256', 'checkpoint_iteration', 'evaluation_seed', 'worlds', 'capture_device'},
         'exact trace binding fields')
-    require(binding['protocol'] in (PROTOCOL, EAGER_PROTOCOL), 'trace binding protocol')
+    require(binding['protocol'] in ITERATIONS, 'trace binding protocol')
     for key in ('source', 'runtime_sha256', 'checkpoint_sha256', 'launch_sha256'):
         require(type(binding[key]) is str and re.fullmatch(
             '[0-9a-f]{'+('40' if key == 'source' else '64')+'}', binding[key]) is not None,
@@ -53,8 +65,8 @@ def validate_binding(binding):
     require(type(binding['worlds']) is int and 1 <= binding['worlds'] <= 128, 'bounded trace worlds')
     require(type(binding['evaluation_seed']) is int and binding['evaluation_seed'] in SEEDS,
             'predeclared evaluation seed')
-    iterations = CHECKPOINTS if binding['protocol'] == PROTOCOL else (-1, 127)
-    require(type(binding['checkpoint_iteration']) is int and binding['checkpoint_iteration'] in iterations,
+    require(type(binding['checkpoint_iteration']) is int
+            and binding['checkpoint_iteration'] in ITERATIONS[binding['protocol']],
             'predeclared checkpoint iteration')
     require(binding['capture_device'] in ('cpu', 'cuda:0'), 'explicit capture device')
 

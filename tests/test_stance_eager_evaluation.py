@@ -59,7 +59,15 @@ def test_strict_frozen_diagnostic_restore_not_pilot(fixture_inputs, iteration):
 
 @pytest.mark.parametrize('iteration,protocol,valid', [(-1, trace.PROTOCOL, False),
     (127, trace.PROTOCOL, False), (128, trace.EAGER_PROTOCOL, False), (511, trace.EAGER_PROTOCOL, False),
-    (-1, trace.EAGER_PROTOCOL, True), (127, trace.EAGER_PROTOCOL, True)])
+    (-1, trace.EAGER_PROTOCOL, True), (127, trace.EAGER_PROTOCOL, True),
+    # The lean-lesson protocol admits only its own four common checkpoints, and
+    # no iteration label is aliased across purposes: 128 is a pilot iteration and
+    # a lean one, but never an eager one, and -1 is eager-only.
+    (64, trace.LEAN_PROTOCOL, True), (128, trace.LEAN_PROTOCOL, True),
+    (192, trace.LEAN_PROTOCOL, True), (255, trace.LEAN_PROTOCOL, True),
+    (-1, trace.LEAN_PROTOCOL, False), (127, trace.LEAN_PROTOCOL, False),
+    (511, trace.LEAN_PROTOCOL, False), (64, trace.PROTOCOL, False),
+    (255, trace.PROTOCOL, False), (255, trace.EAGER_PROTOCOL, False)])
 def test_no_iteration_relabeling(fixture_inputs, iteration, protocol, valid):
     binding = deepcopy(fixture_inputs[0]['cases'][0]['binding'])
     binding.update(checkpoint_iteration=iteration, protocol=protocol)

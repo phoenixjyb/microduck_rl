@@ -401,6 +401,13 @@ undecided: neither `lean-lesson-passed-nominal` nor
 `lean-lesson-rejected-objective-binds` has been earned, and the tilt gate has not
 been relaxed, re-weighted or touched.
 
+The runner now exists (`stance_lean_evaluation`), but a runner is not a
+measurement. Its twelve-case watchdog caps are deliberately unset until the
+[timing probe](2026-09-17-stance-lean-lesson-evaluation-probe.md) measures a
+full-length case, and the evaluate mode refuses to plan while they are unset. So
+"the code is written" is not progress toward the decision; only the probe's
+number, and then the twelve cases, are.
+
 ## What this does not authorize
 
 No physical motion. No claim of learned stance, football balance, disturbance

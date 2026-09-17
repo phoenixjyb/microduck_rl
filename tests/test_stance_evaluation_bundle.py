@@ -161,3 +161,51 @@ def test_rehashed_false_receipt_still_fails_recomputation(tmp_path, inputs, name
     with pytest.raises(ValueError, match='receipt mismatch|score mismatch'):
         bundle.verify_bundle(directory, sha256(raw_manifest).hexdigest(),
             binding=inputs['binding'], checkpoint_identity=inputs['checkpoint_identity'])
+
+
+def test_each_trace_protocol_has_exactly_one_loader():
+    """Loader routing is a declared map, not a fall-through.
+
+    The previous form was a two-way conditional whose ``else`` sent any
+    unrecognised protocol to the pilot loader. A map makes the routing explicit
+    and gives every purpose its own entry.
+    """
+    assert bundle.LOADERS == {trace.PROTOCOL: cp.load_evaluation,
+        trace.EAGER_PROTOCOL: cp.load_eager_diagnostic,
+        trace.LEAN_PROTOCOL: cp.load_lean_evaluation}
+    assert len({id(loader) for loader in bundle.LOADERS.values()}) == 3
+
+
+def test_pilot_export_is_not_readable_through_the_lean_loader(inputs):
+    """A self-consistent lean binding must not restore a pilot-purpose export.
+
+    Iteration 128 is deliberately chosen because it is a valid iteration under
+    *both* the pilot and lean protocols, so only the purpose-exact loader can
+    reject this binding.
+    """
+    changed = deepcopy(inputs)
+    binding = dict(changed['binding'], protocol=trace.LEAN_PROTOCOL)
+    binding.pop('launch_sha256')
+    launch = bundle.launch_bytes(binding, changed['checkpoint_identity'])
+    binding['launch_sha256'] = sha256(launch).hexdigest()
+    assert changed['checkpoint_identity']['iteration'] == binding['checkpoint_iteration'] == 128
+    with pytest.raises(ValueError, match='lean-lesson evaluation export'):
+        bundle.checked_inputs(binding, changed['checkpoint_raw'], changed['checkpoint_identity'],
+                              changed['runtime_raw'], launch)
+
+
+def test_unlisted_protocol_refused_even_if_binding_validation_is_bypassed(monkeypatch, inputs):
+    """Defence in depth: the loader map refuses what the trace whitelist would."""
+    changed = deepcopy(inputs)
+    binding = dict(changed['binding'], protocol='football-b1n-unlisted-trace-v1')
+    binding.pop('launch_sha256')
+    # The protocol is bound into the launch bytes, so they must be rebuilt for
+    # this binding; otherwise the byte check would mask the loader check.
+    monkeypatch.setattr(bundle.trace, 'validate_binding', lambda candidate: None)
+    launch = bundle.launch_bytes(binding, changed['checkpoint_identity'])
+    binding['launch_sha256'] = sha256(launch).hexdigest()
+    with pytest.raises(ValueError, match='bundle loader for the trace protocol'):
+        bundle.checked_inputs(binding, changed['checkpoint_raw'], changed['checkpoint_identity'],
+                              changed['runtime_raw'], launch)
+
+

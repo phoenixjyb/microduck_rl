@@ -5,6 +5,7 @@ import io
 import pytest
 import torch
 from mjlab_microduck import stance_checkpoint as cp
+from mjlab_microduck import stance_attempt_trace as trace
 
 
 def identity(purpose='pilot', iteration=128):
@@ -112,3 +113,19 @@ def test_fresh_models_force_cpu_without_changing_global_default_device():
 def test_non_float32_global_default_is_refused(monkeypatch):
     monkeypatch.setattr(torch, 'get_default_dtype', lambda: torch.float64)
     with pytest.raises(ValueError, match='float32'): cp.fresh_models(521)
+
+
+def test_evaluable_iterations_are_the_trace_protocol_map():
+    """The evaluable set and the trace's admitted set must be one declaration.
+
+    ``checkpoint`` re-exports ``trace.LEAN_CHECKPOINTS`` precisely so these two
+    cannot drift: a divergence would let an export be admitted for evaluation at
+    an iteration no trace protocol is permitted to bind, or the reverse.
+    """
+    assert cp.LEAN_CHECKPOINTS is trace.LEAN_CHECKPOINTS
+    assert cp.EVALUABLE == {'pilot': trace.CHECKPOINTS, 'lean-lesson': trace.LEAN_CHECKPOINTS}
+    assert trace.ITERATIONS[trace.PROTOCOL] == cp.EVALUABLE['pilot']
+    assert trace.ITERATIONS[trace.LEAN_PROTOCOL] == cp.EVALUABLE['lean-lesson']
+    # The eager initializer/final pair is a diagnostic, not an evaluation path,
+    # so it deliberately has no ``EVALUABLE`` entry.
+    assert trace.ITERATIONS[trace.EAGER_PROTOCOL] == (-1, 127)

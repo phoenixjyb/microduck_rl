@@ -4,6 +4,12 @@ import torch
 
 from mjlab_microduck.stance_transition import EPISODE_STEPS, physical_failures
 
+# The predeclared final-second tilt limit, in radians. It is named rather than
+# inlined so that "this gate was not relaxed" is checkable: the lean-lesson
+# decision rule forbids moving it in either branch, and the evaluation records
+# this exact value in its summary.
+TILT_GATE_RAD = .0873
+
 
 @torch.no_grad()
 def score_attempt(state, positions, soft_exposure, steps, *, rejected_proposed_torque=None):
@@ -57,7 +63,7 @@ def score_attempt(state, positions, soft_exposure, steps, *, rejected_proposed_t
     gates = dict(complete_first_attempt=complete, full_duration=full_duration,
         no_hard_failure=not hard_failure, displacement=metrics['maximum_displacement_m'] <= .02,
         soft_limit=metrics['soft_limit_exposure_fraction'] is not None and metrics['soft_limit_exposure_fraction'] <= .01,
-        final_tilt=full_duration and metrics['final_second_tilt_p95_rad'] <= .0873,
+        final_tilt=full_duration and metrics['final_second_tilt_p95_rad'] <= TILT_GATE_RAD,
         final_speed=full_duration and metrics['final_second_planar_speed_p95_mps'] <= .03,
         final_height=full_duration and metrics['final_second_minimum_height_m'] >= .105,
         foot_support=full_duration and metrics['both_feet_support_fraction'] >= .99)

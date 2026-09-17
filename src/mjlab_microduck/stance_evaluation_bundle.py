@@ -18,6 +18,15 @@ PROTOCOL = 'football-b1n-evaluation-bundle-v3'
 LAUNCH_PROTOCOL = 'football-b1n-evaluation-inputs-v3'
 NAMES = {'launch.json', 'runtime.json', 'checkpoint.pt', 'trace.pt', 'control.pt', 'restore.json', 'score.json'}
 ATOL, RTOL = 1e-6, 1e-5
+# Trace protocol -> the one checkpoint loader that may restore its exports. Keyed
+# by protocol so a bundle can never read an export through another purpose's
+# loader: the retained pilot path keeps ``load_evaluation``, which by design
+# refuses both eager-diagnostic and lean-lesson exports, and each of those gets
+# its own entry. An unlisted protocol is refused rather than silently routed to
+# the pilot loader. No existing entry changes.
+LOADERS = {trace.PROTOCOL: checkpoint.load_evaluation,
+           trace.EAGER_PROTOCOL: checkpoint.load_eager_diagnostic,
+           trace.LEAN_PROTOCOL: checkpoint.load_lean_evaluation}
 
 
 def launch_bytes(binding_without_launch_sha, checkpoint_identity):
@@ -40,9 +49,8 @@ def checked_inputs(binding, cp_raw, cp_identity, runtime_raw, launch_raw):
     runtime = files.parse(runtime_raw)
     compiled = plant.checked_runtime(runtime, binding['source'])
     require(cp_identity['iteration'] == binding['checkpoint_iteration'], 'checkpoint/trace iteration mismatch')
-    loader = (checkpoint.load_eager_diagnostic if binding['protocol'] == trace.EAGER_PROTOCOL
-              else checkpoint.load_evaluation)
-    actor, receipt = loader(cp_raw, binding['checkpoint_sha256'], cp_identity)
+    require(binding['protocol'] in LOADERS, 'bundle loader for the trace protocol')
+    actor, receipt = LOADERS[binding['protocol']](cp_raw, binding['checkpoint_sha256'], cp_identity)
     return actor, receipt, compiled
 
 

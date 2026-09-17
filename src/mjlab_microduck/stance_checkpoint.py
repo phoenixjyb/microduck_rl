@@ -11,7 +11,7 @@ from tensordict import TensorDict
 from rsl_rl.models import MLPModel
 
 from mjlab_microduck.first_attempt_smoke import canonical, require
-from mjlab_microduck.stance_attempt_trace import CHECKPOINTS
+from mjlab_microduck.stance_attempt_trace import CHECKPOINTS, LEAN_CHECKPOINTS
 
 PROTOCOL = 'football-b1n-evaluation-checkpoint-v1'
 LIMIT = 8*1024*1024
@@ -29,7 +29,9 @@ ARCHITECTURE = dict(actor_dim=44, critic_dim=50, action_dim=10,
 # byte hash and iteration so only the reviewed frozen weights can initialize a run,
 # and the resulting identity can never be mistaken for a fresh initializer.
 LEAN_SEED, LEAN_WORLDS, LEAN_UPDATES = 571, 64, 256
-LEAN_CHECKPOINTS = (64, 128, 192, 255)
+# ``LEAN_CHECKPOINTS`` is imported from ``stance_attempt_trace``, which owns the
+# protocol -> admitted-iteration map, so the evaluable iterations here and the
+# iterations a lean trace may bind cannot drift apart.
 LEAN_PARENT_SHA256 = '46cd52b53f7b8b9fb220aed96d78cd961423c606e906a4df7330422ae4786e93'
 LEAN_PARENT_SOURCE = 'c8f6b994a2991e400bf6478b967c30e9b618db6a'
 LEAN_PARENT_FILE = 'model_127.pt'

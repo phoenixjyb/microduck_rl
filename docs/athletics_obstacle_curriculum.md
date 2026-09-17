@@ -26,6 +26,25 @@ mechanical-feasibility one, and it changes exactly one axis — budget and
 starting weights. Its 0.0873 rad tilt gate is unchanged and is not to be
 relaxed, and no reward coefficient is touched.
 
+September17 addition: that lesson has now **run and been evaluated**, and the
+declared decision is **`lean-lesson-passed-nominal`**. The 256-update
+weight-initialized continuation (source `7bbc75fb`) was evaluated on all four
+common checkpoints across seeds 541/547/557 at 128 environments each, and
+**1,536 of 1,536 attempts cleared every gate with zero hard failures**. Worst
+per-attempt final-second tilt p95 was 2.25299 deg at iteration 64, 2.40004 at 128,
+1.55985 at 192 and **1.02774 at 255**, against the unchanged **0.0873 rad
+(5 deg)** gate — cleared by more than a factor of two, with no relaxation and no
+re-weighting. Explanation 1 (optimizer budget) is therefore supported and
+explanation 2 (mechanical feasibility) is disfavoured, which is the entire
+question the lesson was built to answer.
+
+This admits **a nominal stance candidate only**. Fresh-seed training replication
+and small-disturbance recovery still precede any B1 acceptance, and no fixed-ball
+or rolling-football training follows directly. Every admission flag remains false,
+including on this pass. See the
+[residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) and its
+[evaluation timing probe](experiments/2026-09-17-stance-lean-lesson-evaluation-probe.md).
+
 ## Capability graph
 
 September7 integration boundary: the historical milestones below do not

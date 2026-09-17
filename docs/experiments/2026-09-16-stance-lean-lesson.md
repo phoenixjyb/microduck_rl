@@ -387,26 +387,60 @@ evidence write — and it was the declared safety factor, not the measurement, t
 made the cap safe. A future probe for this family should time `collect_one`
 end-to-end rather than only the observation build, forward pass and physics step.
 
-### Next: evaluation, and it is not started
+### The evaluation ran, and the declared decision is `lean-lesson-passed-nominal`
 
-All four common checkpoints are evaluated on seeds **541, 547, 557**, 128
-environments each, one 5 s first attempt per environment from the nominal reset,
-against the unchanged every-boundary scorer and the unchanged **0.0873 rad** tilt
-gate, requiring >= 122/128 per seed and passing on all three seeds. Tilt p95 is
-reported per seed for every checkpoint, because the trend across 64/128/192/255 is
-the primary evidence for budget-versus-objective.
+Run on 100.100 on 2026-09-17 at source `602ac07aecd3`, unit
+`microduck-lean-evaluation-602ac07aecd3.service`, inside the caps measured by the
+[timing probe](2026-09-17-stance-lean-lesson-evaluation-probe.md). Child exit 0
+after **1,135.261938189622 s**. All 12 cases ran; **1,536 of 1,536 attempts
+passed every gate**, with zero hard failures.
 
-That evaluation has not been run. Until it is, the decision rule above is
-undecided: neither `lean-lesson-passed-nominal` nor
-`lean-lesson-rejected-objective-binds` has been earned, and the tilt gate has not
-been relaxed, re-weighted or touched.
+| Checkpoint | Worst per-attempt tilt p95 | Gate | Passes per seed | All three seeds |
+| --- | --- | --- | --- | --- |
+| 64 | 2.25299 deg | 5.00000 deg | 128/128 | yes |
+| 128 | 2.40004 deg | 5.00000 deg | 128/128 | yes |
+| 192 | 1.55985 deg | 5.00000 deg | 128/128 | yes |
+| **255** | **1.02774 deg** | 5.00000 deg | 128/128 | yes |
 
-The runner now exists (`stance_lean_evaluation`), but a runner is not a
-measurement. Its twelve-case watchdog caps are deliberately unset until the
-[timing probe](2026-09-17-stance-lean-lesson-evaluation-probe.md) measures a
-full-length case, and the evaluate mode refuses to plan while they are unset. So
-"the code is written" is not progress toward the decision; only the probe's
-number, and then the twelve cases, are.
+**The 0.0873 rad gate was not relaxed, re-weighted or touched**, and the run
+records `tilt_gate_relaxed: false`. It did not need to be: every checkpoint
+clears it by more than a factor of two, and the parent's failing 7.95–8.13 deg
+band is nowhere in the result.
+
+**What this settles.** The lesson existed to separate two explanations. Explanation
+1 — *budget*: the tilt was still descending and would cross the gate with more
+optimization from the same point. Explanation 2 — *objective or mechanical
+feasibility*: the reward plus available correction authority admits only a leaning
+equilibrium. The continuation crossed the gate on every seed within 64 updates of
+the parent's failing export, so **explanation 1 is supported and explanation 2 is
+disfavoured**. The next experiment is therefore not a change to reset pose or
+correction authority.
+
+One observation is recorded without being over-read: the trend is **not monotone**
+(64 → 2.253, 128 → 2.400, 192 → 1.560, 255 → 1.028 deg). Tilt rises slightly from
+64 to 128 before falling. That is consistent with a transient in the early
+continuation rather than a clean descent, and this evaluation has no evidence to
+distinguish those.
+
+**What it does not settle, and the rule is explicit about this.** A pass admits
+only a **nominal stance candidate**. Fresh-seed training replication and
+small-disturbance recovery still precede B1 acceptance, and no fixed-ball or
+rolling-football training follows directly. All four admission flags —
+`checkpoint_admitted`, `learned_stance_accepted`, `football_balance_accepted`,
+`physical_motion_authorized` — are false in both the summary and the report.
+
+Provenance: `artifacts/evaluations/stance-lean-evaluation-602ac07aecd3`, launch
+SHA256 `e9eedf85653c3e1b25c90e239c2ef0e559d1bdaf462dcac04d2526ee83a15f50`,
+comparison SHA256
+`1d0ea3ff449dec5d964af4feea90110326cca1349512a165421dce14d7a55789`, report
+SHA256 `2cb817dde5ceaa7593a6db5c61fd2652828a3e9dfcc97fe588466cd4127bf5b1`.
+
+The result was **independently re-verified** rather than taken from the
+supervisor's own summary: all 12 bundles were re-read and replayed from their
+retained bytes, the decision was recomputed from those scores and matched, and the
+attempt and pass counts were recounted from the attempt lists. The measured caps
+held with **216.74 s (16.03 %)** of headroom to the 1,352 s child watchdog and
+276.74 s (19.60 %) to the 1,412 s service cap.
 
 ## What this does not authorize
 

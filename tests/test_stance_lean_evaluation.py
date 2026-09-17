@@ -309,3 +309,37 @@ def test_incomplete_or_inconsistent_evidence_cannot_become_a_decision(monkeypatc
 def test_gate_constant_is_the_scorers_own_and_is_not_relaxable():
     """The 0.0873 rad limit is a named predeclared constant, not a tunable."""
     assert ev.TILT_GATE_RAD == ev.evaluation.TILT_GATE_RAD == .0873
+
+
+# --- the command line ---------------------------------------------------------
+
+def test_child_command_line_is_accepted_by_the_parsers_own_rules():
+    """The supervisor's child argv and ``main`` must agree.
+
+    This is the check whose absence let a real launch die with
+    ``unrecognized arguments: --mode probe``: ``supervise`` built the child
+    command with one flag name while the parser declared another. A unit test of
+    either side alone would not have caught it.
+    """
+    for mode in ev.MODES:
+        argv = ev.child_command('a'*40, 'b'*64, mode, 7)
+        assert argv[:3] == [str(ev.host.ROOT/'.venv/bin/python'), '-m', ev.MODULE]
+        parsed = ev.parser().parse_args(argv[3:])
+        assert parsed.mode == 'child' and parsed.job == mode
+        assert parsed.source == 'a'*40 and parsed.launch_sha256 == 'b'*64 and parsed.lock_fd == 7
+    with pytest.raises(ValueError, match='declared lean evaluation mode'):
+        ev.child_command('a'*40, 'b'*64, 'training', 7)
+
+
+def test_every_declared_command_line_parses():
+    for mode in ev.MODES:
+        prepare = ev.parser().parse_args(['prepare', '--source', 'a'*40,
+                                          '--deadline-unix', '123', '--job', mode])
+        assert prepare.mode == 'prepare' and prepare.job == mode and prepare.deadline_unix == 123
+        supervise = ev.parser().parse_args(['supervise', '--source', 'a'*40,
+                                            '--launch-sha256', 'b'*64, '--job', mode])
+        assert supervise.mode == 'supervise' and supervise.job == mode
+    # An undeclared job, or a missing required source, is refused by the parser.
+    with pytest.raises(SystemExit): ev.parser().parse_args(['child', '--source', 'a'*40, '--job', 'nonsense'])
+    with pytest.raises(SystemExit): ev.parser().parse_args(['prepare', '--job', 'probe'])
+

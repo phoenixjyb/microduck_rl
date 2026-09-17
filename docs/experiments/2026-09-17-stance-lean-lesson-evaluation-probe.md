@@ -165,6 +165,40 @@ no competing compute owner, temperature below 80 C, and both protected AI
 Mission system services inactive. Do not touch 100.98, do not stop unrelated
 workloads, and do not restore protected services.
 
+## First attempt: failed, produced no measurement
+
+Launched on 100.100 at source `6723cd620333`, service
+`microduck-lean-eval-probe-6723cd620333.service`, `RuntimeMaxSec=960`. The
+service reported `Result=success` while the run had in fact failed, and the
+journal-as-truth read is what caught it. The report records
+`decision: failed`, `error: child exited unsuccessfully: 2`.
+
+| What | Value |
+| --- | --- |
+| child wall time | 7.055826982948929 s |
+| root cause | `error: unrecognized arguments: --mode probe` |
+| measurement produced | **none** |
+
+The defect was ours, in the runner: `supervise` built the child command line
+with `--mode <job>` while `main` declared that argument as `--job`. Neither side
+is wrong on its own, which is exactly why no unit test of either side caught it.
+
+Everything upstream of the child was correct and is now independently confirmed:
+`check_service` passed against the live unit (`RuntimeMaxUSec` read back as
+`16min`, `KillMode=control-group`, `MainPID` matching), `inputs_check`
+authenticated the four checkpoints, and `idle_before` shows a 46 C idle GPU with
+no compute owner and both protected AI Mission services inactive.
+
+The fix moves the command line into `child_command` and the parser into
+`parser()`, and adds a test that feeds the supervisor's own child argv through
+that same parser. Reintroducing `--mode` reproduces
+`unrecognized arguments: --mode probe` and fails the test, so the guard is known
+to bite rather than assumed to.
+
+The failed attempt's `report.json` and `child.log` were removed before the retry,
+because a fresh attempt must start from exactly `launch.json` and
+`runtime.json`. No measurement was discarded: there was none.
+
 ## Implementation status
 
 Written down before the probe runs, so that "the runner exists" and "the runner

@@ -188,6 +188,33 @@ def supervisor_wrapper(mode):
     return files.supervised_lean_evaluation
 
 
+def parser():
+    """The one command line, shared by ``main`` and the supervisor's child argv.
+
+    ``supervise`` builds a child command line that this same parser must accept.
+    Keeping the parser in a function is what lets a test check that the two
+    agree, instead of discovering a mismatch only when a launch fails.
+    """
+    result = argparse.ArgumentParser(description=__doc__)
+    result.add_argument('mode', choices=('prepare', 'supervise', 'child'))
+    result.add_argument('--source', required=True)
+    # ``mode`` is already the action (prepare/supervise/child); the job is which
+    # evaluation this is, so it gets its own name.
+    result.add_argument('--job', choices=MODES)
+    result.add_argument('--deadline-unix', type=int)
+    result.add_argument('--launch-sha256')
+    result.add_argument('--lock-fd', type=int)
+    return result
+
+
+def child_command(source, launch_sha, mode, fd):
+    """The exact argv the supervisor hands to its bounded child."""
+    files.hex_id(source, 40); files.hex_id(launch_sha, 64)
+    require(mode in MODES and type(fd) is int, 'declared lean evaluation mode and lease fd')
+    return [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
+            '--launch-sha256', launch_sha, '--job', mode, '--lock-fd', str(fd)]
+
+
 def training_inputs():
     """Authenticate the immutable lean-lesson archive before any tensor loading."""
     root = lean.output_path(TRAINING_SOURCE)
@@ -524,8 +551,7 @@ def supervise(source, launch_sha, mode):
                 check_window(launch['deadline_unix'], mode); host.check_log(root/'child.log')
                 require(host.identity(source) == launch['inputs'], 'live lean evaluation inputs drift')
             report['child'] = supervisor_wrapper(mode)(
-                [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
-                 '--launch-sha256', launch_sha, '--mode', mode, '--lock-fd', str(fd)],
+                child_command(source, launch_sha, mode, fd),
                 root/'child.log', cwd=host.ROOT, env=files.child_environment(), lock_fd=fd, guard=guard)
             host.check_log(root/'child.log')
             if mode == 'probe':
@@ -546,14 +572,7 @@ def supervise(source, launch_sha, mode):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('prepare', 'supervise', 'child'))
-    parser.add_argument('--source', required=True)
-    parser.add_argument('--job', choices=MODES)
-    parser.add_argument('--deadline-unix', type=int)
-    parser.add_argument('--launch-sha256')
-    parser.add_argument('--lock-fd', type=int)
-    args = parser.parse_args()
+    args = parser().parse_args()
     if args.mode == 'prepare':
         print(canonical(prepare(args.source, args.deadline_unix, args.job)))
     elif args.mode == 'supervise':

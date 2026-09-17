@@ -199,26 +199,84 @@ The failed attempt's `report.json` and `child.log` were removed before the retry
 because a fresh attempt must start from exactly `launch.json` and
 `runtime.json`. No measurement was discarded: there was none.
 
-## Implementation status
+## Second attempt: measured
 
-Written down before the probe runs, so that "the runner exists" and "the runner
-has measured something" cannot be confused.
+Launched on 100.100 at source `cdb05a5667ca`, service
+`microduck-lean-eval-probe-cdb05a5667ca.service`, `RuntimeMaxSec=960`. Child exit
+0 after **109.59330233978108 s**. Decision `probe-measured`.
+
+| Quantity | Measured |
+| --- | --- |
+| `prelude_seconds` (once) | 0.0008308729156851768 s |
+| `env_seconds` (per case) | 0.719240453094244 s |
+| `case_seconds` (per case) | **93.38529451098293 s** |
+| repeating unit `env + case` | 94.10453496407717 s |
+| prediction `prelude + 12 × unit` | 1,129.2552504418418 s |
+| **service cap** `ceil(1.25 × prediction)` | **1,412 s** |
+| **child watchdog** `service − 60` | **1,352 s** |
+| service `RuntimeMaxUSec` rendering | `23min 32s` |
+| window total `service + closeout + margin` | 2,072 s of the 3,600 s maximum |
+
+The probed case reached `policy_ticks == 250` with
+`stop_reason == all-first-attempts-complete`, so the declared validity condition
+held and a full-length cost was in fact measured.
+
+The GPU was idle before (46 C, 12 MiB, no compute owner), peaked at 57 C during
+the case, and was back to 49 C after. Both protected AI Mission services read
+`inactive` in every sample. The run admitted no checkpoint, exported no policy
+and authorized no motion.
+
+Provenance: `artifacts/evaluations/stance-lean-eval-probe-cdb05a5667ca`, launch
+SHA256 `d002eba450e465c03dc86507dc8bcb7b9e87e7296c7d20ff8c90e11ae8cd26d0`,
+report SHA256 `a91b5a068be96def6ae7fa18d7109ea75cb10b64f870a7d3991515589b80db58`,
+measurements SHA256 `aae4de36454cc3bb8a800169de08a118d175532dfde9ef7a4ae78aae34bd6ddd`.
+
+### The declared expectation did not survive measurement, again
+
+The expectation above was that a full-length lean case would land "near the
+full-length iteration-127 case cost inside the parent's realized 354.216 s". The
+only grounded comparable number is that parent's 354.216 / 6 = 59.04 s mean per
+case, and the measured unit is **94.10 s — 59 % above it**. The expectation is
+recorded as failed rather than reinterpreted.
+
+That failure is the probe's justification, and it is worth stating precisely. A
+straight-line analogy from the parent — *6 cases took 354.2 s, so 12 will take
+about 708 s, comfortably inside 900 s* — would have looked safe. The measured
+prediction is 1,129.3 s, which exceeds the frozen 900 s child by 229 s and the
+960 s service by 169 s. **Reusing the existing bound by analogy would have
+guaranteed a timeout**, and the probe is what prevented that launch. The parent's
+mean was cheap only because half its cases were fresh-initializer cases that died
+at 59 ticks.
+
+### The retained probe score is not evidence for the decision
+
+The probed case's bundle retains a score, because the scorer is on the measured
+path and the bundle is what that path produces. Its 128 of 128 attempts passed.
+That number is stated here only so it is not discovered later as a hidden
+result, and **no conclusion may be drawn from it**: one case out of twelve, at
+one checkpoint and one seed, is not the declared evaluation. The predeclaration
+is explicit that the probe records no gate verdict, and neither
+`lean-lesson-passed-nominal` nor `lean-lesson-rejected-objective-binds` is
+earned by it.
+
+## Implementation status
 
 | Piece | State |
 | --- | --- |
 | `stance_attempt_trace.LEAN_PROTOCOL` + protocol→iteration map | landed |
 | `stance_evaluation_bundle.LOADERS` loader routing | landed |
 | `stance_lean_evaluation` module (probe and evaluate modes) | landed, tested |
-| probe case executed | **not run** |
-| twelve-case caps | **not measured** — `None`, and the evaluate mode refuses to plan |
+| probe case executed | **measured**, 2026-09-17 |
+| twelve-case caps | **1,352 s child / 1,412 s service**, transcribed from the probe |
+| `supervised_lean_evaluation` child bound | landed |
+| twelve-case evaluation | **not run** |
 
-The evaluate mode fails closed on purpose. `CHILD_SECONDS`/`SERVICE_SECONDS` are
-`None` until the probe has run, and `service_caps('evaluate')` refuses with
-`twelve-case caps are not measured yet` rather than borrowing the 900 s pair.
-When they are filled in they are a *transcription*, and `measured_caps`
-re-derives them from the retained probe report on every launch — so a hand-edited
-constant, or a probe re-run that produced different numbers, is refused rather
-than launched.
+The transcription is checked, not trusted. `measured_caps` re-derives the caps
+from the retained probe report on every launch and refuses if the constants
+disagree, so a hand-edited number, or a probe re-run that produced different
+ones, cannot size a watchdog. A test additionally pins the transcription against
+the wrapper the supervisor actually applies, so the bound in the code and the
+bound in the constants cannot drift.
 
 The service's `RuntimeMaxUSec` string is computed by `systemd_runtime_max` from
 the seconds instead of being typed in. It reproduces both renderings read off the
@@ -233,6 +291,17 @@ explicit map that refuses an unlisted protocol. That is a real hole closed, not 
 tidy-up: under the old form a lean-protocol binding could restore a
 pilot-purpose export at iteration 128, which is a valid iteration under both
 protocols. A test pins that refusal, and reverting the map makes it fail.
+
+### One defect that only a host run could find
+
+`derive_caps` was written to take a probe report with a top-level `measurements`
+key, but `supervise` nests it under `probe`. The unit fixture had been written
+with the same flat shape, so it agreed with the bug and 48 tests passed while the
+function could not read a real report. It failed the first time it was pointed at
+the retained artifact. The rule now takes the measurements block itself, a
+separate `probe_measurements_of` owns the report shape, and the fixture writes
+the layout `supervise` actually writes. The general lesson is recorded because it
+will recur: a fixture that invents a document's shape tests the fixture.
 
 ## What this does not authorize
 

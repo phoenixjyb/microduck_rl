@@ -221,6 +221,23 @@ def supervised_lean_lesson(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard=
                           timeout=LEAN_LESSON_CHILD_SECONDS,monitor=monitor,guard=guard)
 
 
+# The twelve-case lean-lesson evaluation is longer than both existing bounds, so
+# it gets its own declared wrapper rather than widening either. The probe measured
+# a 94.10453496407717 s repeating unit, which gives a 1129.2552504418418 s
+# prediction for twelve cases, a 1412 s service cap at the declared 1.25 factor,
+# and 1412 - 60 = 1352 s for the child. See
+# docs/experiments/2026-09-17-stance-lean-lesson-evaluation-probe.md.
+# `supervised_process` still caps at CELL_SECONDS, `supervised_stance_smoke`
+# still holds 900 s and `supervised_lean_lesson` still holds 1693 s.
+LEAN_EVALUATION_CHILD_SECONDS = 1352
+
+
+def supervised_lean_evaluation(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard=lambda:None):
+    """Separate fixed 1352-second lean-evaluation bound, from the measured probe."""
+    return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,
+                          timeout=LEAN_EVALUATION_CHILD_SECONDS,monitor=monitor,guard=guard)
+
+
 def _timed_process(command,log,*,cwd,env,lock_fd,timeout,monitor,guard):
     started = time.monotonic(); samples = []
     finished,expired = threading.Event(),threading.Event()

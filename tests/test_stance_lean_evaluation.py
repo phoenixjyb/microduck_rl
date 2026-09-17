@@ -32,16 +32,24 @@ def evaluate_plan():
 
 
 def pinned_probe(monkeypatch, tmp_path, *, prelude_seconds=40.0, env_seconds=20.0, case_seconds=60.0):
-    """Pin a synthetic but self-consistent probe so the evaluate mode can plan."""
+    """Pin a synthetic probe whose report mirrors the real one's key layout.
+
+    The layout is the point. An earlier version of this fixture used a flat
+    ``measurements`` key, so it kept passing while the real report nested the
+    block under ``probe`` -- and a ``derive_caps`` that could not read a real
+    report reached a host run. The fixture now writes the shape ``supervise``
+    actually writes.
+    """
     measurements = dict(prelude_seconds=prelude_seconds, env_seconds=env_seconds,
         case_seconds=case_seconds, policy_ticks=ev.POLICY_TICKS, stop_reason=ev.VALID_STOP_REASON,
         checkpoint_iteration=ev.PROBE_ITERATION, evaluation_seed=ev.PROBE_SEED,
         cases_projected=ev.CASES)
+    derived = ev.derive_caps(measurements)
     report = dict(protocol=ev.PROTOCOL, mode='probe', decision='probe-measured',
-                  launch_sha256='a'*64, measurements=measurements)
+        launch_sha256='a'*64, measurements_sha256='b'*64,
+        probe=dict(measurements=measurements, derived_caps=derived))
     root = tmp_path/'probe'; root.mkdir()
     raw = (canonical(report)+'\n').encode(); (root/'report.json').write_bytes(raw)
-    derived = ev.derive_caps(report)
     monkeypatch.setattr(ev, 'PROBE_SOURCE', 'a'*40)
     monkeypatch.setattr(ev, 'PROBE_REPORT', sha256(raw).hexdigest())
     monkeypatch.setattr(ev, 'CHILD_SECONDS', derived['child_seconds'])
@@ -96,38 +104,87 @@ def test_probe_reuses_the_frozen_pair_and_declares_no_new_bound():
     assert ev.supervisor_wrapper('probe') is ev.files.supervised_stance_smoke
 
 
-def test_evaluate_caps_fail_closed_until_the_probe_is_pinned():
-    assert ev.CHILD_SECONDS is None and ev.SERVICE_SECONDS is None and ev.PROBE_REPORT is None
+def test_evaluate_caps_fail_closed_when_unmeasured(monkeypatch):
+    """The unpinned state must refuse, not borrow a bound."""
+    monkeypatch.setattr(ev, 'CHILD_SECONDS', None)
+    monkeypatch.setattr(ev, 'SERVICE_SECONDS', None)
     with pytest.raises(ValueError, match='not measured yet'):
         ev.service_caps('evaluate')
-    with pytest.raises(ValueError, match='not measured yet'):
-        evaluate_plan()
+    monkeypatch.setattr(ev, 'CHILD_SECONDS', 1352)
+    monkeypatch.setattr(ev, 'SERVICE_SECONDS', 1412)
+    monkeypatch.setattr(ev, 'PROBE_REPORT', None)
+    with pytest.raises(ValueError, match='pinned probe report hash'):
+        ev.service_caps('evaluate')
+
+
+def test_supervisor_refuses_a_missing_evaluation_wrapper(monkeypatch):
+    monkeypatch.delattr(ev.files, 'supervised_lean_evaluation')
     with pytest.raises(ValueError, match='declared only after the probe is measured'):
         ev.supervisor_wrapper('evaluate')
 
 
-def test_declared_cap_rule_applied_to_a_probe_report():
-    report = dict(protocol=ev.PROTOCOL, mode='probe', decision='probe-measured',
-        measurements=dict(prelude_seconds=40.0, env_seconds=20.0, case_seconds=60.0))
-    derived = ev.derive_caps(report)
+def test_transcribed_caps_and_the_frozen_wrapper_agree():
+    """The transcription and the wrapper the supervisor uses must be one number.
+
+    ``measured_caps`` checks the transcription against the retained probe at
+    launch. This checks the other half: that the bound the supervisor actually
+    applies is the same one, rather than a stale copy.
+    """
+    assert ev.CHILD_SECONDS == ev.files.LEAN_EVALUATION_CHILD_SECONDS == 1352
+    assert ev.SERVICE_SECONDS == 1412
+    assert ev.SERVICE_SECONDS == ev.CHILD_SECONDS+ev.WATCHDOG_MARGIN_SECONDS
+    assert ev.systemd_runtime_max(ev.SERVICE_SECONDS) == '23min 32s'
+    assert ev.supervisor_wrapper('evaluate') is ev.files.supervised_lean_evaluation
+
+
+def test_no_existing_frozen_bound_moved():
+    """Adding the evaluation wrapper must not have widened anything."""
+    assert ev.files.CELL_SECONDS == 120
+    assert ev.files.LEAN_LESSON_CHILD_SECONDS == 1693
+    assert ev.smoke.CHILD_SECONDS == 900 and ev.smoke.SERVICE_SECONDS == 960
+    assert ev.PROBE_CHILD_SECONDS == 900 and ev.PROBE_SERVICE_SECONDS == 960
+    assert ev.service_caps('probe')['runtime_max'] == '16min'
+
+
+def test_declared_cap_rule_applied_to_measured_timings():
+    derived = ev.derive_caps(dict(prelude_seconds=40.0, env_seconds=20.0, case_seconds=60.0))
     assert derived['unit_seconds'] == 80.0
     assert derived['predicted_seconds'] == 40.0+ev.CASES*80.0 == 1000.0
     assert derived['service_seconds'] == 1250 and derived['child_seconds'] == 1190
     assert derived['safety_factor'] == 1.25 and derived['cases'] == 12
 
 
-@pytest.mark.parametrize('damage', ['not_measured', 'wrong_protocol', 'wrong_mode', 'missing_timing',
-    'negative', 'nan'])
-def test_cap_rule_refuses_an_unusable_probe_report(damage):
+@pytest.mark.parametrize('damage', ['missing_timing', 'negative', 'zero', 'nan', 'string',
+    'not_a_mapping'])
+def test_cap_rule_refuses_unusable_timings(damage):
+    measurements = dict(prelude_seconds=40.0, env_seconds=20.0, case_seconds=60.0)
+    if damage == 'missing_timing': del measurements['case_seconds']
+    elif damage == 'negative': measurements['env_seconds'] = -1.0
+    elif damage == 'zero': measurements['case_seconds'] = 0.0
+    elif damage == 'nan': measurements['prelude_seconds'] = float('nan')
+    elif damage == 'string': measurements['case_seconds'] = '60'
+    else: measurements = None
+    with pytest.raises(ValueError): ev.derive_caps(measurements)
+
+
+@pytest.mark.parametrize('damage', ['flat_measurements', 'no_probe_block', 'not_measured',
+    'wrong_protocol', 'wrong_mode'])
+def test_probe_measurements_of_requires_the_real_report_shape(damage):
+    """The shape check a flat fixture hid, which is how a broken cap rule shipped."""
+    measurements = dict(prelude_seconds=40.0, env_seconds=20.0, case_seconds=60.0)
     report = dict(protocol=ev.PROTOCOL, mode='probe', decision='probe-measured',
-        measurements=dict(prelude_seconds=40.0, env_seconds=20.0, case_seconds=60.0))
-    if damage == 'not_measured': report['decision'] = 'probe-invalid-short-case'
-    elif damage == 'wrong_protocol': report['protocol'] = 'football-b1n-something-else'
-    elif damage == 'wrong_mode': report['mode'] = 'evaluate'
-    elif damage == 'missing_timing': del report['measurements']['case_seconds']
-    elif damage == 'negative': report['measurements']['env_seconds'] = -1.0
-    else: report['measurements']['prelude_seconds'] = float('nan')
-    with pytest.raises(ValueError): ev.derive_caps(report)
+                  probe=dict(measurements=measurements))
+    if damage == 'flat_measurements':
+        report.pop('probe'); report['measurements'] = measurements
+    elif damage == 'no_probe_block': report.pop('probe')
+    elif damage == 'not_measured': report['decision'] = 'probe-invalid-short-case'
+    elif damage == 'wrong_protocol': report['protocol'] = 'football-b1n-other-v1'
+    else: report['mode'] = 'evaluate'
+    with pytest.raises(ValueError): ev.probe_measurements_of(report)
+    # The well-formed nested shape is the one that must be accepted.
+    report = dict(protocol=ev.PROTOCOL, mode='probe', decision='probe-measured',
+                  probe=dict(measurements=measurements))
+    assert ev.probe_measurements_of(report) == measurements
 
 
 def test_measured_caps_reject_a_hand_edited_constant(monkeypatch, tmp_path):

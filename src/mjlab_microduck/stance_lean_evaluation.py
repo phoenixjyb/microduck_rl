@@ -93,11 +93,19 @@ VALID_STOP_REASON = 'all-first-attempts-complete'
 PROBE_TRACE_PROTOCOL = trace.LEAN_PROTOCOL
 
 # --- evaluate: transcribed from the probe, never typed in as an estimate ------
-# Filled in only from the retained probe measurement. ``None`` means "not yet
-# measured", and the evaluate mode fails closed rather than borrowing a bound.
-PROBE_SOURCE = None
-PROBE_REPORT = None
-CHILD_SECONDS, SERVICE_SECONDS = None, None
+# Measured on 100.100 by the declared probe at source cdb05a5667ca on 2026-09-17.
+# The probe ran one full-length case at iteration 255 / seed 541 and recorded
+# 0.0008308729156851768 s prelude, 0.719240453094244 s environment construction
+# and 93.38529451098293 s of case work. That gives a 94.10453496407717 s
+# repeating unit, a 1,129.2552504418418 s prediction for twelve cases, and a
+# 1,412 s service cap at the declared 1.25 factor.
+#
+# These are a transcription, not the authority. ``measured_caps`` re-derives them
+# from the retained probe report on every launch, so a hand-edited constant, or a
+# probe re-run that produced different numbers, is refused rather than launched.
+PROBE_SOURCE = 'cdb05a5667ca0738e06f87737c1fda51203f12b3'
+PROBE_REPORT = 'a91b5a068be96def6ae7fa18d7109ea75cb10b64f870a7d3991515589b80db58'
+CHILD_SECONDS, SERVICE_SECONDS = 1352, 1412
 
 
 def systemd_runtime_max(seconds):
@@ -115,27 +123,35 @@ def systemd_runtime_max(seconds):
     return f'{minutes}min {rest}s'
 
 
-def derive_caps(probe_report):
-    """The predeclared cap rule, applied to a retained probe report.
+def derive_caps(measurements):
+    """The predeclared cap rule, applied to measured probe timings.
 
+    Takes the measurements block itself, not a report: the rule is about three
+    numbers, and keeping it separate from which report they came from is what
+    stops a caller from handing it a document that merely looks like one.
     ``unit`` is what repeats per case; ``prelude`` happens once. The 1.25 factor
     is applied to the whole prediction, never to a mean.
     """
-    require(probe_report.get('protocol') == PROTOCOL and probe_report.get('mode') == 'probe',
-            'a lean evaluation probe report')
-    require(probe_report.get('decision') == 'probe-measured', 'a probe that measured a full-length case')
-    measured = probe_report.get('measurements')
-    require(type(measured) is dict, 'probe measurements')
+    require(type(measurements) is dict, 'probe measurements')
     for key in ('prelude_seconds', 'env_seconds', 'case_seconds'):
-        value = measured.get(key)
+        value = measurements.get(key)
         require(type(value) is float and math.isfinite(value) and value > 0,
                 'finite positive probe timing: '+key)
-    unit = measured['env_seconds']+measured['case_seconds']
-    predicted = measured['prelude_seconds']+CASES*unit
+    unit = measurements['env_seconds']+measurements['case_seconds']
+    predicted = measurements['prelude_seconds']+CASES*unit
     service = math.ceil(PROBE_SAFETY*predicted)
     return dict(unit_seconds=unit, predicted_seconds=predicted, service_seconds=service,
         child_seconds=service-WATCHDOG_MARGIN_SECONDS, safety_factor=PROBE_SAFETY,
         closeout_seconds=PROBE_CLOSEOUT_SECONDS, cases=CASES)
+
+
+def probe_measurements_of(report):
+    """The measurements block of a retained probe report, with its decision checked."""
+    require(report.get('protocol') == PROTOCOL and report.get('mode') == 'probe',
+            'a lean evaluation probe report')
+    require(report.get('decision') == 'probe-measured', 'a probe that measured a full-length case')
+    require(type(report.get('probe')) is dict, 'probe result block')
+    return report['probe']['measurements']
 
 
 def probe_output_path():
@@ -154,7 +170,7 @@ def measured_caps():
     require(type(PROBE_REPORT) is str, 'a pinned probe report hash')
     raw = files.file_bytes(probe_output_path()/'report.json')
     require(sha256(raw).hexdigest() == PROBE_REPORT, 'independent probe report hash')
-    derived = derive_caps(files.parse(raw))
+    derived = derive_caps(probe_measurements_of(files.parse(raw)))
     require((derived['child_seconds'], derived['service_seconds']) == (CHILD_SECONDS, SERVICE_SECONDS),
             'declared caps equal the probe-derived caps')
     require(SERVICE_SECONDS == CHILD_SECONDS+WATCHDOG_MARGIN_SECONDS,
@@ -530,9 +546,8 @@ def verify_probe(root, launch, launch_sha, measurements_sha):
                 case['name'], case['name']+'.json'}
     require({p.name for p in root.iterdir()} in (expected, expected|{'report.json'}),
             'exact probe directory inventory')
-    return dict(measurements=recorded['measurements'], derived_caps=derive_caps(
-        dict(protocol=PROTOCOL, mode='probe', decision='probe-measured',
-             measurements=recorded['measurements'])))
+    return dict(measurements=recorded['measurements'],
+                derived_caps=derive_caps(recorded['measurements']))
 
 
 def supervise(source, launch_sha, mode):

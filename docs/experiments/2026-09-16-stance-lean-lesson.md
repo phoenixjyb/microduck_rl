@@ -302,6 +302,10 @@ Still outstanding before any launch, and deliberately not fabricated here:
 3. A clean feature branch, pinned dependencies and assets, the compiled plant,
    and an independently retained launch SHA.
 
+All three are now satisfied and the run has completed — see "Training run:
+completed" below. The only remaining step in this predeclaration is the
+evaluation, which has not been started.
+
 One measured-scope caveat is recorded here rather than left to be discovered at
 launch. The probe's collection timer covers the observation build, the policy
 forward pass and the physics step, but not `collect_one`'s own bookkeeping or the
@@ -312,6 +316,90 @@ watchdog — about 11% headroom. The declared 1.25 factor is what covers the
 difference. This is not grounds to change any declared number: if the run
 overruns, the predeclared failure path applies, the durable completed prefix is
 preserved, and the run is diagnosed read-only rather than resumed or extended.
+
+## Training run: completed
+
+The lesson ran on 100.100 at source `7bbc75fb84e42c3fce2856f23114157762c019ec`
+inside a fresh declared 55-minute window (`deadline_unix = 1789606469`; the
+declared floor is 2,413 s). Launch SHA256
+`b0ad9272c93662ee11227058e7be1efa61851d393d845948f7ddc9b438365c9a`, unit
+`microduck-lean-lesson-7bbc75fb84e4.service`, output
+`artifacts/evaluations/stance-lean-lesson-7bbc75fb84e4`.
+
+**Outcome: `lean-lesson-complete-not-capability`.** This is a completion record,
+not a result. No gate has been evaluated, so nothing here is evidence about the
+tilt question. `checkpoint_admitted`, `learned_stance`, `physical_motion_authorized`
+and `pilot_parent_authorized` are all `false`, and no exception was recorded
+(`error_type` absent).
+
+| Quantity | Value |
+| --- | --- |
+| child returncode | 0 |
+| child elapsed | 1,504.5 s |
+| completed updates | 256 |
+| tick records | 6,144 (256 x 24) |
+| update receipts | 256 |
+| checkpoint files | 257 (`initial.pt` + `model_0..255.pt`) |
+| total files | 6,663, with no non-evidence file present |
+| parent archive after the run | `46cd52b5…`, byte-identical to the pin |
+| GPU after | 50/49 C, idle, no compute PIDs |
+
+The weight-initialization claim holds on the retained artifact, not merely in
+memory. `initial.pt` contains only `identity` and `states`; its identity reads
+`purpose = lean-lesson`, `iteration = -1`, `training_seed = 571`,
+`parent_checkpoint_sha256 = 46cd52b5…`, and
+`initial_state_sha256 = 0ca246873f1143c540ecdebb6e6bc80cb826f86b558dda9c3cff8c5694263144`
+— the parent's state hash, and not a fresh initializer's.
+
+The four common checkpoints, hashed as retained:
+
+| Iteration | File | SHA256 |
+| --- | --- | --- |
+| -1 | `initial.pt` | `f2a503c84e7dabf3…` |
+| 64 | `model_64.pt` | `1b90860a6b9b7683…` |
+| 128 | `model_128.pt` | `83d4b758310def6e…` |
+| 192 | `model_192.pt` | `a637c7396ff99a58…` |
+| 255 | `model_255.pt` | `cdc449e92860e267…` |
+
+Run record hashes: `report.json` `c205ca0fb386b1c9…`, `completed.json`
+`9443026f556ea59e…`, `child.log` `a28b379775005724…`, `runtime.json`
+`34fad6864ca26385…`.
+
+### The measured caps were validated by a real 256-update run
+
+This is the first time the probe's measurement has been tested against an actual
+run at full budget, and it held.
+
+- A projection taken at 43/256 updates predicted **1,486.4 s**; the run finished
+  in **1,504.5 s**. That is 1.2% apart, and it confirms the caveat recorded above
+  was accurate rather than hand-waving.
+- Actual per-update cost was **5.8770 s** against the probe's measured worst case
+  of 5.4696 s — so the probe under-measured by **7.5%**, in exactly the direction
+  the caveat predicted (it estimated a ~0.35 s/update gap; the realized gap was
+  0.407 s).
+- The declared 1.25 factor absorbed that error. The service cap of 1,753 s left
+  **248.5 s (16.5%)** of headroom over the realized 1,504.5 s; the 1,693 s
+  watchdog left 188.5 s; the 1,663 s internal child deadline left 158.5 s.
+
+The honest reading: the probe's two-component measurement is **not** a sufficient
+bound on its own — it excludes `collect_one`'s bookkeeping and the per-tick
+evidence write — and it was the declared safety factor, not the measurement, that
+made the cap safe. A future probe for this family should time `collect_one`
+end-to-end rather than only the observation build, forward pass and physics step.
+
+### Next: evaluation, and it is not started
+
+All four common checkpoints are evaluated on seeds **541, 547, 557**, 128
+environments each, one 5 s first attempt per environment from the nominal reset,
+against the unchanged every-boundary scorer and the unchanged **0.0873 rad** tilt
+gate, requiring >= 122/128 per seed and passing on all three seeds. Tilt p95 is
+reported per seed for every checkpoint, because the trend across 64/128/192/255 is
+the primary evidence for budget-versus-objective.
+
+That evaluation has not been run. Until it is, the decision rule above is
+undecided: neither `lean-lesson-passed-nominal` nor
+`lean-lesson-rejected-objective-binds` has been earned, and the tilt gate has not
+been relaxed, re-weighted or touched.
 
 ## What this does not authorize
 

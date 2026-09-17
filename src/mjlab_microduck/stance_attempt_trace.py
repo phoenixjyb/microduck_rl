@@ -19,19 +19,26 @@ from mjlab_microduck.stance_transition import PhysicsState, EPISODE_STEPS, physi
 PROTOCOL = 'football-b1n-first-attempt-trace-v1'
 EAGER_PROTOCOL = 'football-b1n-eager-first-attempt-trace-v1'
 LEAN_PROTOCOL = 'football-b1n-lean-first-attempt-trace-v1'
+LEAN_REPLICATION_PROTOCOL = 'football-b1n-lean-replication-first-attempt-trace-v1'
 SEEDS = (541, 547, 557)
 CHECKPOINTS = (128, 256, 384, 511)
 # The lean-lesson run's common checkpoints. Declared here rather than imported
 # from ``stance_checkpoint`` because that module imports this one; ``checkpoint``
 # re-exports this tuple, so the single literal is the only source of truth.
 LEAN_CHECKPOINTS = (64, 128, 192, 255)
+# The replication evaluates the same four common iterations, and aliases them
+# rather than re-typing them: the two sets must not be able to drift, and it is
+# the distinct ``ITERATIONS`` key -- not a copied literal -- that stops either
+# protocol from borrowing the other's labels.
+LEAN_REPLICATION_CHECKPOINTS = LEAN_CHECKPOINTS
 # Which checkpoint iterations each trace protocol may bind, keyed by protocol so
 # that a protocol can never borrow another's iteration labels. The retained
 # pilot path admits only 128/256/384/511, the eager diagnostic only its
-# initializer/final pair, and the lean-lesson path only its own four common
-# checkpoints. Adding a protocol here is the only way to admit a new iteration
-# set; no existing entry changes.
-ITERATIONS = {PROTOCOL: CHECKPOINTS, EAGER_PROTOCOL: (-1, 127), LEAN_PROTOCOL: LEAN_CHECKPOINTS}
+# initializer/final pair, and the lean-lesson and replication paths only their
+# own four common checkpoints. Adding a protocol here is the only way to admit a
+# new iteration set; no existing entry changes.
+ITERATIONS = {PROTOCOL: CHECKPOINTS, EAGER_PROTOCOL: (-1, 127), LEAN_PROTOCOL: LEAN_CHECKPOINTS,
+              LEAN_REPLICATION_PROTOCOL: LEAN_REPLICATION_CHECKPOINTS}
 MAX_TRACE_BYTES = 512*1024*1024
 STATE_KEYS = set(PhysicsState.__dataclass_fields__)
 FRAME_KEYS = {'physics_steps', 'qpos', 'qvel', 'soft_limit_mask', 'state', 'observation'}

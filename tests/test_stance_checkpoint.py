@@ -123,9 +123,17 @@ def test_evaluable_iterations_are_the_trace_protocol_map():
     an iteration no trace protocol is permitted to bind, or the reverse.
     """
     assert cp.LEAN_CHECKPOINTS is trace.LEAN_CHECKPOINTS
-    assert cp.EVALUABLE == {'pilot': trace.CHECKPOINTS, 'lean-lesson': trace.LEAN_CHECKPOINTS}
+    assert cp.EVALUABLE == {'pilot': trace.CHECKPOINTS, 'lean-lesson': trace.LEAN_CHECKPOINTS,
+                            'lean-replication': trace.LEAN_REPLICATION_CHECKPOINTS}
     assert trace.ITERATIONS[trace.PROTOCOL] == cp.EVALUABLE['pilot']
     assert trace.ITERATIONS[trace.LEAN_PROTOCOL] == cp.EVALUABLE['lean-lesson']
+    assert trace.ITERATIONS[trace.LEAN_REPLICATION_PROTOCOL] == cp.EVALUABLE['lean-replication']
+    # The replication declares the same four iterations as the lesson. That is a
+    # property of the two declared configurations, not a shared name: each
+    # protocol reaches its own map entry, so either can move without silently
+    # moving the other.
+    assert cp.EVALUABLE['lean-replication'] == cp.EVALUABLE['lean-lesson']
+    assert trace.LEAN_REPLICATION_PROTOCOL != trace.LEAN_PROTOCOL
     # The eager initializer/final pair is a diagnostic, not an evaluation path,
     # so it deliberately has no ``EVALUABLE`` entry.
     assert trace.ITERATIONS[trace.EAGER_PROTOCOL] == (-1, 127)

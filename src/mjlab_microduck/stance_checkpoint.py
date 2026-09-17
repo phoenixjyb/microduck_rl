@@ -11,7 +11,8 @@ from tensordict import TensorDict
 from rsl_rl.models import MLPModel
 
 from mjlab_microduck.first_attempt_smoke import canonical, require
-from mjlab_microduck.stance_attempt_trace import CHECKPOINTS, LEAN_CHECKPOINTS
+from mjlab_microduck.stance_attempt_trace import (
+    CHECKPOINTS, LEAN_CHECKPOINTS, LEAN_REPLICATION_CHECKPOINTS)
 
 PROTOCOL = 'football-b1n-evaluation-checkpoint-v1'
 LIMIT = 8*1024*1024
@@ -37,18 +38,39 @@ LEAN_PARENT_SOURCE = 'c8f6b994a2991e400bf6478b967c30e9b618db6a'
 LEAN_PARENT_FILE = 'model_127.pt'
 LEAN_PARENT_ITERATION = 127
 LEAN_PURPOSE = 'lean-lesson'
+# Fresh-seed replication of the lean lesson, declared in
+# docs/experiments/2026-09-17-stance-lean-replication.md. Same worlds, budget,
+# common checkpoints and gates as the lesson; the learner seed is the single
+# changed axis. Three bounded literals, never a range or a predicate: 577, 587
+# and 593 were verified unused across src/, tests/ and docs/ before this landed.
+LEAN_REPLICATION_SEEDS = (577, 587, 593)
+LEAN_REPLICATION_PURPOSE = 'lean-replication'
 FRESH_PURPOSES = ('pilot', 'smoke', 'eager-learning')
-PURPOSES = FRESH_PURPOSES + (LEAN_PURPOSE,)
-# purpose -> (training seed, worlds, update budget)
-SCOPE = {'pilot': (521, 512, 512), 'smoke': (523, 64, 16), 'eager-learning': (563, 64, 128),
-         LEAN_PURPOSE: (LEAN_SEED, LEAN_WORLDS, LEAN_UPDATES)}
+PURPOSES = FRESH_PURPOSES + (LEAN_PURPOSE, LEAN_REPLICATION_PURPOSE)
+# purpose -> (admitted learner seeds, worlds, update budget). The seed slot is a
+# tuple so a purpose can declare more than one without the allowlist widening to
+# a range: the replication declares exactly its three literals, and every other
+# purpose declares exactly one.
+SCOPE = {'pilot': ((521,), 512, 512), 'smoke': ((523,), 64, 16),
+         'eager-learning': ((563,), 64, 128),
+         LEAN_PURPOSE: ((LEAN_SEED,), LEAN_WORLDS, LEAN_UPDATES),
+         LEAN_REPLICATION_PURPOSE: (LEAN_REPLICATION_SEEDS, LEAN_WORLDS, LEAN_UPDATES)}
 BASE_IDENTITY_KEYS = {'protocol', 'source', 'runtime_sha256', 'training_launch_sha256',
     'purpose', 'training_seed', 'worlds', 'iteration', 'initial_state_sha256', 'architecture'}
 PARENT_IDENTITY_KEY = 'parent_checkpoint_sha256'
 # Which iterations each evaluation path may admit. Keyed by purpose so that a
 # purpose can never borrow another's evaluable iterations: the retained pilot
-# evaluation path keeps rejecting eager-learning and lean-lesson exports.
-EVALUABLE = {'pilot': CHECKPOINTS, LEAN_PURPOSE: LEAN_CHECKPOINTS}
+# evaluation path keeps rejecting eager-learning and lean-lesson exports, and the
+# lesson and replication paths keep rejecting each other's.
+EVALUABLE = {'pilot': CHECKPOINTS, LEAN_PURPOSE: LEAN_CHECKPOINTS,
+             LEAN_REPLICATION_PURPOSE: LEAN_REPLICATION_CHECKPOINTS}
+# The two purposes that start from reviewed frozen weights rather than a fresh
+# initializer, and so carry the parent-export identity key.
+WEIGHT_INITIALIZED_PURPOSES = (LEAN_PURPOSE, LEAN_REPLICATION_PURPOSE)
+# Every seed the stock CPU initializer may be built at, composed from the declared
+# per-purpose literals so it stays single-sourced. Still a bounded tuple: adding a
+# seed means naming it above, never widening this to a range or a predicate.
+FRESH_SEEDS = (521, 523, 563, LEAN_SEED) + LEAN_REPLICATION_SEEDS
 
 
 def runtime_check():
@@ -60,7 +82,7 @@ def runtime_check():
 
 def fresh_models(seed):
     """Stock CPU initialization, isolated from caller CPU RNG; no optimizer."""
-    require(type(seed) is int and seed in (521, 523, 563, 571), 'predeclared fresh initialization seed')
+    require(type(seed) is int and seed in FRESH_SEEDS, 'predeclared fresh initialization seed')
     require(torch.get_default_dtype() == torch.float32, 'declared float32 initialization')
     runtime_check()
     with torch.device('cpu'), torch.random.fork_rng(devices=[]):
@@ -95,7 +117,7 @@ def validate_identity(identity, *, evaluation):
     require(type(identity) is dict, 'checkpoint identity mapping')
     purpose = identity.get('purpose')
     require(purpose in PURPOSES, 'checkpoint purpose')
-    lean = purpose == LEAN_PURPOSE
+    lean = purpose in WEIGHT_INITIALIZED_PURPOSES
     keys = BASE_IDENTITY_KEYS | ({PARENT_IDENTITY_KEY} if lean else set())
     require(set(identity) == keys, 'exact checkpoint identity')
     require(identity['protocol'] == PROTOCOL and identity['architecture'] == ARCHITECTURE, 'declared stance architecture')
@@ -104,8 +126,8 @@ def validate_identity(identity, *, evaluation):
         size = 40 if key == 'source' else 64
         require(type(identity[key]) is str and re.fullmatch('[0-9a-f]{'+str(size)+'}', identity[key]) is not None,
                 'checkpoint hash identity: '+key)
-    seed, worlds, updates = SCOPE[purpose]
-    require(type(identity['training_seed']) is int and identity['training_seed'] == seed
+    seeds, worlds, updates = SCOPE[purpose]
+    require(type(identity['training_seed']) is int and identity['training_seed'] in seeds
             and type(identity['worlds']) is int and identity['worlds'] == worlds, 'matched seed/worlds')
     require(type(identity['iteration']) is int and -1 <= identity['iteration'] < updates, 'bounded saved iteration')
     if evaluation:
@@ -121,10 +143,11 @@ def validate_identity(identity, *, evaluation):
     fresh = state_hash(states_of(actor, critic))
     if lean:
         require(identity[PARENT_IDENTITY_KEY] == LEAN_PARENT_SHA256, 'pinned lean-lesson parent export')
-        # The whole point of the purpose: a lean-lesson run starts from reviewed frozen
-        # weights, so its declared start must never coincide with a fresh initializer.
+        # The whole point of the purpose: a weight-initialized run starts from
+        # reviewed frozen weights, so its declared start must never coincide with
+        # a fresh initializer.
         require(identity['initial_state_sha256'] != fresh,
-                'a lean-lesson start must not equal a fresh initializer')
+                'a weight-initialized start must not equal a fresh initializer')
     else:
         require(fresh == identity['initial_state_sha256'], 'exact fresh initializer identity')
     return actor, critic
@@ -190,6 +213,32 @@ def load_lean_evaluation(raw, expected_sha256, expected_identity):
     """
     require(expected_identity['purpose'] == LEAN_PURPOSE, 'lean-lesson evaluation export')
     return _load(raw, expected_sha256, expected_identity, evaluation=LEAN_PURPOSE)
+
+
+def load_lean_replication(raw, expected_sha256, expected_identity):
+    """Lean replication exports; a weight-initialized continuation, never a resume."""
+    require(expected_identity['purpose'] == LEAN_REPLICATION_PURPOSE
+            and expected_identity['iteration'] in (-1,)+LEAN_REPLICATION_CHECKPOINTS,
+            'only declared lean replication checkpoints')
+    actor, info = _load(raw, expected_sha256, expected_identity, evaluation=False)
+    return actor, dict(info, weight_initialized=True,
+        parent_checkpoint_sha256=LEAN_PARENT_SHA256, optimizer_restored=False,
+        simulator_restored=False, replay_restored=False)
+
+
+def load_lean_replication_evaluation(raw, expected_sha256, expected_identity):
+    """Lean replication evaluation exports, on their own path.
+
+    Deliberately separate from both ``load_evaluation`` and
+    ``load_lean_evaluation``. The replication's exports must not be readable
+    through the lesson's evaluation path and the lesson's must not be readable
+    here, so the two purposes can never alias each other's iteration labels. The
+    admitted iterations are the same four, which is a property of the declared
+    configurations rather than a shared name.
+    """
+    require(expected_identity['purpose'] == LEAN_REPLICATION_PURPOSE,
+            'lean replication evaluation export')
+    return _load(raw, expected_sha256, expected_identity, evaluation=LEAN_REPLICATION_PURPOSE)
 
 
 def load_lean_parent(raw, expected_sha256, expected_identity):

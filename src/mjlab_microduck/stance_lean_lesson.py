@@ -74,6 +74,40 @@ SERVICE_RUNTIME_MAX = '29min 13s'
 MAX_WINDOW_SECONDS = 3600
 SERVICE_PROPERTIES = ('MainPID', 'RuntimeMaxUSec', 'KillMode', 'ActiveState')
 
+# The weight-initialized continuations this runner serves. They differ in exactly
+# three things -- purpose, protocol and learner seed -- so they share one code
+# path and one declaration shape rather than two copies that could drift apart.
+# ``LESSON`` is the default on every function below, so the frozen 571 path is
+# bit-for-bit unchanged and every existing call site keeps working.
+#
+# ``path_seed`` is explicit rather than inferred: the lesson's retained evidence
+# lives at a source-keyed path that must not move, while the replication's three
+# runs share one commit and would otherwise collide on a single directory.
+LESSON = dict(label='lean-lesson', protocol=PROTOCOL, purpose=checkpoint.LEAN_PURPOSE,
+              seeds=(SEED,), path_seed=False, directory='stance-lean-lesson-',
+              service='microduck-lean-lesson-',
+              decision='lean-lesson-complete-not-capability')
+REPLICATION = dict(label='lean-replication',
+                   protocol='football-b1n-lean-replication-v1',
+                   purpose=checkpoint.LEAN_REPLICATION_PURPOSE,
+                   seeds=checkpoint.LEAN_REPLICATION_SEEDS, path_seed=True,
+                   directory='stance-lean-replication-',
+                   service='microduck-lean-replication-',
+                   decision='lean-replication-complete-not-capability')
+DECLARATIONS = {d['label']: d for d in (LESSON, REPLICATION)}
+
+
+def declaration_of(label):
+    require(label in DECLARATIONS, 'declared weight-initialized continuation')
+    return DECLARATIONS[label]
+
+
+def seed_of(declaration, seed):
+    """Refuse a seed the declaration did not name, and refuse a missing one."""
+    require(type(seed) is int and seed in declaration['seeds'],
+            'declared learner seed for '+declaration['label'])
+    return seed
+
 
 def parent_record(raw, parent_identity):
     """Read-only load of the frozen parent export.
@@ -88,16 +122,19 @@ class LeanStanceLearner(CpuStanceLearner):
     """Weight-initialized continuation over a real plant; fresh optimizer.
 
     ``_initialize`` builds the stock CPU actor/critic, a fresh Adam optimizer and
-    an empty rollout store at the declared seed 571. ``install_parent`` then
-    overwrites the actor and critic *in place*, so the optimizer and the policy
-    keep referring to the very same modules and the loaded weights really are the
-    weights the policy samples from.
+    an empty rollout store at the declared learner seed, which defaults to the
+    lesson's 571 and may be any seed a weight-initialized purpose declares.
+    ``install_parent`` then overwrites the actor and critic *in place*, so the
+    optimizer and the policy keep referring to the very same modules and the
+    loaded weights really are the weights the policy samples from.
     """
 
     UPDATE_LIMIT = UPDATES
 
-    def __init__(self, parent):
-        self._initialize(WORLDS, seed=SEED)
+    def __init__(self, parent, seed=SEED):
+        require(type(seed) is int and seed in checkpoint.FRESH_SEEDS,
+                'declared weight-initialized learner seed')
+        self._initialize(WORLDS, seed=seed)
         self.parent_checkpoint_sha256 = None
         self.install_parent(parent)
 
@@ -127,8 +164,11 @@ class LeanStanceLearner(CpuStanceLearner):
         self.initial_hash = checkpoint.state_hash(checkpoint.states_of(self.actor, self.critic))
         require(self.initial_hash == parent['parent_state_sha256'],
                 'declared start equals the reviewed parent weights')
-        fresh = checkpoint.state_hash(checkpoint.states_of(*checkpoint.fresh_models(SEED)))
-        require(self.initial_hash != fresh, 'a lean-lesson start is not a fresh initializer')
+        # Compared against this learner's own seed, not the lesson's. Reading the
+        # module constant here would silently check a replication against the
+        # seed-571 initializer instead of the one it was actually built at.
+        fresh = checkpoint.state_hash(checkpoint.states_of(*checkpoint.fresh_models(self.seed)))
+        require(self.initial_hash != fresh, 'a weight-initialized start is not a fresh initializer')
         # Installation must not have created any optimizer state as a side effect.
         require(not self.algorithm.optimizer.state
                 and all(not self.algorithm.optimizer.state.get(p)
@@ -141,22 +181,25 @@ class LeanStanceLearner(CpuStanceLearner):
         return self.parent_checkpoint_sha256 is not None
 
 
-def started_learner(raw, parent_identity):
+def started_learner(raw, parent_identity, seed=SEED):
     """Build a real, weight-initialized learner from the frozen parent export."""
-    return LeanStanceLearner(parent_record(raw, parent_identity))
+    return LeanStanceLearner(parent_record(raw, parent_identity), seed=seed)
 
 
-def identity(source, launch_sha, runtime_sha, learner, iteration):
-    """Run identity for one lean-lesson export.
+def identity(source, launch_sha, runtime_sha, learner, iteration, declaration=LESSON):
+    """Run identity for one weight-initialized export.
 
     Names the parent export hash explicitly and records the loaded parent state
     hash as the starting ``initial_state_sha256``. It never claims to continue
     the parent's optimization trajectory.
     """
     require(type(learner) is LeanStanceLearner and learner.weight_initialized,
-            'identity belongs to a weight-initialized lean-lesson learner')
+            'identity belongs to a weight-initialized learner')
+    # Read from the learner rather than taken as a separate argument, so the
+    # recorded seed cannot disagree with the seed the policy was built at.
+    seed = seed_of(declaration, learner.seed)
     return dict(protocol=checkpoint.PROTOCOL, source=source, runtime_sha256=runtime_sha,
-        training_launch_sha256=launch_sha, purpose=checkpoint.LEAN_PURPOSE, training_seed=SEED,
+        training_launch_sha256=launch_sha, purpose=declaration['purpose'], training_seed=seed,
         worlds=WORLDS, iteration=iteration, initial_state_sha256=learner.initial_hash,
         parent_checkpoint_sha256=learner.parent_checkpoint_sha256,
         architecture=deepcopy(checkpoint.ARCHITECTURE))
@@ -177,22 +220,26 @@ def parent_bytes(root):
     return raw
 
 
-def started_learner_from(raw):
+def started_learner_from(raw, seed=SEED):
     """Deserialize only after the pinned hash has been verified."""
     digest = sha256(raw).hexdigest()
     require(digest == checkpoint.LEAN_PARENT_SHA256, 'pinned lean-lesson parent export')
     parent_identity = torch.load(io.BytesIO(raw), map_location='cpu', weights_only=True)['identity']
-    return started_learner(raw, parent_identity)
+    return started_learner(raw, parent_identity, seed=seed)
 
 
-def output_path(source):
-    supervisor.hex_id(source, 40)
-    return host.ROOT/'artifacts/evaluations'/('stance-lean-lesson-'+source[:12])
+def output_path(source, declaration=LESSON, seed=SEED):
+    """Evidence directory. The lesson keeps its source-keyed path; a purpose whose
+    runs share one commit carries the seed so they cannot overwrite each other."""
+    supervisor.hex_id(source, 40); seed_of(declaration, seed)
+    suffix = f'-seed-{seed}' if declaration['path_seed'] else ''
+    return host.ROOT/'artifacts/evaluations'/(declaration['directory']+source[:12]+suffix)
 
 
-def service_name(source):
-    supervisor.hex_id(source, 40)
-    return 'microduck-lean-lesson-'+source[:12]+'.service'
+def service_name(source, declaration=LESSON, seed=SEED):
+    supervisor.hex_id(source, 40); seed_of(declaration, seed)
+    suffix = f'-seed-{seed}' if declaration['path_seed'] else ''
+    return declaration['service']+source[:12]+suffix+'.service'
 
 
 def check_window(deadline, *, launching=False):
@@ -208,11 +255,12 @@ def check_window(deadline, *, launching=False):
                 'lean-lesson run needs a fresh 41-to-60-minute window')
 
 
-def plan(source, inputs, runtime_sha, deadline):
-    supervisor.hex_id(source, 40); supervisor.hex_id(runtime_sha, 64)
+def plan(source, inputs, runtime_sha, deadline, declaration=LESSON, seed=SEED):
+    supervisor.hex_id(source, 40); supervisor.hex_id(runtime_sha, 64); seed_of(declaration, seed)
     require(type(deadline) is int and deadline > 0, 'explicit integer deadline')
-    return dict(protocol=PROTOCOL, source=source, inputs=inputs, runtime_sha256=runtime_sha,
-        purpose=checkpoint.LEAN_PURPOSE, worlds=WORLDS, seed=SEED, updates=UPDATES,
+    return dict(protocol=declaration['protocol'], source=source, inputs=inputs,
+        runtime_sha256=runtime_sha,
+        purpose=declaration['purpose'], worlds=WORLDS, seed=seed, updates=UPDATES,
         steps_per_update=STEPS, optimizer=deepcopy(CONFIG), learner_device='cpu',
         physics_device='cuda:0', forward_graph=False, deadline_unix=deadline,
         child_timeout_seconds=CHILD_SECONDS, service_timeout_seconds=SERVICE_SECONDS,
@@ -226,8 +274,9 @@ def plan(source, inputs, runtime_sha, deadline):
         learned_stance=False, physical_motion_authorized=False)
 
 
-def prepare(source, deadline):
+def prepare(source, deadline, declaration=LESSON, seed=SEED):
     """CPU-only preparation. Copies the pinned parent in as a read-only input."""
+    seed_of(declaration, seed)
     check_window(deadline, launching=True)
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only lean-lesson preparation')
@@ -236,36 +285,38 @@ def prepare(source, deadline):
     require(sha256(raw).hexdigest() == checkpoint.LEAN_PARENT_SHA256,
             'pinned lean-lesson parent export')
     # Preflight the weight installation on CPU, before any GPU allocation exists.
-    learner = started_learner_from(raw)
+    learner = started_learner_from(raw, seed=seed)
     runtime = plant.runtime_bytes(source, plant.build_entity().compile())
-    root = supervisor.native._plain_path(output_path(source)); root.mkdir(exist_ok=False)
+    root = supervisor.native._plain_path(output_path(source, declaration, seed))
+    root.mkdir(exist_ok=False)
     smoke.write_bytes(root/'parent.pt', raw)
     smoke.write_bytes(root/'runtime.json', runtime)
-    launch = plan(source, inputs, sha256(runtime).hexdigest(), deadline)
+    launch = plan(source, inputs, sha256(runtime).hexdigest(), deadline, declaration, seed)
     supervisor.write_json(root/'launch.json', launch)
     require(learner.updates == 0 and not torch.cuda.is_initialized(), 'preflight cannot train')
-    return dict(output=str(root), service=service_name(source),
+    return dict(output=str(root), service=service_name(source, declaration, seed),
         launch_sha256=host.digest(root/'launch.json'),
         parent_checkpoint_sha256=checkpoint.LEAN_PARENT_SHA256,
         initial_state_sha256=learner.initial_hash)
 
 
-def inputs_check(source, launch_sha):
-    root = output_path(source); raw = supervisor.file_bytes(root/'launch.json')
+def inputs_check(source, launch_sha, declaration=LESSON, seed=SEED):
+    root = output_path(source, declaration, seed); raw = supervisor.file_bytes(root/'launch.json')
     require(sha256(raw).hexdigest() == launch_sha, 'independent lean-lesson launch hash')
     launch = supervisor.parse(raw); runtime = supervisor.file_bytes(root/'runtime.json')
     require(launch == plan(source, host.identity(source), sha256(runtime).hexdigest(),
-                          launch['deadline_unix']), 'exact lean-lesson source/runtime/plan')
+                          launch['deadline_unix'], declaration, seed),
+            'exact lean-lesson source/runtime/plan')
     plant.checked_runtime(supervisor.parse(runtime), source)
     # The parent archive is read-only input and must be intact at every check.
     parent_bytes(root)
     return launch
 
 
-def check_service(source):
+def check_service(source, declaration=LESSON, seed=SEED):
     """Refuse a bare shell launch: verify the independently timed owner service."""
-    values = {k: host.read('systemctl', '--user', 'show', service_name(source), '-p', k, '--value')
-              for k in SERVICE_PROPERTIES}
+    values = {k: host.read('systemctl', '--user', 'show', service_name(source, declaration, seed),
+                           '-p', k, '--value') for k in SERVICE_PROPERTIES}
     require(values == dict(MainPID=str(os.getpid()), RuntimeMaxUSec=SERVICE_RUNTIME_MAX,
                            KillMode='control-group', ActiveState='active'),
             'independently timed lean-lesson service')
@@ -273,12 +324,17 @@ def check_service(source):
             'CPU-only lean-lesson supervisor')
 
 
-def run_updates(learner, bridge, root, source, launch_sha, runtime_sha, *, deadline):
+def run_updates(learner, bridge, root, source, launch_sha, runtime_sha, *, deadline,
+                declaration=LESSON):
     require(type(learner) is LeanStanceLearner and learner.n == bridge.n == WORLDS
-            and learner.seed == SEED and learner.updates == 0 and learner.weight_initialized
+            and learner.updates == 0 and learner.weight_initialized
             and not learner.restored_fixture_only, 'fresh exact weight-initialized learner')
+    # Checked after the type guard: a learner that is not a weight-initialized
+    # continuation at all should be refused as such, not as a wrong seed.
+    seed_of(declaration, learner.seed)
     def save(iteration):
-        return smoke.save_weights(root, identity(source, launch_sha, runtime_sha, learner, iteration), learner)
+        return smoke.save_weights(root,
+            identity(source, launch_sha, runtime_sha, learner, iteration, declaration), learner)
     exports = [save(-1)]; started = time.monotonic()
     for update in range(UPDATES):
         for tick in range(STEPS):
@@ -294,45 +350,49 @@ def run_updates(learner, bridge, root, source, launch_sha, runtime_sha, *, deadl
     return exports
 
 
-def child(source, launch_sha, fd):
-    smoke.inherited_lease(fd); launch = inputs_check(source, launch_sha)
+def child(source, launch_sha, fd, declaration=LESSON, seed=SEED):
+    seed_of(declaration, seed)
+    smoke.inherited_lease(fd); launch = inputs_check(source, launch_sha, declaration, seed)
     check_window(launch['deadline_unix'], launching=True)
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '0' and torch.cuda.is_available(),
             'explicit CUDA0 lean-lesson child')
-    host.wait_idle(); random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
+    host.wait_idle(); random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
     from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
     env = WarpStanceRuntime(WORLDS, device='cuda:0')
     require(str(env.device) == str(env.wp_device) == 'cuda:0' and env.wp_device.is_cuda
             and env.forward_graph is None, 'actual lean-lesson CUDA physics; no graph')
-    root = output_path(source)
+    root = output_path(source, declaration, seed)
     runtime = supervisor.parse(supervisor.file_bytes(root/'runtime.json'))
     require(plant.describe(env.native) == runtime['plant'], 'actual lean-lesson plant')
     raw = parent_bytes(root)
     before = sha256(raw).hexdigest()
-    learner = started_learner_from(raw)
+    learner = started_learner_from(raw, seed=seed)
     exports = run_updates(learner, smoke.PhysicsBridge(env), root, source, launch_sha,
-        launch['runtime_sha256'], deadline=time.monotonic()+CHILD_SECONDS-30)
+        launch['runtime_sha256'], deadline=time.monotonic()+CHILD_SECONDS-30,
+        declaration=declaration)
     after = sha256(parent_bytes(root)).hexdigest()
     require(before == after == checkpoint.LEAN_PARENT_SHA256,
             'parent archive byte-identical after the lean lesson')
-    require(inputs_check(source, launch_sha) == launch and env.forward_graph is None,
-            'unchanged completed lean-lesson inputs')
-    supervisor.write_json(root/'completed.json', dict(protocol=PROTOCOL, launch_sha256=launch_sha,
+    require(inputs_check(source, launch_sha, declaration, seed) == launch
+            and env.forward_graph is None, 'unchanged completed lean-lesson inputs')
+    supervisor.write_json(root/'completed.json', dict(protocol=declaration['protocol'],
+        launch_sha256=launch_sha,
         completed_updates=UPDATES, checkpoints=exports, physics_device=str(env.device),
-        learner_device='cpu', forward_graph=False, seed=SEED, worlds=WORLDS,
-        purpose=checkpoint.LEAN_PURPOSE, common_checkpoints=list(CHECKPOINTS),
+        learner_device='cpu', forward_graph=False, seed=seed, worlds=WORLDS,
+        purpose=declaration['purpose'], common_checkpoints=list(CHECKPOINTS),
         parent_checkpoint_sha256=checkpoint.LEAN_PARENT_SHA256,
         parent_source=checkpoint.LEAN_PARENT_SOURCE, weight_initialized=True,
         optimizer_state_restored=False, simulation_resume_authorized=False,
         pilot_parent_authorized=False, learned_stance=False, physical_motion_authorized=False))
 
 
-def verify_completed(root, source, launch_sha, launch):
+def verify_completed(root, source, launch_sha, launch, declaration=LESSON, seed=SEED):
+    seed_of(declaration, seed)
     result = supervisor.parse(supervisor.file_bytes(root/'completed.json'))
-    require(result['protocol'] == PROTOCOL and result['launch_sha256'] == launch_sha
-        and result['completed_updates'] == UPDATES and result['seed'] == SEED
+    require(result['protocol'] == declaration['protocol'] and result['launch_sha256'] == launch_sha
+        and result['completed_updates'] == UPDATES and result['seed'] == seed
         and result['worlds'] == WORLDS and result['physics_device'] == 'cuda:0'
-        and result['learner_device'] == 'cpu' and result['purpose'] == checkpoint.LEAN_PURPOSE
+        and result['learner_device'] == 'cpu' and result['purpose'] == declaration['purpose']
         and result['parent_checkpoint_sha256'] == checkpoint.LEAN_PARENT_SHA256
         and result['common_checkpoints'] == list(CHECKPOINTS)
         and all(result[k] is False for k in ('forward_graph', 'optimizer_state_restored',
@@ -341,13 +401,13 @@ def verify_completed(root, source, launch_sha, launch):
         'completed lean-lesson scope and counters')
     require(result['weight_initialized'] is True, 'completed run was weight-initialized')
     raw = parent_bytes(root)
-    learner = started_learner_from(raw)
-    fresh = checkpoint.state_hash(checkpoint.states_of(*checkpoint.fresh_models(SEED)))
-    models = checkpoint.fresh_models(SEED)
+    learner = started_learner_from(raw, seed=seed)
+    models = checkpoint.fresh_models(seed)
+    fresh = checkpoint.state_hash(checkpoint.states_of(*models))
     require(len(result['checkpoints']) == UPDATES+1, 'all lean-lesson checkpoints')
     names = {'launch.json', 'runtime.json', 'parent.pt', 'child.log', 'completed.json'}
     for iteration, saved in zip(range(-1, UPDATES), result['checkpoints']):
-        meta = identity(source, launch_sha, launch['runtime_sha256'], learner, iteration)
+        meta = identity(source, launch_sha, launch['runtime_sha256'], learner, iteration, declaration)
         name = 'initial.pt' if iteration == -1 else f'model_{iteration}.pt'; names.add(name)
         blob = supervisor.file_bytes(root/name, limit=checkpoint.LIMIT)
         value = torch.load(io.BytesIO(blob), map_location='cpu', weights_only=True)
@@ -382,13 +442,30 @@ def verify_completed(root, source, launch_sha, launch):
     return result
 
 
-def supervise(source, launch_sha):
-    check_service(source); launch = inputs_check(source, launch_sha)
-    check_window(launch['deadline_unix'], launching=True); root = output_path(source)
+def child_command(source, launch_sha, fd, declaration=LESSON, seed=SEED):
+    """The exact argv the supervisor hands to its bounded child.
+
+    Kept in a function so a test can feed it back through ``parser()``. A
+    supervisor that builds an option the parser does not declare fails only at
+    launch time, which is precisely how the lean evaluation probe's first attempt
+    died; the two sides must be checked against each other, not separately.
+    """
+    seed_of(declaration, seed)
+    return [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
+            '--launch-sha256', launch_sha, '--lock-fd', str(fd),
+            '--job', declaration['label'], '--seed', str(seed)]
+
+
+def supervise(source, launch_sha, declaration=LESSON, seed=SEED):
+    seed_of(declaration, seed)
+    check_service(source, declaration, seed)
+    launch = inputs_check(source, launch_sha, declaration, seed)
+    check_window(launch['deadline_unix'], launching=True)
+    root = output_path(source, declaration, seed)
     require({p.name for p in root.iterdir()} == {'launch.json', 'runtime.json', 'parent.pt'},
             'one fresh lean-lesson attempt')
-    report = dict(protocol=PROTOCOL, launch_sha256=launch_sha, decision='failed',
-        purpose=checkpoint.LEAN_PURPOSE, forward_graph=False, learned_stance=False,
+    report = dict(protocol=declaration['protocol'], launch_sha256=launch_sha, decision='failed',
+        purpose=declaration['purpose'], seed=seed, forward_graph=False, learned_stance=False,
         pilot_parent_authorized=False, physical_motion_authorized=False)
     try:
         with supervisor.gpu_lease() as fd:
@@ -397,12 +474,12 @@ def supervise(source, launch_sha):
                 check_window(launch['deadline_unix']); host.check_log(root/'child.log')
                 require(host.identity(source) == launch['inputs'], 'live lean-lesson source drift')
             report['child'] = supervisor.supervised_lean_lesson(
-                [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
-                 '--launch-sha256', launch_sha, '--lock-fd', str(fd)], root/'child.log',
+                child_command(source, launch_sha, fd, declaration, seed), root/'child.log',
                 cwd=host.ROOT, env=supervisor.child_environment(), lock_fd=fd, guard=guard)
-            host.check_log(root/'child.log'); verify_completed(root, source, launch_sha, launch)
+            host.check_log(root/'child.log')
+            verify_completed(root, source, launch_sha, launch, declaration, seed)
             report['idle_after'] = host.wait_idle()
-            report['decision'] = 'lean-lesson-complete-not-capability'
+            report['decision'] = declaration['decision']
     except Exception as exc:
         report.update(error_type=type(exc).__name__, error=str(exc),
                       error_notes=getattr(exc, '__notes__', []))
@@ -412,20 +489,31 @@ def supervise(source, launch_sha):
         supervisor.write_json(root/'report.json', report)
 
 
+def parser():
+    result = argparse.ArgumentParser(description=__doc__)
+    result.add_argument('mode', choices=('prepare', 'supervise', 'child'))
+    result.add_argument('--source', required=True)
+    result.add_argument('--deadline-unix', type=int)
+    result.add_argument('--launch-sha256')
+    result.add_argument('--lock-fd', type=int)
+    # Which weight-initialized continuation this process is running, and at which
+    # declared learner seed. Both are required to resolve the evidence directory,
+    # so a supervisor and its child must agree on them or the child reads a
+    # different launch document than the one the supervisor wrote.
+    result.add_argument('--job', choices=tuple(DECLARATIONS), default=LESSON['label'])
+    result.add_argument('--seed', type=int, default=SEED)
+    return result
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('prepare', 'supervise', 'child'))
-    parser.add_argument('--source', required=True)
-    parser.add_argument('--deadline-unix', type=int)
-    parser.add_argument('--launch-sha256')
-    parser.add_argument('--lock-fd', type=int)
-    args = parser.parse_args()
+    args = parser().parse_args()
+    declaration = declaration_of(args.job)
     if args.mode == 'prepare':
-        print(canonical(prepare(args.source, args.deadline_unix)))
+        print(canonical(prepare(args.source, args.deadline_unix, declaration, args.seed)))
     elif args.mode == 'supervise':
-        supervise(args.source, args.launch_sha256)
+        supervise(args.source, args.launch_sha256, declaration, args.seed)
     else:
-        child(args.source, args.launch_sha256, args.lock_fd)
+        child(args.source, args.launch_sha256, args.lock_fd, declaration, args.seed)
 
 
 if __name__ == '__main__':

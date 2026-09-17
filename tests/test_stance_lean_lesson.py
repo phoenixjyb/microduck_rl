@@ -227,7 +227,7 @@ def test_lean_identity_cannot_borrow_a_fresh_or_unpinned_start(monkeypatch):
     learner, _, _, _ = lean_learner(monkeypatch)
     meta = lean.identity(SOURCE, LAUNCH, RUNTIME, learner, 64)
     fresh = cp.state_hash(cp.states_of(*cp.fresh_models(lean.SEED)))
-    with pytest.raises(ValueError, match='a lean-lesson start must not equal a fresh initializer'):
+    with pytest.raises(ValueError, match='a weight-initialized start must not equal a fresh initializer'):
         cp.validate_identity(dict(meta, initial_state_sha256=fresh), evaluation=False)
     with pytest.raises(ValueError, match='pinned lean-lesson parent export'):
         cp.validate_identity(dict(meta, parent_checkpoint_sha256='0'*64), evaluation=False)

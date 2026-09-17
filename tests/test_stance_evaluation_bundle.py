@@ -172,8 +172,9 @@ def test_each_trace_protocol_has_exactly_one_loader():
     """
     assert bundle.LOADERS == {trace.PROTOCOL: cp.load_evaluation,
         trace.EAGER_PROTOCOL: cp.load_eager_diagnostic,
-        trace.LEAN_PROTOCOL: cp.load_lean_evaluation}
-    assert len({id(loader) for loader in bundle.LOADERS.values()}) == 3
+        trace.LEAN_PROTOCOL: cp.load_lean_evaluation,
+        trace.LEAN_REPLICATION_PROTOCOL: cp.load_lean_replication_evaluation}
+    assert len({id(loader) for loader in bundle.LOADERS.values()}) == 4
 
 
 def test_pilot_export_is_not_readable_through_the_lean_loader(inputs):

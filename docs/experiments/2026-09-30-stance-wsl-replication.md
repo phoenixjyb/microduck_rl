@@ -113,3 +113,27 @@ PPO/physics, evaluation protocol and all capability gates are unchanged.
 Each WSL service is additionally limited to 6 GiB RAM and 200% CPU quota, Nice
 10; the timing probe and learner use the same limits. Full WSL evaluation remains
 blocked in code until its own full-length timing probe is declared and measured.
+
+## October 1: second rejection and disposable training bring-up
+
+Fresh qualification at `f5aa2d13ee5c5d9e6a399bad1627a6704ca94c98` again
+passed integration, but measured maxima derive 4388/4448 seconds, outside the
+declared 4320/4380 pair. Report SHA256
+`ecb56444c8b3ed362ecff65fc599ea45706e071b272e622b55ae29fde0b1635a`.
+The full replication stays blocked: no further budget extension and no seed
+577/587/593 launch. GPU peaked at 46 C; the CUDA child exited zero in 148.027 s.
+
+Predeclare a separate **disposable training bring-up**, not a shortened
+replication or a curriculum promotion: reuse the existing smoke learner and
+purpose, fresh seed 523, 64 worlds, 16 updates, 24 ticks/update, CPU PPO and CUDA
+eager physics. Seed 523 is reused only as the same infrastructure smoke on a
+different host; it is not claimed as new independent learning evidence. No
+parent initialization, optimizer resume, or pilot/replication parent authority.
+The existing 900/960-second smoke bounds, fresh absolute window and 600-second
+closeout remain fixed. The measured frozen-parent update cost is a conservative
+sizing reference for this short bring-up, not trajectory equivalence; an actual
+overrun still kills only the owned child. Same GPU lock, memory, CPU, temperature,
+source/runtime guards. Retain all 17 weight exports, 384 tick receipts and 16
+optimizer receipts, verify finite tensors and exact hashes before reporting.
+Success proves this isolated host can execute and retain a real short training
+loop; it establishes **no trained stance, hopping, avoidance or football balance**.

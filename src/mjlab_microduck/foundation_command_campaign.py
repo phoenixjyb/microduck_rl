@@ -30,11 +30,12 @@ from mjlab_microduck import foundation_command_capture as core
 from mjlab_microduck import foundation_reset_evidence as reset_evidence
 from mjlab_microduck.first_attempt_smoke import canonical, require
 from mjlab_microduck.gpu_idle_gate import SERVICES, wait_idle
+from mjlab_microduck import stance_execution_profile as execution
 
 PROTOCOL = 'foundation-command-map-supervisor-v1'
-ROOT = Path('/home/converge/work/microduck_rl-athletics-obstacle-curriculum')
+ROOT = execution.ROOT
 OUTPUT = ROOT/'artifacts/evaluations/foundation-command-map-v1'
-LOCK = Path('/home/converge/.local/state/microduck-gpu0.lock')
+LOCK = execution.LOCK
 BRANCH = 'feat/athletics-obstacle-curriculum'
 SERVICE_SECONDS, CELL_SECONDS, CLOSEOUT_SECONDS = 2400, 120, 180
 RUNTIME_SCOPE = 'reviewed-file-set-not-complete-runtime-equivalence'
@@ -148,13 +149,19 @@ def live_gpu(pid):
     """Abort our child if another compute owner or protected service appears."""
     def read(*args):
         return subprocess.check_output(args,text=True,timeout=2).strip()
-    states = {s:read('systemctl','show',s,'-p','ActiveState','--value') for s in SERVICES}
-    raw = read('nvidia-smi','--query-compute-apps=pid','--format=csv,noheader,nounits')
+    states = {s:read(*command) for s,command in execution.service_commands(SERVICES)}
+    raw = read(execution.PROFILE['smi'],'--query-compute-apps=pid','--format=csv,noheader,nounits')
     pids = [int(p) for p in raw.splitlines()]
-    temperature = int(read('nvidia-smi','--query-gpu=temperature.gpu','--format=csv,noheader,nounits'))
+    temperature = int(read(execution.PROFILE['smi'],'--query-gpu=temperature.gpu','--format=csv,noheader,nounits'))
     sample = dict(services=states,compute_pids=pids,temperature_c=temperature)
     require(all(s == 'inactive' for s in states.values()) and set(pids) <= {pid}
-            and 0 <= temperature < 80,'GPU ownership/service/temperature conflict: '+canonical(sample))
+            and 0 <= temperature < execution.PROFILE['temperature_c'],
+            'GPU ownership/service/temperature conflict: '+canonical(sample))
+    if execution.PROFILE['name'] == execution.WSL:
+        used,free = map(int, read(execution.PROFILE['smi'],
+            '--query-gpu=memory.used,memory.free','--format=csv,noheader,nounits').split(','))
+        sample.update(memory_used_mib=used,memory_free_mib=free)
+        require(0 <= used <= 5120 and free >= 6144, 'WSL GPU memory reserve: '+canonical(sample))
     return sample
 
 
@@ -191,6 +198,7 @@ def child_environment():
     # or pytest's argument display. No PYTHONPATH/preload/library-path injection.
     allowed = ('HOME','USER','LOGNAME','XDG_CACHE_HOME','XDG_RUNTIME_DIR')
     return {**{key:os.environ[key] for key in allowed if key in os.environ},
+            **execution.child_settings(),
             'PATH':str(ROOT/'.venv/bin')+':/usr/local/bin:/usr/bin:/bin',
             'CUDA_VISIBLE_DEVICES':'0','OMP_NUM_THREADS':'1','PYTHONUNBUFFERED':'1'}
 

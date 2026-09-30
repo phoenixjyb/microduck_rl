@@ -307,14 +307,37 @@ threshold, gate or decision rule. Nothing has been launched.
   the module-level `SEED`'s initializer rather than the learner's own. That is
   invisible at 571 and wrong for any other seed, so it would have made every
   replication check the wrong thing. It now reads `self.seed`.
+- **The evaluation path** (prerequisite 6). `stance_lean_evaluation` now carries
+  two judged continuations, `LESSON` and `REPLICATION`, differing in protocol,
+  purpose, trace protocol, evidence directory, case prefix, gate key and decision
+  strings. The scorer, the 122/128 per-seed threshold and the 0.0873 rad gate are
+  reused **by reference**, not re-typed. The probe stays lesson-only on purpose:
+  it has already run, its measurement is the shared cap basis, and a replication
+  must not be able to re-measure its way to a different bound.
 
-**Verified.** The lesson's evidence path, service name, plan and child command
-line are asserted unchanged, so the frozen 571 result and its retained directory
-are untouched. 136 tests pass across the directly affected modules, and the full
-stance regression gives **712 passed**. Two new guards were mutation-tested:
-reintroducing the `--mode`/`--job` mismatch reproduces
-`unrecognized arguments: --mode` and fails its test, and routing the replication
-through the lesson's loader fails two tests with `DID NOT RAISE`.
+Two constraints shaped that second refactor, and both are the kind of thing that
+is invisible until it bites:
+
+- **The lesson's plan shape is frozen.** `summarize` re-derives the whole plan and
+  requires equality, so adding even one key to the plan document would make every
+  already-retained lesson launch fail its own re-verification. The plan gained no
+  keys; the declaration travels as a parameter instead.
+- **A replication cannot pin its training source in advance**, because the run
+  does not exist yet. So its source is named at `prepare` and then read back from
+  the hash-bound launch document by every later step, and a declaration that
+  *does* pin its source refuses to be re-pointed by a caller.
+
+**Verified.** The lesson's evidence path, service name, plan, summary and child
+command line are asserted unchanged, so the frozen 571 result and its retained
+directory are untouched. The decisive check is stronger than a unit test: the
+refactored module was placed on the host and used to **re-verify the real
+retained comparison from its bytes**, reproducing `lean-lesson-passed-nominal`,
+1536/1536 attempts, zero hard failures and the same per-checkpoint tilts. 146
+tests pass across the affected modules and the full stance regression gives **712
+passed**. Three new guards are mutation-tested: reintroducing the `--mode`/`--job`
+mismatch reproduces `unrecognized arguments: --mode`, routing the replication
+through the lesson's loader fails two tests with `DID NOT RAISE`, and hardcoding
+the lesson's decision strings fails both replication decision tests.
 
 The stance regression also shows 1 failure and 2 errors in
 `tests/test_stance_eager_learning.py`, which is **pre-existing and not caused by
@@ -325,12 +348,68 @@ collection deadline expires under suite load. Recorded rather than waved off,
 because a failing test that is assumed rather than demonstrated to be unrelated
 is how a real regression gets missed.
 
-**Not yet landed — this is the remaining blocker.** The evaluation path
-(prerequisite 6) is still bound to the lesson's `TRAINING_SOURCE`,
-`TRAINING_REPORT`, purpose, trace protocol and decision strings. Until it takes a
-declared replication identity, a replication can be *trained* but not *judged*,
-so **no replication may be launched**: a run whose only available scorer is the
-lesson's would either fail closed or, worse, score replication exports against
-the lesson's pinned archive. Prerequisite 7's tests for the all-seeds decision
-rule and prerequisite 8's exact-source Linux regression remain open with it.
+- **The cross-seed aggregator** (prerequisite 7). `stance_lean_replication_campaign`
+  turns the three per-seed summaries into the one string this document's decision
+  rule names, and it will not emit `lean-replication-passed` from fewer than all
+  three. Two properties are deliberate and both are the reason it is a module
+  rather than an `all()`:
 
+  - **A seed that could not be verified short-circuits to
+    `lean-replication-incomplete`, and it outranks a pass.** Two passing seeds
+    plus one that never ran is not two-thirds of a pass, and it is not
+    `seed-dependent` either. The broken seed is written into the document as an
+    error record with its exception type and message, so it cannot leave the
+    remaining seeds looking like a full set. `decide` also refuses a mapping that
+    does not name exactly the three declared seeds, in either direction, so a
+    seed cannot be dropped from -- or invented into -- the denominator.
+  - **The verdict is re-derived, not read.** Each seed's outcome comes from
+    `evaluation.verify`, which replays all twelve bundles from their manifests.
+    `seed_verdict` reads that seed's `report.json` only to find the comparison
+    hash and to check the recorded decision is one this campaign may combine;
+    it then requires the re-derived decision to equal the recorded one. A report
+    from another protocol, an unfinished report, and a report whose
+    `tilt_gate_relaxed` is not `false` are all refused before any score is read.
+  - The campaign's own strings are not a per-seed verdict's, in either direction.
+    `lean-replication-passed` is three seeds; `lean-replication-seed-passed` is
+    one. `decide` accepts only the latter two as inputs and only the former four
+    as outputs.
+
+**Verified.** The lesson's evidence path, service name, plan, summary and child
+command line are asserted unchanged, so the frozen 571 result and its retained
+directory are untouched. The decisive check is stronger than a unit test: the
+refactored module was placed on the host and used to **re-verify the real
+retained comparison from its bytes**, reproducing `lean-lesson-passed-nominal`,
+1536/1536 attempts, zero hard failures and the same per-checkpoint tilts. 176
+tests pass across the affected modules and the full stance regression gives
+**738 passed**. Four new guards are mutation-tested, and each one fails when
+reverted: reintroducing the `--mode`/`--job` mismatch reproduces
+`unrecognized arguments: --mode`; routing the replication through the lesson's
+loader fails two tests with `DID NOT RAISE`; hardcoding the lesson's decision
+strings fails both replication decision tests; removing the aggregator's
+incomplete short-circuit fails four tests; silently dropping an unrunnable seed
+instead of recording it fails the campaign test on `all three declared
+replication seeds`; removing the relaxed-gate refusal fails the per-seed report
+test; and removing the per-seed verdict validity check fails all six
+`may_not_combine` cases.
+
+The stance regression also shows 1 failure and 2 errors in
+`tests/test_stance_eager_learning.py`, which is **pre-existing and not caused by
+this change**. That file is untouched here, and the same three tests fail with
+the same signature on a stashed pristine tree: its `--help` subprocess is given a
+hardcoded 20 s timeout against an 11.2 s standalone cost, and its 120 s
+collection deadline expires under suite load. Recorded rather than waved off,
+because a failing test that is assumed rather than demonstrated to be unrelated
+is how a real regression gets missed.
+
+**Still open, and it still blocks any launch.** Prerequisite 8, the exact-source
+Linux CPU regression, has not been run. Nothing has been launched, and nothing in
+this section admits a checkpoint, accepts a learned stance, authorizes motion or
+relaxes the 0.0873 rad gate. The aggregator exists and is tested, but a tested
+aggregator is not a result: no `lean-replication-*` verdict can be recorded until
+three real seeds have been trained, judged and re-derived from their own bytes.
+
+September 30 continuation is separately declared in
+[the WSL migration](2026-09-30-stance-wsl-replication.md). It adds a source-bound
+100.98 integration/timing gate without changing this experiment's denominator
+or acceptance thresholds. Campaign source claims are now checked against each
+seed's retained training source; mismatched claims remain incomplete.

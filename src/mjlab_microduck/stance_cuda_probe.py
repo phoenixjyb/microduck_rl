@@ -21,13 +21,14 @@ from mjlab_microduck import foundation_command_campaign as supervisor
 from mjlab_microduck.first_attempt_smoke import canonical, require
 from mjlab_microduck.football_stance_probe import asset_hashes
 from mjlab_microduck.gpu_idle_gate import wait_idle
+from mjlab_microduck import stance_execution_profile as execution
 
 PROTOCOL = 'football-b1n-cuda-integration-v1'
-ROOT = Path('/home/converge/work/microduck_rl-athletics-obstacle-curriculum')
+ROOT = execution.ROOT
 BRANCH = 'feat/athletics-obstacle-curriculum'
-MACHINE = '0c79e415429b4933a400159bfa79a34d'
-GPU = 'GPU-f21e0304-3b55-b6eb-4993-946e7ee1f6dd'
-DRIVER = '595.84'
+MACHINE = execution.PROFILE['machine']
+GPU = execution.PROFILE['gpu']
+DRIVER = execution.PROFILE['driver']
 CUTOFF = datetime(2026, 9, 9, 23, 30, tzinfo=timezone.utc).timestamp()
 CHILD_SECONDS, SERVICE_SECONDS, CLOSEOUT_SECONDS = 120, 180, 600
 PIN_FILE = Path(__file__).resolve().parents[2]/'docs/experiments/2026-09-09-stance-cuda-probe-runtime.json'
@@ -67,19 +68,22 @@ def identity(source):
     require(read('git', 'branch', '--show-current') == BRANCH
             and read('git', 'rev-parse', 'HEAD') == source
             and not read('git', 'status', '--porcelain'), 'clean exact source')
-    gpu = read('nvidia-smi', '--query-gpu=uuid,driver_version', '--format=csv,noheader,nounits')
+    gpu = read(execution.PROFILE['smi'], '--query-gpu=uuid,driver_version', '--format=csv,noheader,nounits')
     require([v.strip() for v in gpu.split(',')] == [GPU, DRIVER], 'exact single GPU and driver')
     versions = {name: version(name) for name in VERSIONS}
     require(versions == VERSIONS, 'frozen package versions')
     trees = python_trees()
     require(trees == supervisor.parse(PIN_FILE.read_bytes()), 'reviewed dependency Python trees')
     from mjlab_microduck.robot.microduck_constants import actuators
-    return dict(source=source, branch=BRANCH, machine_id=MACHINE, gpu_uuid=GPU,
+    result = dict(source=source, branch=BRANCH, machine_id=MACHINE, gpu_uuid=GPU,
         driver=DRIVER, python_version=sys.version.split()[0], versions=versions,
         dependency_python_trees=trees, robot_assets=asset_hashes(),
         motor_parameters_sha256=digest(Path(actuators._resolved_json_path)),
         lock_sha256=digest(ROOT/'uv.lock'), pyproject_sha256=digest(ROOT/'pyproject.toml'),
         complete_binary_runtime_equivalence_verified=False)
+    if execution.PROFILE['name'] != execution.DEFAULT:
+        result['execution_profile'] = dict(execution.PROFILE)
+    return result
 
 
 def plan(source, inputs):

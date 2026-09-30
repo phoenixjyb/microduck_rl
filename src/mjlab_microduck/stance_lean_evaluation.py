@@ -107,6 +107,49 @@ PROBE_SOURCE = 'cdb05a5667ca0738e06f87737c1fda51203f12b3'
 PROBE_REPORT = 'a91b5a068be96def6ae7fa18d7109ea75cb10b64f870a7d3991515589b80db58'
 CHILD_SECONDS, SERVICE_SECONDS = 1352, 1412
 
+# --- the judged continuations -------------------------------------------------
+# The two weight-initialized continuations this comparison path judges. They
+# differ in purpose, trace protocol, evidence directory and decision strings, and
+# in whether the training archive they read is pinned in advance or named by the
+# caller. Everything else -- the twelve cases, the scorer, the 122/128 per-seed
+# threshold and the 0.0873 rad gate -- is shared by reference, not re-typed.
+#
+# The probe stays lesson-only on purpose. It has already run, its measurement is
+# the shared basis for both purposes' caps, and a replication must not be able to
+# re-measure its way to a different bound.
+LESSON = dict(label='lean-lesson', protocol=PROTOCOL, purpose=checkpoint.LEAN_PURPOSE,
+              trace_protocol=trace.LEAN_PROTOCOL, iterations=checkpoint.LEAN_CHECKPOINTS,
+              directories={'probe': 'stance-lean-eval-probe-',
+                           'evaluate': 'stance-lean-evaluation-'},
+              services={'probe': 'microduck-lean-eval-probe-',
+                        'evaluate': 'microduck-lean-evaluation-'},
+              path_seed=False, case_prefix='lean', training_source=TRAINING_SOURCE,
+              training_report=TRAINING_REPORT, gate_key='lean_lesson_numerical_gate_passed',
+              passed='lean-lesson-passed-nominal', rejected='lean-lesson-rejected-objective-binds')
+REPLICATION = dict(label='lean-replication',
+                   protocol='football-b1n-lean-replication-evaluation-v1',
+                   purpose=checkpoint.LEAN_REPLICATION_PURPOSE,
+                   trace_protocol=trace.LEAN_REPLICATION_PROTOCOL,
+                   iterations=checkpoint.LEAN_REPLICATION_CHECKPOINTS,
+                   directories={'probe': 'stance-lean-repl-eval-probe-',
+                                'evaluate': 'stance-lean-replication-eval-'},
+                   services={'probe': 'microduck-lean-repl-eval-probe-',
+                             'evaluate': 'microduck-lean-replication-eval-'},
+                   path_seed=True, case_prefix='repl', training_source=None, training_report=None,
+                   gate_key='lean_replication_numerical_gate_passed',
+                   passed='lean-replication-seed-passed',
+                   rejected='lean-replication-seed-rejected')
+EVALUATIONS = {d['label']: d for d in (LESSON, REPLICATION)}
+
+
+def evaluation_of(label):
+    require(label in EVALUATIONS, 'declared judged continuation')
+    return EVALUATIONS[label]
+
+
+def cases_of(declaration):
+    return len(declaration['iterations'])*len(trace.SEEDS)
+
 
 def systemd_runtime_max(seconds):
     """systemd's rendering of ``RuntimeMaxSec=<seconds>``.
@@ -217,78 +260,135 @@ def parser():
     # ``mode`` is already the action (prepare/supervise/child); the job is which
     # evaluation this is, so it gets its own name.
     result.add_argument('--job', choices=MODES)
+    # And which continuation is being judged. Named separately from ``--job``
+    # because ``--job`` already means probe-versus-evaluate here.
+    result.add_argument('--continuation', choices=tuple(EVALUATIONS), default=LESSON['label'])
+    result.add_argument('--seed', type=int)
+    # Which completed training run to judge. Required by a continuation that does
+    # not pin one, refused by one that does.
+    result.add_argument('--training-source')
     result.add_argument('--deadline-unix', type=int)
     result.add_argument('--launch-sha256')
     result.add_argument('--lock-fd', type=int)
     return result
 
 
-def child_command(source, launch_sha, mode, fd):
+def child_command(source, launch_sha, mode, fd, declaration=LESSON, seed=None):
     """The exact argv the supervisor hands to its bounded child."""
     files.hex_id(source, 40); files.hex_id(launch_sha, 64)
     require(mode in MODES and type(fd) is int, 'declared lean evaluation mode and lease fd')
-    return [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
-            '--launch-sha256', launch_sha, '--job', mode, '--lock-fd', str(fd)]
+    argv = [str(host.ROOT/'.venv/bin/python'), '-m', MODULE, 'child', '--source', source,
+            '--launch-sha256', launch_sha, '--job', mode, '--lock-fd', str(fd),
+            '--continuation', declaration['label']]
+    # Omitted for a single-seed continuation, whose seed is fixed by its own
+    # declaration; supplied for one whose runs share a commit and differ by seed.
+    return argv if seed is None else argv+['--seed', str(seed)]
 
 
-def training_inputs():
-    """Authenticate the immutable lean-lesson archive before any tensor loading."""
-    root = lean.output_path(TRAINING_SOURCE)
+# Which loader may read the judged run's exports, keyed by the same label the
+# declaration carries. The replication's exports are not readable through the
+# lesson's loader and vice versa, so a comparison can never judge one purpose's
+# archive through the other purpose's identity rules.
+TRAINING_LOADERS = {LESSON['label']: checkpoint.load_lean_evaluation,
+                    REPLICATION['label']: checkpoint.load_lean_replication_evaluation}
+
+
+def training_inputs(declaration=LESSON, seed=None, source=None):
+    """Authenticate the immutable training archive before any tensor loading.
+
+    The lesson's archive is pinned in advance, by source and report hash. A
+    replication's cannot be: it is produced by a run that does not exist yet. So
+    its source is named by the caller and its report hash is *derived* from the
+    archive, then frozen into the launch document that every later step re-checks
+    against. Nothing downstream can re-point the comparison at a different run.
+    """
+    training = lean.declaration_of(declaration['label'])
+    seed = training['seeds'][0] if seed is None else seed
+    lean.seed_of(training, seed)
+    # A pinned continuation names its own source and must not be re-pointed by a
+    # caller; one that names its source at prepare time requires it.
+    if declaration['training_source'] is not None:
+        require(source is None or source == declaration['training_source'],
+                'a pinned continuation names its own training source')
+    source = declaration['training_source'] if source is None else source
+    require(type(source) is str, 'a declared training source to judge')
+    root = lean.output_path(source, training, seed)
     raw = files.file_bytes(root/'report.json')
-    require(sha256(raw).hexdigest() == TRAINING_REPORT, 'independent lean-lesson training report hash')
+    digest = sha256(raw).hexdigest()
+    if declaration['training_report'] is not None:
+        require(digest == declaration['training_report'], 'independent training report hash')
     report = files.parse(raw)
-    require(report['decision'] == 'lean-lesson-complete-not-capability'
-            and report['child']['returncode'] == 0, 'successful completed lean lesson')
+    require(report['decision'] == training['decision'] and report['child']['returncode'] == 0,
+            'successful completed training run')
     require({p.name for p in root.iterdir()} == set(report['files'])|{'report.json'},
-            'exact lean-lesson archive inventory')
-    for name, digest in report['files'].items():
-        require(name == os.path.basename(name) and name not in ('.', '..'), 'plain lean-lesson filename')
-        require(host.digest(root/name) == digest, 'immutable lean-lesson archive hash: '+name)
+            'exact training archive inventory')
+    for name, file_digest in report['files'].items():
+        require(name == os.path.basename(name) and name not in ('.', '..'),
+                'plain training filename')
+        require(host.digest(root/name) == file_digest, 'immutable training archive hash: '+name)
     launch = files.parse(files.file_bytes(root/'launch.json'))
-    completed = lean.verify_completed(root, TRAINING_SOURCE, report['launch_sha256'], launch)
+    completed = lean.verify_completed(root, source, report['launch_sha256'], launch, training, seed)
     by_iteration = {c['identity']['iteration']: c for c in completed['checkpoints']}
-    require(set(by_iteration) == set(range(-1, checkpoint.LEAN_UPDATES)),
-            'every lean-lesson checkpoint present exactly once')
-    selected = [by_iteration[iteration] for iteration in ITERATIONS]
-    require([c['identity']['iteration'] for c in selected] == list(ITERATIONS),
+    require(set(by_iteration) == set(range(-1, lean.UPDATES)),
+            'every training checkpoint present exactly once')
+    selected = [by_iteration[iteration] for iteration in declaration['iterations']]
+    require([c['identity']['iteration'] for c in selected] == list(declaration['iterations']),
             'fixed common-checkpoint selection')
     for saved in selected:
         # The evaluable-iteration admission is enforced by the loader, not here.
-        checkpoint.load_lean_evaluation(files.file_bytes(root/saved['file']), saved['sha256'], saved['identity'])
-    return dict(source=TRAINING_SOURCE, report_sha256=TRAINING_REPORT, checkpoints=selected)
+        TRAINING_LOADERS[declaration['label']](
+            files.file_bytes(root/saved['file']), saved['sha256'], saved['identity'])
+    # Deliberately the same three keys as before the replication existed. The
+    # launch document embeds this block verbatim and ``summarize`` re-derives the
+    # whole plan and requires equality, so adding a key here would make every
+    # already-retained lesson launch document fail its own re-verification.
+    return dict(source=source, report_sha256=digest, checkpoints=selected)
 
 
-def plan(source, inputs, runtime_sha, retained, deadline, mode):
+def plan(source, inputs, runtime_sha, retained, deadline, mode, declaration=LESSON):
     files.hex_id(source, 40); files.hex_id(runtime_sha, 64)
     require(mode in MODES and type(deadline) is int and deadline > 0,
             'declared lean evaluation mode and explicit deadline')
     # Resolve the declared caps first: an unmeasured twelve-case budget must fail
     # before any archive authentication, hash work or directory creation.
     caps = service_caps(mode)
-    require(retained['source'] == TRAINING_SOURCE and retained['report_sha256'] == TRAINING_REPORT,
-            'fixed completed lean-lesson parent')
-    require([c['identity']['iteration'] for c in retained['checkpoints']] == list(ITERATIONS),
-            'all four common lean-lesson checkpoints')
+    iterations = declaration['iterations']
+    # A pinned declaration is checked against its constant here. One that names
+    # its source at prepare time has nothing to compare against at plan time: its
+    # source arrives inside ``retained`` and is bound by the launch hash, which
+    # ``inputs_check`` re-derives on every run.
+    if declaration['training_source'] is not None:
+        require(retained['source'] == declaration['training_source'],
+                'the declared completed training run')
+    if declaration['training_report'] is not None:
+        require(retained['report_sha256'] == declaration['training_report'],
+                'fixed completed training report')
+    require([c['identity']['iteration'] for c in retained['checkpoints']] == list(iterations),
+            'all common checkpoints of the declared continuation')
     selected = retained['checkpoints'] if mode == 'evaluate' else [
         c for c in retained['checkpoints'] if c['identity']['iteration'] == PROBE_ITERATION]
     seeds = trace.SEEDS if mode == 'evaluate' else (PROBE_SEED,)
-    require(len(selected) == (len(ITERATIONS) if mode == 'evaluate' else 1), 'declared checkpoint coverage')
+    require(len(selected) == (len(iterations) if mode == 'evaluate' else 1),
+            'declared checkpoint coverage')
     cases = []
     for saved in selected:
         meta = saved['identity']
-        checkpoint.validate_identity(meta, evaluation=checkpoint.LEAN_PURPOSE)
-        require(meta['purpose'] == checkpoint.LEAN_PURPOSE and meta['source'] == TRAINING_SOURCE
-                and meta['iteration'] in ITERATIONS, 'distinct lean-lesson checkpoint identity')
+        checkpoint.validate_identity(meta, evaluation=declaration['purpose'])
+        require(meta['purpose'] == declaration['purpose'] and meta['source'] == retained['source']
+                and meta['iteration'] in iterations, 'distinct checkpoint identity')
         files.hex_id(saved['sha256'], 64)
-        require(saved['file'] == f'model_{meta["iteration"]}.pt', 'exact lean-lesson checkpoint filename')
-        for seed in seeds:
-            binding = dict(protocol=PROBE_TRACE_PROTOCOL, source=source, runtime_sha256=runtime_sha,
-                checkpoint_sha256=saved['sha256'], checkpoint_iteration=meta['iteration'],
-                evaluation_seed=seed, worlds=WORLDS, capture_device='cuda:0')
+        require(saved['file'] == f'model_{meta["iteration"]}.pt', 'exact checkpoint filename')
+        for evaluation_seed in seeds:
+            binding = dict(protocol=declaration['trace_protocol'], source=source,
+                runtime_sha256=runtime_sha, checkpoint_sha256=saved['sha256'],
+                checkpoint_iteration=meta['iteration'], evaluation_seed=evaluation_seed,
+                worlds=WORLDS, capture_device='cuda:0')
             launch = bundle.launch_bytes(binding, meta); binding['launch_sha256'] = sha256(launch).hexdigest()
-            cases.append(dict(name=f'lean-{meta["iteration"]}-seed-{seed}',
-                              binding=binding, checkpoint=deepcopy(saved)))
-    return dict(protocol=PROTOCOL, mode=mode, source=source, inputs=inputs, runtime_sha256=runtime_sha,
+            cases.append(dict(
+                name=f'{declaration["case_prefix"]}-{meta["iteration"]}-seed-{evaluation_seed}',
+                binding=binding, checkpoint=deepcopy(saved)))
+    return dict(protocol=declaration['protocol'], mode=mode, source=source, inputs=inputs,
+        runtime_sha256=runtime_sha,
         retained_training=deepcopy(retained), deadline_unix=deadline, cases=cases,
         worlds_per_case=WORLDS, cases_required=len(cases), attempts_required=len(cases)*WORLDS,
         policy_ticks=POLICY_TICKS, child_timeout_seconds=caps['child_seconds'],
@@ -302,20 +402,33 @@ def plan(source, inputs, runtime_sha, retained, deadline, mode):
         checkpoint_admitted=False, learned_stance_accepted=False, physical_motion_authorized=False)
 
 
-def lean_output_path(source, mode):
+def seed_suffix(declaration, seed):
+    """The training-seed path component, present only where a run needs one.
+
+    A replication's three runs share one commit, so a source-keyed directory
+    would make them overwrite each other. The lesson's evidence path is already
+    retained and must not move, so it carries no seed component.
+    """
+    if not declaration['path_seed']: return ''
+    training = lean.declaration_of(declaration['label'])
+    return f'-seed-{lean.seed_of(training, seed)}'
+
+
+def lean_output_path(source, mode, declaration=LESSON, seed=None):
     files.hex_id(source, 40)
     require(mode in MODES, 'declared lean evaluation mode')
-    return host.ROOT/'artifacts/evaluations'/(DIRECTORIES[mode]+source[:12])
+    return host.ROOT/'artifacts/evaluations'/(
+        declaration['directories'][mode]+source[:12]+seed_suffix(declaration, seed))
 
 
-def output_path(source, mode):
-    return lean_output_path(source, mode)
+def output_path(source, mode, declaration=LESSON, seed=None):
+    return lean_output_path(source, mode, declaration, seed)
 
 
-def service_name(source, mode):
+def service_name(source, mode, declaration=LESSON, seed=None):
     files.hex_id(source, 40)
     require(mode in MODES, 'declared lean evaluation mode')
-    return SERVICES[mode]+source[:12]+'.service'
+    return declaration['services'][mode]+source[:12]+seed_suffix(declaration, seed)+'.service'
 
 
 def check_window(deadline, mode, *, launching=False):
@@ -332,33 +445,41 @@ def check_window(deadline, mode, *, launching=False):
                 'lean evaluation needs a fresh window with its full closeout reserve')
 
 
-def prepare(source, deadline, mode):
+def prepare(source, deadline, mode, declaration=LESSON, seed=None, training_source=None):
+    require(host.execution.PROFILE['name'] != host.execution.WSL,
+            'WSL full evaluation needs its separately measured timing gate')
     check_window(deadline, mode, launching=True)
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only lean evaluation preparation')
-    inputs = host.identity(source); retained = training_inputs()
+    inputs = host.identity(source)
+    retained = training_inputs(declaration, seed, training_source)
     runtime = plant.runtime_bytes(source, plant.build_entity().compile())
-    launch = plan(source, inputs, sha256(runtime).hexdigest(), retained, deadline, mode)
-    root = files.native._plain_path(output_path(source, mode)); root.mkdir(exist_ok=False)
+    launch = plan(source, inputs, sha256(runtime).hexdigest(), retained, deadline, mode, declaration)
+    root = files.native._plain_path(output_path(source, mode, declaration, seed))
+    root.mkdir(exist_ok=False)
     smoke.write_bytes(root/'runtime.json', runtime); files.write_json(root/'launch.json', launch)
-    return dict(output=str(root), service=service_name(source, mode), mode=mode,
+    return dict(output=str(root), service=service_name(source, mode, declaration, seed), mode=mode,
         cases=len(launch['cases']), launch_sha256=host.digest(root/'launch.json'))
 
 
-def inputs_check(source, launch_sha, mode):
-    root = output_path(source, mode)
+def inputs_check(source, launch_sha, mode, declaration=LESSON, seed=None):
+    root = output_path(source, mode, declaration, seed)
     raw = files.file_bytes(root/'launch.json')
     require(sha256(raw).hexdigest() == launch_sha, 'independent lean evaluation launch hash')
     launch = files.parse(raw); runtime = files.file_bytes(root/'runtime.json')
+    # The judged run's source is read back from the hash-bound launch document
+    # rather than taken from the caller, so it cannot be re-pointed after prepare.
+    retained = training_inputs(declaration, seed, launch['retained_training']['source'])
     require(launch == plan(source, host.identity(source), sha256(runtime).hexdigest(),
-        training_inputs(), launch['deadline_unix'], mode), 'exact lean evaluation plan')
+        retained, launch['deadline_unix'], mode, declaration), 'exact lean evaluation plan')
     plant.checked_runtime(files.parse(runtime), source)
     return launch
 
 
-def check_service(source, mode):
+def check_service(source, mode, declaration=LESSON, seed=None):
     caps = service_caps(mode)
-    values = {k: host.read('systemctl', '--user', 'show', service_name(source, mode), '-p', k, '--value')
+    values = {k: host.read('systemctl', '--user', 'show',
+                           service_name(source, mode, declaration, seed), '-p', k, '--value')
               for k in SERVICE_PROPERTIES}
     require(values == dict(MainPID=str(os.getpid()), RuntimeMaxUSec=caps['runtime_max'],
                            KillMode='control-group', ActiveState='active'),
@@ -367,20 +488,26 @@ def check_service(source, mode):
             'CPU-only lean evaluation supervisor')
 
 
-def run_cases(launch, root, runtime, deadline):
+def run_cases(launch, root, runtime, deadline, declaration=LESSON):
     """Run every declared case through the one shared measured path.
 
     Timings are recorded in both modes so the probed path is the path the
     twelve-case run takes: the probe reads them, the evaluation ignores them.
     """
     from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
+    training = lean.declaration_of(declaration['label'])
     started = time.monotonic(); scores = {}; receipts = []
     for index, case in enumerate(launch['cases']):
         require(time.monotonic() < deadline, 'whole lean comparison time budget')
         seed = case['binding']['evaluation_seed']
         random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
         saved = case['checkpoint']; binding = case['binding']
-        cp_raw = files.file_bytes(lean.output_path(TRAINING_SOURCE)/saved['file'])
+        # Read the training seed off the checkpoint identity rather than taking it
+        # as another argument: the identity is what the archive itself attests, so
+        # it cannot disagree with the run the weights actually came from.
+        cp_raw = files.file_bytes(lean.output_path(
+            launch['retained_training']['source'], training,
+            saved['identity']['training_seed'])/saved['file'])
         launch_raw = bundle.launch_bytes({k: v for k, v in binding.items() if k != 'launch_sha256'},
                                          saved['identity'])
         before_env = time.monotonic()
@@ -425,34 +552,39 @@ def probe_measurements(launch, receipts):
         cases_projected=CASES)
 
 
-def child(source, launch_sha, fd, mode):
-    smoke.inherited_lease(fd); launch = inputs_check(source, launch_sha, mode)
+def child(source, launch_sha, fd, mode, declaration=LESSON, seed=None):
+    smoke.inherited_lease(fd)
+    launch = inputs_check(source, launch_sha, mode, declaration, seed)
     require(launch['mode'] == mode, 'child mode matches the launch document')
     check_window(launch['deadline_unix'], mode, launching=True)
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '0' and torch.cuda.is_available(),
             'explicit evaluation CUDA0')
-    host.wait_idle(); root = output_path(source, mode); runtime = files.file_bytes(root/'runtime.json')
+    host.wait_idle()
+    root = output_path(source, mode, declaration, seed)
+    runtime = files.file_bytes(root/'runtime.json')
     end = time.monotonic()+launch['child_timeout_seconds']-30
-    scores, receipts = run_cases(launch, root, runtime, end)
-    require(inputs_check(source, launch_sha, mode) == launch, 'unchanged lean comparison inputs')
+    scores, receipts = run_cases(launch, root, runtime, end, declaration)
+    require(inputs_check(source, launch_sha, mode, declaration, seed) == launch,
+            'unchanged lean comparison inputs')
     if mode == 'probe':
         files.write_json(root/'measurements.json', dict(protocol=PROTOCOL, mode='probe',
             launch_sha256=launch_sha, measurements=probe_measurements(launch, receipts)))
         return
     files.write_json(root/'comparison.json', dict(launch_sha256=launch_sha, cases=receipts,
-                                                summary=summarize(launch, scores)))
+                                                summary=summarize(launch, scores, declaration)))
 
 
-def summarize(launch, scores):
+def summarize(launch, scores, declaration=LESSON):
     """The predeclared decision rule, applied to twelve verified case scores."""
     require(launch['mode'] == 'evaluate', 'a probe is not a decision')
     require(launch == plan(launch['source'], launch['inputs'], launch['runtime_sha256'],
-        launch['retained_training'], launch['deadline_unix'], 'evaluate'), 'exact fixed comparison plan')
+        launch['retained_training'], launch['deadline_unix'], 'evaluate', declaration),
+        'exact fixed comparison plan')
     require(set(scores) == {c['name'] for c in launch['cases']}, 'all twelve cases required')
     rows = []
     for case in launch['cases']:
         score = scores[case['name']]; attempts = score['attempts']
-        require(score['binding'] == case['binding'] and score['protocol'] == PROBE_TRACE_PROTOCOL,
+        require(score['binding'] == case['binding'] and score['protocol'] == declaration['trace_protocol'],
                 'separate lean trace identity')
         require(len(attempts) == WORLDS and [a['world_id'] for a in attempts] == list(range(WORLDS))
                 and all(a['complete_first_attempt'] is True for a in attempts)
@@ -485,7 +617,7 @@ def summarize(launch, scores):
             hard_failures=sum(a['hard_failure'] for a in attempts),
             failed_gates={key: sum(not a['gates'][key] for a in attempts) for key in attempts[0]['gates']}))
     per_checkpoint = {}
-    for iteration in ITERATIONS:
+    for iteration in declaration['iterations']:
         seeds = [r for r in rows if r['iteration'] == iteration]
         require(len(seeds) == len(trace.SEEDS), 'all three evaluation seeds per checkpoint')
         per_checkpoint[str(iteration)] = dict(
@@ -496,18 +628,23 @@ def summarize(launch, scores):
                 tilt_p95_rad_min=r['tilt_p95_rad_min'], tilt_p95_rad_max=r['tilt_p95_rad_max'],
                 tilt_p95_rad_mean=r['tilt_p95_rad_mean'],
                 hard_failures=r['hard_failures']) for r in seeds})
-    survivors = [i for i in ITERATIONS if per_checkpoint[str(i)]['passes_all_seeds']]
+    survivors = [i for i in declaration['iterations'] if per_checkpoint[str(i)]['passes_all_seeds']]
     passed = bool(survivors)
-    return dict(protocol=PROTOCOL, mode='evaluate', rows=rows, per_checkpoint=per_checkpoint,
+    # The gate key is named by the declaration rather than shared, so a
+    # replication summary cannot be read as a lesson summary. The lesson's key is
+    # retained verbatim: it is already inside a hashed, retained comparison
+    # document, and renaming it would break that document's re-verification.
+    return dict(protocol=declaration['protocol'], mode='evaluate', rows=rows,
+        per_checkpoint=per_checkpoint,
         complete_attempts=ATTEMPTS, passing_checkpoints=survivors,
-        lean_lesson_numerical_gate_passed=passed,
-        decision='lean-lesson-passed-nominal' if passed else 'lean-lesson-rejected-objective-binds',
+        **{declaration['gate_key']: passed},
+        decision=declaration['passed'] if passed else declaration['rejected'],
         tilt_gate_rad=TILT_GATE_RAD, tilt_gate_relaxed=False,
         checkpoint_admitted=False, learned_stance_accepted=False, football_balance_accepted=False,
         physical_motion_authorized=False)
 
 
-def verify(root, launch, comparison_sha):
+def verify(root, launch, comparison_sha, declaration=LESSON):
     raw = files.file_bytes(root/'comparison.json')
     require(sha256(raw).hexdigest() == comparison_sha, 'independent comparison hash')
     result = files.parse(raw)
@@ -525,7 +662,7 @@ def verify(root, launch, comparison_sha):
     expected.update(c['name'] for c in launch['cases']); expected.update(c['name']+'.json' for c in launch['cases'])
     require({p.name for p in root.iterdir()} in (expected, expected|{'report.json'}),
             'exact comparison directory inventory')
-    summary = summarize(launch, scores)
+    summary = summarize(launch, scores, declaration)
     require(result['summary'] == summary, 'recomputed lean comparison decision')
     return summary
 
@@ -550,14 +687,16 @@ def verify_probe(root, launch, launch_sha, measurements_sha):
                 derived_caps=derive_caps(recorded['measurements']))
 
 
-def supervise(source, launch_sha, mode):
-    check_service(source, mode); launch = inputs_check(source, launch_sha, mode)
+def supervise(source, launch_sha, mode, declaration=LESSON, seed=None):
+    check_service(source, mode, declaration, seed)
+    launch = inputs_check(source, launch_sha, mode, declaration, seed)
     require(launch['mode'] == mode, 'supervisor mode matches the launch document')
-    check_window(launch['deadline_unix'], mode, launching=True); root = output_path(source, mode)
+    check_window(launch['deadline_unix'], mode, launching=True)
+    root = output_path(source, mode, declaration, seed)
     require({p.name for p in root.iterdir()} == {'launch.json', 'runtime.json'},
             'one fresh lean evaluation attempt')
-    report = dict(protocol=PROTOCOL, mode=mode, launch_sha256=launch_sha, decision='failed',
-        tilt_gate_rad=TILT_GATE_RAD, tilt_gate_relaxed=False, optimizer_steps=0,
+    report = dict(protocol=declaration['protocol'], mode=mode, launch_sha256=launch_sha,
+        decision='failed', tilt_gate_rad=TILT_GATE_RAD, tilt_gate_relaxed=False, optimizer_steps=0,
         checkpoint_admitted=False, learned_stance_accepted=False, physical_motion_authorized=False)
     try:
         with files.gpu_lease() as fd:
@@ -566,7 +705,7 @@ def supervise(source, launch_sha, mode):
                 check_window(launch['deadline_unix'], mode); host.check_log(root/'child.log')
                 require(host.identity(source) == launch['inputs'], 'live lean evaluation inputs drift')
             report['child'] = supervisor_wrapper(mode)(
-                child_command(source, launch_sha, mode, fd),
+                child_command(source, launch_sha, mode, fd, declaration, seed),
                 root/'child.log', cwd=host.ROOT, env=files.child_environment(), lock_fd=fd, guard=guard)
             host.check_log(root/'child.log')
             if mode == 'probe':
@@ -575,7 +714,7 @@ def supervise(source, launch_sha, mode):
                 report['decision'] = 'probe-measured'
             else:
                 report['comparison_sha256'] = host.digest(root/'comparison.json')
-                report['summary'] = verify(root, launch, report['comparison_sha256'])
+                report['summary'] = verify(root, launch, report['comparison_sha256'], declaration)
                 report['decision'] = report['summary']['decision']
             report['idle_after'] = host.wait_idle()
     except Exception as exc:
@@ -588,12 +727,14 @@ def supervise(source, launch_sha, mode):
 
 def main():
     args = parser().parse_args()
+    declaration = evaluation_of(args.continuation)
     if args.mode == 'prepare':
-        print(canonical(prepare(args.source, args.deadline_unix, args.job)))
+        print(canonical(prepare(args.source, args.deadline_unix, args.job, declaration,
+                                args.seed, args.training_source)))
     elif args.mode == 'supervise':
-        supervise(args.source, args.launch_sha256, args.job)
+        supervise(args.source, args.launch_sha256, args.job, declaration, args.seed)
     else:
-        child(args.source, args.launch_sha256, args.lock_fd, args.job)
+        child(args.source, args.launch_sha256, args.lock_fd, args.job, declaration, args.seed)
 
 
 if __name__ == '__main__': main()

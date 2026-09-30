@@ -258,7 +258,7 @@ def check_window(deadline, *, launching=False):
 def plan(source, inputs, runtime_sha, deadline, declaration=LESSON, seed=SEED):
     supervisor.hex_id(source, 40); supervisor.hex_id(runtime_sha, 64); seed_of(declaration, seed)
     require(type(deadline) is int and deadline > 0, 'explicit integer deadline')
-    return dict(protocol=declaration['protocol'], source=source, inputs=inputs,
+    result = dict(protocol=declaration['protocol'], source=source, inputs=inputs,
         runtime_sha256=runtime_sha,
         purpose=declaration['purpose'], worlds=WORLDS, seed=seed, updates=UPDATES,
         steps_per_update=STEPS, optimizer=deepcopy(CONFIG), learner_device='cpu',
@@ -272,6 +272,11 @@ def plan(source, inputs, runtime_sha, deadline, declaration=LESSON, seed=SEED):
         weight_initialized=True, optimizer_state_restored=False,
         simulation_resume_authorized=False, pilot_parent_authorized=False,
         learned_stance=False, physical_motion_authorized=False)
+    if host.execution.PROFILE['name'] == host.execution.WSL:
+        require(declaration == REPLICATION, 'WSL migration serves only the declared replication')
+        from mjlab_microduck.stance_wsl_qualification import verify
+        result['host_qualification'] = verify(source)
+    return result
 
 
 def prepare(source, deadline, declaration=LESSON, seed=SEED):
@@ -281,6 +286,10 @@ def prepare(source, deadline, declaration=LESSON, seed=SEED):
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only lean-lesson preparation')
     inputs = host.identity(source)
+    if host.execution.PROFILE['name'] == host.execution.WSL:
+        require(declaration == REPLICATION, 'WSL migration serves only the declared replication')
+        from mjlab_microduck.stance_wsl_qualification import verify
+        verify(source)
     raw = supervisor.file_bytes(parent_path(), limit=checkpoint.LIMIT)
     require(sha256(raw).hexdigest() == checkpoint.LEAN_PARENT_SHA256,
             'pinned lean-lesson parent export')

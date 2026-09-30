@@ -5,6 +5,7 @@ import subprocess
 import time
 
 from mjlab_microduck.first_attempt_smoke import require
+from mjlab_microduck import stance_execution_profile as execution
 
 SERVICES=("recomo-ai-mission-vllm.service","recomo-ai-mission-subject-model-worker.service")
 
@@ -18,15 +19,16 @@ def wait_idle(*, reader=None, sleep=time.sleep, now=time.monotonic, timeout=10):
         if reader is not None:return reader(*args)
         return subprocess.check_output(args,text=True,timeout=min(2,remaining)).strip()
     for _ in range(11):
-        states={s:probe("systemctl","show",s,"-p","ActiveState","--value") for s in SERVICES}
-        pids=probe("nvidia-smi","--query-compute-apps=pid","--format=csv,noheader,nounits")
-        raw=probe("nvidia-smi","--query-gpu=utilization.gpu,temperature.gpu,memory.used","--format=csv,noheader,nounits")
+        states={s:probe(*command) for s,command in execution.service_commands(SERVICES)}
+        pids=probe(execution.PROFILE['smi'],"--query-compute-apps=pid","--format=csv,noheader,nounits")
+        raw=probe(execution.PROFILE['smi'],"--query-gpu=utilization.gpu,temperature.gpu,memory.used","--format=csv,noheader,nounits")
         utilization,temperature,memory=map(int,raw.split(","))
         sample=dict(elapsed_s=now()-start,services=states,compute_pids=pids,
                     utilization_percent=utilization,temperature_c=temperature,memory_mib=memory)
         samples.append(sample)
         require(all(s=="inactive" for s in states.values()) and not pids
-                and 0<=utilization<=100 and 0<=temperature<80 and 0<=memory<100,
+                and 0<=utilization<=100 and 0<=temperature<execution.PROFILE['temperature_c']
+                and 0<=memory<execution.PROFILE['idle_memory_mib'],
                 "occupied/unsafe GPU, no wait: "+json.dumps(sample))
         consecutive=consecutive+1 if utilization==0 else 0
         if consecutive==2:

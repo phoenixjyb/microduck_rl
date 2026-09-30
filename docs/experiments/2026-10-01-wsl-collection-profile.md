@@ -62,3 +62,106 @@ integrator, snapshot and CPU-copy boundaries to identify a narrow next experimen
 If the evidence suggests an optimization, preserve safeguards and predeclare
 its equivalence checks before changing the retained learning path. Full learner
 577/587/593 and full held-out WSL evaluation remain blocked.
+
+## Completed run and retained interpretation
+
+Tool source `2032c54a9a2aaae56a68dbc888ee3e579511992d`; runtime source remains
+`987b452dbfdb4cba7c7fef79f419790bd602ae3a`. The runtime worktree stayed clean,
+and its installed environment, old receipts and weights were not rewritten.
+The separate detached validation worktree is retained in ignored
+`artifacts/tools/stance-profile-validation-2032c54a9a2a/`.
+
+Before launch, **327 focused CPU tests passed on the Mac**. Linux initially
+passed 326 and skipped only the pinned-parent artifact test, because the new
+validation worktree lacked that ignored artifact. After copying the existing
+parent with SHA256 `46cd52b53f7b8b9fb220aed96d78cd961423c606e906a4df7330422ae4786e93`,
+the three parent-selected tests passed, including that previously skipped test.
+All 327 distinct checks therefore passed on Linux too; the full repository
+suite was not run. Ruff was unavailable. A Luna read-only protocol review found
+no remaining concrete defect; the owner reviewed its tests and findings.
+
+Direct Mac-to-WSL SSH intermittently timed out during banner/key exchange. An
+explicit per-command `ProxyJump=gw98` reached the same verified WSL machine
+and restored reliable transfers. No SSH configuration, host service, driver
+or networking configuration was changed; 100.100 was only an SSH relay, not a
+Duck GPU execution host.
+
+The retained user service `microduck-wsl-collection-profile-2032c54a9a2a.service`
+finished with `Result=success`, `ExecMainStatus=0`, `inactive/dead`. Its actual
+900-second child returned zero after **464.829342562 seconds**. The checked live
+unit had `RuntimeMaxUSec=16min`, `MemoryMax=6442450944`, `CPUQuotaPerSecUSec=2s`,
+`Nice=10` and `KillMode=control-group`. The final archive contains 12 files,
+including the report and its 11-file hash inventory, retained on WSL and the Mac
+at `artifacts/evaluations/stance-wsl-collection-profile-2032c54a9a2a/`.
+
+Independent CPU-only verification on WSL rechecked live source/tool bindings;
+the Mac separately replayed inventory, hashes, integration schema, ordered timing
+batches and the deterministic summary. The replay API honestly reports
+`live_host_rechecked=false`: that API itself is offline, even when the WSL CLI
+has separately called its live binding check. Both reproduce
+`profile-complete-not-training-qualification`; all admission flags remain false.
+
+Exact retained hashes:
+
+- Runner SHA256: `f9af2c3aa573c5729e9295dc3b3230966c987b488aac55a0aa9c02044a742b1c`.
+- Launch SHA256: `662f2dda9d3900f8b914d330fcd7051133167023c21ef7177ecd36d9f2d2b025`.
+- Report SHA256: `a9942d2a2abf9887e4beb28b790bd34f6cc05a5352afe9538b68eb658bee5ccc`.
+- Summary SHA256: `12db38ba25455aa20b80cbf13a69d0ae98f5ecbd0ffc74fdc38b2d9f263a2ed9`.
+- Function-table SHA256: `5bfe476985a6f5e484afc4b838646b472e6b3d53eae66d39c78f484bb73e2a47`.
+
+| Batch | Measured updates | Mean seconds/update | Maximum seconds/update | Throttled periods |
+| --- | ---: | ---: | ---: | ---: |
+| Baseline before | 8 | 13.359384 | 13.656513 | 0 |
+| Python-profiled | 8 | 18.629592 | 19.325184 | 0 |
+| Baseline after | 8 | 13.460178 | 13.711136 | 0 |
+
+The 16 uninstrumented measurements average **13.409780758 s/update**, maximum
+13.711136294. Both baseline batches and the profiled batch record zero
+`throttled_usec` as well as zero throttled periods. The CPU quota therefore was
+not actively throttling this sampled run; this does not establish how a different
+background workload would behave. Profiling adds substantial overhead, so its
+slower times are not a training sizing reference.
+
+The instrumented collection, including two warmups, accounts for 183.623344
+seconds of Python-profile wall time. Selected inclusive boundaries:
+
+| Function | Calls | Inclusive seconds | Interpretation |
+| --- | ---: | ---: | --- |
+| Owned runtime `_forward` | 4,801 | 123.869089 | About 67.5% of profiled time; includes solver and contact checks |
+| MuJoCo Warp `forward` | 4,801 | 86.047879 | Nested inside the owned wrapper |
+| Warp `launch` | 1,001,708 | 36.401533 | Kernel dispatch across the measured collection; not kernel execution attribution |
+| Contact `read_contacts` | 4,801 | 24.792063 | Nested contact decoding, audits and validation |
+| Owned runtime `_sync` | 9,602 | 0.954530 | Direct synchronization wrapper is not the dominant boundary here |
+| CPU-owned result copying | 71,520 recursive calls | 3.469047 | `stance_attempt_trace.owned`; much smaller than the forward path |
+
+These rows overlap and must not be summed. The million eager launches and large
+forward-wrapper cost support investigating **dispatch and validation overhead**,
+not more VRAM. They do not prove a specific GPU kernel is slow or authorize
+removing checks. The 240 frozen-policy inference calls take only 0.103941 s
+inclusive. Extra learner bookkeeping and durable training exports remain outside
+this diagnostic. The earlier suspicion that direct `_sync` calls alone dominate
+was not supported by this profile.
+
+The 383 retained telemetry samples peaked at **53 C** and **1,180 MiB total GPU
+memory**. FilmBrain preview and observatory remained active with zero restarts;
+the protected AI Mission GPU services remained inactive. The post-run sample
+showed no compute PID, 0% GPU utilization, 43 C and 677 MiB desktop memory.
+Observations support successful coexistence under the sampled guards, not a
+general claim of zero impact on another service.
+
+## Next bounded chunk
+
+Investigate an eager-path reduction in kernel-dispatch/validation overhead, with
+the existing finite, capacity, contact-address, motor, clock, first-terminal and
+selective-reset checks preserved. Require focused CPU contract tests and an
+explicit source-bound CUDA comparison before performance qualification. Do not
+cache away source integrity checks or remove synchronization merely because it
+appears numerous. No speedup is asserted by this completed profiling run.
+
+The [previous captured-forward rejection](2026-09-09-stance-forward-repeatability.md)
+is still binding: do not enable that graph candidate as a shortcut. Any renewed
+graph experiment needs its own numerical-equivalence protocol, not a changed
+threshold chosen to pass observed discrepancies. Neither these profiling
+baselines nor the earlier disposable smoke are accepted full-run calibration.
+Only after an accepted optimization and a fresh timing gate may the first full
+learner (577) proceed, followed by the unchanged replication/evaluation protocol.

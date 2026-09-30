@@ -137,3 +137,44 @@ source/runtime guards. Retain all 17 weight exports, 384 tick receipts and 16
 optimizer receipts, verify finite tensors and exact hashes before reporting.
 Success proves this isolated host can execute and retain a real short training
 loop; it establishes **no trained stance, hopping, avoidance or football balance**.
+
+## Completed training bring-up and retained handoff
+
+Executed at exact source `987b452dbfdb4cba7c7fef79f419790bd602ae3a` on the
+clean isolated WSL checkout. **308 focused CPU tests passed locally and on Linux**
+before launch. The full repository suite was not run. The user service exited
+successfully, its CUDA child returned zero after **240.786744752 seconds**, and a
+separate CPU-only `verify` invocation reproduced
+`training-smoke-complete-not-capability` after rechecking all retained hashes and
+checkpoint tensors.
+
+Artifacts are retained on both WSL and this Mac under
+`artifacts/evaluations/stance-wsl-training-smoke-987b452dbfdb/`:
+17 weight exports (initializer plus updates 0–15), 384 tick receipts, 16 optimizer
+receipts, launch/runtime/child/completion/report evidence; 422 files total.
+Launch SHA256
+`c1f842e248389fdd07eae68ea22c93bef93c56413c41ea18384d8499c0fa814a`;
+report SHA256
+`b9a8cddf7606c4dab39813e28050ea361c0c2a82726b2eef532c2433facc8bd5`.
+Both earlier qualification archives are also copied to the Mac; no evidence was
+overwritten and no weights were added to Git.
+
+All recorded rewards and saved tensors are finite. Peak observed GPU temperature
+49 C, peak total GPU memory 1056 MiB. Applied torque maximum 0.149632 Nm,
+joint speed maximum 0.703126 rad/s, zero soft joint-time exposure. **407 training
+failure events** were retained, not discarded: this freshly initialized smoke
+does not establish stable stance or a motor-safety/capability pass. No full
+thermal model is available in these stance diagnostics.
+
+Final host state: no Duck compute PID, zero GPU utilization, 38 C and 652 MiB
+desktop memory at the retained sample; FilmBrain preview and observatory active,
+protected AI Mission services inactive. No unrelated service was changed.
+The WSL training checkout remains pinned to `987b452d`; do not casually
+fast-forward it when re-verifying source-bound receipts. The fork's later
+documentation commit is not the training source.
+
+Next bounded task: profile WSL eager collection/control-plane overhead and
+repeatable timing variance before predeclaring another full-run calibration.
+Do not reinterpret these smoke weights as replication parents or as a partial
+577/587/593 result. Long replication and full held-out WSL evaluation remain
+unlaunched; disturbance/football capability gates remain unmet.

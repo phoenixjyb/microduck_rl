@@ -10,6 +10,11 @@ from pathlib import Path
 KEY = 'MICRODUCK_STANCE_PROFILE'
 DEFAULT = 'linux-100100'
 WSL = 'wsl-10098-20260930'
+# Separate WSL bound, transcribed from the retained first measurement and rounded
+# UP to the next service minute: ceil(4363/60)*60, less the same 60 s margin.
+# Historical wrappers/constants are not widened.
+WSL_TIMING_SOURCE = 'ab60e84ce71cbfd27ac4b9e0a67146e459c59ae0'
+WSL_TIMING_REPORT = 'c6c561ba227f3d969295c20f167eeef3a29dff3c510fe2dd2b8eab51e3711843'
 PROFILES = {
     DEFAULT: dict(root='/home/converge/work/microduck_rl-athletics-obstacle-curriculum',
         machine='0c79e415429b4933a400159bfa79a34d',
@@ -50,3 +55,11 @@ def child_settings():
     if PROFILE['name'] == DEFAULT:
         return {}
     return {KEY: PROFILE['name']}
+
+
+def training_budget():
+    if PROFILE['name'] == DEFAULT:
+        return dict(child_seconds=1693, service_seconds=1753,
+                    runtime_max='29min 13s', max_window_seconds=3600)
+    return dict(child_seconds=4320, service_seconds=4380,
+                runtime_max='1h 13min', max_window_seconds=7200)

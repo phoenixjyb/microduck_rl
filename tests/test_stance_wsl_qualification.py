@@ -15,7 +15,7 @@ def measurements(seconds=4.0):
 def test_faster_measurement_fits_without_widening_original_caps():
     result = q.derive(*measurements())
     assert result['decision'] == 'qualified-for-bounded-replication'
-    assert (result['existing_child_seconds'], result['existing_service_seconds']) == (1693,1753)
+    assert (result['declared_child_seconds'], result['declared_service_seconds']) == (1693,1753)
     assert result['caps']['setup_seconds'] == 21.0
     assert not result['full_evaluation_timing_qualified']
     assert not result['learned_stance_accepted']
@@ -26,7 +26,17 @@ def test_faster_measurement_fits_without_widening_original_caps():
 def test_slower_host_is_rejected_not_given_more_time():
     result = q.derive(*measurements(7.0))
     assert result['decision'] == 'timing-rejected-no-training'
-    assert result['existing_child_seconds'] == 1693
+    assert result['declared_child_seconds'] == 1693
+
+
+@pytest.mark.parametrize('key', ['setup_seconds','qualification_setup_seconds'])
+@pytest.mark.parametrize('value', [-100.0,float('nan'),float('inf'),True,1])
+def test_setup_components_are_checked_before_addition(key, value):
+    collection, optimizer = measurements()
+    collection['setup_seconds'] = collection['qualification_setup_seconds'] = 121.0
+    collection[key] = value
+    with pytest.raises(ValueError, match='measured setup component'):
+        q.derive(collection, optimizer)
 
 
 @pytest.mark.parametrize('damage', ['device','worlds','count','summary','optimizer','finite','setup'])
@@ -55,6 +65,7 @@ def test_wsl_training_binds_qualification_and_only_allows_replication(monkeypatc
     monkeypatch.setattr(q, 'verify', lambda source: evidence)
     launch = q.lean.plan('a'*40, {}, 'c'*64, 1, q.lean.REPLICATION, 577)
     assert launch['host_qualification'] == evidence
+    assert (launch['child_timeout_seconds'],launch['service_timeout_seconds']) == (4320,4380)
     with pytest.raises(ValueError, match='only the declared replication'):
         q.lean.plan('a'*40, {}, 'c'*64, 1)
 
@@ -64,3 +75,14 @@ def test_wsl_evaluation_cannot_borrow_4090_measurement(monkeypatch):
     monkeypatch.setattr(q.execution, 'PROFILE', q.execution.select(q.execution.WSL))
     with pytest.raises(ValueError, match='separately measured timing gate'):
         ev.prepare('a'*40, 1, 'evaluate')
+
+
+def test_wsl_budget_is_separate_from_historical_wrappers(monkeypatch):
+    monkeypatch.setattr(q.execution, 'PROFILE', q.execution.select(q.execution.WSL))
+    budget = q.execution.training_budget()
+    assert budget == dict(child_seconds=4320,service_seconds=4380,
+                          runtime_max='1h 13min',max_window_seconds=7200)
+    assert q.lean.CHILD_SECONDS == q.files.LEAN_LESSON_CHILD_SECONDS == 1693
+    assert q.lean.SERVICE_SECONDS == 1753
+    assert q.derive(*measurements(13.0))['decision'] == 'qualified-for-bounded-replication'
+    assert q.derive(*measurements(16.0))['decision'] == 'timing-rejected-no-training'

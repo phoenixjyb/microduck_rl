@@ -229,6 +229,13 @@ def supervised_lean_lesson(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard=
                           timeout=LEAN_LESSON_CHILD_SECONDS,monitor=monitor,guard=guard)
 
 
+def supervised_wsl_replication(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard=lambda:None):
+    """Separate measured 4320-second WSL bound; the 4090 wrapper stays frozen."""
+    require(execution.PROFILE['name'] == execution.WSL, 'explicit WSL replication profile')
+    return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,
+                         timeout=execution.training_budget()['child_seconds'],monitor=monitor,guard=guard)
+
+
 # The twelve-case lean-lesson evaluation is longer than both existing bounds, so
 # it gets its own declared wrapper rather than widening either. The probe measured
 # a 94.10453496407717 s repeating unit, which gives a 1129.2552504418418 s

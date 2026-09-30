@@ -249,21 +249,23 @@ def check_window(deadline, *, launching=False):
     require(math.isfinite(now), 'finite clock')
     remaining = deadline-now
     require(remaining > 0, 'a window in the future; expired authority is not a window')
-    require(remaining <= MAX_WINDOW_SECONDS, 'one bounded job inside 60 minutes')
+    budget = host.execution.training_budget()
+    require(remaining <= budget['max_window_seconds'], 'one bounded job inside 60 minutes or the declared WSL window')
     if launching:
-        require(remaining > SERVICE_SECONDS+CLOSEOUT_SECONDS+WATCHDOG_MARGIN_SECONDS,
-                'lean-lesson run needs a fresh 41-to-60-minute window')
+        require(remaining > budget['service_seconds']+CLOSEOUT_SECONDS+WATCHDOG_MARGIN_SECONDS,
+                'lean-lesson run needs a fresh 41-to-60-minute window or declared WSL window')
 
 
 def plan(source, inputs, runtime_sha, deadline, declaration=LESSON, seed=SEED):
     supervisor.hex_id(source, 40); supervisor.hex_id(runtime_sha, 64); seed_of(declaration, seed)
     require(type(deadline) is int and deadline > 0, 'explicit integer deadline')
+    budget = host.execution.training_budget()
     result = dict(protocol=declaration['protocol'], source=source, inputs=inputs,
         runtime_sha256=runtime_sha,
         purpose=declaration['purpose'], worlds=WORLDS, seed=seed, updates=UPDATES,
         steps_per_update=STEPS, optimizer=deepcopy(CONFIG), learner_device='cpu',
         physics_device='cuda:0', forward_graph=False, deadline_unix=deadline,
-        child_timeout_seconds=CHILD_SECONDS, service_timeout_seconds=SERVICE_SECONDS,
+        child_timeout_seconds=budget['child_seconds'], service_timeout_seconds=budget['service_seconds'],
         closeout_seconds=CLOSEOUT_SECONDS, watchdog_margin_seconds=WATCHDOG_MARGIN_SECONDS,
         checkpoints=list(range(-1, UPDATES)), common_checkpoints=list(CHECKPOINTS),
         parent_checkpoint_sha256=checkpoint.LEAN_PARENT_SHA256,
@@ -326,7 +328,7 @@ def check_service(source, declaration=LESSON, seed=SEED):
     """Refuse a bare shell launch: verify the independently timed owner service."""
     values = {k: host.read('systemctl', '--user', 'show', service_name(source, declaration, seed),
                            '-p', k, '--value') for k in SERVICE_PROPERTIES}
-    require(values == dict(MainPID=str(os.getpid()), RuntimeMaxUSec=SERVICE_RUNTIME_MAX,
+    require(values == dict(MainPID=str(os.getpid()), RuntimeMaxUSec=host.execution.training_budget()['runtime_max'],
                            KillMode='control-group', ActiveState='active'),
             'independently timed lean-lesson service')
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
@@ -377,7 +379,7 @@ def child(source, launch_sha, fd, declaration=LESSON, seed=SEED):
     before = sha256(raw).hexdigest()
     learner = started_learner_from(raw, seed=seed)
     exports = run_updates(learner, smoke.PhysicsBridge(env), root, source, launch_sha,
-        launch['runtime_sha256'], deadline=time.monotonic()+CHILD_SECONDS-30,
+        launch['runtime_sha256'], deadline=time.monotonic()+launch['child_timeout_seconds']-30,
         declaration=declaration)
     after = sha256(parent_bytes(root)).hexdigest()
     require(before == after == checkpoint.LEAN_PARENT_SHA256,
@@ -482,7 +484,10 @@ def supervise(source, launch_sha, declaration=LESSON, seed=SEED):
             def guard():
                 check_window(launch['deadline_unix']); host.check_log(root/'child.log')
                 require(host.identity(source) == launch['inputs'], 'live lean-lesson source drift')
-            report['child'] = supervisor.supervised_lean_lesson(
+            runner = (supervisor.supervised_wsl_replication
+                      if host.execution.PROFILE['name'] == host.execution.WSL
+                      else supervisor.supervised_lean_lesson)
+            report['child'] = runner(
                 child_command(source, launch_sha, fd, declaration, seed), root/'child.log',
                 cwd=host.ROOT, env=supervisor.child_environment(), lock_fd=fd, guard=guard)
             host.check_log(root/'child.log')

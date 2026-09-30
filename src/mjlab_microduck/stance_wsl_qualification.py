@@ -6,6 +6,7 @@ a training checkpoint or a capability gate. No historical watchdog is widened.
 """
 import argparse
 from hashlib import sha256
+import math
 import os
 import time
 
@@ -36,6 +37,7 @@ def service_name(source):
 def plan(source, deadline):
     require(execution.PROFILE['name'] == execution.WSL, 'explicit authorized WSL profile')
     return dict(protocol=PROTOCOL, source=source, inputs=host.identity(source),
+        training_budget=execution.training_budget(), timing_basis=validate_timing_basis(source),
         deadline_unix=deadline, child_seconds=900, service_seconds=960,
         collection_worlds=64, policy_ticks=24, warmup_updates=2, measured_updates=8,
         target_updates=256, frozen_parent_sha256=throughput.checkpoint.LEAN_PARENT_SHA256,
@@ -105,14 +107,46 @@ def derive(collection, optimizer):
     for component in (collection, optimizer):
         require(component['summarize'] == throughput.summarize(component['summarize']['series'])
                 and component['summarize']['count'] == 8, 're-derived eight measured samples')
+    for key in ('setup_seconds', 'qualification_setup_seconds'):
+        value = collection[key]
+        require(type(value) is float and math.isfinite(value) and value >= 0,
+                'finite nonnegative measured setup component: '+key)
     caps = throughput.caps(collection['summarize'], optimizer['summarize'],
         float(collection['setup_seconds']+collection['qualification_setup_seconds']))
-    fits = caps['child_seconds'] <= lean.CHILD_SECONDS and caps['service_seconds'] <= lean.SERVICE_SECONDS
-    return dict(caps=caps, existing_child_seconds=lean.CHILD_SECONDS,
-        existing_service_seconds=lean.SERVICE_SECONDS,
+    budget = execution.training_budget()
+    fits = caps['child_seconds'] <= budget['child_seconds'] and caps['service_seconds'] <= budget['service_seconds']
+    return dict(caps=caps, declared_child_seconds=budget['child_seconds'],
+        declared_service_seconds=budget['service_seconds'],
         decision='qualified-for-bounded-replication' if fits else 'timing-rejected-no-training',
         full_evaluation_timing_qualified=False, learned_stance_accepted=False,
         football_balance_accepted=False, physical_motion_authorized=False)
+
+
+def validate_timing_basis(source):
+    """Authenticate the prior host measurement; never pretend it fitted 4090."""
+    root = output_path(execution.WSL_TIMING_SOURCE)
+    require(host.digest(root/'report.json') == execution.WSL_TIMING_REPORT, 'pinned original WSL timing report')
+    report = files.parse(files.file_bytes(root/'report.json'))
+    require(report['protocol'] == PROTOCOL and report['decision'] == 'timing-rejected-no-training',
+            'retained original 4090-budget rejection')
+    require(set(report['files']) == {p.name for p in root.iterdir()}-{'report.json'}, 'exact timing basis inventory')
+    require(all(host.digest(root/name) == digest for name,digest in report['files'].items()), 'timing basis hashes')
+    launch = files.parse(files.file_bytes(root/'launch.json'))
+    require(host.digest(root/'launch.json') == report['launch_sha256']
+            and launch['source'] == execution.WSL_TIMING_SOURCE, 'timing basis source/launch')
+    current = host.identity(source)
+    require({k:v for k,v in launch['inputs'].items() if k != 'source'} ==
+            {k:v for k,v in current.items() if k != 'source'}, 'same measured host/dependencies/assets')
+    host.validate_payload(files.parse(files.file_bytes(root/'integration.json')), report['launch_sha256'])
+    caps = derive(files.parse(files.file_bytes(root/'collection.json')),
+                  files.parse(files.file_bytes(root/'optimizer.json')))['caps']
+    require(caps == report['result']['caps'], 're-derived original timing maxima')
+    rounded_service = math.ceil(caps['service_seconds']/60)*60
+    budget = execution.training_budget()
+    require((budget['child_seconds'],budget['service_seconds']) == (rounded_service-60,rounded_service),
+            'new WSL cap transcribed from authenticated measurement')
+    return dict(source=execution.WSL_TIMING_SOURCE, report_sha256=execution.WSL_TIMING_REPORT,
+                measured_caps=caps, rounded_service_seconds=rounded_service)
 
 
 def verify(source):

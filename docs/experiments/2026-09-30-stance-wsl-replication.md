@@ -72,3 +72,44 @@ Prelaunch inspection: GPU idle at 30 C, approximately 23 GiB free; FilmBrain's
 guard and Duck use the same owned regular lock inode. Frozen lock SHA256
 `84dc822f2d75a4368fe70f09ca0a2dcc7dbc1d523ccb35455d374d02c4c7f88d`.
 No completed learner or cross-host capability result is asserted by this document.
+
+## October 1: completed timing diagnosis and separate WSL budget
+
+The original prelaunch above **did not admit training**. At exact source
+`ab60e84ce71cbfd27ac4b9e0a67146e459c59ae0`, the 900-second qualification child
+completed successfully in 168.314 seconds and integration/isolation passed.
+The service then correctly refused the old training budget; its nonzero exit
+is a recorded timing rejection, not a CUDA/numerical failure. GPU temperature
+peaked at 47 C; service peak RAM was 3.69 GiB. FilmBrain stayed active and the
+protected services inactive. Exact-source focused CPU regression: 274 passed.
+
+Retained report SHA256:
+`c6c561ba227f3d969295c20f167eeef3a29dff3c510fe2dd2b8eab51e3711843`.
+Launch SHA256:
+`83a42b403ab3e71136375cd54d58a2bfb58511fcf5dfc4f5a48eeaea3891fd7e`.
+Measured collection maximum 13.426330681 s/update, optimizer maximum
+0.096356995 s/update and combined setup 27.796749570 s. The unchanged 1.25
+rule derives 3490 s prediction, **4303 s child / 4363 s service**. Therefore
+the 1693/1753-second historical budget cannot be used on this host. This is
+observed wall-time throughput, not evidence that more VRAM is required.
+
+This section predeclares a **new, separate WSL-only wrapper**, not an extension
+of the historical wrapper or a retry of a killed learner. Round the measured
+service cap up to a whole minute: `ceil(4363/60)*60 = 4380`, less the unchanged
+60-second margin gives **4320 s child / 4380 s service**. Fresh launch window
+must exceed 5040 s (service + 600 s closeout + 60 s reserve) and be at most
+7200 s. The original Linux constants, wrapper, plans and evidence stay frozen.
+
+Before launching any seed, run a fresh source-bound 900/960-second qualification
+under the revised implementation. It must authenticate every byte of the prior
+timing archive, re-derive its maxima and rounded budget, match current
+host/dependency/asset inputs, then repeat integration and timing. Both setup
+measurements must independently be finite nonnegative floats before addition.
+The fresh derived cap must fit the newly declared WSL budget; a slower result
+again means **no training**, not another extension. This supersedes only the
+host timing/window paragraphs above. The learner budget, seeds, checkpoints,
+PPO/physics, evaluation protocol and all capability gates are unchanged.
+
+Each WSL service is additionally limited to 6 GiB RAM and 200% CPU quota, Nice
+10; the timing probe and learner use the same limits. Full WSL evaluation remains
+blocked in code until its own full-length timing probe is declared and measured.

@@ -140,6 +140,11 @@ REPLICATION = dict(label='lean-replication',
                    passed='lean-replication-seed-passed',
                    rejected='lean-replication-seed-rejected')
 EVALUATIONS = {d['label']: d for d in (LESSON, REPLICATION)}
+# Probe-only handoff. It is intentionally NOT a judged continuation or CLI
+# choice in this module; the separately bounded WSL timing runner owns it.
+PACKED_PROBE = dict(REPLICATION, label=lean.PACKED_REPLICATION['label'],
+    protocol='football-b1n-wsl-packed-evaluation-probe-v1',
+    trace_protocol=trace.PACKED_PROBE_PROTOCOL, case_prefix='packed-probe')
 
 
 def evaluation_of(label):
@@ -327,6 +332,13 @@ def training_inputs(declaration=LESSON, seed=None, source=None):
                 'plain training filename')
         require(host.digest(root/name) == file_digest, 'immutable training archive hash: '+name)
     launch = files.parse(files.file_bytes(root/'launch.json'))
+    if declaration == PACKED_PROBE:
+        require(report['protocol'] == training['protocol'] and report['seed'] == seed
+                and report['purpose'] == training['purpose']
+                and host.digest(root/'launch.json') == report['launch_sha256']
+                and launch['protocol'] == training['protocol'] and launch['source'] == source
+                and launch['seed'] == seed and launch['solved_field_check'] == 'packed',
+                'complete exact packed training archive before checkpoint loading')
     completed = lean.verify_completed(root, source, report['launch_sha256'], launch, training, seed)
     by_iteration = {c['identity']['iteration']: c for c in completed['checkpoints']}
     require(set(by_iteration) == set(range(-1, lean.UPDATES)),
@@ -336,7 +348,9 @@ def training_inputs(declaration=LESSON, seed=None, source=None):
             'fixed common-checkpoint selection')
     for saved in selected:
         # The evaluable-iteration admission is enforced by the loader, not here.
-        TRAINING_LOADERS[declaration['label']](
+        loader = (checkpoint.load_lean_replication_evaluation if declaration == PACKED_PROBE
+                  else TRAINING_LOADERS[declaration['label']])
+        loader(
             files.file_bytes(root/saved['file']), saved['sha256'], saved['identity'])
     # Deliberately the same three keys as before the replication existed. The
     # launch document embeds this block verbatim and ``summarize`` re-derives the
@@ -346,6 +360,7 @@ def training_inputs(declaration=LESSON, seed=None, source=None):
 
 
 def plan(source, inputs, runtime_sha, retained, deadline, mode, declaration=LESSON):
+    require(declaration in EVALUATIONS.values(), 'only declared judged continuations; packed probe has its own runner')
     files.hex_id(source, 40); files.hex_id(runtime_sha, 64)
     require(mode in MODES and type(deadline) is int and deadline > 0,
             'declared lean evaluation mode and explicit deadline')
@@ -488,7 +503,7 @@ def check_service(source, mode, declaration=LESSON, seed=None):
             'CPU-only lean evaluation supervisor')
 
 
-def run_cases(launch, root, runtime, deadline, declaration=LESSON):
+def run_cases(launch, root, runtime, deadline, declaration=LESSON, *, started_monotonic=None):
     """Run every declared case through the one shared measured path.
 
     Timings are recorded in both modes so the probed path is the path the
@@ -496,7 +511,10 @@ def run_cases(launch, root, runtime, deadline, declaration=LESSON):
     """
     from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
     training = lean.declaration_of(declaration['label'])
-    started = time.monotonic(); scores = {}; receipts = []
+    started = time.monotonic() if started_monotonic is None else started_monotonic
+    require(type(started) is float and math.isfinite(started) and started <= time.monotonic(),
+            'measured case prelude starts in the past')
+    scores = {}; receipts = []
     for index, case in enumerate(launch['cases']):
         require(time.monotonic() < deadline, 'whole lean comparison time budget')
         seed = case['binding']['evaluation_seed']
@@ -511,7 +529,11 @@ def run_cases(launch, root, runtime, deadline, declaration=LESSON):
         launch_raw = bundle.launch_bytes({k: v for k, v in binding.items() if k != 'launch_sha256'},
                                          saved['identity'])
         before_env = time.monotonic()
-        env = WarpStanceRuntime(WORLDS, device='cuda:0')
+        if declaration == PACKED_PROBE:
+            require(binding['protocol'] == trace.PACKED_PROBE_PROTOCOL, 'packed probe trace only')
+            env = WarpStanceRuntime(WORLDS, device='cuda:0', solved_field_check='packed')
+        else:
+            env = WarpStanceRuntime(WORLDS, device='cuda:0')
         after_env = time.monotonic()
         require(env.forward_graph is None and env.wp_device.is_cuda, 'lean-only actual CUDA evaluation')
         result = worker.evaluate_owned_case(root/case['name'], env, binding=binding,
@@ -667,7 +689,7 @@ def verify(root, launch, comparison_sha, declaration=LESSON):
     return summary
 
 
-def verify_probe(root, launch, launch_sha, measurements_sha):
+def verify_probe(root, launch, launch_sha, measurements_sha, declaration=LESSON):
     raw = files.file_bytes(root/'measurements.json')
     require(sha256(raw).hexdigest() == measurements_sha, 'independent probe measurement hash')
     recorded = files.parse(raw)
@@ -677,7 +699,7 @@ def verify_probe(root, launch, launch_sha, measurements_sha):
     score = bundle.verify_bundle(root/case['name'], receipt['manifest_sha256'],
         binding=case['binding'], checkpoint_identity=case['checkpoint']['identity'])
     require(score['complete_attempts'] == WORLDS, 'probe case ran every first attempt')
-    require(recorded == dict(protocol=PROTOCOL, mode='probe', launch_sha256=launch_sha,
+    require(recorded == dict(protocol=declaration['protocol'], mode='probe', launch_sha256=launch_sha,
             measurements=probe_measurements(launch, [receipt])), 'recomputed probe measurement')
     expected = {'launch.json', 'runtime.json', 'child.log', 'measurements.json',
                 case['name'], case['name']+'.json'}

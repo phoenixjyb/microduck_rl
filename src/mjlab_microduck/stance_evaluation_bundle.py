@@ -27,7 +27,8 @@ ATOL, RTOL = 1e-6, 1e-5
 LOADERS = {trace.PROTOCOL: checkpoint.load_evaluation,
            trace.EAGER_PROTOCOL: checkpoint.load_eager_diagnostic,
            trace.LEAN_PROTOCOL: checkpoint.load_lean_evaluation,
-           trace.LEAN_REPLICATION_PROTOCOL: checkpoint.load_lean_replication_evaluation}
+           trace.LEAN_REPLICATION_PROTOCOL: checkpoint.load_lean_replication_evaluation,
+           trace.PACKED_PROBE_PROTOCOL: checkpoint.load_lean_replication_evaluation}
 
 
 def launch_bytes(binding_without_launch_sha, checkpoint_identity):

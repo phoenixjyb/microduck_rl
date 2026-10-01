@@ -231,3 +231,27 @@ The next [opt-in runtime qualification](2026-10-01-wsl-packed-runtime-qualificat
 is predeclared separately. The legacy path remains default; device checks use
 identical solved inputs, not a new tolerance for the known non-repeatable solver.
 No learner is launched by that declaration.
+
+The full qualification subsequently completed at exact clean
+`be2d59661af293b0d67ae20d2e16db50514cce14`, with all 83 same-input device checks,
+33 copied faults and full 2+8 collection/optimizer timing passing. Derived
+4,247/4,307-second budgets fit the unchanged 4,320/4,380-second WSL learner caps
+by only 73 seconds. Exact launch/report/checker hashes and independent WSL/Mac
+replay are retained in the linked experiment. This is timing qualification,
+not learned capability or full evaluator qualification.
+
+The separately declared [packed replication](2026-10-01-wsl-packed-replication.md)
+seed 577 is active on that frozen source; its first common `model_64.pt` is
+durable. No active job source, service, environment or cap was changed. FilmBrain
+preview/observatory remain active and protected services inactive. The current
+stance plant has **no thermal model or applicable spring-bottoming model**;
+finite metrics and modeled torque/soft-limit counters do not establish hardware
+thermal or sprung-hop safety.
+
+Local development now prepares a distinct
+[held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md), not a full
+packed evaluator. The complete old training archive and fresh evaluator/runtime
+source are bound separately; numerical gates and the full matrix remain fixed.
+Do not fast-forward the WSL source between this qualification and active or
+subsequent matched learner seeds. Install later evaluator changes only after
+owned learners close with complete durable receipts and the GPU is idle.

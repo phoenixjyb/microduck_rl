@@ -213,6 +213,16 @@ def supervised_stance_smoke(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard
     return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,timeout=900,monitor=monitor,guard=guard)
 
 
+PACKED_EVALUATION_PROBE_CHILD_SECONDS = 600
+
+
+def supervised_packed_evaluation_probe(command,log,*,cwd,env,lock_fd,monitor=live_gpu,guard=lambda:None):
+    """Fixed WSL probe: reserve 360 of its 960 service seconds for parent replay."""
+    require(execution.PROFILE['name'] == execution.WSL, 'explicit WSL packed evaluation probe profile')
+    return _timed_process(command,log,cwd=cwd,env=env,lock_fd=lock_fd,
+                          timeout=PACKED_EVALUATION_PROBE_CHILD_SECONDS,monitor=monitor,guard=guard)
+
+
 # The lean-lesson child watchdog. 1693 s is *measured*, not estimated: the
 # throughput probe's worst measured update gave a 1402 s prediction, a 1753 s
 # service cap at the declared 1.25 factor, and 1753 - 60 = 1693 s for the child.

@@ -1,0 +1,130 @@
+# WSL packed held-out evaluation timing probe
+
+Predeclared October 1, 2026, **before this probe's execution**. The active CLI
+authority ends at **18:00 Asia/Shanghai / 10:00 UTC** today. This is not a full
+evaluator, a new training recipe, a checkpoint promotion or a capability claim.
+Keep active learners frozen at their qualified source; install this later source
+only after every owned learner has completed and its full archive is durable.
+
+## Entry gate and fixed case
+
+The [packed replication](2026-10-01-wsl-packed-replication.md) archives remain
+separate from the probe's current evaluator/runtime source. Authenticate one
+**complete** packed training archive: successful child/report, exact inventory
+and every file hash, initializer plus all 256 exports, 6,144 ordered tick records,
+256 finite optimizer receipts and all four common checkpoints. No partial final
+checkpoint or legacy training archive is a substitute. The frozen host, stack,
+plant and checker must still match the completed training launch.
+
+Use the new [probe-only runner](../../src/mjlab_microduck/stance_packed_evaluation_probe.py),
+not the historical full evaluator. Select training seed **577**, first in the
+predeclared order, checkpoint **255**, evaluation seed **541**, **128 worlds**,
+one nominal first attempt each, up to **250 ticks / 5 seconds**. An attempt is
+never reset to obtain a second chance. Use the original scorer and strict
+**0.0873-radian** gate; do not score this one case as the full matrix.
+
+The full held-out protocol stays **64/128/192/255 × 541/547/557 = 12 cases**,
+1,536 attempts per training seed, requiring at least **122/128** in every
+evaluation seed at a common checkpoint. All three training seeds remain in the
+cross-seed denominator. Short cases may retain diagnostic evidence but cannot
+size a full-length evaluation or be relabeled as complete timing measurements.
+
+## Source, runtime and archive bindings
+
+Protocol `football-b1n-wsl-packed-evaluation-probe-v1` has distinct source/seed
+service and output prefixes. Its bundle uses the separate
+`football-b1n-packed-evaluation-probe-trace-v1` protocol, which allows only the
+fixed 255/541/128/CUDA case, with exact packed-mode and checker-SHA fields.
+The strict replication checkpoint loader may restore it, but it is not a
+registered full evaluation continuation. Historical binding bytes and loader
+routes remain unchanged. The bundle binds evaluator source/compiled plant
+separately from checkpoint training source, launch, report and checkpoint hashes.
+
+Construct an actual eager packed runtime. Check its immutable mode, CUDA device,
+disabled graph and checker source before collection and after every step.
+Use the existing owned-case path, including strict restore, all boundary/contact/
+motor/control checks, bundle publication and independent actor/trajectory replay.
+No optimizer, policy export, perception, motor/contact/plant change or video.
+
+## Fixed probe bounds, not borrowed full-evaluation timing
+
+One retained user service only, after a fresh idle GPU/lease check:
+
+- **600-second child / 960-second service**, independently checked; neither can
+  be extended or retried automatically after an error or timeout.
+- `KillMode=control-group`, `MemoryMax=6G`, `CPUQuota=200%`, `Nice=10`.
+- 600-second closeout reserve and 60-second margin in a fresh at-most-hour
+  absolute probe window wholly before today's cutoff.
+- The existing shared FilmBrain lease, two-sample idle gate, live sole-owner,
+  GPU memory/temperature and system/user protected-service checks. Preserve
+  FilmBrain and unrelated workloads; never start competing GPU jobs.
+
+These are an explicit bounded single-case experiment, **not** the historical
+4090 full-evaluation cap or the WSL learner's 4,320/4,380-second training cap.
+Nothing here establishes that the future twelve-case evaluator fits.
+The probe-specific 600-second child wrapper leaves up to 360 service seconds
+for parent replay/closeout, rather than letting a near-limit 900-second child
+consume all but 60 seconds. Service setup also uses this allowance, so it is
+not a promise that every probe finishes. The independent hard service bound
+still closes a slow or hung replay. Historical 900-second wrappers are unchanged.
+
+## Measured full-service sizing rule
+
+Record the supervisor's monotonic time immediately before child launch and pass
+it to the child in the same clock domain. Refuse missing, nonfinite, future or
+out-of-budget starts. The first environment's `prelude_seconds` now includes
+child interpreter/import startup, authentication, idle checks and file reads,
+which the old case-local timer omitted. Record actual environment construction
+and the full owned-case wall time separately.
+
+After child exit, time **only the supervisor's additional independent replay**.
+The owned-case time already includes its own immediate replay, so do not count
+that replay twice. Retain observed total supervisor duration through idle
+closeout and top-level hashing; the final report write is outside this observation
+and covered by the fixed reserve. Recompute unattributed overhead as observed
+duration minus the four nonoverlapping components, refusing backwards overlap.
+That residual includes per-case receipt writes, logging and garbage collection
+as well as one-off setup. A one-case probe cannot separate them: conservatively
+project **all** residual work twelve times, not once. This intentionally
+overestimates any truly one-off work instead of silently omitting repeated tails.
+
+```text
+unit = environment + owned_case + supervisor_independent_replay
+unattributed_overhead = observed_probe - (prelude + unit)
+prediction = prelude + 12 * (unit + unattributed_overhead)
+service = ceil(1.25 * prediction)
+child = service - 60
+```
+
+This is one full-length timing sample, not a maximum over multiple samples.
+The fixed factor and explicit closeout reserve are unchanged. Require
+`service + 600 + 60 <= 7200` before any later full-evaluation declaration, and
+then separately require that whole budget fits actual remaining authority.
+An oversized result records `timing-rejected-no-full-evaluation`; do not widen
+the WSL ceiling, drop
+cases, omit replay or reuse a different host's measurement. A fitting result
+records `probe-measured-full-evaluation-disabled` and still leaves
+`full_evaluation_enabled=false` until a reviewed source-bound
+measured-cap handoff registers a distinct full evaluator.
+
+## Retention and current state
+
+Retain launch, plant, complete case bundle/manifest, case receipt, measurements,
+child log/status/telemetry and timing report in an exclusive source/seed path.
+Rehash and replay on WSL, then verify copied bytes independently on Mac; offline
+consistency is not independent GPU authentication. The one-case scorer's values
+are diagnostic only, not a matrix decision or football/hop/obstacle acceptance.
+
+Implementation is complete. **78 focused CPU fixture tests** passed, followed
+by **652 selected CPU checks** across the new probe and unchanged runtime,
+qualifier, learner, archive, checkpoint, trace, control, plant, bundle and scorer
+contracts. Markdown rendering/local links and `git diff --check` passed. Full
+repository tests and live WSL probe/replay are separate, not established by
+these fixtures. A bounded Luna test slice and read-only review were integrated;
+review found repeated loop-tail undercount and parent replay headroom, corrected
+before execution with conservative residual projection and the 600-second child.
+
+This probe has **not launched**. Active learner source is unchanged. Commit/push
+and test this source on Linux before installing it on an idle host. No full
+packed evaluation is enabled. The historical WSL full evaluator still refuses
+preparation and its registry excludes this probe-only continuation.

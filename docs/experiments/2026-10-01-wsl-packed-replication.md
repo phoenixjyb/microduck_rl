@@ -89,7 +89,24 @@ A separate real WSL identity/timing-basis check then passed with CUDA
 uninitialized, frozen package/tree/asset/driver receipts and the authenticated
 original rejected report. Recheck final source on Linux before qualification.
 
-No packed qualification or learner has launched; the previous helper-only
-benchmark is not its entry gate. The old `987b452dbfdb` source is retained as a
+The [full packed qualification](2026-10-01-wsl-packed-runtime-qualification.md)
+completed successfully on exact source `be2d59661af293b0d67ae20d2e16db50514cce14`;
+its report and full timing were inspected and independently replayed before
+preparing a learner. Seed **577** launched at approximately 13:31 Shanghai in
+`microduck-lean-replication-packed-be2d59661af2-seed-577.service`, invocation
+`0bf03d51ff0947188b2a67a63d54e5b8`, with the fixed 4,320/4,380-second budgets.
+Its absolute job deadline is **1790838633** (15:10:33 Shanghai). Launch SHA256:
+`8236806aa44c1d424b77e74942d1e01b6530702a55216186165856a870f48455`.
+The retained initializer binds state SHA256
+`0ca246873f1143c540ecdebb6e6bc80cb826f86b558dda9c3cff8c5694263144`;
+the pinned parent weight SHA remains
+`46cd52b53f7b8b9fb220aed96d78cd961423c606e906a4df7330422ae4786e93`.
+Training is in progress, not complete or accepted. Seeds 587/593 have not
+launched. Future local evaluator/documentation commits must **not** fast-forward
+the active WSL source or invalidate later seeds' exact qualification.
+
+The separate [held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md)
+is being prepared locally; it is not the full evaluator. The old
+`987b452dbfdb` source is retained as a
 detached worktree at `artifacts/tools/runtime-baseline-987b452dbfdb` on WSL;
 completed microbenchmark receipts remain unchanged on both hosts.

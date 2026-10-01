@@ -111,13 +111,54 @@ Implementation and CPU validation are complete: **449 selected tests passed**
 across both-mode native CPU runtime cases, copied fault/checker fixtures,
 source/receipt tampering, cutoff/decision checks, WSL/profile guards and unchanged
 learner/checkpoint/evaluation contracts. Markdown rendered, local links resolved
-and `git diff --check` passed. Full repository tests and CUDA validation have not
-run. A bounded Luna implementation supplied the new CPU integration tests; a
+and `git diff --check` passed. Full repository tests were not run; the later
+source-bound CUDA qualification is recorded below. A bounded Luna implementation supplied the new CPU integration tests; a
 read-only Luna review found the mutable-mode receipt risk, and owner integration
 made selection read-only and checked the actual measured mode on both boundaries.
 The reviewed diff from the old runtime has no lockfile, dependency declaration,
 robot asset, contact fixture or compiled-plant definition change.
 
-The new source has not yet been installed on WSL and this GPU qualification has
-**not launched**. Commit and push before changing the idle training checkout;
-then repeat CPU checks and exact host/dependency identity on Linux before launch.
+## Completed qualification
+
+After final-source validation (**463 selected tests passed on Mac and Linux**),
+the clean WSL training source was fast-forwarded to
+`be2d59661af293b0d67ae20d2e16db50514cce14`. The frozen environment, stack,
+assets, motor parameters and driver were not changed. The qualification service
+`microduck-wsl-packed-qualification-be2d59661af2.service`, invocation
+`899f103ad9a14ad7977923c376698e90`, completed with service/child exit **0**;
+child duration was **144.6244974769652 seconds**.
+
+Retained directory on WSL and copied unchanged to Mac:
+`artifacts/evaluations/stance-wsl-packed-qualification-be2d59661af2/`.
+Its exact nine-file inventory and every payload hash were independently checked.
+
+- Launch SHA256: `4ae653839e45410a2ae7657df9b0432f3db87c484cae584dac3edfb24b744bc1`.
+- Report SHA256: `455f493825f2414cc18c77d2d5110ab6859de0304005c1c813356ae092cedaff`.
+- Checker SHA256: `3551500208e5138a07b511bea20e2b28f1ba4cbc3094ac31cd4a58695a1d801d`.
+
+All **83 same-input checked forwards** agreed with exact bit preservation;
+all 33 copy-only injected faults retained their first-field errors. Normal,
+isolation and selective-reset payloads passed the unchanged validator. No
+separate-trajectory equivalence is claimed.
+
+| Full timing evidence | Result |
+| --- | --- |
+| Collection, 2 warmups + 8 measured updates, maximum | 13.345187686849385 s/update |
+| CPU optimizer stand-in, same sample counts, maximum | 0.08830344281159341 s/update |
+| Combined measured setup | 5.838157262885943 s |
+| Projected 256-update child | 3,445 s |
+| Derived child / service, unchanged 1.25 rule | **4,247 / 4,307 s** |
+| Fixed child / service budgets | **4,320 / 4,380 s** |
+
+Decision **`qualified-for-bounded-replication`**, rederived by the live CPU-only
+WSL verifier and independently from copied bytes on Mac. Service headroom is
+only **73 seconds**, not a claim of a large whole-training speedup. Sampled
+peak GPU temperature was 46 C and peak memory 1,147 MiB. Post-run GPU was idle;
+both protected services stayed inactive. FilmBrain preview and observatory were
+active with zero restarts before and after. No watchdog was extended.
+
+This is source-bound execution/timing evidence, not learned stance, full held-out
+evaluation timing, football balance, complete binary equivalence or hardware
+acceptance. Those flags remain false. The separately predeclared packed learner
+can now consume this exact qualification; hold WSL source at `be2d59661af2`
+through active learner jobs.

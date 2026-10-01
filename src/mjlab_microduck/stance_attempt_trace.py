@@ -20,6 +20,7 @@ PROTOCOL = 'football-b1n-first-attempt-trace-v1'
 EAGER_PROTOCOL = 'football-b1n-eager-first-attempt-trace-v1'
 LEAN_PROTOCOL = 'football-b1n-lean-first-attempt-trace-v1'
 LEAN_REPLICATION_PROTOCOL = 'football-b1n-lean-replication-first-attempt-trace-v1'
+PACKED_PROBE_PROTOCOL = 'football-b1n-packed-evaluation-probe-trace-v1'
 SEEDS = (541, 547, 557)
 CHECKPOINTS = (128, 256, 384, 511)
 # The lean-lesson run's common checkpoints. Declared here rather than imported
@@ -38,7 +39,8 @@ LEAN_REPLICATION_CHECKPOINTS = LEAN_CHECKPOINTS
 # own four common checkpoints. Adding a protocol here is the only way to admit a
 # new iteration set; no existing entry changes.
 ITERATIONS = {PROTOCOL: CHECKPOINTS, EAGER_PROTOCOL: (-1, 127), LEAN_PROTOCOL: LEAN_CHECKPOINTS,
-              LEAN_REPLICATION_PROTOCOL: LEAN_REPLICATION_CHECKPOINTS}
+              LEAN_REPLICATION_PROTOCOL: LEAN_REPLICATION_CHECKPOINTS,
+              PACKED_PROBE_PROTOCOL: (LEAN_CHECKPOINTS[-1],)}
 MAX_TRACE_BYTES = 512*1024*1024
 STATE_KEYS = set(PhysicsState.__dataclass_fields__)
 FRAME_KEYS = {'physics_steps', 'qpos', 'qvel', 'soft_limit_mask', 'state', 'observation'}
@@ -61,14 +63,23 @@ def tensor(value, shape, dtype, label):
 
 
 def validate_binding(binding):
-    require(set(binding) == {'protocol', 'source', 'runtime_sha256', 'checkpoint_sha256',
-        'launch_sha256', 'checkpoint_iteration', 'evaluation_seed', 'worlds', 'capture_device'},
+    keys = {'protocol', 'source', 'runtime_sha256', 'checkpoint_sha256',
+        'launch_sha256', 'checkpoint_iteration', 'evaluation_seed', 'worlds', 'capture_device'}
+    packed = binding.get('protocol') == PACKED_PROBE_PROTOCOL
+    if packed: keys |= {'solved_field_check', 'checker_sha256'}
+    require(set(binding) == keys,
         'exact trace binding fields')
     require(binding['protocol'] in ITERATIONS, 'trace binding protocol')
     for key in ('source', 'runtime_sha256', 'checkpoint_sha256', 'launch_sha256'):
         require(type(binding[key]) is str and re.fullmatch(
             '[0-9a-f]{'+('40' if key == 'source' else '64')+'}', binding[key]) is not None,
             'trace binding hash: '+key)
+    if packed:
+        require(binding['solved_field_check'] == 'packed' and type(binding['checker_sha256']) is str
+                and re.fullmatch('[0-9a-f]{64}', binding['checker_sha256']) is not None,
+                'packed probe checker binding')
+        require(binding['evaluation_seed'] == SEEDS[0] and binding['worlds'] == 128
+                and binding['capture_device'] == 'cuda:0', 'fixed packed probe case')
     require(type(binding['worlds']) is int and 1 <= binding['worlds'] <= 128, 'bounded trace worlds')
     require(type(binding['evaluation_seed']) is int and binding['evaluation_seed'] in SEEDS,
             'predeclared evaluation seed')

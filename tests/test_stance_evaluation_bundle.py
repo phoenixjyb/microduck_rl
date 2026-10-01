@@ -173,7 +173,8 @@ def test_each_trace_protocol_has_exactly_one_loader():
     assert bundle.LOADERS == {trace.PROTOCOL: cp.load_evaluation,
         trace.EAGER_PROTOCOL: cp.load_eager_diagnostic,
         trace.LEAN_PROTOCOL: cp.load_lean_evaluation,
-        trace.LEAN_REPLICATION_PROTOCOL: cp.load_lean_replication_evaluation}
+        trace.LEAN_REPLICATION_PROTOCOL: cp.load_lean_replication_evaluation,
+        trace.PACKED_PROBE_PROTOCOL: cp.load_lean_replication_evaluation}
     assert len({id(loader) for loader in bundle.LOADERS.values()}) == 4
 
 
@@ -208,5 +209,4 @@ def test_unlisted_protocol_refused_even_if_binding_validation_is_bypassed(monkey
     with pytest.raises(ValueError, match='bundle loader for the trace protocol'):
         bundle.checked_inputs(binding, changed['checkpoint_raw'], changed['checkpoint_identity'],
                               changed['runtime_raw'], launch)
-
 

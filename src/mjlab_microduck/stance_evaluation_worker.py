@@ -1,6 +1,8 @@
 """Caller-owned first-attempt collection; no simulator allocation or GPU launcher."""
 from copy import deepcopy
+from hashlib import sha256
 import math
+from pathlib import Path
 import time
 
 import torch
@@ -14,6 +16,16 @@ from mjlab_microduck.first_attempt_smoke import canonical
 from mjlab_microduck.first_attempt_smoke import require
 
 
+def check_packed_runtime(env, binding):
+    """Only the probe protocol asserts actual packed execution; old traces stay unchanged."""
+    if binding['protocol'] != trace.PACKED_PROBE_PROTOCOL: return
+    from mjlab_microduck import stance_solved_field_check as checker
+    require(env.solved_field_check == 'packed' and env.forward_graph is None
+            and env.wp_device.is_cuda, 'actual eager packed probe runtime')
+    require(sha256(Path(checker.__file__).read_bytes()).hexdigest() == binding['checker_sha256'],
+            'actual packed probe checker source')
+
+
 @torch.no_grad()
 def collect(env, actor, binding, *, deadline_monotonic, policy_tick_limit=250, clock=time.monotonic):
     """Use only inside a caller's seeded, leased, independently timed service.
@@ -25,6 +37,7 @@ def collect(env, actor, binding, *, deadline_monotonic, policy_tick_limit=250, c
     mandatory for live use. Source, runtime and seed provenance remain external.
     """
     trace.validate_binding(binding)
+    check_packed_runtime(env, binding)
     require(type(policy_tick_limit) is int and 1 <= policy_tick_limit <= 250, 'bounded evaluation ticks')
     require(type(deadline_monotonic) in (float, int) and math.isfinite(deadline_monotonic)
             and clock() < deadline_monotonic, 'evaluation wall budget before stepping')
@@ -41,6 +54,7 @@ def collect(env, actor, binding, *, deadline_monotonic, policy_tick_limit=250, c
         action_cpu = checkpoint.infer(actor, obs.detach().cpu())
         action = action_cpu.to(env.device)
         result = env.step(action, capture_control=True)
+        check_packed_runtime(env, binding)
         recorder.append(result, obs, action)
         controls['ticks'].append(trace.owned(result['control_evidence']))
     require(controls['ticks'], 'no complete policy tick to retain')

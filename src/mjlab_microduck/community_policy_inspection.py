@@ -13,9 +13,11 @@ import os
 from pathlib import Path
 import re
 import stat
+from typing import TYPE_CHECKING
 
-import onnx
-from google.protobuf.message import Message
+if TYPE_CHECKING:
+    import onnx
+    from google.protobuf.message import Message
 
 
 MAX_BYTES = 32 * 1024 * 1024
@@ -63,6 +65,8 @@ def _messages(message: Message):
 
 
 def _reject_external_tensors(model: onnx.ModelProto) -> None:
+    import onnx
+
     tensor_name = onnx.TensorProto.DESCRIPTOR.full_name
     for message in _messages(model):
         if message.DESCRIPTOR.full_name != tensor_name:
@@ -74,6 +78,8 @@ def _reject_external_tensors(model: onnx.ModelProto) -> None:
 
 
 def _reject_custom_domains(model: onnx.ModelProto) -> None:
+    import onnx
+
     for message in _messages(model):
         if message.DESCRIPTOR.full_name in (
             onnx.NodeProto.DESCRIPTOR.full_name,
@@ -87,6 +93,8 @@ def _reject_custom_domains(model: onnx.ModelProto) -> None:
 
 
 def _dtype(elem_type: int) -> str:
+    import onnx
+
     name = onnx.TensorProto.DataType.Name(elem_type)
     if name == "FLOAT":
         return "float32"
@@ -144,9 +152,24 @@ def inspect_policy(path: Path, expected_sha256: str) -> dict:
     _require(type(expected_sha256) is str
              and re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is not None,
              "expected SHA256 must be 64 lowercase hexadecimal characters")
-    payload = _read_payload(Path(path))
+    return inspect_policy_payload(_read_payload(Path(path)), expected_sha256)
+
+
+def inspect_policy_payload(payload: bytes, expected_sha256: str) -> dict:
+    """Validate immutable bytes which a separate approved runner may reuse.
+
+    No inference happens here. Avoid a hash/check of one file followed by an
+    inference session reopening a potentially different file at the same path.
+    """
+    _require(type(payload) is bytes and len(payload) <= MAX_BYTES,
+             "policy payload must be bounded bytes")
+    _require(type(expected_sha256) is str
+             and re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is not None,
+             "expected SHA256 must be 64 lowercase hexadecimal characters")
     digest = hashlib.sha256(payload).hexdigest()
     _require(digest == expected_sha256, "policy SHA256 mismatch")
+    import onnx
+
     try:
         model = onnx.load_model_from_string(payload)
         _reject_external_tensors(model)

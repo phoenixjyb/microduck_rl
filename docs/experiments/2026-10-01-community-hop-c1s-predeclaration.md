@@ -122,3 +122,8 @@ requires a separate run go-ahead and stays within this budget.
 - `git diff --check` passed; Markdown rendered with one table and three local
   links resolved. Full repository tests, runner tests, rollouts and training
   were not run. No remote service, dependency or GPU workload was changed.
+
+Subsequent implementation: the [native CPU runner and walker-only adapter](2026-10-01-community-hop-c1s-runner.md)
+now have fixture and static-preflight evidence. This historical predeclaration
+and its immutable JSON are preserved. Neither public attempt has executed;
+separate policy-execution approval is still required.

@@ -34,6 +34,12 @@ is now predeclared: a walker-only control precedes one conditional hop handoff
 on an explicit CPU surrogate. It is not author replication, a completed replay
 or skill admission; tested runner/plant binding still precedes execution.
 
+The [C1-S native CPU runner](experiments/2026-10-01-community-hop-c1s-runner.md)
+and separate walker-only adapter are now implemented and fixture-tested. Static
+preflight binds the pinned policies and compiled BAM surrogate without inference
+or physics stepping. The two public diagnostic attempts remain unexecuted and
+require their separate run go-ahead; no old curriculum gate has changed.
+
 September16 addition: the B1-N stance track's
 [residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) is a
 **predeclaration, not a result**. The completed frozen initializer/final

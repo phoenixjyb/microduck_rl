@@ -167,10 +167,36 @@ invocation `96677bc9380a4858ac4a05f4d5d4195c`, with the same source and fixed
 4,320/4,380-second bounds. Deadline: **1790847002** (17:30:02 Shanghai).
 Launch SHA256:
 `947bdb9d770d786c674b2913a44f4d4bf67c041b81f0f0ebbc0e4e400c6b716b`.
-Seed 593 is in progress. No held-out matrix has run; two completed learners
-remain an incomplete three-seed campaign. Future local evaluator/documentation
-commits must **not** fast-forward the active WSL source or invalidate its exact
-qualification.
+Seed 593 completed successfully at approximately **17:01 Shanghai**, child
+exit 0 and service success, with child elapsed **4,202.424 seconds**. WSL replay
+checked its exact 6,663-file inventory and all payload/checkpoint/update/tick
+receipts. Report SHA256:
+`5ee3b60dab8c8e051d4fc4205b21302a1c85b12ebf25b4d4e57a6e00a6973d5c`.
+
+| Seed 593 checkpoint | SHA256 |
+| --- | --- |
+| 64 | `03faaff39257b9f49dbb5f199ff1025641ef9b0e37cb99edaf5d36ea87b01879` |
+| 128 | `94c0ae05bb8f37426cfd3b571fd6c3f028873019c930c0539e1b4508b65d8823` |
+| 192 | `8cf823eee30c353704313ff3793e063c50318f523f6d1ce176a2bd87dee223bc` |
+| 255 | `215d3674134e9ce8139039a4db0c8f8ae4fc677d9cd578b2386ee6761323d63d` |
+
+It recorded 489 failure events, 236 in the first 16 updates and zero in the
+last 16. There were zero soft-limit samples out of **55,017,326 executed joint
+samples**; modeled maxima were **0.15541719 Nm / 0.71809620 rad/s**. Sampled GPU
+peaks were **52 C / 1,261 MiB**. Thermal/spring model availability is unchanged.
+
+**Training is complete for 3/3 seeds**, all on the same qualified source and
+recipe: 771 exports including initializers, 768 finite optimizer receipts and
+18,432 finite-reward tick receipts. Zero soft-limit samples were recorded out of
+**165,054,106 executed joint samples**. All three services are inactive/successful;
+the GPU was idle with no compute PID, and FilmBrain/protected-service states
+unchanged. These are descriptive training and byte-verification results,
+**not** a held-out or learned-capability decision. No full matrix has run.
+The seed-593 archive is being copied to the Mac for independent CPU replay.
+
+Only now may a later evaluator source be validated on Linux and installed on
+the idle host. Preserve the exact `be2d59661af2` training source snapshot and all
+archives; do not retroactively relabel the three learners with the evaluator tip.
 
 The separate [held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md)
 is implemented and CPU-tested locally, but has not launched; it is not the full

@@ -237,6 +237,17 @@ clean at `d4e96cda975f943ac89aacbbed62e99f1c9f00d1`; no live installation,
 environment restoration, binary equivalence or GPU replay is claimed. The source
 bundle and detached validation/training source snapshots remain retained.
 
+An additional bounded **CPU-only full-horizon trace fixture** ran from that
+exact Linux repair snapshot: 128 inert synthetic worlds, 250 policy ticks and
+2,500 recorded physics counters each. Real `encode` and hash-verified `verify`
+completed with the packed CUDA-origin binding intact and every provenance,
+admission and motion flag false. Serialized trace size was **267,936,199 bytes**,
+within the unchanged 512 MiB trace limit. No actor inference, optimizer, actual
+physics or CUDA context was run; the fixture's synthetic numerical passes are
+not learned performance. This checks trace shape/serialization/full-horizon
+replay only, not full bundle/control size, peak-memory qualification or GPU
+timing. Its 120-second CPU watchdog was not a probe cap extension.
+
 There is **no automatic retry** of this consumed single-use probe, no full packed
 evaluation enabled and no checkpoint promotion. The next GPU step needs a
 separately reviewed fresh probe identity and authority, the tested repair source,

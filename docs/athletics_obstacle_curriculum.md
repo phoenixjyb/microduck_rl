@@ -73,6 +73,56 @@ including on this pass. See the
 [residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) and its
 [evaluation timing probe](experiments/2026-09-17-stance-lean-lesson-evaluation-probe.md).
 
+### October 1 WSL execution and next curriculum gate
+
+The [packed runtime qualification](experiments/2026-10-01-wsl-packed-runtime-qualification.md)
+completed on exact source `be2d59661af293b0d67ae20d2e16db50514cce14` on 100.98,
+with same-input device checks and full collection timing fitting the fixed WSL
+budget. The [packed replication](experiments/2026-10-01-wsl-packed-replication.md)
+is now training its first seed, 577. This is an execution milestone, **not** a
+new stance, obstacle, hopping or football achievement. Keep that active runtime
+source frozen through the matched 577/587/593 sequence; later local source commits
+must not replace it mid-job. The active CLI authority ends October 1 at 18:00
+Shanghai; no confirmed background automation exists.
+
+Training and capability evaluation remain separate. Authenticate every complete
+archive before the separate [WSL held-out timing probe](experiments/2026-10-01-wsl-packed-evaluation-probe.md).
+That fixed 255/541/128-world single case is not the twelve-case evaluation or the
+three-training-seed verdict. Full evaluation must retain 64/128/192/255 ×
+541/547/557 for each of the three training seeds: **4,608 first attempts** in
+the complete campaign, never a smaller denominator after a missing run.
+
+The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
+requires each training seed to have at least one checkpoint passing every gate
+at all three evaluation seeds, with at least 122/128 passes each. It does **not**
+require the same passing iteration across all three training seeds. Report all
+passing checkpoints and preserve that original rule. Before a later recovery
+experiment, separately predeclare which candidate is selected; do not select a
+different checkpoint after observing disturbance outcomes.
+
+Only after complete, independently replayed nominal replication should the next
+bounded lesson be **flat-ground small-disturbance recovery**. Predeclare
+directions, magnitude, onset, duration, settling/recovery and motor/action-rate
+criteria first. The current B1-N runtime explicitly rejects applied external
+forces: do not silently disable that guard or label assisted trajectories as
+nominal stance. A future recovery path needs an explicit perturbation contract
+and focused fixtures, then its own source/timing/held-out gate. A nominal pass
+alone still does not accept B1.
+
+After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
+to fixed support (B2), prescribed slow rolling (B3) and only then free coupled
+rolling (B4). Ball-only tests or an unstepped geometry fixture do not clear B0.
+Obstacle bypass remains a separate phase-aware track: slowing is allowed in the
+interaction zone, but approach/post-pass speed and route recovery remain gates.
+Sprung hopping's historical rejections and community-policy source/handoff gaps
+remain separate; neither is erased by a flat-stance run. Retention across these
+tracks precedes any combined-skill claim.
+
+No real Duck is available. Current stance receipts explicitly have no thermal
+model and no applicable spring-bottoming model. Modeled torque/soft-limit
+counters, numerical tests and GPU temperature must not be reported as robot
+motor thermal calibration, spring safety or physical readiness.
+
 ## Capability graph
 
 September7 integration boundary: the historical milestones below do not

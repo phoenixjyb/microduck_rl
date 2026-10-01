@@ -246,8 +246,8 @@ def test_no_existing_frozen_bound_moved():
     assert lean.SEED == cp.LEAN_SEED == 571
 
 
-def test_the_two_declarations_are_registered_and_distinct():
-    assert set(lean.DECLARATIONS) == {'lean-lesson', 'lean-replication'}
+def test_the_historical_declarations_and_packed_opt_in_are_registered_and_distinct():
+    assert set(lean.DECLARATIONS) == {'lean-lesson', 'lean-replication', 'lean-replication-packed'}
     assert lean.declaration_of('lean-replication') is lean.REPLICATION
     assert lean.declaration_of('lean-lesson') is lean.LESSON
     assert lean.LESSON['purpose'] != lean.REPLICATION['purpose']
@@ -427,7 +427,10 @@ def test_the_judged_continuations_are_registered_and_distinct():
 def test_the_replication_loader_pairs_with_the_replication_training_declaration():
     assert ev.TRAINING_LOADERS['lean-lesson'] is cp.load_lean_evaluation
     assert ev.TRAINING_LOADERS['lean-replication'] is cp.load_lean_replication_evaluation
-    assert set(ev.TRAINING_LOADERS) == set(ev.EVALUATIONS) == set(lean.DECLARATIONS)
+    assert set(ev.TRAINING_LOADERS) == set(ev.EVALUATIONS) == {'lean-lesson', 'lean-replication'}
+    assert set(lean.DECLARATIONS) - set(ev.EVALUATIONS) == {'lean-replication-packed'}
+    # Packed evaluation stays parked until its own WSL timing and mode receipt
+    # are implemented; adding a learner must not silently admit an evaluator.
 
 
 # --- the cross-seed campaign: the declared rule over all three seeds ----------

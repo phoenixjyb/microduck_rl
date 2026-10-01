@@ -95,6 +95,29 @@ REPLICATION = dict(label='lean-replication',
                    service='microduck-lean-replication-',
                    decision='lean-replication-complete-not-capability')
 DECLARATIONS = {d['label']: d for d in (LESSON, REPLICATION)}
+PACKED_REPLICATION = dict(REPLICATION, label='lean-replication-packed',
+    protocol='football-b1n-lean-replication-packed-v1',
+    directory='stance-lean-replication-packed-', service='microduck-lean-replication-packed-',
+    solved_field_check='packed')
+DECLARATIONS[PACKED_REPLICATION['label']] = PACKED_REPLICATION
+
+
+def checker_of(declaration):
+    """Only the fixed WSL packed replication opts in; historical defaults remain."""
+    if declaration == PACKED_REPLICATION:
+        require(host.execution.PROFILE['name'] == host.execution.WSL,
+                'packed replication requires the exact WSL profile')
+        return 'packed'
+    return 'legacy'
+
+
+def qualification_of(source, declaration):
+    require(declaration in (REPLICATION, PACKED_REPLICATION),
+            'WSL migration serves only the declared replication')
+    from mjlab_microduck.stance_wsl_qualification import verify
+    if checker_of(declaration) == 'packed':
+        return verify(source, 'packed')
+    return verify(source)
 
 
 def declaration_of(label):
@@ -275,9 +298,13 @@ def plan(source, inputs, runtime_sha, deadline, declaration=LESSON, seed=SEED):
         simulation_resume_authorized=False, pilot_parent_authorized=False,
         learned_stance=False, physical_motion_authorized=False)
     if host.execution.PROFILE['name'] == host.execution.WSL:
-        require(declaration == REPLICATION, 'WSL migration serves only the declared replication')
-        from mjlab_microduck.stance_wsl_qualification import verify
-        result['host_qualification'] = verify(source)
+        result['host_qualification'] = qualification_of(source, declaration)
+    if checker_of(declaration) == 'packed':
+        from mjlab_microduck import stance_wsl_qualification as qualification
+        from mjlab_microduck import stance_solved_field_check as checker
+        require(deadline <= qualification.PACKED_CUTOFF, 'packed learner wholly before authorized cutoff')
+        result.update(solved_field_check='packed', checker_sha256=host.digest(checker.__file__),
+            memory_max_bytes=6*1024**3, cpu_quota_per_sec_usec=2_000_000, nice=10)
     return result
 
 
@@ -285,13 +312,14 @@ def prepare(source, deadline, declaration=LESSON, seed=SEED):
     """CPU-only preparation. Copies the pinned parent in as a read-only input."""
     seed_of(declaration, seed)
     check_window(deadline, launching=True)
+    if checker_of(declaration) == 'packed':
+        from mjlab_microduck import stance_wsl_qualification as qualification
+        require(deadline <= qualification.PACKED_CUTOFF, 'packed learner wholly before authorized cutoff')
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only lean-lesson preparation')
     inputs = host.identity(source)
     if host.execution.PROFILE['name'] == host.execution.WSL:
-        require(declaration == REPLICATION, 'WSL migration serves only the declared replication')
-        from mjlab_microduck.stance_wsl_qualification import verify
-        verify(source)
+        qualification_of(source, declaration)
     raw = supervisor.file_bytes(parent_path(), limit=checkpoint.LIMIT)
     require(sha256(raw).hexdigest() == checkpoint.LEAN_PARENT_SHA256,
             'pinned lean-lesson parent export')
@@ -333,6 +361,11 @@ def check_service(source, declaration=LESSON, seed=SEED):
             'independently timed lean-lesson service')
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only lean-lesson supervisor')
+    if checker_of(declaration) == 'packed':
+        require({key: host.read('systemctl', '--user', 'show', service_name(source, declaration, seed), '-p', key, '--value')
+                 for key in ('MemoryMax', 'CPUQuotaPerSecUSec', 'Nice')} ==
+                dict(MemoryMax=str(6*1024**3), CPUQuotaPerSecUSec='2s', Nice='10'),
+                'independently bounded packed learner resources')
 
 
 def run_updates(learner, bridge, root, source, launch_sha, runtime_sha, *, deadline,
@@ -348,6 +381,8 @@ def run_updates(learner, bridge, root, source, launch_sha, runtime_sha, *, deadl
             identity(source, launch_sha, runtime_sha, learner, iteration, declaration), learner)
     exports = [save(-1)]; started = time.monotonic()
     for update in range(UPDATES):
+        if checker_of(declaration) == 'packed':
+            require(bridge.env.solved_field_check == 'packed', 'actual packed learner runtime')
         for tick in range(STEPS):
             require(time.monotonic() < deadline, 'lean-lesson collection deadline')
             result = learner.collect_one(bridge)
@@ -369,9 +404,11 @@ def child(source, launch_sha, fd, declaration=LESSON, seed=SEED):
             'explicit CUDA0 lean-lesson child')
     host.wait_idle(); random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
     from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
-    env = WarpStanceRuntime(WORLDS, device='cuda:0')
+    selected = checker_of(declaration)
+    env = WarpStanceRuntime(WORLDS, device='cuda:0', solved_field_check=selected)
     require(str(env.device) == str(env.wp_device) == 'cuda:0' and env.wp_device.is_cuda
-            and env.forward_graph is None, 'actual lean-lesson CUDA physics; no graph')
+            and env.forward_graph is None and env.solved_field_check == selected,
+            'actual lean-lesson CUDA physics and selected checker; no graph')
     root = output_path(source, declaration, seed)
     runtime = supervisor.parse(supervisor.file_bytes(root/'runtime.json'))
     require(plant.describe(env.native) == runtime['plant'], 'actual lean-lesson plant')
@@ -385,8 +422,9 @@ def child(source, launch_sha, fd, declaration=LESSON, seed=SEED):
     require(before == after == checkpoint.LEAN_PARENT_SHA256,
             'parent archive byte-identical after the lean lesson')
     require(inputs_check(source, launch_sha, declaration, seed) == launch
-            and env.forward_graph is None, 'unchanged completed lean-lesson inputs')
-    supervisor.write_json(root/'completed.json', dict(protocol=declaration['protocol'],
+            and env.forward_graph is None and env.solved_field_check == selected,
+            'unchanged completed lean-lesson inputs')
+    completed = dict(protocol=declaration['protocol'],
         launch_sha256=launch_sha,
         completed_updates=UPDATES, checkpoints=exports, physics_device=str(env.device),
         learner_device='cpu', forward_graph=False, seed=seed, worlds=WORLDS,
@@ -394,7 +432,11 @@ def child(source, launch_sha, fd, declaration=LESSON, seed=SEED):
         parent_checkpoint_sha256=checkpoint.LEAN_PARENT_SHA256,
         parent_source=checkpoint.LEAN_PARENT_SOURCE, weight_initialized=True,
         optimizer_state_restored=False, simulation_resume_authorized=False,
-        pilot_parent_authorized=False, learned_stance=False, physical_motion_authorized=False))
+        pilot_parent_authorized=False, learned_stance=False, physical_motion_authorized=False)
+    if selected == 'packed':
+        completed.update(solved_field_check=env.solved_field_check,
+                         checker_sha256=launch['checker_sha256'])
+    supervisor.write_json(root/'completed.json', completed)
 
 
 def verify_completed(root, source, launch_sha, launch, declaration=LESSON, seed=SEED):
@@ -411,6 +453,9 @@ def verify_completed(root, source, launch_sha, launch, declaration=LESSON, seed=
                 'physical_motion_authorized')),
         'completed lean-lesson scope and counters')
     require(result['weight_initialized'] is True, 'completed run was weight-initialized')
+    if declaration == PACKED_REPLICATION:
+        require(result['solved_field_check'] == launch['solved_field_check'] == 'packed'
+                and result['checker_sha256'] == launch['checker_sha256'], 'completed packed checker receipt')
     raw = parent_bytes(root)
     learner = started_learner_from(raw, seed=seed)
     models = checkpoint.fresh_models(seed)

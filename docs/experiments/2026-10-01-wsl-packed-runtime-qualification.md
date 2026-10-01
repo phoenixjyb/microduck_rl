@@ -97,8 +97,11 @@ Possible complete outcomes are `qualified-for-bounded-replication` or
 made successful by widening caps, dropping setup/samples or relabeling a partial
 run. `verify` still refuses a rejection for any learner gate. Even a timing pass
 does not admit learned stance, football balance, skills, video or physical motion.
-Only after inspecting actual evidence may a separately declared learner launch
-explicitly bind this checker/source/qualification and fit the remaining window.
+Only after inspecting actual evidence may the separately declared
+[conditional learner](2026-10-01-wsl-packed-replication.md) explicitly bind this
+checker/source/qualification and fit the remaining window. Its launch wiring is
+reviewed in the same source before timing; it cannot use a legacy qualification
+or silently flip the old learner default.
 No community-policy retry, raw perception, protected-service restart or physical
 robot action.
 

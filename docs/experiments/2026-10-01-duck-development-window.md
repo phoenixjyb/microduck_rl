@@ -271,3 +271,31 @@ strict. Keep WSL's failed-attempt source frozen for reproducibility. The next GP
 step requires a separately reviewed fresh probe identity and source, unchanged
 600/960-second bounds, new frozen-host/idle/lease checks and a new authorized
 window. Full evaluator sizing and nominal capability acceptance are still gated.
+
+## Final pre-cutoff retained state
+
+At **17:57 Shanghai / 09:57 UTC**, the final pre-cutoff read-only check found:
+
+- All three packed learner services inactive/dead, result success, exit 0 and
+  MainPID 0. Their complete archives were freshly rehashed and verified on both
+  WSL and Mac during closeout, including all 771 exports, 768 optimizer receipts
+  and 18,432 finite-reward ticks.
+- The consumed `d4e96cda975f` probe service remains failed/exit 1, MainPID 0,
+  with the unchanged four-file failed archive; no reset, retry or promotion.
+- No GPU compute PID, **0% utilization / 30 C / 686 MiB**. Both FilmBrain user
+  services active with zero restarts and unchanged PIDs. Both protected AI
+  services inactive in system and user managers; no service was restored.
+- The main WSL feature branch is clean at
+  `d4e96cda975f943ac89aacbbed62e99f1c9f00d1`. The repaired source remains the
+  separate CPU-validation snapshot `05ff5574bd67daf42f48cc299f3ac83355fee59a`,
+  not a live GPU installation. Lockfile and project-definition hashes remain
+  unchanged. Local implementation/evidence commits are pushed to the exact fork
+  feature branch; large artifacts stay retained outside Git on both machines.
+
+The 18:00 cutoff starts no new Duck work; no owned process needs termination and
+no confirmed background automation exists. Keep unrelated services unchanged.
+The next executable GPU gate is a separately authorized, newly date-bound fixed
+timing probe from reviewed repaired source, **not** another learner or a reduced
+matrix. A successful complete measurement may then support the full evaluator's
+measured-cap predeclaration. No nominal replication, recovery, hopping, obstacle
+or football capability is newly accepted by today's three learner completions.

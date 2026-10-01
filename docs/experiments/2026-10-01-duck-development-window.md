@@ -157,3 +157,31 @@ static-prefix checks plus the unchanged C1/H1/static-retention selection.
 passed. Full repository tests, new public-policy attempts, GPU host/runtime
 qualification, training, video and physical tests were not run. The immutable
 declaration and frozen scorer SHA256 values above were rechecked unchanged.
+
+### Retained offline receipt and executable handoff
+
+Offline analysis from clean `a9d1a0d47c12de4a4b76958382dd22c4d18d1dbc` is
+retained separately in:
+
+```text
+artifacts/community/c1s-offline-audit-v1/20261001T035849Z-3cd581a01d024ae2b20aa7ab739e1dcf
+```
+
+Its manifest SHA256 is
+`94d297d7d96bd043fb752cfdf1edf1037970fc566a824ed24f1600eb33f5aa56`;
+audit SHA256 is
+`092712c71e77eb2c7822693c5dab0c5dd276defddb024ad0a54d741da29ee179`.
+Four manifested JSON records contain the audit, both exact static-prefix
+descriptions and a source/hash receipt. Analysis executed zero actor forwards,
+policy inferences or physics advances. The [compact result index](2026-10-01-community-hop-c1s-result-index.json)
+is committed so the fork retains identifiers even though large local traces,
+compiled models and public weights remain ignored and unmodified.
+
+Next bounded step: build a fixture-tested source-contract/gap report comparing
+the pinned graph metadata with explicit author-provided training/export/plant
+receipts. Missing source/overlay/entry identity must be reported as missing;
+matching 61/14 shapes or these static affine constants cannot fill it. Reuse
+the existing skill compatibility and retained-binding contracts rather than
+creating another unvalidated switch path. Do not run a new policy while that
+contract is incomplete. Remote host/runtime qualification remains a separate
+read-only step, not a result of these local CPU tools.

@@ -21,6 +21,8 @@ EAGER_PROTOCOL = 'football-b1n-eager-first-attempt-trace-v1'
 LEAN_PROTOCOL = 'football-b1n-lean-first-attempt-trace-v1'
 LEAN_REPLICATION_PROTOCOL = 'football-b1n-lean-replication-first-attempt-trace-v1'
 PACKED_PROBE_PROTOCOL = 'football-b1n-packed-evaluation-probe-trace-v1'
+PORTABLE_PROBE_PROTOCOL = 'football-b1n-portable-packed-probe-trace-v1'
+PACKED_PROBE_PROTOCOLS = (PACKED_PROBE_PROTOCOL, PORTABLE_PROBE_PROTOCOL)
 SEEDS = (541, 547, 557)
 CHECKPOINTS = (128, 256, 384, 511)
 # The lean-lesson run's common checkpoints. Declared here rather than imported
@@ -40,7 +42,8 @@ LEAN_REPLICATION_CHECKPOINTS = LEAN_CHECKPOINTS
 # new iteration set; no existing entry changes.
 ITERATIONS = {PROTOCOL: CHECKPOINTS, EAGER_PROTOCOL: (-1, 127), LEAN_PROTOCOL: LEAN_CHECKPOINTS,
               LEAN_REPLICATION_PROTOCOL: LEAN_REPLICATION_CHECKPOINTS,
-              PACKED_PROBE_PROTOCOL: (LEAN_CHECKPOINTS[-1],)}
+              PACKED_PROBE_PROTOCOL: (LEAN_CHECKPOINTS[-1],),
+              PORTABLE_PROBE_PROTOCOL: (LEAN_CHECKPOINTS[-1],)}
 MAX_TRACE_BYTES = 512*1024*1024
 STATE_KEYS = set(PhysicsState.__dataclass_fields__)
 FRAME_KEYS = {'physics_steps', 'qpos', 'qvel', 'soft_limit_mask', 'state', 'observation'}
@@ -65,11 +68,16 @@ def tensor(value, shape, dtype, label):
 def validate_binding(binding):
     keys = {'protocol', 'source', 'runtime_sha256', 'checkpoint_sha256',
         'launch_sha256', 'checkpoint_iteration', 'evaluation_seed', 'worlds', 'capture_device'}
-    packed = binding.get('protocol') == PACKED_PROBE_PROTOCOL
+    packed = binding.get('protocol') in PACKED_PROBE_PROTOCOLS
     if packed: keys |= {'solved_field_check', 'checker_sha256'}
+    portable = binding.get('protocol') == PORTABLE_PROBE_PROTOCOL
+    if portable: keys.add('cpu_math_profile')
     require(set(binding) == keys,
         'exact trace binding fields')
     require(binding['protocol'] in ITERATIONS, 'trace binding protocol')
+    if portable:
+        from mjlab_microduck import stance_cpu_replay_profile as profile
+        profile.validate_receipt(binding['cpu_math_profile'])
     for key in ('source', 'runtime_sha256', 'checkpoint_sha256', 'launch_sha256'):
         require(type(binding[key]) is str and re.fullmatch(
             '[0-9a-f]{'+('40' if key == 'source' else '64')+'}', binding[key]) is not None,

@@ -56,7 +56,8 @@ def test_exclusive_durable_bundle_and_recomputed_receipts(tmp_path, inputs):
     assert not torch.cuda.is_initialized()
 
 
-def test_packed_cuda_origin_bundle_roundtrip_on_cpu_consistency_fixture(tmp_path, inputs):
+@pytest.mark.parametrize('protocol', trace.PACKED_PROBE_PROTOCOLS)
+def test_packed_cuda_origin_bundle_roundtrip_on_cpu_consistency_fixture(tmp_path, inputs, monkeypatch, protocol):
     """Exercise actual publication/replay, not CUDA capture or learner evidence.
 
     Duplicate the short two-world CPU fixture to 128 worlds. The declaration and
@@ -82,10 +83,15 @@ def test_packed_cuda_origin_bundle_roundtrip_on_cpu_consistency_fixture(tmp_path
     actor, critic = cp.fresh_models(521)  # Same fixture actions, not trained seed 577.
     changed['checkpoint_raw'] = cp.encode(actor, critic, identity)
     changed['checkpoint_identity'] = identity
-    binding = {**inputs['binding'], 'protocol': trace.PACKED_PROBE_PROTOCOL,
+    binding = {**inputs['binding'], 'protocol': protocol,
         'checkpoint_sha256': sha256(changed['checkpoint_raw']).hexdigest(),
         'checkpoint_iteration': 255, 'worlds': 128, 'capture_device': 'cuda:0',
         'solved_field_check': 'packed', 'checker_sha256': 'f'*64}
+    if protocol == trace.PORTABLE_PROBE_PROTOCOL:
+        from mjlab_microduck import stance_cpu_replay_profile as profile
+        binding['cpu_math_profile'] = profile.expected_receipt()
+        # Synthetic runtime metadata only. This is not a live Linux/profile gate.
+        monkeypatch.setattr(profile, 'checked_receipt', profile.expected_receipt)
     binding.pop('launch_sha256')
     changed['launch_raw'] = bundle.launch_bytes(binding, identity)
     binding['launch_sha256'] = sha256(changed['launch_raw']).hexdigest()
@@ -239,7 +245,8 @@ def test_each_trace_protocol_has_exactly_one_loader():
         trace.EAGER_PROTOCOL: cp.load_eager_diagnostic,
         trace.LEAN_PROTOCOL: cp.load_lean_evaluation,
         trace.LEAN_REPLICATION_PROTOCOL: cp.load_lean_replication_evaluation,
-        trace.PACKED_PROBE_PROTOCOL: cp.load_lean_replication_evaluation}
+        trace.PACKED_PROBE_PROTOCOL: cp.load_lean_replication_evaluation,
+        trace.PORTABLE_PROBE_PROTOCOL: cp.load_lean_replication_evaluation}
     assert len({id(loader) for loader in bundle.LOADERS.values()}) == 4
 
 

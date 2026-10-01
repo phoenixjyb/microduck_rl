@@ -135,6 +135,13 @@ whole-bundle replay still precede full-evaluator development and the 4,608-attem
 campaign. 100.100's current NVML mismatch remains unrepaired; 100.98 remains the
 candidate GPU host, subject to fresh entry gates and GPU-job authority.
 
+Following renewed authority, [R2 portable replay probe](experiments/2026-10-01-wsl-portable-probe-r2.md)
+is separately declared for October 1 **21:00–22:00 Shanghai**. Its distinct
+trace/probe protocols bind the invariant CPU profile before actor capture and
+replay; existing gates, old artifacts and all capability flags remain unchanged.
+It permits one fixed 255/541/128-world capture, not a new learner or full matrix.
+Independent whole-bundle replay remains required before evaluator advancement.
+
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate
 at all three evaluation seeds, with at least 122/128 passes each. It does **not**

@@ -69,7 +69,8 @@ def test_packed_probe_is_not_registered_as_full_evaluation_or_training_loader():
         evaluation.plan(SOURCE, {}, RUNTIME_SHA, retained_training(), 1234,
                         "probe", evaluation.PACKED_PROBE)
     assert bundle.LOADERS[trace.PACKED_PROBE_PROTOCOL] is checkpoint.load_lean_replication_evaluation
-    assert set(bundle.LOADERS) - {trace.PACKED_PROBE_PROTOCOL} == {
+    assert bundle.LOADERS[trace.PORTABLE_PROBE_PROTOCOL] is checkpoint.load_lean_replication_evaluation
+    assert set(bundle.LOADERS) - set(trace.PACKED_PROBE_PROTOCOLS) == {
         trace.PROTOCOL, trace.EAGER_PROTOCOL, trace.LEAN_PROTOCOL, trace.LEAN_REPLICATION_PROTOCOL
     }
 
@@ -541,7 +542,11 @@ def _retained_probe_fixture(tmp_path, monkeypatch, *, window=probe.LEGACY_WINDOW
     root.mkdir()
     retained = retained_training()
     runtime_raw = b'{"runtime":"fixture"}'
-    launch = probe.plan(SOURCE, {"host": "fixture"}, sha256(runtime_raw).hexdigest(),
+    inputs = {"host": "fixture"}
+    if window == probe.PORTABLE_WINDOW:
+        inputs['execution_profile'] = probe.host.execution.select(probe.host.execution.WSL)
+        monkeypatch.setattr(probe.cpu_profile, 'checked_receipt', probe.cpu_profile.expected_receipt)
+    launch = probe.plan(SOURCE, inputs, sha256(runtime_raw).hexdigest(),
                         retained,
                         probe.WINDOWS[window]["cutoff"] if window != probe.LEGACY_WINDOW
                         else qualification.PACKED_CUTOFF - 1,
@@ -554,7 +559,7 @@ def _retained_probe_fixture(tmp_path, monkeypatch, *, window=probe.LEGACY_WINDOW
     (root / "measurements.json").write_bytes(measurement_raw)
     (root / "child.log").write_bytes(b"mocked complete child")
     names = ("launch.json", "runtime.json", "measurements.json", "child.log")
-    report = dict(protocol=probe.PROTOCOL, launch_sha256=sha256(launch_raw).hexdigest(),
+    report = dict(protocol=launch['protocol'], launch_sha256=sha256(launch_raw).hexdigest(),
         decision="probe-measured-full-evaluation-disabled",
         child={"pid": 1234, "returncode": 0, "elapsed_s": 10.0,
                "samples": [{"sample": 1}]},
@@ -571,7 +576,7 @@ def _retained_probe_fixture(tmp_path, monkeypatch, *, window=probe.LEGACY_WINDOW
     def replay(_root, replay_launch, launch_sha, measurements_sha, declaration):
         assert replay_launch == launch
         assert launch_sha == report["launch_sha256"]
-        assert declaration is probe.DECLARATION
+        assert declaration is probe.declaration_of_window(window)
         raw = (_root / "measurements.json").read_bytes()
         assert sha256(raw).hexdigest() == measurements_sha
         return {"measurements": json.loads(raw)}

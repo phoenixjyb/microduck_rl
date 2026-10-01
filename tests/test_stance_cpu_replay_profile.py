@@ -181,3 +181,28 @@ def test_runtime_inspection_uses_metadata_not_version_label(monkeypatch):
     assert runtime['torch_version'] == '2.9.2'
     with pytest.raises(ValueError, match='pinned PyTorch metadata version'):
         check(runtime)
+
+
+def test_expected_receipt_is_pure_fresh_and_matches_validated_runtime():
+    assert profile.expected_receipt() == check()
+    changed = profile.expected_receipt()
+    changed['settings']['MKL_CBWR'] = 'AUTO'
+    assert profile.expected_receipt()['settings']['MKL_CBWR'] == 'COMPATIBLE'
+
+
+@pytest.mark.parametrize('damage', ['extra', 'missing', 'wrong_setting', 'bool_thread', 'int_flag'])
+def test_archived_receipt_requires_exact_schema_values_and_json_types(damage):
+    receipt = profile.expected_receipt()
+    if damage == 'extra': receipt['ignored'] = True
+    elif damage == 'missing': receipt.pop('settings')
+    elif damage == 'wrong_setting': receipt['settings']['MKL_CBWR'] = 'AUTO'
+    elif damage == 'bool_thread': receipt['torch_num_threads'] = True
+    else: receipt['capability_accepted'] = 0
+    with pytest.raises(ValueError, match='exact recorded CPU math profile'):
+        profile.validate_receipt(receipt)
+
+
+def test_archived_profile_requires_actual_runtime_before_inference(monkeypatch):
+    monkeypatch.setattr(profile, 'checked_receipt', lambda: {})
+    with pytest.raises(ValueError, match='actual recorded CPU math profile'):
+        profile.check_recorded(profile.expected_receipt())

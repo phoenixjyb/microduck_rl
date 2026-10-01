@@ -145,6 +145,13 @@ EVALUATIONS = {d['label']: d for d in (LESSON, REPLICATION)}
 PACKED_PROBE = dict(REPLICATION, label=lean.PACKED_REPLICATION['label'],
     protocol='football-b1n-wsl-packed-evaluation-probe-v1',
     trace_protocol=trace.PACKED_PROBE_PROTOCOL, case_prefix='packed-probe')
+PORTABLE_PROBE = dict(PACKED_PROBE,
+    protocol='football-b1n-wsl-portable-packed-probe-v1',
+    trace_protocol=trace.PORTABLE_PROBE_PROTOCOL)
+
+
+def is_packed_probe(declaration):
+    return declaration in (PACKED_PROBE, PORTABLE_PROBE)
 
 
 def evaluation_of(label):
@@ -332,7 +339,7 @@ def training_inputs(declaration=LESSON, seed=None, source=None):
                 'plain training filename')
         require(host.digest(root/name) == file_digest, 'immutable training archive hash: '+name)
     launch = files.parse(files.file_bytes(root/'launch.json'))
-    if declaration == PACKED_PROBE:
+    if is_packed_probe(declaration):
         require(report['protocol'] == training['protocol'] and report['seed'] == seed
                 and report['purpose'] == training['purpose']
                 and host.digest(root/'launch.json') == report['launch_sha256']
@@ -348,7 +355,7 @@ def training_inputs(declaration=LESSON, seed=None, source=None):
             'fixed common-checkpoint selection')
     for saved in selected:
         # The evaluable-iteration admission is enforced by the loader, not here.
-        loader = (checkpoint.load_lean_replication_evaluation if declaration == PACKED_PROBE
+        loader = (checkpoint.load_lean_replication_evaluation if is_packed_probe(declaration)
                   else TRAINING_LOADERS[declaration['label']])
         loader(
             files.file_bytes(root/saved['file']), saved['sha256'], saved['identity'])
@@ -529,8 +536,8 @@ def run_cases(launch, root, runtime, deadline, declaration=LESSON, *, started_mo
         launch_raw = bundle.launch_bytes({k: v for k, v in binding.items() if k != 'launch_sha256'},
                                          saved['identity'])
         before_env = time.monotonic()
-        if declaration == PACKED_PROBE:
-            require(binding['protocol'] == trace.PACKED_PROBE_PROTOCOL, 'packed probe trace only')
+        if is_packed_probe(declaration):
+            require(binding['protocol'] == declaration['trace_protocol'], 'packed probe trace only')
             env = WarpStanceRuntime(WORLDS, device='cuda:0', solved_field_check='packed')
         else:
             env = WarpStanceRuntime(WORLDS, device='cuda:0')

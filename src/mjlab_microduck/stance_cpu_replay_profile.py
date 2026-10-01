@@ -7,6 +7,7 @@ profile, changes PyTorch state, initializes CUDA, or claims replay parity.
 from hashlib import sha256
 from importlib.metadata import version
 import os
+import json
 from pathlib import Path
 import platform
 import sys
@@ -29,6 +30,32 @@ _RUNTIME_KEYS = {
 def settings():
     """Return the exact environment settings for a caller to opt into."""
     return dict(_SETTINGS)
+
+
+def expected_receipt():
+    """Pure expected bytes, not an observation or live runtime qualification."""
+    return {
+        'protocol': PROTOCOL, 'status': 'portable-cpu-math-profile-checked',
+        'settings': settings(), 'platform': 'linux', 'architecture': 'x86_64',
+        'torch_version': TORCH_VERSION, 'cpu_capability': 'DEFAULT',
+        'torch_num_threads': 1, 'libtorch_cpu_sha256': LIBTORCH_CPU_SHA256,
+        'full_replay_performed': False, 'actor_output_parity_verified': False,
+        'capability_accepted': False, 'binary_equivalence_verified': False,
+    }
+
+
+def validate_receipt(receipt):
+    """Validate recorded profile metadata without inspecting the current host."""
+    require(type(receipt) is dict, 'exact recorded CPU math profile')
+    require(json.dumps(receipt, sort_keys=True, allow_nan=False) ==
+            json.dumps(expected_receipt(), sort_keys=True, allow_nan=False),
+            'exact recorded CPU math profile')
+
+
+def check_recorded(receipt):
+    """Require archived and actual process receipts before any actor inference."""
+    validate_receipt(receipt)
+    require(checked_receipt() == receipt, 'actual recorded CPU math profile')
 
 
 def _parse_exec_environment(raw):

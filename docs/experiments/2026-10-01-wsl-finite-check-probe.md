@@ -89,9 +89,9 @@ plus optimizer timing before any learner can be launched. A negative result
 closes this candidate; do not weaken checks, revise thresholds to fit measured
 data or enable the rejected graph as a shortcut. No video or physical motion.
 
-## Current state
+## Prelaunch validation
 
-Implementation and focused CPU checks are complete; **not launched**. The
+Implementation and focused CPU checks were complete before launch. The
 October 1 read-only host check verified exact runtime source, package versions,
 dependency trees, assets, driver/GPU identity and lockfile. Two idle observations
 showed no compute PID, 0% utilization, 29 C and 687 MiB GPU memory; protected
@@ -105,7 +105,63 @@ stance runtime/contact/throughput and shared GPU/service guards. After final
 preflight/replay integration, the 110 new-tool tests were rechecked separately.
 Synthetic fixtures construct no native runtime and start no service or policy.
 The broader unchanged runtime tests do use the native CPU audit backend. Full
-repository tests and CUDA performance/equivalence were not run yet. A bounded
+repository tests and CUDA performance/equivalence had not run at that point. A bounded
 Luna read-only review checked the candidate and source-separated service wiring;
 owner integration made prelaunch CPU fixtures and pre-publication replay
 mandatory, clarified initialization-forward work and hardened derived ratios.
+
+## Retained execution result
+
+The reviewed tool source was `80f1749bb1eb47b7ffafb1468cb1e5ee11d5d225`;
+the clean runtime checkout remained at `987b452dbfdb4cba7c7fef79f419790bd602ae3a`.
+The same 110 new-tool CPU tests also passed on Linux before preparation. One
+`microduck-finite-check-probe-80f1749bb1eb.service` invocation
+`b59952f8e7944dca9ff5df4a490b0131` completed with `Result=success`,
+`ExecMainStatus=0`, inactive/dead and `MainPID=0`. The retained child exited zero
+after **18.46121555 seconds**; neither watchdog was extended.
+
+| Adjacent blocks | Legacy seconds / 1,000 checks | Packed seconds / 1,000 checks | Packed / legacy |
+| --- | --- | --- | --- |
+| 0, 1 | 1.52747920 | 0.15866262 | 0.10387220 |
+| 2, 3 | 1.50598293 | 0.17069169 | 0.11334238 |
+| 4, 5 | 1.52075444 | 0.16782242 | 0.11035471 |
+
+Decision: **`finite-check-probe-complete-not-runtime-equivalence`**. Fresh
+packing was faster in all three same-input pairs, with its copy/allocation cost
+included. All 33 owned-copy CUDA fault cases agreed with the original ordered
+error. Original input bits were unchanged; integrator ticks, policy inferences
+and optimizer updates were zero. Construction still executed its normal eager
+forward outside the measured blocks. This does not establish equivalent
+trajectories or an end-to-end collection/training speedup.
+
+Retained unchanged on WSL and copied to the Mac under:
+
+```text
+artifacts/evaluations/stance-finite-check-probe-80f1749bb1eb/
+```
+
+Fourteen files include the two tool archives, launch and plant receipt, original
+tensor snapshot, six timing blocks, child log, summary and hash-inventory report.
+Independent receipts:
+
+- Launch SHA256: `0c02f566df2ff319fc7de97fc3b671bd2738c4e32e4ad12e70d4e123015d4718`.
+- Report SHA256: `49dc484d2700d979bb04431fc902a981b4efc5b233b8f6012d799b77376572c6`.
+- Runner SHA256: `f3d87a13a14049d9be2e55a512d967bfd07a43a13e070c4eb213e9fa3ed7ef1d`.
+- Checker SHA256: `3551500208e5138a07b511bea20e2b28f1ba4cbc3094ac31cd4a58695a1d801d`.
+- Input tensor SHA256: `45053013dca1226b995554271150b02c323ddd7722c2ac5c8412d4110c161d4f`.
+
+The supervisor's pre-publication replay, separate WSL CPU verification and
+separate Mac CPU replay all passed the exact inventory, hashes, strict launch
+schema, all fault errors and deterministic timing-summary reconstruction. This
+is consistency verification, not independent CUDA execution authentication.
+Telemetry sampled only the owned child as a compute process; sampled maxima
+were **33 C and 1,118 MiB**. Both post-run idle samples had no compute PID and
+0% utilization. FilmBrain preview and observatory stayed active with zero
+restarts; protected system/user GPU services stayed inactive. No environment,
+driver, installed dependency or existing runtime file changed.
+
+The positive checker result justifies reviewing the smallest opt-in integration
+next. Runtime integration, timing qualification, replication/training, skill,
+football and physical-motion admission remain **false**. Keep the fixed WSL
+4,320/4,380-second training/service bounds; do not extrapolate this microbenchmark
+into an accepted full-run timing receipt or retry a learner yet.

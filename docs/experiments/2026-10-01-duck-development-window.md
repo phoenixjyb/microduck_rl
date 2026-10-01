@@ -216,3 +216,13 @@ The next separately predeclared [WSL finite-check probe](2026-10-01-wsl-finite-c
 tests a fresh packed finite predicate on identical tensors. It leaves the old
 runtime and every physical check unchanged and does not admit training or a
 community-policy retry.
+
+That probe has now completed successfully with source `80f1749bb1eb`, all 33
+fault errors agreeing and unchanged input bits. Fresh-packing times were
+0.104, 0.113 and 0.110 times the paired legacy times. WSL and Mac CPU evidence
+replay passed; the runtime remained at clean `987b452dbfdb`, and FilmBrain was
+preserved. The linked experiment retains exact launch/report/tool/input hashes.
+This is a checker-only result, **not** learned capability or end-to-end training
+qualification. Next review a minimal opt-in runtime integration, then obtain
+fresh source-bound device and full collection/optimizer evidence without
+widening the existing WSL budgets.

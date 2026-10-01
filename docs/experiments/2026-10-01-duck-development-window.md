@@ -226,3 +226,8 @@ This is a checker-only result, **not** learned capability or end-to-end training
 qualification. Next review a minimal opt-in runtime integration, then obtain
 fresh source-bound device and full collection/optimizer evidence without
 widening the existing WSL budgets.
+
+The next [opt-in runtime qualification](2026-10-01-wsl-packed-runtime-qualification.md)
+is predeclared separately. The legacy path remains default; device checks use
+identical solved inputs, not a new tolerance for the known non-repeatable solver.
+No learner is launched by that declaration.

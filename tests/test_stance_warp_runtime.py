@@ -11,9 +11,9 @@ from mjlab_microduck.stance_warp_integrator import STATE_FIELDS
 from mjlab_microduck.stance_transition import StanceTransition
 
 
-@pytest.fixture
-def env():
-    return WarpStanceRuntime(2, device='cpu')
+@pytest.fixture(params=['legacy', 'packed'])
+def env(request):
+    return WarpStanceRuntime(2, device='cpu', solved_field_check=request.param)
 
 
 def test_initial_entity_binding_and_observation_match_native_reference(env):

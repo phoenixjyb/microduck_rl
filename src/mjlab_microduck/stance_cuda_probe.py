@@ -133,11 +133,12 @@ def frozen_row(env, row):
     return result
 
 
-def cases(device):
+def cases(device, *, runtime_factory=None):
     """Same short integration cases on CPU for tests; only child requests CUDA."""
     from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
+    factory = WarpStanceRuntime if runtime_factory is None else runtime_factory
     torch.manual_seed(527)
-    normal = WarpStanceRuntime(2, device=device)
+    normal = factory(2, device=device)
     traces = []; rewards = []; started = time.monotonic()
     for i in range(2):
         result = normal.step(torch.full((2, 10), float(i), device=device))
@@ -152,7 +153,7 @@ def cases(device):
                    torch_cuda_initialized=torch.cuda.is_initialized())
     del normal
 
-    env = WarpStanceRuntime(2, device=device)
+    env = factory(2, device=device)
     integrate = env.integrator.integrate; count = 0
     def injected(live):
         nonlocal count

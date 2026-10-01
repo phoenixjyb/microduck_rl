@@ -60,9 +60,12 @@ class WarpStanceRuntime:
     selected rows. No CUDA/service/lease or checkpoint admission is implied.
     """
 
-    def __init__(self, nworld=2, *, device='cpu'):
+    def __init__(self, nworld=2, *, device='cpu', solved_field_check='legacy'):
         if type(nworld) is not int or not 1 <= nworld <= 512:
             raise ValueError('one to 512 declared stance worlds required')
+        if type(solved_field_check) is not str or solved_field_check not in ('legacy', 'packed'):
+            raise ValueError('explicit legacy or packed solved-field check required')
+        self._solved_field_check = solved_field_check
         self.n = nworld; self.device = torch.device(device)
         self.wp_device = wp.get_device(device)
         self.faulted = False
@@ -118,6 +121,11 @@ class WarpStanceRuntime:
         self.state = None; self._observations = None
         self.reset(self.live.clone())
 
+    @property
+    def solved_field_check(self):
+        """Constructor-bound selection; changing public mode after reset is refused."""
+        return self._solved_field_check
+
     def _view(self, name):
         return wp.to_torch(getattr(self.data, name))
 
@@ -148,10 +156,7 @@ class WarpStanceRuntime:
         else:
             self.forward_graph.run(self.model, self.data)
         self._sync()
-        for name in ('qpos', 'qvel', 'qacc', 'qacc_warmstart', 'time', 'ctrl',
-                     'qfrc_bias', 'qfrc_constraint', 'qfrc_actuator', 'cvel', 'xquat'):
-            if not torch.isfinite(self._view(name)).all():
-                raise ValueError('nonfinite solved stance field: '+name)
+        self._check_solved_fields()
         if self._view('qfrc_applied').any() or self._view('xfrc_applied').any():
             raise ValueError('B1-N does not permit external assistance or pushes')
         self.contacts = read_contacts(self.model, self.data)
@@ -162,6 +167,19 @@ class WarpStanceRuntime:
         friction = active & (types == int(mujoco.mjtConstraint.mjCNSTR_FRICTION_DOF))
         if (friction & ((ids < 0) | (ids >= self.native.nv))).any():
             raise ValueError('invalid active friction DOF address')
+
+    def _check_solved_fields(self):
+        """Read-only finite predicate; packed is an explicit unqualified opt-in."""
+        if self.solved_field_check == 'legacy':
+            for name in ('qpos', 'qvel', 'qacc', 'qacc_warmstart', 'time', 'ctrl',
+                         'qfrc_bias', 'qfrc_constraint', 'qfrc_actuator', 'cvel', 'xquat'):
+                if not torch.isfinite(self._view(name)).all():
+                    raise ValueError('nonfinite solved stance field: '+name)
+        elif self.solved_field_check == 'packed':
+            from mjlab_microduck.stance_solved_field_check import FIELDS, packed_check
+            packed_check({name: self._view(name) for name in FIELDS})
+        else:
+            raise ValueError('explicit legacy or packed solved-field check required')
 
     def _refresh(self, rows):
         """Cache only changed worlds; never replace a closed world's observation."""

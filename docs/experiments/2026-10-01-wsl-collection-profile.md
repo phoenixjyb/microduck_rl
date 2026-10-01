@@ -165,3 +165,7 @@ threshold chosen to pass observed discrepancies. Neither these profiling
 baselines nor the earlier disposable smoke are accepted full-run calibration.
 Only after an accepted optimization and a fresh timing gate may the first full
 learner (577) proceed, followed by the unchanged replication/evaluation protocol.
+
+Follow-up: the [finite-check microbenchmark](2026-10-01-wsl-finite-check-probe.md)
+predeclares a standalone predicate comparison with fresh packing cost included.
+It does not integrate the candidate, remove checks or qualify a learner.

@@ -83,9 +83,10 @@ flags remain false.
    interaction zone, but must recover speed before/after it. Preserve separate
    stock-hop, sprung-H1, stance and football tracks and historical results.
 
-The consumed C1-S attempt is closed; transfer remains blocked. Offline audit
-and affine-prefix tooling below are implemented and tested. The next code
-slice is the source-grounded contract/gap inventory, not another rollout. Never run its
+The consumed C1-S attempt is closed; transfer remains blocked. Offline audit,
+affine-prefix tooling and the source-grounded gap inventory below are implemented.
+The next slice is the separate WSL finite-check performance diagnosis, not
+another community-policy rollout. Never run its
 `--execute-approved` entry point again under the same declaration. Subsequent
 handoffs must name actual source commits, retained evidence, checks and the
 next bounded executable step. Missing author provenance does not justify
@@ -100,8 +101,10 @@ remaining window; this CPU probe qualifies neither remote host.
 
 ## Scheduled continuation and hard stop
 
-Same-chat continuation through 18:00 was requested. Its actual creation/status
-is the app scheduling record, not a claim made by this document. On each run,
+Continuation through 18:00 was requested. The user clarified that this session
+runs in the Codex CLI. App scheduling calls did not return a confirmation or
+register a task; do not claim a background automation exists. Continue in the
+active CLI session. On each continuation,
 verify the clock, branch/worktree and latest handoff. Preserve dirty/external
 work; never change an active diagnostic's source or overlap workloads. Report
 completed milestones or real failures, not repetitive unchanged status.
@@ -109,7 +112,8 @@ completed milestones or real failures, not repetitive unchanged status.
 At or after 18:00 Shanghai today, start **no new Duck work**. Confirm owned
 Duck children are safely complete/stopped and evidence/checkpoints are durable.
 Leave unrelated services unchanged, delete the matching continuation and report
-the retained state. Do not restore protected AI services without a new request.
+the retained state if a matching automation actually exists. Do not restore
+protected AI services without a new request.
 
 ## Offline evidence tooling
 
@@ -177,11 +181,38 @@ policy inferences or physics advances. The [compact result index](2026-10-01-com
 is committed so the fork retains identifiers even though large local traces,
 compiled models and public weights remain ignored and unmodified.
 
-Next bounded step: build a fixture-tested source-contract/gap report comparing
-the pinned graph metadata with explicit author-provided training/export/plant
-receipts. Missing source/overlay/entry identity must be reported as missing;
+The [source-gap inventory](../../src/mjlab_microduck/community_source_gaps.py)
+is now implemented. It pins both releases' policy/card bytes, retains literal
+graph metadata and hashes the affine constants, and uses the existing six-field
+static-skill vocabulary. It reports all effective author receipts as missing,
+plus the exact entry walker, task/run overlay and transition-state handoff gaps.
+It has no receipt-admission or policy-execution switch and never synthesizes a
+skill descriptor. The producing commit remains unknown; a branch, export date,
+`run_path=None`, upstream base or named checkpoint is not substituted for it.
+
+```sh
+CUDA_VISIBLE_DEVICES='' .venv/bin/python -m mjlab_microduck.community_source_gaps .
+```
+
+The actual report is 12,914 bytes, SHA256
+`f33438574cba501d852ef76912027342979bee2a62615be23ccd856a0004a615`, with twelve
+per-candidate effective-receipt gaps plus three shared handoff gaps. It loaded
+no Torch, ONNX Runtime, MuJoCo, Warp or BAM module and executed zero actor
+forwards, inference or physics. Fixture tests use temporary inert intake files,
+not ignored local policy/card dependencies.
+The report is retained unchanged at
+`artifacts/community/source-gaps-v1/20261001-pinned-c1-source-gaps.json`.
+Its 23 focused tests passed; the following broader selection passed 408 CPU
+checks, with the 110 new-tool checks separately repeated after final integration.
+
+Missing source/overlay/entry identity must still be reported as missing;
 matching 61/14 shapes or these static affine constants cannot fill it. Reuse
 the existing skill compatibility and retained-binding contracts rather than
 creating another unvalidated switch path. Do not run a new policy while that
 contract is incomplete. Remote host/runtime qualification remains a separate
 read-only step, not a result of these local CPU tools.
+
+The next separately predeclared [WSL finite-check probe](2026-10-01-wsl-finite-check-probe.md)
+tests a fresh packed finite predicate on identical tensors. It leaves the old
+runtime and every physical check unchanged and does not admit training or a
+community-policy retry.

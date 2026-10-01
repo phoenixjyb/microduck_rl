@@ -398,7 +398,9 @@ def _retained_probe_fixture(tmp_path, monkeypatch):
     (root / "child.log").write_bytes(b"mocked complete child")
     names = ("launch.json", "runtime.json", "measurements.json", "child.log")
     report = dict(protocol=probe.PROTOCOL, launch_sha256=sha256(launch_raw).hexdigest(),
-        decision="probe-measured-full-evaluation-disabled", child={"returncode": 0},
+        decision="probe-measured-full-evaluation-disabled",
+        child={"pid": 1234, "returncode": 0, "elapsed_s": 10.0,
+               "samples": [{"sample": 1}]},
         optimizer_steps=0, full_evaluation_enabled=False, checkpoint_admitted=False,
         learned_stance_accepted=False, football_balance_accepted=False,
         physical_motion_authorized=False,
@@ -425,6 +427,66 @@ def _rewrite_report(root, report):
     raw = (json.dumps(report, sort_keys=True, separators=(",", ":")) + "\n").encode()
     (root / "report.json").write_bytes(raw)
     return sha256(raw).hexdigest()
+
+
+@pytest.mark.parametrize("damage", [
+    "missing_pid", "missing_returncode", "missing_elapsed", "missing_samples", "extra_key",
+    "pid_zero", "pid_negative", "pid_bool", "pid_string", "returncode_bool",
+    "returncode_nonzero", "elapsed_int", "elapsed_bool", "elapsed_zero", "elapsed_negative",
+    "elapsed_nan", "elapsed_inf", "elapsed_over_cap", "samples_nonlist",
+])
+def test_verify_retained_requires_exact_bounded_child_receipt(tmp_path, monkeypatch, damage):
+    root, _launch, report = _retained_probe_fixture(tmp_path, monkeypatch)
+    changed = deepcopy(report)
+    child = changed["child"]
+    if damage == "missing_pid": child.pop("pid")
+    elif damage == "missing_returncode": child.pop("returncode")
+    elif damage == "missing_elapsed": child.pop("elapsed_s")
+    elif damage == "missing_samples": child.pop("samples")
+    elif damage == "extra_key": child["extra"] = "not-declared"
+    elif damage == "pid_zero": child["pid"] = 0
+    elif damage == "pid_negative": child["pid"] = -1
+    elif damage == "pid_bool": child["pid"] = True
+    elif damage == "pid_string": child["pid"] = "1234"
+    elif damage == "returncode_bool": child["returncode"] = False
+    elif damage == "returncode_nonzero": child["returncode"] = 1
+    elif damage == "elapsed_int": child["elapsed_s"] = 120
+    elif damage == "elapsed_bool": child["elapsed_s"] = True
+    elif damage == "elapsed_zero": child["elapsed_s"] = 0.0
+    elif damage == "elapsed_negative": child["elapsed_s"] = -0.1
+    elif damage == "elapsed_nan": child["elapsed_s"] = float("nan")
+    elif damage == "elapsed_inf": child["elapsed_s"] = float("inf")
+    elif damage == "elapsed_over_cap": child["elapsed_s"] = probe.CHILD_SECONDS + 0.001
+    else: child["samples"] = "not-a-list"
+    report_sha = _rewrite_report(root, changed)
+    assert report_sha == sha256((root / "report.json").read_bytes()).hexdigest()
+    with pytest.raises((ValueError, TypeError, KeyError)):
+        probe.verify_retained(root, changed["launch_sha256"], report_sha)
+
+
+def test_verify_retained_accepts_exact_positive_child_receipt_at_cap(tmp_path, monkeypatch):
+    root, _launch, report = _retained_probe_fixture(tmp_path, monkeypatch)
+    report["child"]["elapsed_s"] = float(probe.CHILD_SECONDS)
+    report["timing"] = probe.derive(report["probe"]["measurements"], 4.0,
+                                   float(probe.CHILD_SECONDS) + 10.0)
+    report["decision"] = "timing-rejected-no-full-evaluation"
+    report_sha = _rewrite_report(root, report)
+    result = probe.verify_retained(root, report["launch_sha256"], report_sha)
+    assert result == report["timing"]
+
+
+@pytest.mark.parametrize("damage", ["child_outlasts_service", "observed_exceeds_service_cap"])
+def test_verify_retained_refuses_contradictory_service_timing(tmp_path, monkeypatch, damage):
+    root, _launch, report = _retained_probe_fixture(tmp_path, monkeypatch)
+    if damage == "child_outlasts_service":
+        report["child"]["elapsed_s"] = report["timing"]["observed_probe_seconds"] + 0.001
+    else:
+        report["timing"] = probe.derive(report["probe"]["measurements"], 4.0,
+                                       float(probe.SERVICE_SECONDS) + 0.001)
+        report["decision"] = "timing-rejected-no-full-evaluation"
+    report_sha = _rewrite_report(root, report)
+    with pytest.raises(ValueError, match="consistent retained child and service timing bounds"):
+        probe.verify_retained(root, report["launch_sha256"], report_sha)
 
 
 @pytest.mark.parametrize("damage", ["report_hash", "launch_hash"])

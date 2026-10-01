@@ -193,8 +193,20 @@ def verify_retained(root, launch_sha, report_sha):
     launch = files.parse(files.file_bytes(root/'launch.json')); report = files.parse(files.file_bytes(root/'report.json'))
     require(report['protocol'] == PROTOCOL and report['launch_sha256'] == launch_sha
             and report['decision'] in ('probe-measured-full-evaluation-disabled', 'timing-rejected-no-full-evaluation')
-            and report['child']['returncode'] == 0 and report['optimizer_steps'] == 0,
+            and report['optimizer_steps'] == 0,
             'successful timing-only probe report')
+    # Re-hashing a contradictory receipt must not turn a timed-out child into a
+    # consistent success archive. The live wrapper enforces the watchdog; this
+    # is only an offline schema/bound check, not independent GPU authentication.
+    child_receipt = report.get('child')
+    require(type(child_receipt) is dict and set(child_receipt) ==
+            {'pid', 'returncode', 'elapsed_s', 'samples'}, 'exact retained child success receipt')
+    require(type(child_receipt['pid']) is int and child_receipt['pid'] > 0
+            and type(child_receipt['returncode']) is int and child_receipt['returncode'] == 0
+            and type(child_receipt['elapsed_s']) is float
+            and math.isfinite(child_receipt['elapsed_s'])
+            and 0 < child_receipt['elapsed_s'] <= CHILD_SECONDS
+            and type(child_receipt['samples']) is list, 'bounded retained child success receipt')
     require(all(report[k] is False for k in ('full_evaluation_enabled', 'checkpoint_admitted',
         'learned_stance_accepted', 'football_balance_accepted', 'physical_motion_authorized')),
         'retained probe cannot enable capability')
@@ -208,6 +220,10 @@ def verify_retained(root, launch_sha, report_sha):
     replay = evaluation.verify_probe(root, launch, launch_sha, report['measurements_sha256'], DECLARATION)
     require(report['probe'] == dict(measurements=replay['measurements']), 'replayed full-length timing case')
     timing = report['timing']
+    observed = timing.get('observed_probe_seconds')
+    require(type(observed) is float and math.isfinite(observed)
+            and child_receipt['elapsed_s'] <= observed <= SERVICE_SECONDS,
+            'consistent retained child and service timing bounds')
     require(timing == derive(replay['measurements'], timing['supervisor_replay_seconds'],
                             timing['observed_probe_seconds']), 'rederived packed evaluation timing')
     require(report['decision'] == ('probe-measured-full-evaluation-disabled' if timing['fits_declared_wsl_window']

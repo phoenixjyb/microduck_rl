@@ -114,6 +114,14 @@ child log/status/telemetry and timing report in an exclusive source/seed path.
 Rehash and replay on WSL, then verify copied bytes independently on Mac; offline
 consistency is not independent GPU authentication. The one-case scorer's values
 are diagnostic only, not a matrix decision or football/hop/obstacle acceptance.
+Offline verification also checks the exact successful child-receipt fields,
+positive PID, integer zero exit, finite positive elapsed time within 600 seconds
+and a telemetry list. Child elapsed cannot exceed observed supervisor duration,
+which cannot exceed the 960-second service bound. Independently rehashing an
+internally contradictory timeout/status receipt cannot make it acceptable.
+Preflight refusal may produce no report because no child ran; a service-level
+kill may leave a partial single-use archive. Both fail retained verification,
+and neither authorizes reuse, retry or cap extension.
 
 Implementation is complete. **78 focused CPU fixture tests** passed, followed
 by **652 selected CPU checks** across the new probe and unchanged runtime,
@@ -123,6 +131,11 @@ repository tests and live WSL probe/replay are separate, not established by
 these fixtures. A bounded Luna test slice and read-only review were integrated;
 review found repeated loop-tail undercount and parent replay headroom, corrected
 before execution with conservative residual projection and the 600-second child.
+An additional read-only timeout/closeout audit found an offline child-receipt
+consistency gap, tightened before installation. The revised probe's **100
+focused tests** and **339 selected CPU tests** passed, including rehashed
+malformed/over-limit child receipts and contradictory child/service timing.
+This changes only retained-evidence checks, not live caps, runtime or skill gates.
 
 This probe has **not launched**. Active learner source is unchanged. Commit/push
 and test this source on Linux before installing it on an idle host. No full

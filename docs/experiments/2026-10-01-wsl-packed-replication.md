@@ -138,9 +138,39 @@ approximately **14:40 Shanghai** in
 4,320/4,380-second bounds are unchanged. Its absolute deadline is
 **1790842452** (16:14:12 Shanghai), and launch SHA256 is
 `b926278f15cfa0f6f0cac70614f544b7095293e06d407d82d34818a97fbc6a55`.
-Seed 587 is in progress; seed 593 has not launched. No held-out matrix has run.
-Future local evaluator/documentation commits must **not** fast-forward the active
-WSL source or invalidate later seeds' exact qualification.
+Seed 587 completed successfully at approximately **15:47 Shanghai**, child
+exit 0 and service success, within its unchanged bounds. Child elapsed was
+**4,035.256 seconds**. WSL replay checked the same complete 6,663-file inventory,
+all payload hashes, 257 exports, 256 optimizer and 6,144 tick receipts. An
+independent CPU replay of the copied Mac archive also passed the exact inventory,
+all hashes, checkpoint/update/tick receipts and finite rewards. Report SHA256:
+`202d9b31aa27295c18a7c78086505ec7d821bc69d0568224def3bbe754ae9f05`.
+
+| Seed 587 checkpoint | SHA256 |
+| --- | --- |
+| 64 | `73b2770243d59f043731f4b1d665bcc0dc5e762416c0ab3c2f181066af8151e0` |
+| 128 | `3f27d81ae8e7d45f02090f9f6b2d27ea5dcddc5d3bb3bed7c229b205c322bfc6` |
+| 192 | `514df5f975302c353a2fd68d3d77115157cd4f16b6bb47d57ee13802c4a37e05` |
+| 255 | `ada16eb865160bf9ed93540b17a9c48c2b964a7b7ef8a89f1926af40530cf5e1` |
+
+It recorded 554 failure events, 202 in the first 16 updates and zero in the
+last 16. Zero soft-limit samples were recorded out of **55,015,954 executed
+joint samples**; modeled maxima were **0.14429134 Nm / 0.74633807 rad/s**.
+Sampled GPU peaks were **53 C / 1,247 MiB**; motor thermal and spring-bottoming
+models remain unavailable. The GPU was idle with no compute PID before the next
+seed; FilmBrain remained active without restarts and protected services inactive.
+
+After verifying the complete seed-587 archive, idle GPU, clean qualified source
+and fresh remaining budget, seed **593** launched at approximately **15:51
+Shanghai** in `microduck-lean-replication-packed-be2d59661af2-seed-593.service`,
+invocation `96677bc9380a4858ac4a05f4d5d4195c`, with the same source and fixed
+4,320/4,380-second bounds. Deadline: **1790847002** (17:30:02 Shanghai).
+Launch SHA256:
+`947bdb9d770d786c674b2913a44f4d4bf67c041b81f0f0ebbc0e4e400c6b716b`.
+Seed 593 is in progress. No held-out matrix has run; two completed learners
+remain an incomplete three-seed campaign. Future local evaluator/documentation
+commits must **not** fast-forward the active WSL source or invalidate its exact
+qualification.
 
 The separate [held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md)
 is implemented and CPU-tested locally, but has not launched; it is not the full

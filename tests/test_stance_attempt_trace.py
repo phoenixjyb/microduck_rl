@@ -237,3 +237,120 @@ def test_short_real_warp_cpu_policy_input_before_correction_and_first_terminal()
     assert scored['attempts'][0]['last_physics_step'] == 11
     assert scored['attempts'][1]['last_physics_step'] == 20
     assert not torch.cuda.is_initialized()
+
+
+def packed_binding(**changes):
+    value = dict(protocol=trace.PACKED_PROBE_PROTOCOL, source='a'*40,
+        runtime_sha256='b'*64, checkpoint_sha256='c'*64, launch_sha256='d'*64,
+        checkpoint_iteration=255, evaluation_seed=541, worlds=128,
+        capture_device='cuda:0', solved_field_check='packed', checker_sha256='e'*64)
+    value.update(changes)
+    return value
+
+
+def packed_short_payload():
+    """Synthetic 128-world CPU prefix with CUDA provenance metadata only."""
+    selected = packed_binding()
+    # Build the well-formed CPU fixture with the ordinary CPU trace recorder;
+    # packed replay must retain the independent CUDA-bound declaration while
+    # rehydrating only the tensors/checker state on CPU.
+    recorder = trace.FirstAttemptTrace(binding(128), frame([0]*128))
+    append(recorder, tick(0, 128))
+    payload = recorder.payload()
+    payload['binding'] = selected
+    return selected, payload
+
+
+def test_packed_short_synthetic_cpu_replay_and_hash_roundtrip_preserve_cuda_metadata():
+    selected, payload = packed_short_payload()
+    score = trace.replay(payload, selected)
+    assert score['binding'] == selected
+    assert score['protocol'] == trace.PACKED_PROBE_PROTOCOL
+    assert len(score['attempts']) == 128 and score['complete_attempts'] == 0
+    assert all(not attempt['complete_first_attempt'] for attempt in score['attempts'])
+    assert score['trajectory_continuity_validated'] is True
+    assert score['provenance_validated'] is False
+    assert score['checkpoint_admitted'] is False
+    assert score['learned_stance_accepted'] is False
+    assert score['physical_motion_authorized'] is False
+
+    raw, receipt = trace.encode(payload, selected)
+    assert receipt['score']['binding'] == selected
+    assert trace.verify(raw, receipt['sha256'], selected) == receipt['score']
+    assert not torch.cuda.is_initialized()
+
+
+def test_packed_terminal_complete_synthetic_cpu_roundtrip_scores_128_worlds():
+    selected = packed_binding()
+    recorder = trace.FirstAttemptTrace(binding(128), frame([0]*128))
+    result = tick(0, 128)
+    end = result['boundaries'][-1]
+    end['state']['tilt'].fill_(.4)
+    result.update(terminal_records=[terminal(end, row) for row in range(128)],
+        terminated=torch.ones(128, dtype=torch.bool), timed_out=torch.zeros(128, dtype=torch.bool),
+        live=torch.zeros(128, dtype=torch.bool), episode_steps=torch.full((128,), 10, dtype=torch.int64),
+        executed_steps=torch.full((128,), 10, dtype=torch.int64), reward=torch.full((128,), -2.0))
+    append(recorder, result)
+    payload = recorder.payload()
+    payload['binding'] = selected
+    raw, receipt = trace.encode(payload, selected)
+    scored = trace.verify(raw, receipt['sha256'], selected)
+    assert scored['complete_attempts'] == 128
+    assert scored['numerical_passes'] == 0
+    assert all(attempt['complete_first_attempt'] for attempt in scored['attempts'])
+    assert scored['binding'] == selected and scored['provenance_validated'] is False
+    assert scored['checkpoint_admitted'] is False and scored['learned_stance_accepted'] is False
+    assert not torch.cuda.is_initialized()
+
+
+def test_packed_replay_rejects_payload_binding_mismatch():
+    selected, payload = packed_short_payload()
+    payload['binding'] = {**selected, 'source': 'f'*40}
+    with pytest.raises(ValueError, match='expected trace binding mismatch'):
+        trace.replay(payload, selected)
+    assert not torch.cuda.is_initialized()
+
+
+def test_packed_public_constructor_keeps_actual_capture_device_check_strict():
+    with pytest.raises(ValueError, match='observed capture device'):
+        trace.FirstAttemptTrace(packed_binding(), frame([0]*128))
+    with pytest.raises(ValueError, match='fixed packed probe case'):
+        trace.FirstAttemptTrace(packed_binding(capture_device='cpu'), frame([0]*128))
+    assert not torch.cuda.is_initialized()
+
+
+@pytest.mark.parametrize(('key', 'value'), [
+    ('evaluation_seed', 547), ('worlds', 127), ('checkpoint_iteration', 256),
+    ('solved_field_check', 'legacy'), ('checker_sha256', 'bad'),
+    ('capture_device', 'cpu'),
+    ('source', 'bad'), ('runtime_sha256', 'g'*64), ('checkpoint_sha256', 'h'*64),
+    ('launch_sha256', 'i'*64),
+])
+def test_packed_replay_rejects_malformed_or_wrong_binding(key, value):
+    selected, payload = packed_short_payload()
+    malformed = {**selected, key: value}
+    payload['binding'] = malformed
+    with pytest.raises(ValueError):
+        trace.replay(payload, malformed)
+
+
+def test_packed_replay_rejects_counter_discontinuity():
+    selected, payload = packed_short_payload()
+    damaged = deepcopy(payload)
+    damaged['ticks'][0]['boundaries'][2]['physics_steps'][0] += 1
+    with pytest.raises(ValueError, match='counter continuity|substeps'):
+        trace.replay(damaged, selected)
+    assert not torch.cuda.is_initialized()
+
+
+def test_legacy_cuda_origin_replay_retains_declared_metadata():
+    selected = {**binding(2), 'capture_device': 'cuda:0'}
+    recorder = trace.FirstAttemptTrace({**selected, 'capture_device': 'cpu'}, frame([0, 0]))
+    append(recorder, tick(0, 2))
+    payload = recorder.payload()
+    payload['binding'] = selected
+    score = trace.replay(payload, selected)
+    assert score['binding'] == selected
+    assert score['binding']['capture_device'] == 'cuda:0'
+    assert score['provenance_validated'] is False
+    assert not torch.cuda.is_initialized()

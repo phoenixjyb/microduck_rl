@@ -158,7 +158,78 @@ The single probe launched at approximately **17:14 Shanghai** in
 6 GiB/200% CPU/Nice 10/control-group resources and deadline **1790848800**
 (today 18:00 Shanghai). Independently checked launch SHA256:
 `2d4284cc12b2f0347574bd2c566023b12ce7f646cc3843008da07488098a5739`.
-It is in progress, not measured or accepted. Keep this active runtime source
-frozen despite later local documentation commits. No full packed evaluation is
-enabled; the historical full evaluator still refuses WSL preparation and its
-registry excludes this probe-only continuation.
+It **failed**, not timed out, after **191.47832137392834 child seconds**, with
+child exit 1. The user service is `failed / Result=exit-code / ExecMainStatus=1`,
+MainPID 0. No Duck compute process remained; the GPU was idle at 35 C. FilmBrain's
+two user services remained active with zero restarts and the protected AI services
+remained inactive. No service, dependency, driver or training artifact was changed
+to diagnose this failure. Keep this runtime's exact source frozen; subsequent CPU
+repair commits are not a live GPU retry or runtime installation.
+
+### Failed attempt retained, not usable timing evidence
+
+The exact error was **`ValueError: fixed packed probe case`** along
+`evaluate_owned_case -> write_bundle -> trace.encode -> trace.replay ->
+FirstAttemptTrace -> validate_binding`. Replay replaced the declared CUDA capture
+device with `cpu` before revalidating the strict packed binding. The CUDA-only
+binding correctly refused that altered declaration. This is a replay-device
+bookkeeping bug, not a numerical checkpoint rejection or evidence of a failed
+learner. It occurs before bundle directory creation; the in-memory trajectory was
+not retained and cannot be salvaged as a completed measurement.
+
+Both WSL and Mac retain exactly these **four files**, independently rehashed,
+with the report's three payload hashes checked against their bytes:
+
+| File | SHA256 |
+| --- | --- |
+| `child.log` | `25d9ab1f295eed13898c55b1e196a143a07a7c3157642af2e231354b1a71187b` |
+| `launch.json` | `2d4284cc12b2f0347574bd2c566023b12ce7f646cc3843008da07488098a5739` |
+| `runtime.json` | `d790ead1c4ed5f8ba672ad58d9e3db8c4f06ced01ecfc0634d9fd986decf6e4a` |
+| `report.json` | `b6279b74961a207d9c661e74983d75f471545bd300daf618a628411d058c5ea1` |
+
+The archive is
+`artifacts/evaluations/stance-wsl-packed-eval-probe-d4e96cda975f-seed-577`.
+The report has decision `failed`, optimizer steps zero and every admission,
+full-evaluation, skill and physical-motion flag false. Its error note retains
+child PID 1413484, elapsed time and 152 telemetry samples. There is **no case
+receipt, complete bundle, manifest or timing measurement**. This inventory/hash
+check is a failed-attempt audit, not successful `verify_retained` evidence. Do not
+derive full-service caps or a skill verdict from the failed child's wall time.
+
+### Bounded CPU repair and next gate
+
+The repair preserves the original binding throughout replay and separates the
+CPU checker's tensor device from recorded capture-device metadata. The public
+capture constructor and live append still require the actual declared device;
+packed bindings still require 255/541/128/CUDA and the packed checker fields.
+Only the private CPU rehydration path uses CPU tensors without rewriting the
+binding. Replay continues to report `provenance_validated=false` and all
+admission/physical-motion flags false.
+
+New regression fixtures exercise actual replay/encode/hash verification at 128
+worlds and actual bundle publication plus strict checkpoint, actor, plant and
+motor-control replay. Fixture CUDA-origin metadata is synthetic, not GPU capture
+authentication, and the tests leave CUDA uninitialized. Malformed bindings,
+CPU-authored packed capture and discontinuous traces remain refused. No original
+scoring, motor/contact/plant contract, learner recipe or timeout is relaxed.
+
+Validation of this repair: **53 trace tests** and the real packed-bundle regression
+passed, then **474 affected CPU checks** passed together on Mac with CUDA hidden
+and explicitly uninitialized. The first parallel broader run passed 420 checks
+but one unchanged standalone-import subprocess exceeded its fixed 30-second
+timeout during elevated Mac load. That exact test passed in isolation, and the
+complete sequential 474-test run subsequently passed without a timeout change.
+Focused Luna test development and read-only review were integrated; the owner
+added/reviewed the actual bundle roundtrip. Full repository tests and repaired
+live GPU timing have not been run. Linux validation of the repaired source is
+still separate from this Mac proof.
+
+There is **no automatic retry** of this consumed single-use probe, no full packed
+evaluation enabled and no checkpoint promotion. The next GPU step needs a
+separately reviewed fresh probe identity and authority, the tested repair source,
+fresh frozen-host/idle/lease guards, the same fixed case and unchanged hard bounds,
+and sufficient remaining authorized time. Only a successful complete retained
+measurement can justify the later measured-cap full-evaluator declaration.
+The historical full evaluator still refuses WSL preparation and its registry
+excludes this probe-only continuation. Hopping, obstacles and rolling football
+remain behind their separate numerical gates.

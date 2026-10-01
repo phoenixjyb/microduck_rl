@@ -241,17 +241,27 @@ replay are retained in the linked experiment. This is timing qualification,
 not learned capability or full evaluator qualification.
 
 The separately declared [packed replication](2026-10-01-wsl-packed-replication.md)
-seed 577 is active on that frozen source; its first common `model_64.pt` is
-durable. No active job source, service, environment or cap was changed. FilmBrain
-preview/observatory remain active and protected services inactive. The current
+seeds 577/587/593 have all completed on that frozen source; every initializer,
+export, ordered rollout tick and optimizer receipt is durable and independently
+verified on WSL and Mac. No active job source, service, environment or cap was
+changed. FilmBrain preview/observatory remain active and protected services inactive. The current
 stance plant has **no thermal model or applicable spring-bottoming model**;
 finite metrics and modeled torque/soft-limit counters do not establish hardware
 thermal or sprung-hop safety.
 
-Local development now prepares a distinct
-[held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md), not a full
-packed evaluator. The complete old training archive and fresh evaluator/runtime
-source are bound separately; numerical gates and the full matrix remain fixed.
-Do not fast-forward the WSL source between this qualification and active or
-subsequent matched learner seeds. Install later evaluator changes only after
-owned learners close with complete durable receipts and the GPU is idle.
+The distinct [held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md)
+was CPU-tested on Mac and Linux, then installed only after all three learners
+closed and fresh frozen-host/idle checks passed. Its one authorized GPU attempt
+at `d4e96cda975f` failed before bundle publication, with
+`ValueError: fixed packed probe case`: CPU replay accidentally rewrote the CUDA
+capture binding. The consumed four-file failed archive is hash-checked on both
+hosts and records no completed timing or numerical gate result. The GPU is idle.
+No retry, full matrix, recovery, video or capability promotion follows this error.
+
+A bounded CPU repair preserves original capture metadata and uses a separate
+internal CPU-checker device. Real 128-world trace/bundle roundtrip fixtures cover
+the failing path while public capture-device checks and all admission flags stay
+strict. Keep WSL's failed-attempt source frozen for reproducibility. The next GPU
+step requires a separately reviewed fresh probe identity and source, unchanged
+600/960-second bounds, new frozen-host/idle/lease checks and a new authorized
+window. Full evaluator sizing and nominal capability acceptance are still gated.

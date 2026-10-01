@@ -79,11 +79,12 @@ The [packed runtime qualification](experiments/2026-10-01-wsl-packed-runtime-qua
 completed on exact source `be2d59661af293b0d67ae20d2e16db50514cce14` on 100.98,
 with same-input device checks and full collection timing fitting the fixed WSL
 budget. The [packed replication](experiments/2026-10-01-wsl-packed-replication.md)
-is now training its first seed, 577. This is an execution milestone, **not** a
-new stance, obstacle, hopping or football achievement. Keep that active runtime
-source frozen through the matched 577/587/593 sequence; later local source commits
-must not replace it mid-job. The active CLI authority ends October 1 at 18:00
-Shanghai; no confirmed background automation exists.
+has completed all three matched seeds **577/587/593** on that frozen source.
+Each complete archive and copied bytes passed verification on WSL and Mac:
+771 exports including initializers, 768 finite optimizer receipts and 18,432
+ordered finite-reward ticks in total. This is an execution milestone, **not** a
+new stance, obstacle, hopping or football achievement. The active CLI authority
+ends October 1 at 18:00 Shanghai; no confirmed background automation exists.
 
 Training and capability evaluation remain separate. Authenticate every complete
 archive before the separate [WSL held-out timing probe](experiments/2026-10-01-wsl-packed-evaluation-probe.md).
@@ -91,6 +92,16 @@ That fixed 255/541/128-world single case is not the twelve-case evaluation or th
 three-training-seed verdict. Full evaluation must retain 64/128/192/255 ×
 541/547/557 for each of the three training seeds: **4,608 first attempts** in
 the complete campaign, never a smaller denominator after a missing run.
+
+The single timing probe at evaluator source `d4e96cda975f` failed before publishing
+its bundle: CPU replay rewrote the CUDA-origin binding, which the strict packed
+validator refused. The failed attempt is retained on both hosts, with no usable
+timing measurement or skill verdict. A bounded CPU repair now separates checker
+device from capture metadata without weakening either capture or scoring gates.
+This does not authorize an automatic retry. A separately reviewed fresh fixed
+probe, then a successful measured-cap full-evaluator declaration, still precede
+nominal replication acceptance; no recovery or ball lesson starts from a training
+completion alone.
 
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate

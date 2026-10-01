@@ -157,9 +157,24 @@ class FirstAttemptTrace:
     """
 
     def __init__(self, binding, initial):
+        self._initialize(binding, initial, None)
+
+    @classmethod
+    def _for_cpu_replay(cls, binding, initial):
+        """Rehydrate owned CPU evidence without changing its capture provenance.
+
+        This is consistency replay, not a capture constructor or CUDA attestation.
+        The public constructor still checks the actual source tensor device.
+        """
+        trace = cls.__new__(cls)
+        trace._initialize(binding, initial, 'cpu')
+        return trace
+
+    def _initialize(self, binding, initial, tensor_device):
         validate_binding(binding)
         self.binding = deepcopy(binding); self.n = binding['worlds']; self.faulted = False
-        require(str(initial['qpos'].device) == binding['capture_device'], 'observed capture device')
+        self._tensor_device = binding['capture_device'] if tensor_device is None else tensor_device
+        require(str(initial['qpos'].device) == self._tensor_device, 'observed capture device')
         frame = owned(initial); validate_frame(frame, self.n)
         require(not frame['physics_steps'].any(), 'first attempt must start at zero')
         require(not physical_failures(PhysicsState(**frame['state']), frame['physics_steps']).any(), 'valid initial state')
@@ -171,7 +186,7 @@ class FirstAttemptTrace:
         try:
             require(len(self.ticks) < EPISODE_STEPS//10, 'bounded first-attempt tick count')
             require(any(t is None for t in self.terminals), 'all attempts already closed')
-            require(str(result['boundaries'][0]['qpos'].device) == self.binding['capture_device'], 'observed capture device')
+            require(str(result['boundaries'][0]['qpos'].device) == self._tensor_device, 'observed capture device')
             tick = owned({k: result[k] for k in TICK_KEYS-{'actor_input', 'actions'}})
             tick.update(actor_input=owned(actor_input), actions=owned(actions))
             self._validate_tick(tick)
@@ -244,9 +259,9 @@ def replay(payload, expected_binding):
     require(set(payload) == {'binding', 'initial', 'ticks'} and payload['binding'] == expected_binding,
             'expected trace binding mismatch')
     validate_binding(expected_binding)
-    # Rehydrate the pure CPU checker without asserting that CPU tensors run CUDA.
-    cpu_binding = {**expected_binding, 'capture_device': 'cpu'}
-    trace = FirstAttemptTrace(cpu_binding, payload['initial'])
+    # Keep the recorded origin immutable, including CUDA-only protocol bindings.
+    # Only the checker tensor device is CPU; replay never attests CUDA capture.
+    trace = FirstAttemptTrace._for_cpu_replay(expected_binding, payload['initial'])
     require(type(payload['ticks']) is list, 'ordered tick list')
     for tick in payload['ticks']:
         require(set(tick) == TICK_KEYS, 'exact replay tick fields')

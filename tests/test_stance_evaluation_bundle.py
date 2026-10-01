@@ -56,6 +56,55 @@ def test_exclusive_durable_bundle_and_recomputed_receipts(tmp_path, inputs):
     assert not torch.cuda.is_initialized()
 
 
+def test_packed_cuda_origin_bundle_roundtrip_on_cpu_consistency_fixture(tmp_path, inputs):
+    """Exercise actual publication/replay, not CUDA capture or learner evidence.
+
+    Duplicate the short two-world CPU fixture to 128 worlds. The declaration and
+    export metadata are synthetic; no packed solver, training or GPU is run.
+    """
+    def expand(value):
+        if isinstance(value, torch.Tensor):
+            assert value.shape[0] == 2
+            return value.repeat((64,)+(1,)*(value.ndim-1))
+        if isinstance(value, dict): return {k: expand(v) for k, v in value.items()}
+        if isinstance(value, list): return [expand(v) for v in value]
+        return deepcopy(value)
+
+    changed = deepcopy(inputs)
+    changed['payload'] = expand(inputs['payload'])
+    for tick in changed['payload']['ticks']:
+        assert tick['terminal_records'] == [None, None]
+        tick['terminal_records'] = [None]*128
+    changed['control_evidence'] = expand(inputs['control_evidence'])
+    identity = {**inputs['checkpoint_identity'], 'purpose': cp.LEAN_REPLICATION_PURPOSE,
+        'training_seed': 577, 'worlds': 64, 'iteration': 255,
+        'initial_state_sha256': '3'*64, 'parent_checkpoint_sha256': cp.LEAN_PARENT_SHA256}
+    actor, critic = cp.fresh_models(521)  # Same fixture actions, not trained seed 577.
+    changed['checkpoint_raw'] = cp.encode(actor, critic, identity)
+    changed['checkpoint_identity'] = identity
+    binding = {**inputs['binding'], 'protocol': trace.PACKED_PROBE_PROTOCOL,
+        'checkpoint_sha256': sha256(changed['checkpoint_raw']).hexdigest(),
+        'checkpoint_iteration': 255, 'worlds': 128, 'capture_device': 'cuda:0',
+        'solved_field_check': 'packed', 'checker_sha256': 'f'*64}
+    binding.pop('launch_sha256')
+    changed['launch_raw'] = bundle.launch_bytes(binding, identity)
+    binding['launch_sha256'] = sha256(changed['launch_raw']).hexdigest()
+    changed['binding'] = binding
+    changed['payload']['binding'] = deepcopy(binding)
+    changed['control_evidence']['binding'] = deepcopy(binding)
+    directory = tmp_path/'packed-cpu-fixture'
+    digest, score = bundle.write_bundle(directory, **changed)
+    assert bundle.verify_bundle(directory, digest, binding=binding,
+                                checkpoint_identity=identity) == score
+    assert score['binding'] == binding and len(score['attempts']) == 128
+    assert score['strict_checkpoint_checked'] and score['deterministic_actor_replay_checked']
+    assert score['compiled_plant_checked'] and score['delayed_motor_targets_checked']
+    assert score['complete_attempts'] == 0
+    assert not score['provenance_validated'] and not score['checkpoint_admitted']
+    assert not score['learned_stance_accepted'] and not score['physical_motion_authorized']
+    assert not torch.cuda.is_initialized()
+
+
 def test_rehashed_false_plant_refused_before_publication(tmp_path, inputs):
     import json
     changed = deepcopy(inputs)
@@ -209,4 +258,3 @@ def test_unlisted_protocol_refused_even_if_binding_validation_is_bypassed(monkey
     with pytest.raises(ValueError, match='bundle loader for the trace protocol'):
         bundle.checked_inputs(binding, changed['checkpoint_raw'], changed['checkpoint_identity'],
                               changed['runtime_raw'], launch)
-

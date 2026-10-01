@@ -161,3 +161,8 @@ and first-attempt transition scorer for C1. Do not run it on the bespoke stance
 plant or label it accepted from structural checks. Ball work first audits the
 released plant and recurrent reset semantics against B0–B6; no direct football
 promotion is granted.
+
+Follow-up: [C1 preparation and contract audit](2026-10-01-community-hop-c1-preparation.md)
+implements/tests the proposed first-attempt scorer, but does not run a replay.
+The inspected release lacks the exact entry walker and Happy Hop task overlay;
+these must be source-bound before a matched simulation can start.

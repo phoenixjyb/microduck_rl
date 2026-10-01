@@ -23,6 +23,12 @@ skills or replacements for the historical sprung-K3900 H1 and soccer-ball
 B0–B6 gates. Pinned public artifacts are quarantined for CPU structural inspection;
 no new training or controller switching is admitted by the research.
 
+The [C1 preparation](experiments/2026-10-01-community-hop-c1-preparation.md)
+now supplies tested first-attempt trace scoring and proposed timing/history
+helpers. These are not a replay result. A matched Happy Hop diagnostic remains
+blocked on the exact entry walker, missing task/run overlay and transition
+semantics; the current official walker is not silently substituted.
+
 September16 addition: the B1-N stance track's
 [residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) is a
 **predeclaration, not a result**. The completed frozen initializer/final

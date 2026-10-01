@@ -1,0 +1,154 @@
+{
+  "schema": "community-hop-substitution-predeclaration-v1",
+  "experiment_id": "community-hop-c1s-velstand-substitution-v1",
+  "status": "predeclared-runner-not-implemented",
+  "authority": {
+    "predeclaration_only": true,
+    "policy_execution_approved": false,
+    "training_approved": false,
+    "run_go_ahead_required": true
+  },
+  "source_base": "61d84991938d0181cf78c560a8a33d98d92f4526",
+  "measurement": {
+    "protocol": "community-hop-c1-first-attempt-v1",
+    "trace_schema": "community-hop-c1-trace-v1",
+    "scorer_path": "src/mjlab_microduck/community_hop_rehearsal.py",
+    "scorer_sha256": "019ade48269ef5bbcf59abd9f8160dbf87caa1432d834fcbb6e6bcf5744b3ef8"
+  },
+  "policies": {
+    "walk": {
+      "repo": "pollen-robotics/microduck-policies",
+      "revision": "1b56c396825c052a4e26e95cf2b8d8298af9e9b4",
+      "upstream_file": "velstand.onnx",
+      "local_path": "artifacts/community/intake-20261001/official-velstand/policy.onnx",
+      "sha256": "1c659be55da94bc5753b707de5c6a3e7c49931e05ca3b6991615cef1a8ba9a45",
+      "bytes": 793705,
+      "exact_training_source_verified": false
+    },
+    "hop": {
+      "repo": "joanfox/microduck-happy-hop",
+      "revision": "c0447da668255436eea070e862ad8eb89bad2ba1",
+      "upstream_file": "policy.onnx",
+      "local_path": "artifacts/community/intake-20261001/happy-hop/policy.onnx",
+      "sha256": "abd6db1bca2f2a583508cfd9a6fd144a7cce65b302827b9b9a0c5227fc2acae9",
+      "bytes": 793778,
+      "exact_training_source_verified": false
+    }
+  },
+  "interface": {
+    "input": {"name": "obs", "dtype": "float32", "shape": [1, 61]},
+    "output": {"name": "actions", "dtype": "float32", "shape": [1, 14]},
+    "joint_names": ["left_hip_yaw", "left_hip_roll", "left_hip_pitch", "left_knee", "left_ankle", "neck_pitch", "head_pitch", "head_yaw", "head_roll", "right_hip_yaw", "right_hip_roll", "right_hip_pitch", "right_knee", "right_ankle"],
+    "home_rad": [0.0, -0.0873, -0.4579, -0.0049, 0.4530, 0.3491, 0.3491, 0.0, 0.0, 0.0, 0.0873, 0.4579, 0.0049, -0.4530],
+    "action_scale": 1.0,
+    "normalizer": "baked-onnx-only-no-external-normalization",
+    "normalizer_parity_verified": false,
+    "position_view": "servo-plus-backlash-minus-home",
+    "velocity_view": "servo-plus-backlash",
+    "joint_velocity_observation_lag_steps": 1,
+    "other_observation_lag_steps": 0,
+    "observation_noise": false,
+    "encoder_bias_rad": 0.0
+  },
+  "plant": {
+    "kind": "our-controlled-stock-backlash-surrogate-not-author-training-plant",
+    "scene_path": "src/mjlab_microduck/robot/microduck/scene_backlash.xml",
+    "scene_sha256": "9ad82184844332f3999a3bb4e634700e8d8010f9974744c16f9ac174243cf488",
+    "robot_path": "src/mjlab_microduck/robot/microduck/robot_allcollisions_backlash.xml",
+    "robot_sha256": "248c712e13258104ccab3f96c5cc47c7faa8f718f56f2c7de03efda653c8fb6b",
+    "asset_tree_sha1": "ea23327c83f492b1a4e96f7b37dc4a1098cf8b9d",
+    "initial_base_xyz_m": [0.0, 0.0, 0.12],
+    "initial_base_quaternion_wxyz": [1.0, 0.0, 0.0, 0.0],
+    "initial_servo_pose": "interface.home_rad",
+    "initial_passive_positions_rad": 0.0,
+    "initial_velocity": 0.0,
+    "keep_source_collision_masks_and_contacts": true,
+    "expected_ground_enabled_robot_geom_count": 10,
+    "floor_geom": "floor",
+    "foot_geoms": ["left_foot_collision", "right_foot_collision"],
+    "nonfoot_floor_contact_is_fatal": true,
+    "solver": "Newton",
+    "integrator": "Euler",
+    "iterations": 100,
+    "ls_iterations": 50,
+    "tolerance": 1e-8,
+    "gravity_m_s2": [0.0, 0.0, -9.81],
+    "motor_model": "BAM-XL330-M6-voltage-current-limiter-not-position-PD",
+    "bam_git_revision": "62bd8ce12154340be97e06f7f41a0ca8f116d967",
+    "bam_parameters_sha256": "61c699362fb3fabdde93eeba5e1ad3bf4ef9ca2f71d03e316b1924ff005b20d3",
+    "vin_v": 7.4,
+    "kp_fw": 200.0,
+    "max_current_a": 1.75,
+    "voltage_drop_gain": 0.0,
+    "firmware_position_view": "servo-plus-backlash",
+    "back_emf_and_friction_velocity_view": "motor-side",
+    "soft_joint_limit_factor": 0.9,
+    "domain_randomization": false,
+    "hidden_support": false
+  },
+  "runtime": {
+    "backend": "native-cpu-mujoco",
+    "ort_provider": "CPUExecutionProvider",
+    "ort_intra_threads": 1,
+    "ort_inter_threads": 1,
+    "cuda_visible_devices": "",
+    "physics_dt_s": 0.005,
+    "control_dt_s": 0.02,
+    "action_delay_steps": 1,
+    "action_lowpass": "none",
+    "action_clipping": "none",
+    "initial_previous_raw_action": "zeros",
+    "initial_action_delay_queue": "zeros",
+    "initial_velocity_observation_queue": "zeros",
+    "switch_history": "carry-all-three-histories-no-reset",
+    "versions": {"mujoco": "3.10.0", "better-actuator-models": "1.0.1", "onnx": "1.22.0", "onnxruntime": "1.24.4"},
+    "uv_lock_sha256": "84dc822f2d75a4368fe70f09ca0a2dcc7dbc1d523ccb35455d374d02c4c7f88d"
+  },
+  "schedule": [
+    {"phase": "walk", "duration_s": 3.0, "command_vx_m_s": 0.2},
+    {"phase": "entry_settle", "duration_s": 1.0, "command_vx_m_s": 0.0},
+    {"phase": "hop", "duration_s": 3.0, "command_vx_m_s": 0.0},
+    {"phase": "landing_settle", "duration_s": 2.0, "command_vx_m_s": 0.0},
+    {"phase": "resume_walk", "duration_s": 3.0, "command_vx_m_s": 0.2}
+  ],
+  "other_command_slots": "all-twelve-zero",
+  "cases": [
+    {"id": "walk-only-control", "policy_sequence": ["walk", "walk", "walk", "walk", "walk"], "run_if": "preflight-passed"},
+    {"id": "walk-hop-transition", "policy_sequence": ["walk", "walk", "hop", "walk", "walk"], "run_if": "walk-only-control-indicators-pass"}
+  ],
+  "baseline_requirements": {
+    "shared_measurement_gates": ["complete_first_attempt", "no_fatal_event", "approach_speed_heading", "stable_entry", "hop_settle_drift_100mm", "resume_speed_heading", "modeled_current_1p75a", "no_soft_limit_exposure", "finite_derived_peaks"],
+    "stable_final_zero_command_window_s": [8.0, 9.0],
+    "qualified_airborne_episode_count_4_9": 0,
+    "never_apply_hop_overall_decision_to_baseline": true
+  },
+  "budget": {
+    "max_attempts": 2,
+    "max_simulated_s_per_attempt": 12.0,
+    "states_per_complete_attempt": 2401,
+    "max_setup_wall_s": 60.0,
+    "max_wall_s_per_attempt": 60.0,
+    "max_campaign_wall_s": 180.0,
+    "automatic_retry": false,
+    "save_partial_failure_on_timeout": true,
+    "sequential_only": true
+  },
+  "evidence": {
+    "artifact_root": "artifacts/community/c1s-velstand-substitution-v1",
+    "unique_attempt_directories_no_overwrite": true,
+    "required": ["predeclaration-bytes-and-sha256", "runner-source-commit-and-sha256", "policy-bytes-hashes-and-metadata", "effective-compiled-plant-and-bam-settings", "runtime-versions-and-provider", "physics-substep-trace", "first-failure-and-timeout-evidence", "per-case-metrics-and-gates", "deterministic-sequential-decision", "artifact-hash-manifest"],
+    "report_identity": ["experiment_id", "case_id", "measurement_protocol", "measurement_scorer_sha256", "predeclaration_sha256", "runner_source_commit"]
+  },
+  "not_claimed": {
+    "author_entry_replication": false,
+    "author_training_plant_binding": false,
+    "impact_limit_calibrated": false,
+    "thermal_model_verified": false,
+    "behavioral_acceptance": false,
+    "multi_seed_promotion": false,
+    "training_authorized_by_predeclaration": false,
+    "deployment_transition_authorized": false,
+    "physical_motion_authorized": false
+  },
+  "excluded": ["gpu-workload", "remote-service-changes", "dependency-upgrades", "new-training", "h1-gate-changes", "mp4", "raw-perception", "physical-motion"]
+}

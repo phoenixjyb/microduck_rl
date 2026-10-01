@@ -196,3 +196,8 @@ Next gate: obtain/bind the immutable source handoff above, or explicitly
 predeclare a substituted-entry diagnostic under a new identity. Only then
 implement and test the native-CPU BAM runner against the actual task/transition
 contract and execute the single bounded first attempt.
+
+Subsequent user decision: a separately labelled official-walker substitution
+is approved for predeclaration. See [C1-S](2026-10-01-community-hop-c1s-predeclaration.md)
+for its explicit surrogate and baseline-first budget. This does not resolve
+the original author-matched C1 blockers or claim a replay has executed.

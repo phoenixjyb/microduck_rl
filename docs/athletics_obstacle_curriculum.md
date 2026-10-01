@@ -29,6 +29,11 @@ helpers. These are not a replay result. A matched Happy Hop diagnostic remains
 blocked on the exact entry walker, missing task/run overlay and transition
 semantics; the current official walker is not silently substituted.
 
+The separately approved [C1-S substitution diagnostic](experiments/2026-10-01-community-hop-c1s-predeclaration.md)
+is now predeclared: a walker-only control precedes one conditional hop handoff
+on an explicit CPU surrogate. It is not author replication, a completed replay
+or skill admission; tested runner/plant binding still precedes execution.
+
 September16 addition: the B1-N stance track's
 [residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) is a
 **predeclaration, not a result**. The completed frozen initializer/final

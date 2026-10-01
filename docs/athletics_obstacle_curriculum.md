@@ -16,6 +16,13 @@ retention. This is a new requirement, not an achieved capability or a renamed
 ball-kicking/roller-foot task. The renewed simulation/development window ends
 September9 07:30 Asia/Shanghai; old expired campaign windows below remain historical.
 
+October1 addition: the [community skills research and intake](experiments/2026-10-01-community-skills-research.md)
+identifies a stock/backlash one-shot hop reference and a recurrent basketball
+balance reference. These are separate candidate investigations, not accepted
+skills or replacements for the historical sprung-K3900 H1 and soccer-ball
+B0–B6 gates. Pinned public artifacts are quarantined for CPU structural inspection;
+no new training or controller switching is admitted by the research.
+
 September16 addition: the B1-N stance track's
 [residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) is a
 **predeclaration, not a result**. The completed frozen initializer/final

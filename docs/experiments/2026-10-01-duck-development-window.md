@@ -299,3 +299,12 @@ timing probe from reviewed repaired source, **not** another learner or a reduced
 matrix. A successful complete measurement may then support the full evaluator's
 measured-cap predeclaration. No nominal replication, recovery, hopping, obstacle
 or football capability is newly accepted by today's three learner completions.
+
+## Separately renewed single-probe authority
+
+Following the 18:00 closeout, the user asked to continue and for a current Duck
+status. The [R1 predeclaration](2026-10-01-wsl-packed-evaluation-probe-r1.md)
+limits this renewal to one repaired fixed timing probe, starting no earlier than
+18:02 and ending at **19:00 Shanghai** today. Historical archives and cutoffs
+remain unchanged. No new learner, full matrix or skill promotion is authorized
+by this bounded step; qualification and exact-source tests precede installation.

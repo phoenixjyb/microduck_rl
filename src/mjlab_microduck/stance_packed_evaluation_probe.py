@@ -6,6 +6,7 @@ held-out cases remain blocked until a later reviewed measured-cap declaration.
 """
 import argparse
 from copy import deepcopy
+from datetime import datetime, timezone
 from hashlib import sha256
 import math
 import os
@@ -29,6 +30,16 @@ PROTOCOL = DECLARATION['protocol']
 CHILD_SECONDS, SERVICE_SECONDS, CLOSEOUT_SECONDS = 600, 960, 600
 MARGIN_SECONDS, MAX_PROBE_WINDOW, MAX_EVALUATION_WINDOW = 60, 3600, 7200
 PROBE_TRAINING_SEED = lean.PACKED_REPLICATION['seeds'][0]
+LEGACY_WINDOW = 'oct1-before-18'
+REPAIRED_WINDOW = 'oct1-replay-repair-18-to-19'
+# A fresh, explicitly authorized single probe, not a mutation of the consumed
+# before-18 declaration or the historical qualification/training cutoff.
+WINDOWS = {
+    LEGACY_WINDOW: dict(not_before=None, cutoff=qualification.PACKED_CUTOFF),
+    REPAIRED_WINDOW: dict(
+        not_before=int(datetime(2026, 10, 1, 10, 2, tzinfo=timezone.utc).timestamp()),
+        cutoff=int(datetime(2026, 10, 1, 11, 0, tzinfo=timezone.utc).timestamp())),
+}
 
 
 def probe_seed(seed):
@@ -36,11 +47,23 @@ def probe_seed(seed):
     return seed
 
 
-def check_window(deadline, *, launching=False):
-    require(host.execution.PROFILE['name'] == host.execution.WSL, 'exact packed probe WSL profile')
-    require(type(deadline) is int and deadline <= qualification.PACKED_CUTOFF,
+def checked_deadline(deadline, window):
+    require(type(window) is str and window in WINDOWS, 'explicit declared packed probe window')
+    limits = WINDOWS[window]
+    require(type(deadline) is int and deadline <= limits['cutoff'],
             'packed probe wholly before authorized October 1 cutoff')
-    remaining = deadline-time.time()
+    require(limits['not_before'] is None or deadline > limits['not_before'],
+            'renewed packed probe deadline after its declared start')
+    return limits
+
+
+def check_window(deadline, *, launching=False, window=LEGACY_WINDOW):
+    require(host.execution.PROFILE['name'] == host.execution.WSL, 'exact packed probe WSL profile')
+    limits = checked_deadline(deadline, window)
+    now = time.time()
+    require(limits['not_before'] is None or now >= limits['not_before'],
+            'renewed packed probe cannot launch before its declared start')
+    remaining = deadline-now
     require(math.isfinite(remaining) and 0 < remaining <= MAX_PROBE_WINDOW, 'fresh bounded probe window')
     if launching:
         require(remaining > SERVICE_SECONDS+CLOSEOUT_SECONDS+MARGIN_SECONDS,
@@ -57,11 +80,10 @@ def service_name(source, seed):
     return f'microduck-wsl-packed-eval-probe-{source[:12]}-seed-{seed}.service'
 
 
-def plan(source, inputs, runtime_sha, retained, deadline):
+def plan(source, inputs, runtime_sha, retained, deadline, *, window=LEGACY_WINDOW):
     files.hex_id(source, 40); files.hex_id(runtime_sha, 64)
     require(host.execution.PROFILE['name'] == host.execution.WSL, 'exact packed probe WSL profile')
-    require(type(deadline) is int and deadline <= qualification.PACKED_CUTOFF,
-            'packed probe wholly before authorized October 1 cutoff')
+    checked_deadline(deadline, window)
     files.hex_id(retained['source'], 40); files.hex_id(retained['report_sha256'], 64)
     require([c['identity']['iteration'] for c in retained['checkpoints']] == list(lean.CHECKPOINTS),
             'all four common checkpoints in completed packed archive')
@@ -75,7 +97,7 @@ def plan(source, inputs, runtime_sha, retained, deadline):
         evaluation_seed=evaluation.PROBE_SEED, worlds=evaluation.WORLDS, capture_device='cuda:0',
         solved_field_check='packed', checker_sha256=host.digest(checker.__file__))
     binding['launch_sha256'] = sha256(evaluation.bundle.launch_bytes(binding, meta)).hexdigest()
-    return dict(protocol=PROTOCOL, mode='probe', source=source, inputs=inputs,
+    result = dict(protocol=PROTOCOL, mode='probe', source=source, inputs=inputs,
         runtime_sha256=runtime_sha, retained_training=deepcopy(retained), deadline_unix=deadline,
         cases=[dict(name='packed-probe-255-seed-541', binding=binding, checkpoint=deepcopy(saved))],
         worlds_per_case=evaluation.WORLDS, cases_required=1, attempts_required=evaluation.WORLDS,
@@ -89,11 +111,15 @@ def plan(source, inputs, runtime_sha, retained, deadline):
         tilt_gate_rad=evaluation.TILT_GATE_RAD, tilt_gate_relaxed=False,
         full_evaluation_enabled=False, checkpoint_admitted=False, learned_stance_accepted=False,
         football_balance_accepted=False, physical_motion_authorized=False)
+    # Preserve historical launch bytes exactly; only the renewed declaration
+    # carries an explicit label, independently bound by the top-level hash.
+    if window != LEGACY_WINDOW: result['execution_window'] = window
+    return result
 
 
-def prepare(source, training_source, seed, deadline):
+def prepare(source, training_source, seed, deadline, *, window=LEGACY_WINDOW):
     probe_seed(seed)
-    check_window(deadline, launching=True)
+    check_window(deadline, launching=True, window=window)
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only packed evaluation probe preparation')
     inputs = host.identity(source)
@@ -104,7 +130,7 @@ def prepare(source, training_source, seed, deadline):
             and training_launch['checker_sha256'] == host.digest(checker.__file__),
             'same frozen host/stack/plant/checker as completed packed training')
     runtime = plant.runtime_bytes(source, plant.build_entity().compile())
-    launch = plan(source, inputs, sha256(runtime).hexdigest(), retained, deadline)
+    launch = plan(source, inputs, sha256(runtime).hexdigest(), retained, deadline, window=window)
     root = files.native._plain_path(output_path(source, seed)); root.mkdir(exist_ok=False)
     smoke.write_bytes(root/'runtime.json', runtime); files.write_json(root/'launch.json', launch)
     return dict(output=str(root), service=service_name(source, seed), launch_sha256=host.digest(root/'launch.json'))
@@ -117,7 +143,8 @@ def checked(source, seed, launch_sha):
     launch = files.parse(files.file_bytes(root/'launch.json'))
     retained = evaluation.training_inputs(DECLARATION, seed, launch['retained_training']['source'])
     require(launch == plan(source, host.identity(source), host.digest(root/'runtime.json'),
-            retained, launch['deadline_unix']), 'unchanged packed probe source/host/archive/plan')
+            retained, launch['deadline_unix'], window=launch.get('execution_window', LEGACY_WINDOW)),
+            'unchanged packed probe source/host/archive/plan')
     plant.checked_runtime(files.parse(files.file_bytes(root/'runtime.json')), source)
     return launch
 
@@ -167,7 +194,8 @@ def child(source, seed, launch_sha, fd, started):
     require(type(started) is float and math.isfinite(started) and 0 < entered-started < CHILD_SECONDS,
             'same-clock pre-exec monotonic start')
     smoke.inherited_lease(fd); launch = checked(source, seed, launch_sha)
-    check_window(launch['deadline_unix'], launching=True)
+    check_window(launch['deadline_unix'], launching=True,
+                 window=launch.get('execution_window', LEGACY_WINDOW))
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '0' and torch.cuda.is_available(), 'explicit CUDA0 probe child')
     host.wait_idle(); root = output_path(source, seed)
     _, receipts = evaluation.run_cases(launch, root, files.file_bytes(root/'runtime.json'),
@@ -211,7 +239,8 @@ def verify_retained(root, launch_sha, report_sha):
         'learned_stance_accepted', 'football_balance_accepted', 'physical_motion_authorized')),
         'retained probe cannot enable capability')
     require(launch == plan(launch['source'], launch['inputs'], host.digest(root/'runtime.json'),
-            launch['retained_training'], launch['deadline_unix']), 'rederived source-bound probe plan')
+            launch['retained_training'], launch['deadline_unix'],
+            window=launch.get('execution_window', LEGACY_WINDOW)), 'rederived source-bound probe plan')
     require(set(report['files']) == {p.name for p in root.iterdir() if p.is_file()}-{'report.json'}
             and all(host.digest(root/name) == digest for name, digest in report['files'].items()
                     if name == os.path.basename(name) and name not in ('.', '..'))
@@ -235,7 +264,8 @@ def verify_retained(root, launch_sha, report_sha):
 def supervise(source, seed, launch_sha):
     service_started = time.monotonic()
     check_service(source, seed); launch = checked(source, seed, launch_sha)
-    check_window(launch['deadline_unix'], launching=True); root = output_path(source, seed)
+    check_window(launch['deadline_unix'], launching=True,
+                 window=launch.get('execution_window', LEGACY_WINDOW)); root = output_path(source, seed)
     require({p.name for p in root.iterdir()} == {'launch.json', 'runtime.json'}, 'one fresh packed probe attempt')
     report = dict(protocol=PROTOCOL, launch_sha256=launch_sha, decision='failed', optimizer_steps=0,
         full_evaluation_enabled=False, checkpoint_admitted=False, learned_stance_accepted=False,
@@ -244,7 +274,8 @@ def supervise(source, seed, launch_sha):
         with files.gpu_lease() as fd:
             report['idle_before'] = host.wait_idle()
             def guard():
-                check_window(launch['deadline_unix']); host.check_log(root/'child.log')
+                check_window(launch['deadline_unix'],
+                             window=launch.get('execution_window', LEGACY_WINDOW)); host.check_log(root/'child.log')
                 require(host.identity(source) == launch['inputs'], 'live packed probe inputs drift')
             started = time.monotonic()
             require(CHILD_SECONDS == files.PACKED_EVALUATION_PROBE_CHILD_SECONDS,
@@ -281,12 +312,14 @@ def parser():
     result.add_argument('--seed', type=int, required=True); result.add_argument('--deadline-unix', type=int)
     result.add_argument('--launch-sha256'); result.add_argument('--lock-fd', type=int)
     result.add_argument('--started-monotonic', type=float)
+    result.add_argument('--execution-window', choices=tuple(WINDOWS), default=LEGACY_WINDOW)
     return result
 
 
 def main():
     args = parser().parse_args()
-    if args.mode == 'prepare': print(canonical(prepare(args.source, args.training_source, args.seed, args.deadline_unix)))
+    if args.mode == 'prepare': print(canonical(prepare(args.source, args.training_source, args.seed,
+                                                   args.deadline_unix, window=args.execution_window)))
     elif args.mode == 'supervise': supervise(args.source, args.seed, args.launch_sha256)
     else: child(args.source, args.seed, args.launch_sha256, args.lock_fd, args.started_monotonic)
 

@@ -83,8 +83,8 @@ has completed all three matched seeds **577/587/593** on that frozen source.
 Each complete archive and copied bytes passed verification on WSL and Mac:
 771 exports including initializers, 768 finite optimizer receipts and 18,432
 ordered finite-reward ticks in total. This is an execution milestone, **not** a
-new stance, obstacle, hopping or football achievement. The active CLI authority
-ends October 1 at 18:00 Shanghai; no confirmed background automation exists.
+new stance, obstacle, hopping or football achievement. The original CLI window
+ended October 1 at 18:00 Shanghai; no confirmed background automation exists.
 
 Training and capability evaluation remain separate. Every complete archive was
 authenticated before the single [WSL held-out timing probe](experiments/2026-10-01-wsl-packed-evaluation-probe.md).
@@ -103,6 +103,12 @@ This does not authorize an automatic retry. A separately reviewed fresh fixed
 probe, then a successful measured-cap full-evaluator declaration, still precede
 nominal replication acceptance; no recovery or ball lesson starts from a training
 completion alone.
+
+After that closeout the user renewed work. The separately predeclared
+[repaired timing probe R1](experiments/2026-10-01-wsl-packed-evaluation-probe-r1.md)
+allows one fresh fixed case through October 1 **19:00 Shanghai**, with unchanged
+600/960-second caps and all entry gates. It does not renew training or enable the
+full evaluator; if qualification leaves insufficient time, launch nothing.
 
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate

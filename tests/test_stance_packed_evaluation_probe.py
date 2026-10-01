@@ -115,6 +115,160 @@ def test_plan_binds_only_fixed255_seed541_packed_probe(monkeypatch):
         assert launch[key] is False
 
 
+def test_legacy_window_plan_is_byte_identical_and_default(monkeypatch):
+    select_wsl(monkeypatch)
+    legacy = probe.plan(SOURCE, {}, RUNTIME_SHA, retained_training(),
+                        qualification.PACKED_CUTOFF - 1)
+    explicit = probe.plan(SOURCE, {}, RUNTIME_SHA, retained_training(),
+                          qualification.PACKED_CUTOFF - 1, window=probe.LEGACY_WINDOW)
+    assert legacy == explicit
+    assert "execution_window" not in legacy
+    from mjlab_microduck.first_attempt_smoke import canonical
+    assert sha256(canonical(legacy).encode()).hexdigest() == (
+        "5ca4d5d8441d68057e912a2682cd5173fede3623808b90dfccc56accb48ea361")
+
+
+def test_repaired_window_plan_is_explicit_bounded_and_keeps_probe_caps(monkeypatch):
+    select_wsl(monkeypatch)
+    limits = probe.WINDOWS[probe.REPAIRED_WINDOW]
+    assert limits == {"not_before": 1_790_848_920, "cutoff": 1_790_852_400}
+    launch = probe.plan(SOURCE, {"fixture": True}, RUNTIME_SHA,
+        retained_training(), limits["cutoff"], window=probe.REPAIRED_WINDOW)
+    assert launch["execution_window"] == probe.REPAIRED_WINDOW
+    assert launch["deadline_unix"] == limits["cutoff"]
+    assert launch["cases_required"] == 1 and launch["attempts_required"] == 128
+    assert launch["child_timeout_seconds"] == 600
+    assert launch["service_timeout_seconds"] == 960
+    assert launch["closeout_seconds"] == 600 and launch["watchdog_margin_seconds"] == 60
+    assert launch["full_evaluation_enabled"] is False
+
+
+@pytest.mark.parametrize(("window", "deadline"), [
+    ("unknown", 1_790_852_400), (None, 1_790_852_400),
+    (probe.REPAIRED_WINDOW, True), (probe.REPAIRED_WINDOW, 1_790_852_400.0),
+    (probe.REPAIRED_WINDOW, 1_790_848_920),
+    (probe.REPAIRED_WINDOW, 1_790_852_401),
+    (probe.LEGACY_WINDOW, 1_790_852_401),
+])
+def test_plan_rejects_wrong_window_or_malformed_repaired_deadline(monkeypatch, window, deadline):
+    select_wsl(monkeypatch)
+    with pytest.raises(ValueError):
+        probe.plan(SOURCE, {}, RUNTIME_SHA, retained_training(), deadline, window=window)
+
+
+def test_repaired_window_clock_enforces_start_deadline_cap_and_no_next_day_borrow(monkeypatch):
+    select_wsl(monkeypatch)
+    limits = probe.WINDOWS[probe.REPAIRED_WINDOW]
+    monkeypatch.setattr(probe.time, "time", lambda: limits["not_before"] - 1)
+    with pytest.raises(ValueError, match="cannot launch before its declared start"):
+        probe.check_window(limits["cutoff"], window=probe.REPAIRED_WINDOW)
+
+    monkeypatch.setattr(probe.time, "time", lambda: limits["not_before"])
+    probe.check_window(limits["cutoff"], launching=True, window=probe.REPAIRED_WINDOW)
+    monkeypatch.setattr(probe.time, "time", lambda: limits["cutoff"] - 1_621)
+    probe.check_window(limits["cutoff"], launching=True, window=probe.REPAIRED_WINDOW)
+    monkeypatch.setattr(probe.time, "time", lambda: limits["cutoff"] - 1_620)
+    with pytest.raises(ValueError, match="whole packed probe plus closeout"):
+        probe.check_window(limits["cutoff"], launching=True, window=probe.REPAIRED_WINDOW)
+    monkeypatch.setattr(probe.time, "time", lambda: limits["cutoff"])
+    with pytest.raises(ValueError, match="fresh bounded probe window"):
+        probe.check_window(limits["cutoff"], window=probe.REPAIRED_WINDOW)
+    monkeypatch.setattr(probe.time, "time", lambda: limits["cutoff"] + 1)
+    with pytest.raises(ValueError):
+        probe.check_window(limits["cutoff"], window=probe.REPAIRED_WINDOW)
+    with pytest.raises(ValueError):
+        probe.check_window(limits["cutoff"] + 86_400, window=probe.REPAIRED_WINDOW)
+
+
+def test_prepare_refuses_before_fresh_window_without_identity_or_artifact_allocation(monkeypatch):
+    select_wsl(monkeypatch)
+    limits = probe.WINDOWS[probe.REPAIRED_WINDOW]
+    monkeypatch.setattr(probe.time, "time", lambda: limits["not_before"] - 1)
+    monkeypatch.setattr(probe.host, "identity", lambda *_: pytest.fail("preflight must precede identity"))
+    monkeypatch.setattr(probe.files.native, "_plain_path",
+                        lambda *_: pytest.fail("preflight must precede artifact allocation"))
+    with pytest.raises(ValueError, match="cannot launch before its declared start"):
+        probe.prepare(SOURCE, TRAINING_SOURCE, probe.PROBE_TRAINING_SEED,
+                      limits["cutoff"], window=probe.REPAIRED_WINDOW)
+
+
+def test_prepare_forwards_repaired_window_and_keeps_source_seed_service_unique(
+        tmp_path, monkeypatch):
+    select_wsl(monkeypatch)
+    limits = probe.WINDOWS[probe.REPAIRED_WINDOW]
+    monkeypatch.setattr(probe.time, "time", lambda: limits["not_before"])
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
+    monkeypatch.setattr(probe.torch.cuda, "is_initialized", lambda: False)
+    inputs = {"source": SOURCE, "fixture": True}
+    training_launch = {"inputs": {"source": TRAINING_SOURCE, "fixture": True},
+        "checker_sha256": probe.host.digest(checker.__file__)}
+    monkeypatch.setattr(probe.host, "identity", lambda _source: inputs)
+    monkeypatch.setattr(evaluation, "training_inputs", lambda *_: retained_training())
+    monkeypatch.setattr(probe.files, "file_bytes", lambda path, **_kwargs:
+        Path(path).read_bytes() if str(path) == str(checker.__file__) else b"training launch")
+    monkeypatch.setattr(probe.files, "parse", lambda _raw: training_launch)
+    monkeypatch.setattr(probe.plant, "build_entity", lambda: SimpleNamespace(compile=lambda: "plant"))
+    monkeypatch.setattr(probe.plant, "runtime_bytes", lambda *_: b"runtime")
+    root = tmp_path / "one-attempt"
+    monkeypatch.setattr(probe, "output_path", lambda *_: root)
+    real_plan = probe.plan
+    plan_windows = []
+    def capture_plan(*args, **kwargs):
+        plan_windows.append(kwargs.get("window", probe.LEGACY_WINDOW))
+        return real_plan(*args, **kwargs)
+    monkeypatch.setattr(probe, "plan", capture_plan)
+    monkeypatch.setattr(probe.files.native, "_plain_path", lambda path: path)
+    result = probe.prepare(SOURCE, TRAINING_SOURCE, probe.PROBE_TRAINING_SEED,
+                           limits["cutoff"], window=probe.REPAIRED_WINDOW)
+    saved = json.loads((root / "launch.json").read_text())
+    assert plan_windows == [probe.REPAIRED_WINDOW]
+    assert saved["execution_window"] == probe.REPAIRED_WINDOW
+    assert result["service"] == probe.service_name(SOURCE, probe.PROBE_TRAINING_SEED)
+    assert probe.output_path(SOURCE, probe.PROBE_TRAINING_SEED) == root
+    assert probe.service_name(SOURCE, probe.PROBE_TRAINING_SEED) != probe.service_name("f"*40, probe.PROBE_TRAINING_SEED)
+
+
+def test_prepare_cli_defaults_legacy_and_accepts_only_declared_repaired_window():
+    default = probe.parser().parse_args(["prepare", "--source", SOURCE, "--training-source",
+        TRAINING_SOURCE, "--seed", str(probe.PROBE_TRAINING_SEED), "--deadline-unix", "100"])
+    assert default.execution_window == probe.LEGACY_WINDOW
+    fresh = probe.parser().parse_args(["prepare", "--source", SOURCE, "--training-source",
+        TRAINING_SOURCE, "--seed", str(probe.PROBE_TRAINING_SEED), "--deadline-unix", "100",
+        "--execution-window", probe.REPAIRED_WINDOW])
+    assert fresh.execution_window == probe.REPAIRED_WINDOW
+    with pytest.raises(SystemExit):
+        probe.parser().parse_args(["prepare", "--source", SOURCE, "--training-source",
+            TRAINING_SOURCE, "--seed", str(probe.PROBE_TRAINING_SEED), "--deadline-unix", "100",
+            "--execution-window", "next-day"])
+
+
+def test_checked_rederives_fresh_window_label_from_saved_launch(tmp_path, monkeypatch):
+    select_wsl(monkeypatch)
+    root = tmp_path / "checked-attempt"
+    root.mkdir()
+    monkeypatch.setattr(probe, "output_path", lambda *_: root)
+    inputs = {"source": SOURCE, "fixture": True}
+    monkeypatch.setattr(probe.host, "identity", lambda _source: inputs)
+    retained = retained_training()
+    monkeypatch.setattr(evaluation, "training_inputs", lambda *_: retained)
+    monkeypatch.setattr(probe.plant, "checked_runtime", lambda *_: None)
+    runtime = b'{"fixture":"runtime"}'
+    (root / "runtime.json").write_bytes(runtime)
+    limits = probe.WINDOWS[probe.REPAIRED_WINDOW]
+    launch = probe.plan(SOURCE, inputs, sha256(runtime).hexdigest(), retained,
+                        limits["cutoff"] - 1, window=probe.REPAIRED_WINDOW)
+    launch_path = root / "launch.json"
+    launch_path.write_text(json.dumps(launch, sort_keys=True, separators=(",", ":")) + "\n")
+    launch_sha = probe.host.digest(launch_path)
+    checked = probe.checked(SOURCE, probe.PROBE_TRAINING_SEED, launch_sha)
+    assert checked["execution_window"] == probe.REPAIRED_WINDOW
+
+    legacy_label = {**launch, "execution_window": probe.LEGACY_WINDOW}
+    launch_path.write_text(json.dumps(legacy_label, sort_keys=True, separators=(",", ":")) + "\n")
+    with pytest.raises(ValueError, match="packed probe wholly before authorized October 1 cutoff"):
+        probe.checked(SOURCE, probe.PROBE_TRAINING_SEED, probe.host.digest(launch_path))
+
+
 @pytest.mark.parametrize("damage", ["wrong_seed", "wrong_iteration", "wrong_file", "wrong_source", "wrong_hash", "wrong_worlds"])
 def test_plan_rejects_changed_checkpoint_source_seed_and_final_iteration(monkeypatch, damage):
     select_wsl(monkeypatch)
@@ -381,14 +535,17 @@ def test_training_inputs_authenticates_complete_replication_before_selected_load
     assert all(digest == sha256(raw).hexdigest() for raw, digest, _identity in loads)
 
 
-def _retained_probe_fixture(tmp_path, monkeypatch):
+def _retained_probe_fixture(tmp_path, monkeypatch, *, window=probe.LEGACY_WINDOW):
     select_wsl(monkeypatch)
     root = tmp_path / "retained-probe"
     root.mkdir()
     retained = retained_training()
     runtime_raw = b'{"runtime":"fixture"}'
     launch = probe.plan(SOURCE, {"host": "fixture"}, sha256(runtime_raw).hexdigest(),
-                        retained, qualification.PACKED_CUTOFF - 1)
+                        retained,
+                        probe.WINDOWS[window]["cutoff"] if window != probe.LEGACY_WINDOW
+                        else qualification.PACKED_CUTOFF - 1,
+                        window=window)
     launch_raw = (json.dumps(launch, sort_keys=True, separators=(",", ":")) + "\n").encode()
     (root / "launch.json").write_bytes(launch_raw)
     (root / "runtime.json").write_bytes(runtime_raw)
@@ -599,6 +756,19 @@ def test_verify_retained_accepts_oversize_measurement_only_as_timing_rejection(t
     verified = probe.verify_retained(root, report["launch_sha256"], report_sha)
     assert verified["fits_declared_wsl_window"] is False
     assert verified["full_evaluation_enabled"] is False
+
+
+def test_verify_retained_rederives_explicit_repaired_window_without_admission(
+        tmp_path, monkeypatch):
+    root, launch, report = _retained_probe_fixture(
+        tmp_path, monkeypatch, window=probe.REPAIRED_WINDOW)
+    assert launch["execution_window"] == probe.REPAIRED_WINDOW
+    timing = probe.verify_retained(root, report["launch_sha256"], probe.host.digest(root / "report.json"))
+    assert timing["fits_declared_wsl_window"] is True
+    assert report["full_evaluation_enabled"] is False
+    assert report["checkpoint_admitted"] is False
+    assert report["learned_stance_accepted"] is False
+    assert report["physical_motion_authorized"] is False
 
 
 @pytest.mark.parametrize("started", [None, float("nan"), 12.0, 11.0, 12])

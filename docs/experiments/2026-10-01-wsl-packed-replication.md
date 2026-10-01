@@ -101,12 +101,50 @@ The retained initializer binds state SHA256
 `0ca246873f1143c540ecdebb6e6bc80cb826f86b558dda9c3cff8c5694263144`;
 the pinned parent weight SHA remains
 `46cd52b53f7b8b9fb220aed96d78cd961423c606e906a4df7330422ae4786e93`.
-Training is in progress, not complete or accepted. Seeds 587/593 have not
-launched. Future local evaluator/documentation commits must **not** fast-forward
-the active WSL source or invalidate later seeds' exact qualification.
+Seed 577 completed successfully at approximately 14:32 Shanghai: child exit 0,
+service `Result=success` / `ExecMainStatus=0`, child elapsed **3,642.981 seconds**,
+decision `lean-replication-complete-not-capability`. WSL verification and an
+independent CPU replay of the copied Mac archive both checked the exact
+**6,663-file** inventory, all 6,662 payload hashes, initializer plus 256 weight
+exports, 256 finite optimizer receipts and 6,144 ordered finite-reward tick
+receipts. This is byte/contract verification, not an independent GPU rerun or
+held-out capability result. Report SHA256:
+`2a5a3ec503bcf39ed89d4f3a82cea8b2bd3974741313f3c7cd2ab8d97280b5de`.
+
+The four retained common checkpoint hashes are:
+
+| Checkpoint | SHA256 |
+| --- | --- |
+| 64 | `425413e4d7908d92fb038eca71532fd0fa7c3428cc045f9fed8f5ebd7349dd19` |
+| 128 | `1404cf461481bf8a1f375d1fe0c64a24bb3f4a58d394dbd71a95830655e0230c` |
+| 192 | `356563bea1364c3104c38c00fb73bcd23e43e3ba48cf3ddadd4b72a4cc778a3c` |
+| 255 | `2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5` |
+
+Descriptive training receipts record 475 failure events: 238 during the first
+16 updates and zero during the last 16. Modeled maxima were **0.13981843 Nm**
+applied torque and **0.77446574 rad/s** joint speed, with zero soft-joint-limit
+samples out of **55,020,826 executed joint samples**. No motor thermal model or
+spring-bottoming model is available in this stance plant. Sampled GPU peaks
+were **54 C / 1,237 MiB**, not a motor thermal
+calibration. The final two idle samples had no compute PID, 0% utilization and
+672 MiB GPU memory. FilmBrain remained active with zero restarts; the protected
+system/user services remained inactive.
+
+After independently verifying the closed seed-577 archive, fresh idle GPU,
+clean exact source and remaining full budget, seed **587** launched at
+approximately **14:40 Shanghai** in
+`microduck-lean-replication-packed-be2d59661af2-seed-587.service`, invocation
+`fdc879ffb1d74b3e8d9bcb15b4260abe`. Source, parent, resources and fixed
+4,320/4,380-second bounds are unchanged. Its absolute deadline is
+**1790842452** (16:14:12 Shanghai), and launch SHA256 is
+`b926278f15cfa0f6f0cac70614f544b7095293e06d407d82d34818a97fbc6a55`.
+Seed 587 is in progress; seed 593 has not launched. No held-out matrix has run.
+Future local evaluator/documentation commits must **not** fast-forward the active
+WSL source or invalidate later seeds' exact qualification.
 
 The separate [held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md)
-is being prepared locally; it is not the full evaluator. The old
+is implemented and CPU-tested locally, but has not launched; it is not the full
+evaluator. The old
 `987b452dbfdb` source is retained as a
 detached worktree at `artifacts/tools/runtime-baseline-987b452dbfdb` on WSL;
 completed microbenchmark receipts remain unchanged on both hosts.

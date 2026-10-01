@@ -192,7 +192,9 @@ recipe: 771 exports including initializers, 768 finite optimizer receipts and
 the GPU was idle with no compute PID, and FilmBrain/protected-service states
 unchanged. These are descriptive training and byte-verification results,
 **not** a held-out or learned-capability decision. No full matrix has run.
-The seed-593 archive is being copied to the Mac for independent CPU replay.
+The seed-593 archive was copied to the Mac; independent CPU replay also passed
+its exact inventory, all payload/checkpoint/update/tick hashes and finite rewards.
+Thus all three complete training archives are durable and verified on both hosts.
 
 Only now may a later evaluator source be validated on Linux and installed on
 the idle host. Preserve the exact `be2d59661af2` training source snapshot and all

@@ -137,7 +137,28 @@ focused tests** and **339 selected CPU tests** passed, including rehashed
 malformed/over-limit child receipts and contradictory child/service timing.
 This changes only retained-evidence checks, not live caps, runtime or skill gates.
 
-This probe has **not launched**. Active learner source is unchanged. Commit/push
-and test this source on Linux before installing it on an idle host. No full
-packed evaluation is enabled. The historical WSL full evaluator still refuses
-preparation and its registry excludes this probe-only continuation.
+After all three learners completed, their full archives were verified on WSL and
+the copied bytes independently replayed on the Mac. **339 selected CPU tests**
+also passed on Linux in an isolated source-only validation worktree, explicitly
+loading the new source with CUDA hidden and uninitialized. Fixture tests used
+the default profile, not a globally forced WSL profile. Production does not use
+the validation process's `PYTHONPATH` override or a rewritten environment.
+
+The exact fork tip `d4e96cda975f943ac89aacbbed62e99f1c9f00d1` was transferred by
+a hash-checked Git bundle, preserving the clean training source as detached
+`artifacts/tools/runtime-packed-training-be2d59661af2`. The validation snapshot
+is `artifacts/tools/probe-validation-d4e96cda975f`. These are source snapshots,
+not separately restored binary environments. Only after Linux validation and
+fresh frozen-host/two-sample-idle checks was the runtime fast-forwarded to this
+exact evaluator tip; no dependency, asset, driver or service configuration changed.
+
+The single probe launched at approximately **17:14 Shanghai** in
+`microduck-wsl-packed-eval-probe-d4e96cda975f-seed-577.service`, invocation
+`2fc1ba2aefd84ce5a1e3e14fc9488ace`, with unchanged **600/960-second** hard bounds,
+6 GiB/200% CPU/Nice 10/control-group resources and deadline **1790848800**
+(today 18:00 Shanghai). Independently checked launch SHA256:
+`2d4284cc12b2f0347574bd2c566023b12ce7f646cc3843008da07488098a5739`.
+It is in progress, not measured or accepted. Keep this active runtime source
+frozen despite later local documentation commits. No full packed evaluation is
+enabled; the historical full evaluator still refuses WSL preparation and its
+registry excludes this probe-only continuation.

@@ -86,8 +86,9 @@ ordered finite-reward ticks in total. This is an execution milestone, **not** a
 new stance, obstacle, hopping or football achievement. The active CLI authority
 ends October 1 at 18:00 Shanghai; no confirmed background automation exists.
 
-Training and capability evaluation remain separate. Authenticate every complete
-archive before the separate [WSL held-out timing probe](experiments/2026-10-01-wsl-packed-evaluation-probe.md).
+Training and capability evaluation remain separate. Every complete archive was
+authenticated before the single [WSL held-out timing probe](experiments/2026-10-01-wsl-packed-evaluation-probe.md).
+Any future attempt requires separate fresh authority and repeat entry checks.
 That fixed 255/541/128-world single case is not the twelve-case evaluation or the
 three-training-seed verdict. Full evaluation must retain 64/128/192/255 ×
 541/547/557 for each of the three training seeds: **4,608 first attempts** in

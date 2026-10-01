@@ -64,7 +64,11 @@ not independent simulator authentication. Author replication, skill acceptance,
 training/promotion, impact/thermal calibration, deployment and physical-motion
 flags remain false.
 
-## Bounded sequence and current handoff
+## Historical C1-stage bounded sequence and handoff
+
+This block records the earlier C1-stage plan. The WSL diagnosis, qualification,
+three matched learners and failed timing probe have since run; the final WSL
+section below and linked experiment documents contain the current handoff.
 
 1. Integrate an offline manifest/journal/scorer audit: actual actor-input
    command/history checks and descriptive phase statistics, no new inference
@@ -85,7 +89,8 @@ flags remain false.
 
 The consumed C1-S attempt is closed; transfer remains blocked. Offline audit,
 affine-prefix tooling and the source-grounded gap inventory below are implemented.
-The next slice is the separate WSL finite-check performance diagnosis, not
+At that stage the next slice was the separate WSL finite-check performance
+diagnosis, not
 another community-policy rollout. Never run its
 `--execute-approved` entry point again under the same declaration. Subsequent
 handoffs must name actual source commits, retained evidence, checks and the
@@ -255,7 +260,8 @@ closed and fresh frozen-host/idle checks passed. Its one authorized GPU attempt
 at `d4e96cda975f` failed before bundle publication, with
 `ValueError: fixed packed probe case`: CPU replay accidentally rewrote the CUDA
 capture binding. The consumed four-file failed archive is hash-checked on both
-hosts and records no completed timing or numerical gate result. The GPU is idle.
+hosts and records no completed timing or numerical gate result. The GPU was idle
+at failed-probe closeout and the subsequent 17:44 Shanghai check.
 No retry, full matrix, recovery, video or capability promotion follows this error.
 
 A bounded CPU repair preserves original capture metadata and uses a separate

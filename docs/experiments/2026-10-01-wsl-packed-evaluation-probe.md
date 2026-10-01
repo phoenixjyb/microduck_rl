@@ -195,6 +195,9 @@ child PID 1413484, elapsed time and 152 telemetry samples. There is **no case
 receipt, complete bundle, manifest or timing measurement**. This inventory/hash
 check is a failed-attempt audit, not successful `verify_retained` evidence. Do not
 derive full-service caps or a skill verdict from the failed child's wall time.
+The actual copied archive was also supplied to `verify_retained` with its exact
+independent hashes: it correctly refused it with `successful timing-only probe
+report`, before case replay, with CUDA hidden and uninitialized.
 
 ### Bounded CPU repair and next gate
 
@@ -221,8 +224,18 @@ timeout during elevated Mac load. That exact test passed in isolation, and the
 complete sequential 474-test run subsequently passed without a timeout change.
 Focused Luna test development and read-only review were integrated; the owner
 added/reviewed the actual bundle roundtrip. Full repository tests and repaired
-live GPU timing have not been run. Linux validation of the repaired source is
-still separate from this Mac proof.
+live GPU timing have not been run.
+
+Repair source **`05ff5574bd67daf42f48cc299f3ac83355fee59a`** is committed and
+pushed to the exact fork feature branch. A second hash-checked source bundle,
+SHA256 `7b8c47d7c665712164bb84359aaf8d543ff39d80fe9762763391a512cc7dd153`,
+created the isolated detached Linux worktree
+`artifacts/tools/replay-validation-05ff5574bd67`. The same **474 CPU checks passed
+on Linux in 40.72 seconds**, explicitly loading the repaired trace module from
+that snapshot with CUDA hidden and uninitialized. The main WSL runtime remains
+clean at `d4e96cda975f943ac89aacbbed62e99f1c9f00d1`; no live installation,
+environment restoration, binary equivalence or GPU replay is claimed. The source
+bundle and detached validation/training source snapshots remain retained.
 
 There is **no automatic retry** of this consumed single-use probe, no full packed
 evaluation enabled and no checkpoint promotion. The next GPU step needs a
@@ -230,6 +243,8 @@ separately reviewed fresh probe identity and authority, the tested repair source
 fresh frozen-host/idle/lease guards, the same fixed case and unchanged hard bounds,
 and sufficient remaining authorized time. Only a successful complete retained
 measurement can justify the later measured-cap full-evaluator declaration.
+The runner's current October 1 cutoff must not be reused on another day: a new
+window needs an explicit tested date-bound declaration before any new launch.
 The historical full evaluator still refuses WSL preparation and its registry
 excludes this probe-only continuation. Hopping, obstacles and rolling football
 remain behind their separate numerical gates.

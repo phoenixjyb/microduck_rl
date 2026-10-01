@@ -61,8 +61,9 @@ Training completion means only `lean-replication-complete-not-capability`.
 No MP4 or stance/football acceptance follows automatically. Held-out evaluation
 must preserve the original protocol: checkpoints 64/128/192/255, seeds
 541/547/557, 128 environments and 5-second trials, with the unchanged numerical
-gate and all cases retained. WSL held-out evaluation still needs its own
-source-bound timing declaration; do not borrow the old 4090 evaluator budget.
+gate and all cases retained. WSL held-out evaluation still needs a successful
+source-bound timing measurement: the declared probe failed before bundle
+publication. Do not borrow the old 4090 evaluator budget.
 Do not spend an expired window on an unqualified evaluator.
 
 The evaluator/cross-seed decision must explicitly recognize this new training
@@ -201,8 +202,13 @@ the idle host. Preserve the exact `be2d59661af2` training source snapshot and al
 archives; do not retroactively relabel the three learners with the evaluator tip.
 
 The separate [held-out timing probe](2026-10-01-wsl-packed-evaluation-probe.md)
-is implemented and CPU-tested locally, but has not launched; it is not the full
-evaluator. The old
+was CPU-tested on Mac/Linux and launched once at source `d4e96cda975f` after all
+learners closed. It failed during CPU trace rehydration before publishing a
+bundle, not at a numerical gate or timeout. The failed archive is retained on
+both hosts. Repair source `05ff5574bd67` passed 474 CPU checks on each host, but
+has not been installed for a live retry. No successful timing measurement, full
+matrix or nominal replication verdict exists yet; see the linked failure audit
+and fresh-probe handoff. The old
 `987b452dbfdb` source is retained as a
 detached worktree at `artifacts/tools/runtime-baseline-987b452dbfdb` on WSL;
 completed microbenchmark receipts remain unchanged on both hosts.

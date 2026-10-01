@@ -1,0 +1,429 @@
+{
+  "protocol": "independent-linux-r1-cpu-closeout-v1",
+  "decision": "original-r1-strict-replay-refused-portable-profile-candidate-only",
+  "original_r1_strict_replay_passed": false,
+  "full_evaluation_enabled": false,
+  "independent_gpu_reexecution": false,
+  "binary_runtime_equivalence": false,
+  "learned_stance_accepted": false,
+  "football_balance_accepted": false,
+  "physical_motion_authorized": false,
+  "source": "7bf19b4b53a559dae87b138c3fc628abec582c67",
+  "source_bundle_sha256": "9bd69640aaaaa189e92c9abaf8eba40aafeb644617202e59c643f6b7c63791c4",
+  "archive_name": "stance-wsl-packed-eval-probe-7bf19b4b53a5-seed-577",
+  "archive_bytes": 620853096,
+  "archive_files": 14,
+  "inventory_sha256": "ad30b8c0ba6bda50a586d9798f4ac97ed886a5355b9599ddaa4afcba16e40b1f",
+  "original_strict_attempts": [
+    {
+      "host": "100.100",
+      "service": "microduck-independent-cpu-r1-7bf19b4b53a5.service",
+      "invocation_id": "16d1eb32aea0428cb54d8f08688feb00",
+      "dispatch_override": null,
+      "result": "exit-code",
+      "exit_code": 1,
+      "error": "ValueError: recomputed score mismatch",
+      "service_seconds": 19.055,
+      "cpu_seconds": 19.441246,
+      "source_unchanged": true,
+      "whole_compiled_plant_matched": true
+    },
+    {
+      "host": "100.100",
+      "service": "microduck-independent-cpu-r1-avx2.service",
+      "invocation_id": "e810e3e01dc84e13a38125ab5e4efdbc",
+      "dispatch_override": {
+        "ATEN_CPU_CAPABILITY": "avx2"
+      },
+      "actual_cpu_capability": "AVX2",
+      "result": "exit-code",
+      "exit_code": 1,
+      "error": "ValueError: recomputed score mismatch",
+      "service_seconds": 19.019,
+      "cpu_seconds": 19.452141,
+      "source_unchanged": true,
+      "whole_compiled_plant_matched": true
+    }
+  ],
+  "readonly_score_diagnostic": {
+    "archive_bytes": 620853096,
+    "checkpoint_admitted": false,
+    "cpu_capability": "AVX512",
+    "cuda_initialized": false,
+    "diagnosis_only": true,
+    "elapsed_seconds": 11.989646852016449,
+    "entire_compiled_plant_checked": true,
+    "file_count": 14,
+    "football_balance_accepted": false,
+    "full_evaluation_launched": false,
+    "hostname": "converge-robotics",
+    "input_hashes": {
+      "child.log": "40891801f409d846997ad7cc4a9176ed49c98b7b120f4f2a1b79a18365577a4e",
+      "launch.json": "fe3d40e4844a85e9089b6f9c37c8c74934dbfefca027de68f6689492806eceb0",
+      "measurements.json": "b38a8b3cfabd7c12ee8e0a04800962f5383656cdb59bb36140c016a588cd89db",
+      "packed-probe-255-seed-541.json": "fc585695848fbb921c8644020b63d8ddad7b1cf80a0cdfa13fb6fe1b5780296e",
+      "packed-probe-255-seed-541/checkpoint.pt": "2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5",
+      "packed-probe-255-seed-541/control.pt": "0a088942bdc03ccebce76ae816b619d6a218e7b333cf3a71fb30bef89fb597d6",
+      "packed-probe-255-seed-541/launch.json": "26b48db63256daffa17dcf577f6c3750f1b52a369be5679cdef2c3ad13df0988",
+      "packed-probe-255-seed-541/manifest.json": "b0863ff3d5b8bc08ccca3b580c584af5363cea94dee151bf1dc38878d2d7ad6c",
+      "packed-probe-255-seed-541/restore.json": "decacb77865d13e2f9c48502a2dc976fe7afb86ccb05a0d27d732f2d9c4c034f",
+      "packed-probe-255-seed-541/runtime.json": "48dc1fa2d594fe457da650594713a6f60756003647bf0e256021e2c8cadc1aec",
+      "packed-probe-255-seed-541/score.json": "f34fe7b4b1b9aec71720e89e794d78b3626b557a846a7457524f28ff5e5d514e",
+      "packed-probe-255-seed-541/trace.pt": "68c1f1bba3b7f30814471bd560d9956cf0e199e0513a314cd3848e124c821205",
+      "report.json": "e2f417eedecc6095ae5130f83f76a6abc17af26db449764da31e40247935ffdd",
+      "runtime.json": "48dc1fa2d594fe457da650594713a6f60756003647bf0e256021e2c8cadc1aec"
+    },
+    "inventory_sha256": "ad30b8c0ba6bda50a586d9798f4ac97ed886a5355b9599ddaa4afcba16e40b1f",
+    "invocation_id": "8130cd6beeb146fc81eb1ae9ca2578a3",
+    "learned_stance_accepted": false,
+    "physical_motion_authorized": false,
+    "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+    "protocol": "independent-linux-r1-score-diagnostic-v1",
+    "python": "3.12.12",
+    "recomputed_complete_attempts": 128,
+    "recomputed_numerical_passes": 128,
+    "replay_checks": {
+      "action_slew_checked": true,
+      "compiled_plant_checked": true,
+      "delayed_motor_targets_checked": true,
+      "deterministic_actor_replay_checked": true,
+      "kinematic_observations_checked": true,
+      "motor_commit_masks_checked": true,
+      "motor_proposals_checked": 2500,
+      "nominal_reset_checked": true,
+      "strict_checkpoint_checked": true,
+      "terminal_contact_records_checked": 128,
+      "terminal_contact_summary_checked": true,
+      "voltage_history_checked": true
+    },
+    "score_differences": [
+      {
+        "path": "$.actor_replay_max_abs_error",
+        "recomputed": 8.344650268554688e-7,
+        "saved": 0
+      }
+    ],
+    "selected_fields_sha256": "6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f",
+    "service": "microduck-independent-cpu-r1-score-diagnostic.service",
+    "service_properties": {
+      "ActiveState": "active",
+      "CPUQuotaPerSecUSec": "2s",
+      "KillMode": "control-group",
+      "MainPID": "2457412",
+      "MemoryMax": "6442450944",
+      "Nice": "10",
+      "RuntimeMaxUSec": "3min"
+    },
+    "source": "7bf19b4b53a559dae87b138c3fc628abec582c67",
+    "strict_retained_replay_passed": false,
+    "torch_build_configuration": "PyTorch built with:\n  - GCC 13.3\n  - C++ Version: 201703\n  - Intel(R) oneAPI Math Kernel Library Version 2024.2-Product Build 20240605 for Intel(R) 64 architecture applications\n  - Intel(R) MKL-DNN v3.7.1 (Git Hash 8d263e693366ef8db40acc569cc7d8edf644556d)\n  - OpenMP 201511 (a.k.a. OpenMP 4.5)\n  - LAPACK is enabled (usually provided by MKL)\n  - NNPACK is enabled\n  - CPU capability usage: AVX512\n  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, COMMIT_SHA=5811a8d7da873dd699ff6687092c225caffcf1bb, CUDA_VERSION=12.8, CUDNN_VERSION=9.8.0, CXX_COMPILER=/opt/rh/gcc-toolset-13/root/usr/bin/c++, CXX_FLAGS= -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DLIBKINETO_NOXPUPTI=ON -DUSE_FBGEMM -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -DC10_NODEPRECATED -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=range-loop-construct -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-unknown-pragmas -Wno-unused-parameter -Wno-strict-overflow -Wno-strict-aliasing -Wno-stringop-overflow -Wsuggest-override -Wno-psabi -Wno-error=old-style-cast -faligned-new -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-dangling-reference -Wno-error=dangling-reference -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, TORCH_VERSION=2.9.1, USE_CUDA=ON, USE_CUDNN=ON, USE_CUSPARSELT=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_GLOO=ON, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=1, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, USE_ROCM_KERNEL_ASSERT=OFF, USE_XCCL=OFF, USE_XPU=OFF, \n",
+    "torch_cpu_library_sha256": "7918fc09ff644c9b667921100b924e33ea432c85737c2982b56283691b32a4d7",
+    "versions": {
+      "better-actuator-models": "1.0.1",
+      "mjlab": "1.3.0",
+      "mujoco": "3.10.0",
+      "mujoco-warp": "3.8.1",
+      "torch": "2.9.1",
+      "warp-lang": "1.12.0"
+    }
+  },
+  "readonly_score_diagnostic_completion": {
+    "exit_code": 0,
+    "service_seconds": 19.362,
+    "cpu_seconds": 19.764
+  },
+  "portable_actor_parity": {
+    "executed_script": "2026-10-01-portable-cpu-actor-parity.py",
+    "executed_script_sha256": "6fdefc4e266f689653ef8eb8524512086d6d58f225536dcc58839729f736a7e6",
+    "parity_on_retained_inputs_only": true,
+    "input_rows": 32000,
+    "output_scalar_values": 320000,
+    "receipts": {
+      "100.100": {
+        "actor_inputs_sha256": "675481992ed5d41a7400759437121de245d08b9aa8265e7cc40b2a37c0ea095d",
+        "actor_outputs_sha256": "a097a0f3aabc8bb0f57fd0f59eb6d45f6b29409754bcb4ca45b416f8d04b3ffe",
+        "all_original_actor_tolerance_checks_passed": true,
+        "batches": 250,
+        "binary_runtime_equivalence": false,
+        "checkpoint_admitted": false,
+        "checkpoint_sha256": "2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5",
+        "cpu_capability": "DEFAULT",
+        "cuda_initialized": false,
+        "diagnosis_only": true,
+        "elapsed_seconds": 6.7345286989584565,
+        "entire_compiled_plant_checked": true,
+        "environment": {
+          "ATEN_CPU_CAPABILITY": "default",
+          "MKL_CBWR": "COMPATIBLE",
+          "OMP_NUM_THREADS": "1"
+        },
+        "football_balance_accepted": false,
+        "full_evaluation_launched": false,
+        "hostname": "converge-robotics",
+        "independent_gpu_reexecution": false,
+        "intraop_threads": 1,
+        "inventory_sha256": "ad30b8c0ba6bda50a586d9798f4ac97ed886a5355b9599ddaa4afcba16e40b1f",
+        "invocation_id": "2029b62302e2418fac8da007bf2bedd5",
+        "learned_stance_accepted": false,
+        "maximum_error_against_original_r1_actions": 7.152557373046875e-7,
+        "module_file": "/home/converge/work/microduck_rl-athletics-obstacle-curriculum/artifacts/tools/independent-linux-r1-7bf19b4b53a5/src/mjlab_microduck/stance_packed_evaluation_probe.py",
+        "original_actor_tolerances": {
+          "atol": 0.000001,
+          "rtol": 0.00001
+        },
+        "original_r1_strict_replay_passed_by_this_diagnostic": false,
+        "output_shape_per_batch": [
+          128,
+          10
+        ],
+        "physical_motion_authorized": false,
+        "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+        "protocol": "portable-cpu-actor-parity-diagnostic-v1",
+        "python": "3.12.12",
+        "service": "microduck-cpu-r1-portable-parity-100100.service",
+        "service_properties": {
+          "ActiveState": "active",
+          "CPUQuotaPerSecUSec": "2s",
+          "KillMode": "control-group",
+          "MainPID": "2480232",
+          "MemoryMax": "6442450944",
+          "Nice": "10",
+          "RuntimeMaxUSec": "3min"
+        },
+        "source": "7bf19b4b53a559dae87b138c3fc628abec582c67",
+        "torch_cpu_library_sha256": "7918fc09ff644c9b667921100b924e33ea432c85737c2982b56283691b32a4d7",
+        "trace_sha256": "68c1f1bba3b7f30814471bd560d9956cf0e199e0513a314cd3848e124c821205",
+        "versions": {
+          "better-actuator-models": "1.0.1",
+          "mjlab": "1.3.0",
+          "mujoco": "3.10.0",
+          "mujoco-warp": "3.8.1",
+          "torch": "2.9.1",
+          "warp-lang": "1.12.0"
+        },
+        "worlds_per_batch": 128
+      },
+      "100.98": {
+        "actor_inputs_sha256": "675481992ed5d41a7400759437121de245d08b9aa8265e7cc40b2a37c0ea095d",
+        "actor_outputs_sha256": "a097a0f3aabc8bb0f57fd0f59eb6d45f6b29409754bcb4ca45b416f8d04b3ffe",
+        "all_original_actor_tolerance_checks_passed": true,
+        "batches": 250,
+        "binary_runtime_equivalence": false,
+        "checkpoint_admitted": false,
+        "checkpoint_sha256": "2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5",
+        "cpu_capability": "DEFAULT",
+        "cuda_initialized": false,
+        "diagnosis_only": true,
+        "elapsed_seconds": 6.903997750021517,
+        "entire_compiled_plant_checked": true,
+        "environment": {
+          "ATEN_CPU_CAPABILITY": "default",
+          "MKL_CBWR": "COMPATIBLE",
+          "OMP_NUM_THREADS": "1"
+        },
+        "football_balance_accepted": false,
+        "full_evaluation_launched": false,
+        "hostname": "DESKTOP-HNKBDR1",
+        "independent_gpu_reexecution": false,
+        "intraop_threads": 1,
+        "inventory_sha256": "ad30b8c0ba6bda50a586d9798f4ac97ed886a5355b9599ddaa4afcba16e40b1f",
+        "invocation_id": "8d94c738462d444295299bc7aed571ef",
+        "learned_stance_accepted": false,
+        "maximum_error_against_original_r1_actions": 7.152557373046875e-7,
+        "module_file": "/home/yanbo/work/microduck_rl-stance-replication-20260930/artifacts/tools/probe-r1-validation-7bf19b4b53a5/src/mjlab_microduck/stance_packed_evaluation_probe.py",
+        "original_actor_tolerances": {
+          "atol": 0.000001,
+          "rtol": 0.00001
+        },
+        "original_r1_strict_replay_passed_by_this_diagnostic": false,
+        "output_shape_per_batch": [
+          128,
+          10
+        ],
+        "physical_motion_authorized": false,
+        "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "protocol": "portable-cpu-actor-parity-diagnostic-v1",
+        "python": "3.12.13",
+        "service": "microduck-cpu-r1-portable-parity-10098.service",
+        "service_properties": {
+          "ActiveState": "active",
+          "CPUQuotaPerSecUSec": "2s",
+          "KillMode": "control-group",
+          "MainPID": "1467556",
+          "MemoryMax": "6442450944",
+          "Nice": "10",
+          "RuntimeMaxUSec": "3min"
+        },
+        "source": "7bf19b4b53a559dae87b138c3fc628abec582c67",
+        "torch_cpu_library_sha256": "7918fc09ff644c9b667921100b924e33ea432c85737c2982b56283691b32a4d7",
+        "trace_sha256": "68c1f1bba3b7f30814471bd560d9956cf0e199e0513a314cd3848e124c821205",
+        "versions": {
+          "better-actuator-models": "1.0.1",
+          "mjlab": "1.3.0",
+          "mujoco": "3.10.0",
+          "mujoco-warp": "3.8.1",
+          "torch": "2.9.1",
+          "warp-lang": "1.12.0"
+        },
+        "worlds_per_batch": 128
+      }
+    },
+    "completions": {
+      "100.100": {
+        "exit_code": 0,
+        "service_seconds": 17.346,
+        "cpu_seconds": 17.779
+      },
+      "100.98": {
+        "exit_code": 0,
+        "service_seconds": 19.187,
+        "cpu_seconds": 18.481,
+        "memory_peak_display": "1.1G",
+        "swap_peak_bytes": 0
+      }
+    }
+  },
+  "optional_checker": {
+    "helper_source_sha256": "2e80aa5160e27dd144710541f869cff36a6435cd743a3374d7efeb7f546ec379",
+    "reviewed_source_text": "\"\"\"Explicit opt-in CPU math profile receipt for later replay processes.\n\nThis module only inspects the already-running process. It never selects the\nprofile, changes PyTorch state, initializes CUDA, or claims replay parity.\n\"\"\"\n\nfrom hashlib import sha256\nfrom importlib.metadata import version\nimport os\nfrom pathlib import Path\nimport platform\nimport sys\nimport torch\n\nPROTOCOL = 'football-b1n-portable-cpu-math-profile-v1'\nTORCH_VERSION = '2.9.1'\nLIBTORCH_CPU_SHA256 = '7918fc09ff644c9b667921100b924e33ea432c85737c2982b56283691b32a4d7'\n_SETTINGS = {\n    'ATEN_CPU_CAPABILITY': 'default',\n    'MKL_CBWR': 'COMPATIBLE',\n    'OMP_NUM_THREADS': '1',\n}\n_RUNTIME_KEYS = {\n    'platform', 'architecture', 'torch_version', 'cpu_capability',\n    'torch_num_threads', 'libtorch_cpu_sha256',\n}\n\n\ndef settings():\n    \"\"\"Return the exact environment settings for a caller to opt into.\"\"\"\n    return dict(_SETTINGS)\n\n\ndef _parse_exec_environment(raw):\n    \"\"\"Select only profile keys; never expose unrelated process environment.\"\"\"\n    require(type(raw) is bytes and len(raw) <= 1024 * 1024,\n            'bounded exec environment')\n    entries = raw.split(b'\\0')\n    if entries[-1] == b'':\n        entries.pop()\n    selected = {}\n    names = {key.encode('ascii'): key for key in _SETTINGS}\n    for entry in entries:\n        require(b'=' in entry, 'well-formed exec environment')\n        name, value = entry.split(b'=', 1)\n        if name in names:\n            key = names[name]\n            require(key not in selected, 'unique profile key in exec environment')\n            try:\n                selected[key] = value.decode('ascii')\n            except UnicodeDecodeError as error:\n                raise ValueError('ASCII profile value in exec environment') from error\n    return selected\n\n\ndef inspect_exec_environment():\n    \"\"\"Read Linux's initial-exec environment, not a late os.environ snapshot.\n\n    /proc/self/environ normally reports the environment supplied to execve;\n    this is a configuration check, not tamper-proof process attestation.\n    \"\"\"\n    require(sys.platform == 'linux', 'Linux CPU replay platform')\n    try:\n        with Path('/proc/self/environ').open('rb') as source:\n            raw = source.read(1024 * 1024 + 1)\n    except OSError as error:\n        raise ValueError('readable exec environment required') from error\n    return _parse_exec_environment(raw)\n\n\ndef inspect_runtime():\n    \"\"\"Read the current CPU runtime without touching CUDA or global settings.\"\"\"\n    require(sys.platform == 'linux', 'Linux CPU replay platform')\n    require(platform.machine().lower() == 'x86_64', 'x86_64 CPU replay architecture')\n    library = Path(torch.__file__).resolve().parent / 'lib' / 'libtorch_cpu.so'\n    digest = sha256()\n    with library.open('rb') as source:\n        for block in iter(lambda: source.read(1024 * 1024), b''):\n            digest.update(block)\n    return {\n        'platform': sys.platform,\n        'architecture': platform.machine().lower(),\n        'torch_version': version('torch'),\n        'cpu_capability': torch.backends.cpu.get_cpu_capability(),\n        'torch_num_threads': torch.get_num_threads(),\n        'libtorch_cpu_sha256': digest.hexdigest(),\n    }\n\n\ndef validate_runtime(runtime, *, exec_env=None, current_env=None):\n    \"\"\"Check initial and current settings plus runtime; overrides are test seams.\"\"\"\n    exec_env = inspect_exec_environment() if exec_env is None else exec_env\n    current_env = os.environ if current_env is None else current_env\n    for label, values in (('at exec', exec_env), ('currently', current_env)):\n        require(isinstance(values, dict) or hasattr(values, 'get'), 'environment snapshot '+label)\n        for key, expected in _SETTINGS.items():\n            require(values.get(key) == expected,\n                    f'{key} must equal {expected!r} {label}')\n\n    require(type(runtime) is dict and set(runtime) == _RUNTIME_KEYS, 'exact CPU runtime inspection')\n    require(runtime['platform'] == 'linux', 'Linux CPU replay platform')\n    require(runtime['architecture'] == 'x86_64', 'x86_64 CPU replay architecture')\n    require(runtime['torch_version'] == TORCH_VERSION, 'pinned PyTorch metadata version')\n    require(runtime['cpu_capability'] == 'DEFAULT', 'ATen default CPU capability')\n    require(type(runtime['torch_num_threads']) is int and runtime['torch_num_threads'] == 1,\n            'single PyTorch CPU thread')\n    require(runtime['libtorch_cpu_sha256'] == LIBTORCH_CPU_SHA256,\n            'pinned libtorch_cpu.so hash')\n    return {\n        'protocol': PROTOCOL,\n        'status': 'portable-cpu-math-profile-checked',\n        'settings': settings(),\n        **runtime,\n        'full_replay_performed': False,\n        'actor_output_parity_verified': False,\n        'capability_accepted': False,\n        'binary_equivalence_verified': False,\n    }\n\n\ndef checked_receipt():\n    \"\"\"Inspect and validate the current process; no profile settings are applied.\"\"\"\n    return validate_runtime(inspect_runtime())\n\n\ndef require(condition, message):\n    if not condition:\n        raise ValueError(message)\n",
+    "configuration_check_only": true,
+    "installed": false,
+    "receipts": {
+      "100.100": {
+        "configuration_only": true,
+        "cuda_initialized": false,
+        "helper_installed": false,
+        "helper_source_sha256": "2e80aa5160e27dd144710541f869cff36a6435cd743a3374d7efeb7f546ec379",
+        "hostname": "converge-robotics",
+        "invocation_id": "88b9839f6ed649ada5a4db16c4c8d120",
+        "receipt": {
+          "actor_output_parity_verified": false,
+          "architecture": "x86_64",
+          "binary_equivalence_verified": false,
+          "capability_accepted": false,
+          "cpu_capability": "DEFAULT",
+          "full_replay_performed": false,
+          "libtorch_cpu_sha256": "7918fc09ff644c9b667921100b924e33ea432c85737c2982b56283691b32a4d7",
+          "platform": "linux",
+          "protocol": "football-b1n-portable-cpu-math-profile-v1",
+          "settings": {
+            "ATEN_CPU_CAPABILITY": "default",
+            "MKL_CBWR": "COMPATIBLE",
+            "OMP_NUM_THREADS": "1"
+          },
+          "status": "portable-cpu-math-profile-checked",
+          "torch_num_threads": 1,
+          "torch_version": "2.9.1"
+        },
+        "service": "microduck-cpu-profile-check-2e80aa5160e2-100100.service",
+        "service_properties": {
+          "ActiveState": "active",
+          "CPUQuotaPerSecUSec": "2s",
+          "KillMode": "control-group",
+          "MainPID": "2498359",
+          "MemoryMax": "6442450944",
+          "Nice": "10",
+          "RuntimeMaxUSec": "1min"
+        },
+        "source_snapshot": "7bf19b4b53a559dae87b138c3fc628abec582c67"
+      },
+      "100.98": {
+        "configuration_only": true,
+        "cuda_initialized": false,
+        "helper_installed": false,
+        "helper_source_sha256": "2e80aa5160e27dd144710541f869cff36a6435cd743a3374d7efeb7f546ec379",
+        "hostname": "DESKTOP-HNKBDR1",
+        "invocation_id": "a27bbc7746a846ad99cb69dfcfbaafdd",
+        "receipt": {
+          "actor_output_parity_verified": false,
+          "architecture": "x86_64",
+          "binary_equivalence_verified": false,
+          "capability_accepted": false,
+          "cpu_capability": "DEFAULT",
+          "full_replay_performed": false,
+          "libtorch_cpu_sha256": "7918fc09ff644c9b667921100b924e33ea432c85737c2982b56283691b32a4d7",
+          "platform": "linux",
+          "protocol": "football-b1n-portable-cpu-math-profile-v1",
+          "settings": {
+            "ATEN_CPU_CAPABILITY": "default",
+            "MKL_CBWR": "COMPATIBLE",
+            "OMP_NUM_THREADS": "1"
+          },
+          "status": "portable-cpu-math-profile-checked",
+          "torch_num_threads": 1,
+          "torch_version": "2.9.1"
+        },
+        "service": "microduck-cpu-profile-check-2e80aa5160e2-10098.service",
+        "service_properties": {
+          "ActiveState": "active",
+          "CPUQuotaPerSecUSec": "2s",
+          "KillMode": "control-group",
+          "MainPID": "1471056",
+          "MemoryMax": "6442450944",
+          "Nice": "10",
+          "RuntimeMaxUSec": "1min"
+        },
+        "source_snapshot": "7bf19b4b53a559dae87b138c3fc628abec582c67"
+      }
+    },
+    "completions": {
+      "100.100": {
+        "exit_code": 0,
+        "service_seconds": 1.074,
+        "cpu_seconds": 1.058
+      },
+      "100.98": {
+        "exit_code": 0,
+        "service_seconds": 1.151,
+        "cpu_seconds": 1.128,
+        "memory_peak_display": "262.0M",
+        "swap_peak_bytes": 0
+      }
+    }
+  },
+  "observation_closeout": {
+    "observed_at": "2026-10-01T20:13:40+08:00",
+    "owned_cpu_units_finished": true,
+    "successful_transient_units_collected": true,
+    "failed_strict_units_preserved": true,
+    "successful_receipt_service_properties_are_process_start_snapshots": true,
+    "historical_worktrees_clean_and_unmodified": {
+      "100.100": "978af672dd983b0fbfa57b4b4c1ff6092407da02",
+      "100.98": "7bf19b4b53a559dae87b138c3fc628abec582c67"
+    },
+    "isolated_snapshots_clean_source": "7bf19b4b53a559dae87b138c3fc628abec582c67",
+    "protected_mission_services_inactive_user_and_system": true,
+    "filmbrain_observatory": {
+      "active": true,
+      "main_pid": 521,
+      "restarts": 0
+    },
+    "filmbrain_video_playground": {
+      "active": true,
+      "main_pid": 298048,
+      "restarts": 0
+    },
+    "gpu_10098": {
+      "uuid": "GPU-7d72b360-33bc-2cee-3ff4-a954474011b5",
+      "name": "NVIDIA RTX PRO 4000 Blackwell",
+      "driver": "595.95",
+      "memory_total_mib": 24467,
+      "memory_used_mib": 677,
+      "utilization_percent": 0,
+      "temperature_c": 30,
+      "compute_pids": [],
+      "utility": "/usr/lib/wsl/lib/nvidia-smi"
+    },
+    "gpu_100100": {
+      "qualified": false,
+      "readonly_error": "Failed to initialize NVML: Driver/library version mismatch",
+      "nvml_version": "595.91",
+      "no_driver_fix_attempted": true
+    },
+    "source_or_dependency_installation": false,
+    "gpu_job_started": false,
+    "existing_service_state_changed": false,
+    "incomplete_transfer_preserved": "stance-wsl-packed-eval-probe-7bf19b4b53a5-seed-577.incomplete-scp-20261001"
+  },
+  "required_next_gate": "Separate source-bound fresh capture under the declared portable profile and successful independent unchanged whole-bundle replay before any full matrix; fresh authority, host, storage, GPU-idle/lease, service and watchdog gates remain required."
+}

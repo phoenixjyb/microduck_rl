@@ -212,6 +212,22 @@ def test_rehashed_false_receipt_still_fails_recomputation(tmp_path, inputs, name
             binding=inputs['binding'], checkpoint_identity=inputs['checkpoint_identity'])
 
 
+def test_rehashed_subtolerance_actor_error_still_refuses_exact_score(tmp_path, inputs):
+    """Actor allclose is not permission to approximate a retained score receipt."""
+    import json
+    directory = tmp_path/'owned'; bundle.write_bundle(directory, **inputs)
+    score = json.loads((directory/'score.json').read_bytes())
+    assert score['actor_replay_max_abs_error'] == 0
+    score['actor_replay_max_abs_error'] = 1e-8
+    raw = (canonical(score)+'\n').encode(); (directory/'score.json').write_bytes(raw)
+    manifest = json.loads((directory/'manifest.json').read_bytes())
+    manifest['files']['score.json'] = dict(sha256=sha256(raw).hexdigest(), bytes=len(raw))
+    raw_manifest = (canonical(manifest)+'\n').encode(); (directory/'manifest.json').write_bytes(raw_manifest)
+    with pytest.raises(ValueError, match='recomputed score mismatch'):
+        bundle.verify_bundle(directory, sha256(raw_manifest).hexdigest(),
+            binding=inputs['binding'], checkpoint_identity=inputs['checkpoint_identity'])
+
+
 def test_each_trace_protocol_has_exactly_one_loader():
     """Loader routing is a declared map, not a fall-through.
 

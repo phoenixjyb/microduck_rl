@@ -122,6 +122,19 @@ replay runtime before advancing; then a reviewed, tested full
 evaluator must still retain all 4,608 attempts and apply the original cross-seed
 decision. No further GPU job fits the remaining single-probe authority.
 
+The renewed CPU-only [independent Linux investigation](experiments/2026-10-01-independent-linux-r1-replay.md)
+authenticated all copied bytes and matched the entire compiled plant on
+100.100, but strict replay refused an actor-error receipt mismatch (saved 0;
+recomputed 8.34465e-7). A single AVX2 dispatch check also refused. The gate was
+not relaxed. A separately declared portable CPU profile produces identical
+actor-output hashes on both hosts for the retained 32,000 inputs; this is only
+candidate arithmetic evidence, **not** successful original R1 replay or a skill
+verdict. The optional profile checker is opt-in and does not change any runner.
+A separately reviewed fresh capture under that profile and independent exact
+whole-bundle replay still precede full-evaluator development and the 4,608-attempt
+campaign. 100.100's current NVML mismatch remains unrepaired; 100.98 remains the
+candidate GPU host, subject to fresh entry gates and GPU-job authority.
+
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate
 at all three evaluation seeds, with at least 122/128 passes each. It does **not**

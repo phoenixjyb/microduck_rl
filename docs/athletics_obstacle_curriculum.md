@@ -37,8 +37,12 @@ or skill admission; tested runner/plant binding still precedes execution.
 The [C1-S native CPU runner](experiments/2026-10-01-community-hop-c1s-runner.md)
 and separate walker-only adapter are now implemented and fixture-tested. Static
 preflight binds the pinned policies and compiled BAM surrogate without inference
-or physics stepping. The two public diagnostic attempts remain unexecuted and
-require their separate run go-ahead; no old curriculum gate has changed.
+or physics stepping. The subsequent [October 1 result and development window](experiments/2026-10-01-duck-development-window.md)
+ran the approved walker-only control safely, but rejected approach and resume
+speed tracking. Happy Hop was not invoked. The consumed C1-S attempt does not
+establish a hopping failure or admit a retry; no old curriculum gate changed.
+Bounded development continues through October 1 18:00 Asia/Shanghai under the
+new window, not an expired September campaign.
 
 September16 addition: the B1-N stance track's
 [residual-lean lesson](experiments/2026-09-16-stance-lean-lesson.md) is a

@@ -127,3 +127,9 @@ Subsequent implementation: the [native CPU runner and walker-only adapter](2026-
 now have fixture and static-preflight evidence. This historical predeclaration
 and its immutable JSON are preserved. Neither public attempt has executed;
 separate policy-execution approval is still required.
+
+Subsequent result: the separate user go-ahead authorized the
+[October 1 first attempt](2026-10-01-duck-development-window.md). The walker-only
+control completed safely but failed speed tracking, so Happy Hop was not run.
+This closes the attempt without changing this historical declaration or its
+immutable JSON. No automatic retry is authorized.

@@ -118,3 +118,8 @@ training/deployment and physical-motion flags remain false. An eventual all-pass
 C1-S result can only be a nominal substituted-entry diagnostic candidate; it
 does not recover the [matched author's C1](2026-10-01-community-hop-c1-preparation.md)
 or relax H1, obstacle, stance or football gates.
+
+Subsequent authorized execution: the [October 1 result](2026-10-01-duck-development-window.md)
+consumed the walker-only attempt and rejected approach/resume speed tracking.
+The conditional hop was not invoked. The implementation/static evidence above
+remains historical; this entry point does not authorize a repeat attempt.

@@ -61,9 +61,13 @@ Training completion means only `lean-replication-complete-not-capability`.
 No MP4 or stance/football acceptance follows automatically. Held-out evaluation
 must preserve the original protocol: checkpoints 64/128/192/255, seeds
 541/547/557, 128 environments and 5-second trials, with the unchanged numerical
-gate and all cases retained. WSL held-out evaluation still needs a successful
-source-bound timing measurement: the declared probe failed before bundle
-publication. Do not borrow the old 4090 evaluator budget.
+gate and all cases retained. The original declared probe failed before bundle
+publication; the separately authorized [repaired R1 probe](2026-10-01-wsl-packed-evaluation-probe-r1.md)
+has now produced a complete fitting source-bound timing measurement on WSL.
+All copied Mac hashes match, but exact native plant compilation differs at
+last-bit scale and Mac full replay fails closed. Resolve compatible independent
+CPU replay and a tested measured-cap full evaluator before the complete matrix.
+Do not borrow the old 4090 budget.
 Do not spend an expired window on an unqualified evaluator.
 
 The evaluator/cross-seed decision must explicitly recognize this new training

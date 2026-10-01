@@ -308,3 +308,12 @@ limits this renewal to one repaired fixed timing probe, starting no earlier than
 18:02 and ending at **19:00 Shanghai** today. Historical archives and cutoffs
 remain unchanged. No new learner, full matrix or skill promotion is authorized
 by this bounded step; qualification and exact-source tests precede installation.
+
+The renewed probe completed successfully at 18:24:13 Shanghai. Its fixed case
+scored 128/128 complete numerical passes and the conservative full-evaluation
+projection fits the existing WSL ceiling. WSL rehash/replay passed; all copied
+Mac hashes match, but full Mac replay refuses `compiled plant mismatch` from
+last-bit native compilation differences. Exact checks remain unchanged. Resolve
+compatible independent CPU replay before any later full matrix; no evaluator or
+capability is enabled. The GPU is idle; no further whole evaluation fits this
+renewal. Full diagnostic evidence and the next storage gate are in the R1 record.

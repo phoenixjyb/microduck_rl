@@ -110,6 +110,18 @@ allows one fresh fixed case through October 1 **19:00 Shanghai**, with unchanged
 600/960-second caps and all entry gates. It does not renew training or enable the
 full evaluator; if qualification leaves insufficient time, launch nothing.
 
+R1 has now completed its fixed **255 / 541 / 128-world** case: **128/128**
+complete numerical passes without gate relaxation. Its unchanged conservative
+timing rule yields **3,350-second service / 3,290-second child** and **4,010
+seconds including closeout/margin**, within the existing WSL ceiling. WSL
+rehash/replay passed. All 14 copied Mac file hashes match, but Mac full replay
+refused `compiled plant mismatch`: five native arrays differ at last-bit scale
+between ARM Mac and x86 Linux. The exact gate was not relaxed. This is one
+diagnostic case, not replicated stance. Qualify a compatible independent CPU
+replay runtime before advancing; then a reviewed, tested full
+evaluator must still retain all 4,608 attempts and apply the original cross-seed
+decision. No further GPU job fits the remaining single-probe authority.
+
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate
 at all three evaluation seeds, with at least 122/128 passes each. It does **not**

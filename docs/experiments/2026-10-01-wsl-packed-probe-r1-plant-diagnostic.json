@@ -1,0 +1,91 @@
+{
+  "protocol": "wsl-packed-probe-r1-cross-platform-plant-diagnosis-v1",
+  "purpose": "read-only-diagnosis-not-acceptance",
+  "source": "7bf19b4b53a559dae87b138c3fc628abec582c67",
+  "launch_sha256": "fe3d40e4844a85e9089b6f9c37c8c74934dbfefca027de68f6689492806eceb0",
+  "report_sha256": "e2f417eedecc6095ae5130f83f76a6abc17af26db449764da31e40247935ffdd",
+  "runtime_sha256": "48dc1fa2d594fe457da650594713a6f60756003647bf0e256021e2c8cadc1aec",
+  "copied_file_count": 14,
+  "copied_archive_bytes": 620853096,
+  "copied_inventory_sha256": "ad30b8c0ba6bda50a586d9798f4ac97ed886a5355b9599ddaa4afcba16e40b1f",
+  "copied_hashes_match": true,
+  "wsl_retained_replay": "passed",
+  "mac_retained_replay": "refused",
+  "mac_error": "ValueError: compiled plant mismatch",
+  "wsl": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "versions": {
+      "better-actuator-models": "1.0.1",
+      "mjlab": "1.3.0",
+      "mujoco": "3.10.0",
+      "mujoco-warp": "3.8.1",
+      "torch": "2.9.1"
+    },
+    "selected_fields_sha256": "6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f",
+    "cuda_initialized": false
+  },
+  "mac": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "versions": {
+      "better-actuator-models": "1.0.1",
+      "mjlab": "1.3.0",
+      "mujoco": "3.10.0",
+      "mujoco-warp": "3.8.1",
+      "torch": "2.9.1"
+    },
+    "selected_fields_sha256": "7bdf08526f5178612ee3dc43eaf3cb751ace3dad8571bd535fbe946885e9f653",
+    "cuda_initialized": false
+  },
+  "other_runtime_plant_metadata_equal": true,
+  "selected_arrays_total": 34,
+  "identical_selected_array_hashes": 29,
+  "changed_arrays": {
+    "body_inertia": {
+      "numbers": 48,
+      "different": 11,
+      "signed_zero_only": 0,
+      "max_abs_difference": 1.0842021724855044e-19,
+      "mac_sha256": "9d2a6e8823141bf845755dfd3c26cdd997f3a46e2c01ea449fa80493d23fc40e",
+      "wsl_sha256": "6fd10e91d2fcd714859518436cc10334f4e156e1ff1fd186dc1f0263e7a5389f"
+    },
+    "body_iquat": {
+      "numbers": 64,
+      "different": 17,
+      "signed_zero_only": 0,
+      "max_abs_difference": 2.8935187579293142e-15,
+      "mac_sha256": "d48b52e09d78b2a5aec7780f2168b51b8bc614607413dbdfc18a148984df5092",
+      "wsl_sha256": "74ff7a6b80b46ad7138616092b9fb0b12b249fed97a1d92ba5df41883444788a"
+    },
+    "geom_pos": {
+      "numbers": 246,
+      "different": 109,
+      "signed_zero_only": 0,
+      "max_abs_difference": 1.3877787807814457e-17,
+      "mac_sha256": "88c556a0948350e4d4aa24a7abe70e819e9e94ce0ff44348f51698b956dba257",
+      "wsl_sha256": "4c0b71d2cf7b1e33218744b92525f728b3c65a43bb724f781bda5f31d86de896"
+    },
+    "geom_quat": {
+      "numbers": 328,
+      "different": 72,
+      "signed_zero_only": 0,
+      "max_abs_difference": 1.5543122344752192e-15,
+      "mac_sha256": "c6965e67ae4721f32a9120bd8b0b11f85ac6e142d8aaf88a833f9c144caaa109",
+      "wsl_sha256": "e2581b5ee650f347dee552718971fc9db444b52df0b1d47ecb733be151747d1c"
+    },
+    "geom_size": {
+      "numbers": 246,
+      "different": 99,
+      "signed_zero_only": 0,
+      "max_abs_difference": 1.231653667943533e-16,
+      "mac_sha256": "ff61afc57a78e170c6a17c83dbbd8bafa3f977e4933ab09a986463a760cf87d6",
+      "wsl_sha256": "44b62c9d7658021f763a0aef7c917dd4790e67ee9775fa99f63c2ac27686695e"
+    }
+  },
+  "interpretation": "Consistent with platform-dependent native compilation rounding; not a proven binary-equivalence result and not permission to relax exact fingerprint.",
+  "diagnosis_changed_installed_dependencies_or_native_runtime": false,
+  "diagnosis_started_gpu_job": false,
+  "full_evaluation_enabled": false,
+  "learned_stance_accepted": false,
+  "football_balance_accepted": false,
+  "physical_motion_authorized": false
+}

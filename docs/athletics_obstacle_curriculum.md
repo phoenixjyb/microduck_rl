@@ -162,7 +162,8 @@ October 3 at 00:56 Shanghai and finished successfully at 03:11. All **4,608/4,60
 attempts passed, and the CPU-only supervisor replayed the entire serialized
 matrix to re-derive `lean-replication-passed`; every checkpoint passed for every
 training seed. This clears nominal simulation replication only. The additional
-retained CPU closeout and byte-only delivery inventory are pending, and every
+whole-matrix CPU closeout passed again with CUDA hidden, and all 329 retained
+files / 22,352,528,834 bytes were hashed and rechecked. Every
 capability/physical admission flag remains false. Disturbance recovery and
 football promotion are not established by the nominal result.
 

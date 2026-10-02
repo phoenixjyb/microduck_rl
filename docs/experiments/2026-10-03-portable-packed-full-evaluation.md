@@ -1,7 +1,7 @@
 # Portable packed stance replication evaluation
 
-This is a predeclaration for one complete evaluation of the three retained
-packed-replication trainings. It is not new training and has not run yet. The
+This records the predeclaration and completed evaluation of the three retained
+packed-replication trainings. It is not new training. The
 owner authorized simulation, development and training until **2026-10-03 08:00
 Asia/Shanghai**. This experiment answers the outstanding nominal replication
 question before disturbance recovery or football work can advance.
@@ -316,15 +316,19 @@ in 36 case directories plus top-level metadata. This stat-only count is not
 the byte-hashed delivery inventory. The worktree remains clean at capture source
 `0b73855a0dbddc7ae06303398177a706ac812dc6`; the durable inputs are not mutated.
 
-An additional exact-source CPU-only whole-matrix closeout is running in
+An additional exact-source CPU-only whole-matrix closeout completed successfully in
 `microduck-full-retained-replay-0b73855a0dbd.service`, invocation
 `c9bedbdccc504069a3364f593205b2f9`, with the separately reserved **600-second**
 cap, 6 GiB, 200% CPU, Nice 10 and KillMode control-group. CUDA is hidden,
 portable math is set at process start, and the imported module must come from
 the qualified detached 0b73855a snapshot. A fresh receipt is written outside
 the original capture only after all plan, hash, bundle, actor, plant, control,
-scoring and deterministic-decision checks pass. Completion of this extra
-closeout is still pending; service liveness is not a replay result.
+scoring and deterministic-decision checks pass. It reran the complete matrix in
+**351.4223970901221 s**, with `cuda_initialized=false`, and re-derived the same
+`lean-replication-passed` decision. Receipt SHA256:
+`69547a77cee34e208e366512fe247f194d34e0c78f02ae7321cbb00ddaf89ce2`.
+The receipt is separately retained in
+`artifacts/tools/portable-full-closeout-0b73855a0dbd/replay.json`.
 
 Before using the byte-only helper against live retained evidence, inspection of
 the real completed report exposed a synthetic-fixture schema mismatch:
@@ -334,6 +338,28 @@ fixtures; the numerical evaluator and original decision rule remain unchanged.
 The corrected combined helper/full-runner/packed-probe suite passed **183 tests
 in 14.38 s**, including a source-declaration check for the individual verdict
 names. The earlier helper revision was not used to inventory live captures.
+
+The corrected helper at source `1858f359f9b61880381ed546841c504254223aa0`
+was qualified on Linux with CUDA hidden: **34 tests passed in 2.35 s**, service
+`microduck-full-inventory-cpu-tests-1858f359f9b6.service`, invocation
+`132f1b3914694fc6b116aa251901c35a`. Only after terminal numerical replay did
+`microduck-full-byte-inventory-1858f359f9b6.service`, invocation
+`91cfb549a25245f7bf7aa445f2f8385d`, stream all capture bytes and independently
+rehash the inventory. It finished successfully in **22.99724806495942 s**,
+within a 600-second / 1-GiB / 100%-CPU / Nice-10 / control-group cap. No tensors
+were loaded and no CUDA allocation occurred in this byte-only helper.
+
+| Separate closeout item | SHA256 |
+| --- | --- |
+| 47,508-byte inventory, all 329 files / 22,352,528,834 bytes | `69a5be8fb1e0863e20e576218992baedbe9219ba49f172fd31a8a95cde851519` |
+| 799-byte inventory closeout receipt | `2cbd2b0df5ff5efd4a21bf2616cff7c72dd934d269cbe24b8262cca5772b2299` |
+
+Both are outside the immutable capture under the same tools closeout directory,
+as `inventory-1858f359f9b6.json` and `inventory-closeout-1858f359f9b6.json`.
+The helper's detached source snapshot is separate; the original WSL capture
+worktree stayed clean at 0b73855a throughout both closeouts. Byte-only flags
+still explicitly deny tensor replay and numerical acceptance. The numerical
+decision comes from the exact-source CPU replays, not from the inventory.
 
 This clears the **nominal simulation replication numerical gate only**.
 Every checkpoint/stance/football/motion/GPU-attestation/binary-equivalence

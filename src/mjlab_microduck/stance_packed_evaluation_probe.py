@@ -22,6 +22,7 @@ from mjlab_microduck import stance_solved_field_check as checker
 from mjlab_microduck import stance_training_smoke as smoke
 from mjlab_microduck import stance_wsl_qualification as qualification
 from mjlab_microduck import stance_cpu_replay_profile as cpu_profile
+from mjlab_microduck import stance_historical_training_auth as historical
 from mjlab_microduck.first_attempt_smoke import canonical, require
 
 host, files = smoke.host, smoke.supervisor
@@ -34,6 +35,9 @@ PROBE_TRAINING_SEED = lean.PACKED_REPLICATION['seeds'][0]
 LEGACY_WINDOW = 'oct1-before-18'
 REPAIRED_WINDOW = 'oct1-replay-repair-18-to-19'
 PORTABLE_WINDOW = 'oct1-portable-replay-21-to-22'
+AUTH_WINDOW = 'oct1-historical-auth-portable-23-30-to-oct2-00-30'
+OCT2_WINDOW = 'oct2-portable-auth-22-45-to-23-45'
+PORTABLE_WINDOWS = (PORTABLE_WINDOW, AUTH_WINDOW, OCT2_WINDOW)
 # A fresh, explicitly authorized single probe, not a mutation of the consumed
 # before-18 declaration or the historical qualification/training cutoff.
 WINDOWS = {
@@ -44,17 +48,23 @@ WINDOWS = {
     PORTABLE_WINDOW: dict(
         not_before=int(datetime(2026, 10, 1, 13, 0, tzinfo=timezone.utc).timestamp()),
         cutoff=int(datetime(2026, 10, 1, 14, 0, tzinfo=timezone.utc).timestamp())),
+    AUTH_WINDOW: dict(
+        not_before=int(datetime(2026, 10, 1, 15, 30, tzinfo=timezone.utc).timestamp()),
+        cutoff=int(datetime(2026, 10, 1, 16, 30, tzinfo=timezone.utc).timestamp())),
+    OCT2_WINDOW: dict(
+        not_before=int(datetime(2026, 10, 2, 14, 45, tzinfo=timezone.utc).timestamp()),
+        cutoff=int(datetime(2026, 10, 2, 15, 45, tzinfo=timezone.utc).timestamp())),
 }
 
 
 def declaration_of_window(window):
     require(type(window) is str and window in WINDOWS, 'explicit declared packed probe window')
-    return evaluation.PORTABLE_PROBE if window == PORTABLE_WINDOW else DECLARATION
+    return evaluation.PORTABLE_PROBE if window in PORTABLE_WINDOWS else DECLARATION
 
 
 def check_cpu_profile(window):
     declaration_of_window(window)
-    if window == PORTABLE_WINDOW:
+    if window in PORTABLE_WINDOWS:
         cpu_profile.check_recorded(cpu_profile.expected_receipt())
 
 
@@ -63,8 +73,8 @@ def child_environment(launch):
     result = files.child_environment()
     window = launch.get('execution_window', LEGACY_WINDOW)
     declaration_of_window(window)
-    if window == PORTABLE_WINDOW:
-        check_cpu_profile(PORTABLE_WINDOW)
+    if window in PORTABLE_WINDOWS:
+        check_cpu_profile(window)
         result.update(cpu_profile.settings())
     return result
 
@@ -107,16 +117,18 @@ def service_name(source, seed):
     return f'microduck-wsl-packed-eval-probe-{source[:12]}-seed-{seed}.service'
 
 
-def plan(source, inputs, runtime_sha, retained, deadline, *, window=LEGACY_WINDOW):
+def plan(source, inputs, runtime_sha, retained, deadline, *, window=LEGACY_WINDOW, training_auth=None):
     files.hex_id(source, 40); files.hex_id(runtime_sha, 64)
     checked_deadline(deadline, window)
     declaration = declaration_of_window(window)
-    if window == PORTABLE_WINDOW:
+    if window in PORTABLE_WINDOWS:
         # Pure rederivation on another Linux host checks recorded capture input,
         # not the verifier's current GPU/WSL identity. Live checks remain separate.
         require(inputs.get('execution_profile') == host.execution.select(host.execution.WSL),
                 'recorded portable probe WSL capture profile')
+        historical.validate(training_auth, source, retained)
     else:
+        require(training_auth is None, 'no historical auth field in legacy probe')
         require(host.execution.PROFILE['name'] == host.execution.WSL, 'exact packed probe WSL profile')
     files.hex_id(retained['source'], 40); files.hex_id(retained['report_sha256'], 64)
     require([c['identity']['iteration'] for c in retained['checkpoints']] == list(lean.CHECKPOINTS),
@@ -130,7 +142,7 @@ def plan(source, inputs, runtime_sha, retained, deadline, *, window=LEGACY_WINDO
         checkpoint_sha256=saved['sha256'], checkpoint_iteration=evaluation.PROBE_ITERATION,
         evaluation_seed=evaluation.PROBE_SEED, worlds=evaluation.WORLDS, capture_device='cuda:0',
         solved_field_check='packed', checker_sha256=host.digest(checker.__file__))
-    if window == PORTABLE_WINDOW:
+    if window in PORTABLE_WINDOWS:
         binding['cpu_math_profile'] = cpu_profile.expected_receipt()
     binding['launch_sha256'] = sha256(evaluation.bundle.launch_bytes(binding, meta)).hexdigest()
     result = dict(protocol=declaration['protocol'], mode='probe', source=source, inputs=inputs,
@@ -150,7 +162,10 @@ def plan(source, inputs, runtime_sha, retained, deadline, *, window=LEGACY_WINDO
     # Preserve historical launch bytes exactly; only the renewed declaration
     # carries an explicit label, independently bound by the top-level hash.
     if window != LEGACY_WINDOW: result['execution_window'] = window
-    if window == PORTABLE_WINDOW:
+    if window in PORTABLE_WINDOWS:
+        result['historical_training_authentication'] = deepcopy(training_auth)
+        result['historical_training_authentication_sha256'] = sha256(
+            (canonical(training_auth)+'\n').encode()).hexdigest()
         result['cpu_math_profile'] = deepcopy(binding['cpu_math_profile'])
         result['cpu_math_profile_sha256'] = sha256(
             (canonical(result['cpu_math_profile'])+'\n').encode()).hexdigest()
@@ -164,14 +179,18 @@ def prepare(source, training_source, seed, deadline, *, window=LEGACY_WINDOW):
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
             'CPU-only packed evaluation probe preparation')
     inputs = host.identity(source)
-    retained = evaluation.training_inputs(declaration_of_window(window), seed, training_source)
+    auth = historical.run(source, training_source, seed) if window in PORTABLE_WINDOWS else None
+    retained = (auth['retained_training'] if auth is not None
+                else evaluation.training_inputs(declaration_of_window(window), seed, training_source))
     training_launch = files.parse(files.file_bytes(lean.output_path(training_source, lean.PACKED_REPLICATION, seed)/'launch.json'))
     require({k: v for k, v in training_launch['inputs'].items() if k != 'source'} ==
             {k: v for k, v in inputs.items() if k != 'source'}
             and training_launch['checker_sha256'] == host.digest(checker.__file__),
             'same frozen host/stack/plant/checker as completed packed training')
     runtime = plant.runtime_bytes(source, plant.build_entity().compile())
-    launch = plan(source, inputs, sha256(runtime).hexdigest(), retained, deadline, window=window)
+    launch = plan(source, inputs, sha256(runtime).hexdigest(), retained, deadline,
+                  window=window, training_auth=auth)
+    check_window(deadline, launching=True, window=window)
     root = files.native._plain_path(output_path(source, seed)); root.mkdir(exist_ok=False)
     smoke.write_bytes(root/'runtime.json', runtime); files.write_json(root/'launch.json', launch)
     return dict(output=str(root), service=service_name(source, seed), launch_sha256=host.digest(root/'launch.json'))
@@ -184,9 +203,12 @@ def checked(source, seed, launch_sha):
     launch = files.parse(files.file_bytes(root/'launch.json'))
     window = launch.get('execution_window', LEGACY_WINDOW)
     check_cpu_profile(window)
-    retained = evaluation.training_inputs(declaration_of_window(window), seed, launch['retained_training']['source'])
+    auth = (historical.run(source, launch['retained_training']['source'], seed)
+            if window in PORTABLE_WINDOWS else None)
+    retained = (auth['retained_training'] if auth is not None else evaluation.training_inputs(
+        declaration_of_window(window), seed, launch['retained_training']['source']))
     require(launch == plan(source, host.identity(source), host.digest(root/'runtime.json'),
-            retained, launch['deadline_unix'], window=window),
+            retained, launch['deadline_unix'], window=window, training_auth=auth),
             'unchanged packed probe source/host/archive/plan')
     plant.checked_runtime(files.parse(files.file_bytes(root/'runtime.json')), source)
     return launch
@@ -287,7 +309,8 @@ def verify_retained(root, launch_sha, report_sha):
         'retained probe cannot enable capability')
     require(launch == plan(launch['source'], launch['inputs'], host.digest(root/'runtime.json'),
             launch['retained_training'], launch['deadline_unix'],
-            window=window), 'rederived source-bound probe plan')
+            window=window, training_auth=launch.get('historical_training_authentication')),
+            'rederived source-bound probe plan')
     require(set(report['files']) == {p.name for p in root.iterdir() if p.is_file()}-{'report.json'}
             and all(host.digest(root/name) == digest for name, digest in report['files'].items()
                     if name == os.path.basename(name) and name not in ('.', '..'))

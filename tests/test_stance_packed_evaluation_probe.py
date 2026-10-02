@@ -49,6 +49,24 @@ def retained_training(seed=577):
     return dict(source=TRAINING_SOURCE, report_sha256="4" * 64, checkpoints=checkpoints)
 
 
+def portable_retained_training():
+    retained = retained_training()
+    retained['source'] = probe.historical.TRAINING_SOURCE
+    for saved in retained['checkpoints']:
+        saved['identity']['source'] = retained['source']
+    return retained
+
+
+def historical_auth_fixture(retained=None):
+    retained = portable_retained_training() if retained is None else retained
+    inventory = {name: 'f'*64 for name in probe.historical.inventory_names()}
+    return dict(protocol=probe.historical.PROTOCOL, source=SOURCE, training_seed=577,
+        cpu_runtime=probe.historical.expected_runtime(),
+        settings=dict(OMP_NUM_THREADS='1', CUDA_VISIBLE_DEVICES=''), timeout_seconds=60,
+        archive_files=inventory, retained_training=deepcopy(retained), optimizer_steps=0,
+        gpu_execution_performed=False, independent_attestation=False)
+
+
 def valid_measurements():
     return dict(policy_ticks=evaluation.POLICY_TICKS,
         stop_reason=evaluation.VALID_STOP_REASON,
@@ -543,14 +561,16 @@ def _retained_probe_fixture(tmp_path, monkeypatch, *, window=probe.LEGACY_WINDOW
     retained = retained_training()
     runtime_raw = b'{"runtime":"fixture"}'
     inputs = {"host": "fixture"}
-    if window == probe.PORTABLE_WINDOW:
+    if window in probe.PORTABLE_WINDOWS:
+        retained = portable_retained_training()
         inputs['execution_profile'] = probe.host.execution.select(probe.host.execution.WSL)
         monkeypatch.setattr(probe.cpu_profile, 'checked_receipt', probe.cpu_profile.expected_receipt)
     launch = probe.plan(SOURCE, inputs, sha256(runtime_raw).hexdigest(),
                         retained,
                         probe.WINDOWS[window]["cutoff"] if window != probe.LEGACY_WINDOW
                         else qualification.PACKED_CUTOFF - 1,
-                        window=window)
+                        window=window, training_auth=historical_auth_fixture(retained)
+                        if window in probe.PORTABLE_WINDOWS else None)
     launch_raw = (json.dumps(launch, sort_keys=True, separators=(",", ":")) + "\n").encode()
     (root / "launch.json").write_bytes(launch_raw)
     (root / "runtime.json").write_bytes(runtime_raw)

@@ -90,3 +90,56 @@ read-only review accepted the inline profile binding; unknown window selectors
 also refuse explicitly. Diff and relative-link checks passed. This is source
 evidence only; Linux CPU validation and all live entry gates must still pass.
 Full repository and GPU tests have not run as part of these source checks.
+
+## Preparation refusal and predeclared phase separation
+
+At source `3b683e18151c1699ed4248233f7b8443df331d18`, the first CPU
+preparation (`microduck-r2-prepare-3b683e18151c.service`, invocation
+`77d583361bbd46ef9c08522ddb429e07`) refused with
+`ValueError: exact fresh initializer identity`. No output directory was
+allocated and no GPU capture started. The unchanged verifier reaches
+`training_inputs -> verify_completed -> started_learner_from -> load_lean_parent`
+and reconstructs the historical parent's initializer before checking its weights.
+Read-only comparison using unchanged R1 source reproduced the seed-521 hash:
+original AVX2 profile `27e98087a3043f8a4b4fdc9b81958260db849cd4dbfec5dc5cb6a8810e0b7e8b`;
+portable DEFAULT profile `ee8c7ed74d456f3505bad44c609e5b823136e762bd9bc6016dad4ebffad98dd2`.
+Strict restore of the retained trained checkpoint matched the same saved receipt
+under both profiles. Do not relax the initializer gate or rewrite old evidence.
+
+Before capture, authenticate the entire original seed-577 packed archive in a
+separate **60-second CPU-only subprocess**, direct argv in the pinned WSL checkout
+and venv, inherited 6-GiB/200%-CPU service limits. At exec, keep CUDA hidden,
+OMP_NUM_THREADS=1, and omit ATEN_CPU_CAPABILITY/MKL_CBWR. Check initial/current
+settings, actual AVX2 runtime, pinned CPU library and uninitialized CUDA before
+and after the unchanged complete archive verifier. Require one bounded canonical
+JSON receipt and zero return code; no parent-process fallback or optimizer step.
+Bind its complete file-hash inventory, original training source/report/checkpoints,
+current R2 source and CPU runtime into the top R2 launch with a canonical hash.
+Each live `checked()` reruns this authentication and exactly compares the result.
+Portable capture/replay still uses the separately recorded DEFAULT profile.
+Offline receipt checking is recorded provenance, not independent attestation.
+The one-case gates, 21:00–22:00 window and watchdogs remain unchanged, including
+a renewed full-reserve check after CPU preparation and before artifact allocation.
+The helper also reads GPU UUID/driver metadata through the unchanged host identity
+check; this is not CUDA initialization, allocation or GPU computation. Stream
+separate stdout/stderr with a shared 1-MiB cap enforced during reading; kill only the
+owned CPU subprocess group on timeout/oversize/failure, with at most two seconds
+of reap cleanup. Do not accumulate unbounded PIPE output before checking its size.
+The fixed Python exec wrapper redirects package-registration/authentication
+diagnostics to stderr before import, leaving stdout exclusively for one canonical
+receipt. Keep the original numerical/backend warning guard on those diagnostics;
+do not assume package import prints only one informational line.
+
+At 3b683e1, WSL default-profile affected tests passed **534/534** (41.28 s),
+while portable-profile contracts passed **241/241** (20.09 s). The initial broad
+portable invocation had **13 failures / 521 passes**: twelve default/WSL fixture
+assumptions and one historical initializer golden. No test was disabled; both
+separate final suites passed. Native CPU whole-plant qualification passed at
+fingerprint `6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
+Its first invocation used the wrong archive path and failed FileNotFoundError;
+the corrected path was the retained R1 detached snapshot. Failed CPU journals
+remain retained; none of these checks is GPU/capability acceptance.
+
+The original 22:00 window expired without a GPU launch. A later authorized
+capture must use a separately predeclared execution window and new tested source,
+not change the R2 cutoff or repurpose its failed preparation service.

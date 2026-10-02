@@ -11,14 +11,14 @@ from mjlab_microduck import stance_attempt_trace as trace
 from mjlab_microduck.first_attempt_smoke import canonical
 from test_stance_packed_evaluation_probe import (
     SOURCE, TRAINING_SOURCE, RUNTIME_SHA, retained_training, select_wsl,
-    _retained_probe_fixture,
+    _retained_probe_fixture, portable_retained_training, historical_auth_fixture,
 )
 
 
-def portable_plan():
+def portable_plan(window=probe.PORTABLE_WINDOW):
     return probe.plan(SOURCE, {'execution_profile': probe.host.execution.select(probe.host.execution.WSL)},
-        RUNTIME_SHA, retained_training(), probe.WINDOWS[probe.PORTABLE_WINDOW]['cutoff'],
-        window=probe.PORTABLE_WINDOW)
+        RUNTIME_SHA, portable_retained_training(), probe.WINDOWS[window]['cutoff'],
+        window=window, training_auth=historical_auth_fixture())
 
 
 def test_pure_portable_plan_records_distinct_profile_bound_protocol_without_current_wsl_claim(monkeypatch):
@@ -32,6 +32,9 @@ def test_pure_portable_plan_records_distinct_profile_bound_protocol_without_curr
     assert launch['attempts_required'] == 128 and launch['optimizer_steps'] == 0
     assert launch['child_timeout_seconds'] == 600 and launch['service_timeout_seconds'] == 960
     assert not launch['full_evaluation_enabled'] and not launch['learned_stance_accepted']
+    auth = launch['historical_training_authentication']
+    assert auth == historical_auth_fixture()
+    assert launch['historical_training_authentication_sha256'] == sha256((canonical(auth)+'\n').encode()).hexdigest()
     assert evaluation.PORTABLE_PROBE not in evaluation.EVALUATIONS.values()
     with pytest.raises(ValueError, match='only declared judged continuations'):
         evaluation.plan(SOURCE, {}, RUNTIME_SHA, retained_training(), 1234, 'evaluate', evaluation.PORTABLE_PROBE)
@@ -114,3 +117,61 @@ def test_offline_portable_profile_refusal_precedes_case_replay(tmp_path, monkeyp
     monkeypatch.setattr(evaluation, 'verify_probe', lambda *_: pytest.fail('profile refusal before bundle replay'))
     with pytest.raises(ValueError, match='actual recorded CPU math profile'):
         probe.verify_retained(root, report['launch_sha256'], probe.host.digest(root/'report.json'))
+
+
+def test_r3_is_separate_window_and_cannot_reopen_expired_r2(monkeypatch):
+    select_wsl(monkeypatch)
+    limits = probe.WINDOWS[probe.AUTH_WINDOW]
+    assert limits['cutoff']-limits['not_before'] == 3600
+    assert probe.WINDOWS[probe.PORTABLE_WINDOW]['cutoff'] < limits['not_before']
+    monkeypatch.setattr(probe.time, 'time', lambda: limits['not_before'])
+    probe.check_window(limits['cutoff'], launching=True, window=probe.AUTH_WINDOW)
+    with pytest.raises(ValueError):
+        probe.check_window(probe.WINDOWS[probe.PORTABLE_WINDOW]['cutoff'], launching=True,
+                           window=probe.PORTABLE_WINDOW)
+    monkeypatch.setattr(probe.time, 'time', lambda: limits['cutoff']-1620)
+    with pytest.raises(ValueError, match='whole packed probe plus closeout'):
+        probe.check_window(limits['cutoff'], launching=True, window=probe.AUTH_WINDOW)
+    launch = portable_plan(probe.AUTH_WINDOW)
+    assert launch['execution_window'] == probe.AUTH_WINDOW
+    assert launch['historical_training_authentication'] == historical_auth_fixture()
+    assert probe.declaration_of_window(probe.AUTH_WINDOW) is evaluation.PORTABLE_PROBE
+
+
+def test_r3_offline_rederivation_keeps_profile_and_auth_without_live_gpu(tmp_path, monkeypatch):
+    root, _, report = _retained_probe_fixture(tmp_path, monkeypatch, window=probe.AUTH_WINDOW)
+    monkeypatch.setattr(probe.host.execution, 'PROFILE', probe.host.execution.select(probe.host.execution.DEFAULT))
+    assert not probe.verify_retained(root, report['launch_sha256'],
+                                    probe.host.digest(root/'report.json'))['full_evaluation_enabled']
+
+
+def test_r4_renewal_is_additive_bounded_and_does_not_reopen_old_windows(monkeypatch):
+    select_wsl(monkeypatch)
+    limits = probe.WINDOWS[probe.OCT2_WINDOW]
+    assert limits['cutoff']-limits['not_before'] == 3600
+    assert probe.WINDOWS[probe.AUTH_WINDOW]['cutoff'] < limits['not_before']
+    monkeypatch.setattr(probe.time, 'time', lambda: limits['not_before']-1)
+    with pytest.raises(ValueError, match='before its declared start'):
+        probe.check_window(limits['cutoff'], launching=True, window=probe.OCT2_WINDOW)
+    monkeypatch.setattr(probe.time, 'time', lambda: limits['not_before'])
+    probe.check_window(limits['cutoff'], launching=True, window=probe.OCT2_WINDOW)
+    for old in (probe.PORTABLE_WINDOW, probe.AUTH_WINDOW, probe.REPAIRED_WINDOW):
+        with pytest.raises(ValueError):
+            probe.check_window(probe.WINDOWS[old]['cutoff'], launching=True, window=old)
+    monkeypatch.setattr(probe.time, 'time', lambda: limits['cutoff']-1620)
+    with pytest.raises(ValueError, match='whole packed probe plus closeout'):
+        probe.check_window(limits['cutoff'], launching=True, window=probe.OCT2_WINDOW)
+    monkeypatch.setattr(probe.time, 'time', lambda: limits['cutoff']+1)
+    with pytest.raises(ValueError):
+        probe.check_window(limits['cutoff'], window=probe.OCT2_WINDOW)
+    launch = portable_plan(probe.OCT2_WINDOW)
+    assert launch['execution_window'] == probe.OCT2_WINDOW
+    assert launch['historical_training_authentication'] == historical_auth_fixture()
+    assert launch['child_timeout_seconds'] == 600 and launch['service_timeout_seconds'] == 960
+
+
+def test_r4_retained_plan_rederives_on_independent_cpu_runtime(tmp_path, monkeypatch):
+    root, _, report = _retained_probe_fixture(tmp_path, monkeypatch, window=probe.OCT2_WINDOW)
+    monkeypatch.setattr(probe.host.execution, 'PROFILE', probe.host.execution.select(probe.host.execution.DEFAULT))
+    assert not probe.verify_retained(root, report['launch_sha256'],
+                                    probe.host.digest(root/'report.json'))['learned_stance_accepted']

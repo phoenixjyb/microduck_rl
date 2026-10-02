@@ -71,3 +71,28 @@ def test_bad_reset_refused_before_stepping(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='nominal first reset'):
         worker.evaluate_owned_case(tmp_path/'case', env, **args, deadline_monotonic=time.monotonic()+60)
     assert not (tmp_path/'case').exists()
+
+
+def test_full_collection_requires_recorded_portable_profile_before_stepping(monkeypatch):
+    env = WarpStanceRuntime(2, device='cpu'); args = inputs(env)
+    identity = {**args['checkpoint_identity'], 'purpose': cp.LEAN_REPLICATION_PURPOSE,
+        'training_seed': 577, 'worlds': 64, 'iteration': 255,
+        'initial_state_sha256': '3'*64, 'parent_checkpoint_sha256': cp.LEAN_PARENT_SHA256}
+    actor, critic = cp.fresh_models(521)
+    args['checkpoint_raw'] = cp.encode(actor, critic, identity)
+    args['checkpoint_identity'] = identity
+    binding = {**args['binding'], 'protocol': trace.PORTABLE_FULL_PROTOCOL,
+        'checkpoint_sha256': sha256(args['checkpoint_raw']).hexdigest(),
+        'checkpoint_iteration': 255, 'evaluation_seed': 541, 'worlds': 128,
+        'capture_device': 'cuda:0', 'solved_field_check': 'packed',
+        'checker_sha256': 'f'*64, 'training_seed': 577}
+    from mjlab_microduck import stance_cpu_replay_profile as profile
+    binding['cpu_math_profile'] = profile.expected_receipt()
+    binding.pop('launch_sha256')
+    args['launch_raw'] = bundle.launch_bytes(binding, identity)
+    binding['launch_sha256'] = sha256(args['launch_raw']).hexdigest()
+    before = env.steps.clone()
+    monkeypatch.setattr(profile, 'check_recorded', lambda _receipt: pytest.fail('profile must reject'))
+    with pytest.raises(pytest.fail.Exception):
+        worker.collect(env, actor, binding, deadline_monotonic=time.monotonic()+60)
+    assert torch.equal(before, env.steps)

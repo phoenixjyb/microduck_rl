@@ -29,7 +29,8 @@ LOADERS = {trace.PROTOCOL: checkpoint.load_evaluation,
            trace.LEAN_PROTOCOL: checkpoint.load_lean_evaluation,
            trace.LEAN_REPLICATION_PROTOCOL: checkpoint.load_lean_replication_evaluation,
            trace.PACKED_PROBE_PROTOCOL: checkpoint.load_lean_replication_evaluation,
-           trace.PORTABLE_PROBE_PROTOCOL: checkpoint.load_lean_replication_evaluation}
+           trace.PORTABLE_PROBE_PROTOCOL: checkpoint.load_lean_replication_evaluation,
+           trace.PORTABLE_FULL_PROTOCOL: checkpoint.load_lean_replication_evaluation}
 
 
 def launch_bytes(binding_without_launch_sha, checkpoint_identity):
@@ -43,9 +44,12 @@ def launch_bytes(binding_without_launch_sha, checkpoint_identity):
 
 def checked_inputs(binding, cp_raw, cp_identity, runtime_raw, launch_raw):
     trace.validate_binding(binding)
-    if binding['protocol'] == trace.PORTABLE_PROBE_PROTOCOL:
+    if binding['protocol'] in trace.PORTABLE_ACTOR_PROTOCOLS:
         from mjlab_microduck import stance_cpu_replay_profile as profile
         profile.check_recorded(binding['cpu_math_profile'])
+    if binding['protocol'] == trace.PORTABLE_FULL_PROTOCOL:
+        require(cp_identity.get('training_seed') == binding['training_seed'],
+                'full training seed/checkpoint identity mismatch')
     for raw, expected in ((cp_raw, binding['checkpoint_sha256']),
                           (runtime_raw, binding['runtime_sha256']), (launch_raw, binding['launch_sha256'])):
         require(type(raw) is bytes and 0 < len(raw) <= checkpoint.LIMIT and sha256(raw).hexdigest() == expected,
@@ -61,7 +65,7 @@ def checked_inputs(binding, cp_raw, cp_identity, runtime_raw, launch_raw):
 
 
 def actor_replay(payload, actor, score):
-    if payload['binding']['protocol'] == trace.PORTABLE_PROBE_PROTOCOL:
+    if payload['binding']['protocol'] in trace.PORTABLE_ACTOR_PROTOCOLS:
         from mjlab_microduck import stance_cpu_replay_profile as profile
         profile.check_recorded(payload['binding']['cpu_math_profile'])
     maximum = 0.

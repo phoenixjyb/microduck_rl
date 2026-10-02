@@ -148,11 +148,16 @@ expired windows above. The separate [R4 portable capture](experiments/2026-10-02
 completed on source `07466b58021c084dbc2f688effa936d9466ba456`: all 128 nominal
 first attempts passed and same-host actor replay was exact. The original
 training initializer/archive authentication passed separately under AVX2.
-Strict independent native-Linux replay is still **blocked on complete archive
-delivery**; timed-out partial copies are not accepted evidence. No full matrix,
+Strict independent native-Linux replay **passed on October 3 at 00:05** after
+complete archive delivery: all 14 files and 621,439,568 bytes matched, all 128
+attempts were recomputed, and actor error was exactly zero with CUDA hidden.
+Timed-out partial copies remain unaccepted and preserved. No full matrix,
 new learner, disturbance recovery, hopping or football capability follows from
 the single capture. A separately bounded CPU-only delivery closeout preserves
-all original GPU limits and every acceptance gate.
+all original GPU limits and every acceptance gate. The separately declared
+4,608-attempt evaluator has a [separate predeclaration](experiments/2026-10-03-portable-packed-full-evaluation.md)
+and focused implementation checks; it has not yet run. Its complete nominal
+replication decision still precedes disturbance recovery or football promotion.
 
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate

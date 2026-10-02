@@ -88,7 +88,7 @@ def test_packed_probe_is_not_registered_as_full_evaluation_or_training_loader():
                         "probe", evaluation.PACKED_PROBE)
     assert bundle.LOADERS[trace.PACKED_PROBE_PROTOCOL] is checkpoint.load_lean_replication_evaluation
     assert bundle.LOADERS[trace.PORTABLE_PROBE_PROTOCOL] is checkpoint.load_lean_replication_evaluation
-    assert set(bundle.LOADERS) - set(trace.PACKED_PROBE_PROTOCOLS) == {
+    assert set(bundle.LOADERS) - set(trace.PACKED_CAPTURE_PROTOCOLS) == {
         trace.PROTOCOL, trace.EAGER_PROTOCOL, trace.LEAN_PROTOCOL, trace.LEAN_REPLICATION_PROTOCOL
     }
 

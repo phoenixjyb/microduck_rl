@@ -17,8 +17,8 @@ from mjlab_microduck.first_attempt_smoke import require
 
 
 def check_packed_runtime(env, binding):
-    """Only packed probe protocols assert packed execution; old traces stay unchanged."""
-    if binding['protocol'] not in trace.PACKED_PROBE_PROTOCOLS: return
+    """Packed capture protocols require the live eager CUDA solver and checker."""
+    if binding['protocol'] not in trace.PACKED_CAPTURE_PROTOCOLS: return
     from mjlab_microduck import stance_solved_field_check as checker
     require(env.solved_field_check == 'packed' and env.forward_graph is None
             and env.wp_device.is_cuda, 'actual eager packed probe runtime')
@@ -37,7 +37,7 @@ def collect(env, actor, binding, *, deadline_monotonic, policy_tick_limit=250, c
     mandatory for live use. Source, runtime and seed provenance remain external.
     """
     trace.validate_binding(binding)
-    if binding['protocol'] == trace.PORTABLE_PROBE_PROTOCOL:
+    if binding['protocol'] in trace.PORTABLE_ACTOR_PROTOCOLS:
         from mjlab_microduck import stance_cpu_replay_profile as profile
         profile.check_recorded(binding['cpu_math_profile'])
     check_packed_runtime(env, binding)

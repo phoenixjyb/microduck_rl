@@ -56,7 +56,7 @@ def test_exclusive_durable_bundle_and_recomputed_receipts(tmp_path, inputs):
     assert not torch.cuda.is_initialized()
 
 
-@pytest.mark.parametrize('protocol', trace.PACKED_PROBE_PROTOCOLS)
+@pytest.mark.parametrize('protocol', trace.PACKED_CAPTURE_PROTOCOLS)
 def test_packed_cuda_origin_bundle_roundtrip_on_cpu_consistency_fixture(tmp_path, inputs, monkeypatch, protocol):
     """Exercise actual publication/replay, not CUDA capture or learner evidence.
 
@@ -87,7 +87,9 @@ def test_packed_cuda_origin_bundle_roundtrip_on_cpu_consistency_fixture(tmp_path
         'checkpoint_sha256': sha256(changed['checkpoint_raw']).hexdigest(),
         'checkpoint_iteration': 255, 'worlds': 128, 'capture_device': 'cuda:0',
         'solved_field_check': 'packed', 'checker_sha256': 'f'*64}
-    if protocol == trace.PORTABLE_PROBE_PROTOCOL:
+    if protocol == trace.PORTABLE_FULL_PROTOCOL:
+        binding['training_seed'] = 577
+    if protocol in trace.PORTABLE_ACTOR_PROTOCOLS:
         from mjlab_microduck import stance_cpu_replay_profile as profile
         binding['cpu_math_profile'] = profile.expected_receipt()
         # Synthetic runtime metadata only. This is not a live Linux/profile gate.
@@ -147,6 +149,30 @@ def test_actor_disagreement_rejected_before_creating_directory(tmp_path, inputs)
     changed = deepcopy(inputs); changed['payload']['ticks'][0]['actions'][0, 0] += .01
     with pytest.raises(ValueError, match='restored actor'): bundle.write_bundle(tmp_path/'owned', **changed)
     assert not (tmp_path/'owned').exists()
+
+
+def test_full_training_seed_must_match_checkpoint_identity_before_loader(inputs, monkeypatch):
+    changed = deepcopy(inputs)
+    identity = {**inputs['checkpoint_identity'], 'purpose': cp.LEAN_REPLICATION_PURPOSE,
+        'training_seed': 577, 'worlds': 64, 'iteration': 255,
+        'initial_state_sha256': '3'*64, 'parent_checkpoint_sha256': cp.LEAN_PARENT_SHA256}
+    actor, critic = cp.fresh_models(521)
+    changed['checkpoint_raw'] = cp.encode(actor, critic, identity)
+    changed['checkpoint_identity'] = identity
+    binding = {**inputs['binding'], 'protocol': trace.PORTABLE_FULL_PROTOCOL,
+        'checkpoint_sha256': sha256(changed['checkpoint_raw']).hexdigest(),
+        'checkpoint_iteration': 255, 'worlds': 128, 'capture_device': 'cuda:0',
+        'solved_field_check': 'packed', 'checker_sha256': 'f'*64,
+        'training_seed': 587}
+    from mjlab_microduck import stance_cpu_replay_profile as profile
+    binding['cpu_math_profile'] = profile.expected_receipt()
+    monkeypatch.setattr(profile, 'checked_receipt', profile.expected_receipt)
+    binding.pop('launch_sha256')
+    launch = bundle.launch_bytes(binding, identity)
+    binding['launch_sha256'] = sha256(launch).hexdigest()
+    with pytest.raises(ValueError, match='training seed/checkpoint identity mismatch'):
+        bundle.checked_inputs(binding, changed['checkpoint_raw'], identity,
+            changed['runtime_raw'], launch)
 
 
 def test_control_disagreement_rejected_before_creating_directory(tmp_path, inputs):
@@ -246,7 +272,8 @@ def test_each_trace_protocol_has_exactly_one_loader():
         trace.LEAN_PROTOCOL: cp.load_lean_evaluation,
         trace.LEAN_REPLICATION_PROTOCOL: cp.load_lean_replication_evaluation,
         trace.PACKED_PROBE_PROTOCOL: cp.load_lean_replication_evaluation,
-        trace.PORTABLE_PROBE_PROTOCOL: cp.load_lean_replication_evaluation}
+        trace.PORTABLE_PROBE_PROTOCOL: cp.load_lean_replication_evaluation,
+        trace.PORTABLE_FULL_PROTOCOL: cp.load_lean_replication_evaluation}
     assert len({id(loader) for loader in bundle.LOADERS.values()}) == 4
 
 

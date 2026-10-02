@@ -604,14 +604,34 @@ def child(source, launch_sha, fd, mode, declaration=LESSON, seed=None):
 
 
 def summarize(launch, scores, declaration=LESSON):
-    """The predeclared decision rule, applied to twelve verified case scores."""
+    """Validate the original fixed plan, then apply its unchanged decision rule."""
     require(launch['mode'] == 'evaluate', 'a probe is not a decision')
     require(launch == plan(launch['source'], launch['inputs'], launch['runtime_sha256'],
         launch['retained_training'], launch['deadline_unix'], 'evaluate', declaration),
         'exact fixed comparison plan')
-    require(set(scores) == {c['name'] for c in launch['cases']}, 'all twelve cases required')
+    return summarize_cases(launch['cases'], scores, declaration)
+
+
+def summarize_cases(cases, scores, declaration):
+    """Pure aggregation for exactly the declared twelve checkpoint/seed scores.
+
+    This keeps the fixed lesson/replication wrapper's decision rule reusable by
+    another bounded evaluator without importing its launch-plan or cap policy.
+    """
+    iterations = declaration['iterations']
+    require(type(iterations) in (tuple, list) and len(iterations) == len(ITERATIONS)
+            and len(set(iterations)) == len(iterations), 'four distinct declared checkpoints')
+    expected_pairs = [(iteration, seed) for iteration in iterations for seed in trace.SEEDS]
+    require(len(expected_pairs) == CASES, 'exact twelve checkpoint/seed pairs')
+    require(type(cases) is list and len(cases) == CASES, 'all twelve cases required')
+    names = [case['name'] for case in cases]
+    require(len(set(names)) == CASES, 'unique case names')
+    pairs = [(case['binding']['checkpoint_iteration'], case['binding']['evaluation_seed'])
+             for case in cases]
+    require(pairs == expected_pairs, 'exact ordered checkpoint/seed matrix')
+    require(type(scores) is dict and set(scores) == set(names), 'all twelve case scores required')
     rows = []
-    for case in launch['cases']:
+    for case in cases:
         score = scores[case['name']]; attempts = score['attempts']
         require(score['binding'] == case['binding'] and score['protocol'] == declaration['trace_protocol'],
                 'separate lean trace identity')
@@ -646,7 +666,7 @@ def summarize(launch, scores, declaration=LESSON):
             hard_failures=sum(a['hard_failure'] for a in attempts),
             failed_gates={key: sum(not a['gates'][key] for a in attempts) for key in attempts[0]['gates']}))
     per_checkpoint = {}
-    for iteration in declaration['iterations']:
+    for iteration in iterations:
         seeds = [r for r in rows if r['iteration'] == iteration]
         require(len(seeds) == len(trace.SEEDS), 'all three evaluation seeds per checkpoint')
         per_checkpoint[str(iteration)] = dict(
@@ -657,7 +677,7 @@ def summarize(launch, scores, declaration=LESSON):
                 tilt_p95_rad_min=r['tilt_p95_rad_min'], tilt_p95_rad_max=r['tilt_p95_rad_max'],
                 tilt_p95_rad_mean=r['tilt_p95_rad_mean'],
                 hard_failures=r['hard_failures']) for r in seeds})
-    survivors = [i for i in declaration['iterations'] if per_checkpoint[str(i)]['passes_all_seeds']]
+    survivors = [i for i in iterations if per_checkpoint[str(i)]['passes_all_seeds']]
     passed = bool(survivors)
     # The gate key is named by the declaration rather than shared, so a
     # replication summary cannot be read as a lesson summary. The lesson's key is

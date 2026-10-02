@@ -22,8 +22,12 @@ LEAN_PROTOCOL = 'football-b1n-lean-first-attempt-trace-v1'
 LEAN_REPLICATION_PROTOCOL = 'football-b1n-lean-replication-first-attempt-trace-v1'
 PACKED_PROBE_PROTOCOL = 'football-b1n-packed-evaluation-probe-trace-v1'
 PORTABLE_PROBE_PROTOCOL = 'football-b1n-portable-packed-probe-trace-v1'
+PORTABLE_FULL_PROTOCOL = 'football-b1n-portable-packed-full-evaluation-trace-v1'
 PACKED_PROBE_PROTOCOLS = (PACKED_PROBE_PROTOCOL, PORTABLE_PROBE_PROTOCOL)
+PACKED_CAPTURE_PROTOCOLS = PACKED_PROBE_PROTOCOLS + (PORTABLE_FULL_PROTOCOL,)
+PORTABLE_ACTOR_PROTOCOLS = (PORTABLE_PROBE_PROTOCOL, PORTABLE_FULL_PROTOCOL)
 SEEDS = (541, 547, 557)
+PORTABLE_FULL_TRAINING_SEEDS = (577, 587, 593)
 CHECKPOINTS = (128, 256, 384, 511)
 # The lean-lesson run's common checkpoints. Declared here rather than imported
 # from ``stance_checkpoint`` because that module imports this one; ``checkpoint``
@@ -34,6 +38,7 @@ LEAN_CHECKPOINTS = (64, 128, 192, 255)
 # the distinct ``ITERATIONS`` key -- not a copied literal -- that stops either
 # protocol from borrowing the other's labels.
 LEAN_REPLICATION_CHECKPOINTS = LEAN_CHECKPOINTS
+PORTABLE_FULL_CHECKPOINTS = LEAN_REPLICATION_CHECKPOINTS
 # Which checkpoint iterations each trace protocol may bind, keyed by protocol so
 # that a protocol can never borrow another's iteration labels. The retained
 # pilot path admits only 128/256/384/511, the eager diagnostic only its
@@ -43,7 +48,8 @@ LEAN_REPLICATION_CHECKPOINTS = LEAN_CHECKPOINTS
 ITERATIONS = {PROTOCOL: CHECKPOINTS, EAGER_PROTOCOL: (-1, 127), LEAN_PROTOCOL: LEAN_CHECKPOINTS,
               LEAN_REPLICATION_PROTOCOL: LEAN_REPLICATION_CHECKPOINTS,
               PACKED_PROBE_PROTOCOL: (LEAN_CHECKPOINTS[-1],),
-              PORTABLE_PROBE_PROTOCOL: (LEAN_CHECKPOINTS[-1],)}
+              PORTABLE_PROBE_PROTOCOL: (LEAN_CHECKPOINTS[-1],),
+              PORTABLE_FULL_PROTOCOL: PORTABLE_FULL_CHECKPOINTS}
 MAX_TRACE_BYTES = 512*1024*1024
 STATE_KEYS = set(PhysicsState.__dataclass_fields__)
 FRAME_KEYS = {'physics_steps', 'qpos', 'qvel', 'soft_limit_mask', 'state', 'observation'}
@@ -68,10 +74,12 @@ def tensor(value, shape, dtype, label):
 def validate_binding(binding):
     keys = {'protocol', 'source', 'runtime_sha256', 'checkpoint_sha256',
         'launch_sha256', 'checkpoint_iteration', 'evaluation_seed', 'worlds', 'capture_device'}
-    packed = binding.get('protocol') in PACKED_PROBE_PROTOCOLS
+    packed = binding.get('protocol') in PACKED_CAPTURE_PROTOCOLS
     if packed: keys |= {'solved_field_check', 'checker_sha256'}
-    portable = binding.get('protocol') == PORTABLE_PROBE_PROTOCOL
+    portable = binding.get('protocol') in PORTABLE_ACTOR_PROTOCOLS
     if portable: keys.add('cpu_math_profile')
+    full = binding.get('protocol') == PORTABLE_FULL_PROTOCOL
+    if full: keys.add('training_seed')
     require(set(binding) == keys,
         'exact trace binding fields')
     require(binding['protocol'] in ITERATIONS, 'trace binding protocol')
@@ -86,8 +94,15 @@ def validate_binding(binding):
         require(binding['solved_field_check'] == 'packed' and type(binding['checker_sha256']) is str
                 and re.fullmatch('[0-9a-f]{64}', binding['checker_sha256']) is not None,
                 'packed probe checker binding')
-        require(binding['evaluation_seed'] == SEEDS[0] and binding['worlds'] == 128
-                and binding['capture_device'] == 'cuda:0', 'fixed packed probe case')
+        if not full:
+            require(binding['evaluation_seed'] == SEEDS[0] and binding['worlds'] == 128
+                    and binding['capture_device'] == 'cuda:0', 'fixed packed probe case')
+        else:
+            require(binding['worlds'] == 128 and binding['capture_device'] == 'cuda:0',
+                    'fixed full packed capture')
+            require(type(binding['training_seed']) is int
+                    and binding['training_seed'] in PORTABLE_FULL_TRAINING_SEEDS,
+                    'predeclared full training seed')
     require(type(binding['worlds']) is int and 1 <= binding['worlds'] <= 128, 'bounded trace worlds')
     require(type(binding['evaluation_seed']) is int and binding['evaluation_seed'] in SEEDS,
             'predeclared evaluation seed')

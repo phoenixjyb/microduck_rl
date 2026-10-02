@@ -239,3 +239,25 @@ SHA256 before extraction and all 14 inventory identities before tensor loading.
 No active bound, GPU window, numerical threshold or original artifact is
 modified. Another failure closes this recovery as incomplete; no automatic
 retry. The full evaluator remains blocked until strict replay actually passes.
+
+## Independent closeout completed
+
+The fresh 600-second recovery completed successfully. Native gzip SHA256
+matched `82e327f89ca15f208d22ae3ca7f7954589ccf788f519dee025d55076e9395ae3`;
+all **14 / 621,439,568-byte** inventory identities matched the declared digest
+before any tensor loading. `microduck-r4-independent-replay-07466b58021c.service`
+finished successfully with CUDA hidden, exact clean detached R4 source, frozen
+package versions, DEFAULT CPU capability, compatible MKL and one CPU thread.
+Invocation: `915a07e21fb44ef59d1b9acaa97e9680`.
+
+Strict whole-plan / bundle / score and entire compiled-plant replay passed:
+**128/128** completed numerical passes, actor maximum absolute error **0.0**,
+11.657050742767751 seconds of replay work. The retained independent receipt is
+`artifacts/tools/portable-r4-validation-07466b58021c/artifacts/transfers/r4-network-recovery-e0df1aa7/independent-replay.json`
+on the native host, SHA256
+`eed529043cb4af240cc922138e73ca383beda9dd79f4805a17ce3fd962100406`.
+Original failed copies/journals remain unchanged. This closes R4's independent
+CPU replay gate, not independent GPU attestation, binary-runtime equivalence,
+replicated stance, recovery, hopping, football balance or physical acceptance.
+All existing admission flags remain false. A new separately measured-budget
+36-case / 4,608-attempt evaluator can now be implemented and reviewed.

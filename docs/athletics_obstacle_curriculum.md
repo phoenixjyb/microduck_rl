@@ -204,8 +204,15 @@ the full +x case passed all numerical gates, retained 37.6 MB of evidence and
 passed independent CPU actor/control/recorded-state replay. Maximum displacement
 was 2.4 mm and soft-limit exposure zero. This remains one fixed timing diagnostic,
 not recovery or B1 acceptance. The [five-case frozen baseline](experiments/2026-10-03-frozen-five-direction-recovery-baseline.md)
-is now separately predeclared from its measured timings; no matrix outcome is
-claimed yet. The original failed attempt remains preserved.
+completed at approximately 06:16 Shanghai: all five fresh full cases passed,
+with exact matched pre-push prefixes, independent whole-case CPU scoring and
+a separate rescore/rehash. Worst displacement was 3.15 mm; both-foot support
+was complete and soft-limit exposure zero. This is a fixed small-push baseline,
+not randomized recovery or B1 graduation. The original failed attempt remains
+preserved. The [next progressive recovery design](experiments/2026-10-03-progressive-recovery-lesson-design.md)
+keeps timing and dose expansion separate from the frozen D1 protocol and screens
+the unchanged actor before spending training time. It is source-only: no new
+learner, job admission or football capability follows from that proposal.
 
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled

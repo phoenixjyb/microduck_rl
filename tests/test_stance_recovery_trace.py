@@ -1,6 +1,7 @@
 """Short CPU collection and independent-contract tests for D1 recovery traces."""
 
 from copy import deepcopy
+import gc
 from hashlib import sha256
 
 import pytest
@@ -19,6 +20,13 @@ SOURCE = "a" * 40
 TRAINING_SOURCE = "be2d59661af293b0d67ae20d2e16db50514cce14"
 CHECKPOINT_SHA256 = "2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5"
 EXPECTED_CPU_PROFILE = profile.expected_receipt()
+
+
+@pytest.fixture(autouse=True)
+def release_finished_native_test_fixtures():
+    """Bound native fixture lifetime after each test and its monkeypatch undo."""
+    yield
+    gc.collect()
 
 
 def frozen_checkpoint_identity():

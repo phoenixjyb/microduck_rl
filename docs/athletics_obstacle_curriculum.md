@@ -191,6 +191,13 @@ the fixed tolerance; the bounded service finished in 37.12 seconds. This
 qualifies only the force path, with no actor/checkpoint/optimizer or recovery
 acceptance. The nominal no-push guard remains unchanged. D1 must separately
 predeclare and qualify a frozen-policy recovery baseline before any learner.
+The [D1 frozen-policy push baseline](experiments/2026-10-03-frozen-push-recovery-baseline.md)
+now preselects seed 577 / checkpoint 255, a 2-N / 20-ms world-frame push after
+one second, and unchanged five-second stability/motor gates. Its first +x case
+is only a full-length timing/retention probe. One WSL portable test batch hit
+its 2-GiB cap before GPU use; same-cap isolated CPU qualifications are required
+after the reviewed test-lifetime correction. No D1 GPU or recovery acceptance
+is claimed at this source revision.
 
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled

@@ -1,11 +1,20 @@
 """Focused D1 pulse adapter checks; synthetic counters are control-flow fixtures."""
 
+import gc
+
 import pytest
 import torch
 
 from mjlab_microduck import stance_recovery_contract as contract
 from mjlab_microduck.stance_recovery_runtime import RecoveryRuntime
 from mjlab_microduck.stance_warp_runtime import WarpStanceRuntime
+
+
+@pytest.fixture(autouse=True)
+def release_finished_native_test_fixtures():
+    """Collect finished test-hook cycles; never change an active runtime."""
+    yield
+    gc.collect()
 
 
 @pytest.mark.parametrize('cases', [

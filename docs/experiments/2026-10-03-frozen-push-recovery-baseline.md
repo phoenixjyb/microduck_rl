@@ -145,3 +145,41 @@ forward-probe and portable-full-protocol regression checks. Python compilation
 and whitespace checks passed. These are source/CPU checks, not Linux execution,
 GPU recovery or skill acceptance. Exact-source Linux qualifications and the
 bounded timing probe remain pending at this predeclaration commit.
+
+## First WSL qualification and bounded test-lifetime revision
+
+At exact source `5a0d5b5fbb543079d63aed8454dc58647f1f5cf9`, the default-math
+integrated WSL suite passed **278 tests in 44.00 s** under the declared
+150-second / 6-GiB budget. Service
+`microduck-d1-regression-cpu-tests-5a0d5b5fbb54.service`, invocation
+`1ecefaa8e8e14f2db9d3f2a8165eb183`, exited successfully; journal reports
+71.507 s CPU and 5.7 GiB peak memory.
+
+The single-process portable-profile suite did **not** qualify: service
+`microduck-d1-portable-cpu-tests-5a0d5b5fbb54.service`, invocation
+`484c77a5ad5546329bfdb279e214e53e`, hit its actual 2-GiB cgroup ceiling at
+04:50:24 Shanghai: **`Result=oom-kill`, `ExecMainStatus=9`**, after partial test
+progress; no assertion error or completed suite was reported. Its failed unit
+and journal are preserved. Initial-exec profile inspection succeeded, but that
+does not qualify the suite. The GPU remained idle (0%, 30 C, 663 MiB, no CUDA
+PID); FilmBrain PIDs/restarts and both protected services were unchanged. No
+training-worktree installation or D1 GPU execution followed this failure.
+
+Read-only source inspection found environment-bound synthetic refresh hooks
+and native fixture graphs whose cyclic Python lifetimes can outlast an
+individual test. Accumulation is a plausible cause, not an independently
+measured allocator attribution. The reviewed change is test-only garbage
+collection after completed fixtures/monkeypatch teardown, not an active-runtime
+reset or changed physics/gate. No dependency, driver or GPU cap changes.
+
+Before new qualification outcomes, predeclare the corrected-source portable
+qualification as **four sequential, fresh one-file user services** (contract,
+runtime, trace, probe), each retaining **120 seconds / 2 GiB / 200% / Nice 10 /
+control-group**, exact source and actual initial-exec portable profile. Preserve
+all failures; no automatic retry or larger cap. All four must finish
+successfully, together covering the same 123 tests, plus a fresh corrected-source
+278-test default-math regression under the unchanged 150-second / 6-GiB cap,
+before installation or GPU access. This bounds cross-test/suite fixture
+lifetime; it does not widen the 2-GiB CPU-preparation or GPU-probe budgets.
+The corrected test-lifetime source passed the same **278 Mac CPU-hidden tests
+in 42.84 s**, with whitespace checks clean, before any new WSL qualification.

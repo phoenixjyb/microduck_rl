@@ -173,13 +173,13 @@ class RecoveryRuntime(WarpStanceRuntime):
                 q_tensor = torch.as_tensor(q_expected, dtype=self._view('qfrc_applied').dtype, device=self.device)
                 if self._view('xfrc_applied').any() or self._view('qfrc_applied').any():
                     raise ValueError('applied-force arrays must be zero before pulse installation')
-                self._view('xfrc_applied').copy_(x_tensor)
-                self._view('qfrc_applied').copy_(q_tensor)
-                in_window = ((before_steps >= contract.ONSET_STEP) &
-                             (before_steps < contract.ONSET_STEP+contract.PULSE_STEPS) & accepted)
-                phases = {}
-                old_time = self._view('time').clone()
                 try:
+                    self._view('xfrc_applied').copy_(x_tensor)
+                    self._view('qfrc_applied').copy_(q_tensor)
+                    in_window = ((before_steps >= contract.ONSET_STEP) &
+                                 (before_steps < contract.ONSET_STEP+contract.PULSE_STEPS) & accepted)
+                    phases = {}
+                    old_time = self._view('time').clone()
                     self._pulse_forward(before_steps, accepted)
                     if (self._view('qfrc_actuator')[:, self.dofs][accepted].abs() > .36).any():
                         raise ValueError('applied motor torque exceeds pre-step gate')

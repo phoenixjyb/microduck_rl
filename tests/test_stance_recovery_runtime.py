@@ -205,6 +205,23 @@ def test_integration_failure_clears_force_arrays_and_permanently_faults(monkeypa
         env.reset(torch.ones(2, dtype=torch.bool))
 
 
+@pytest.mark.parametrize('field', ['xfrc_applied', 'qfrc_applied'])
+def test_installation_failure_also_clears_owned_force_arrays(field, monkeypatch):
+    env = pulse_fixture(('+x',))
+    pointer = env._view(field).data_ptr()
+    original = torch.Tensor.copy_
+    def fail_after_copy(destination, source, *args, **kwargs):
+        result = original(destination, source, *args, **kwargs)
+        if destination.data_ptr() == pointer:
+            raise RuntimeError('synthetic pulse installation fault')
+        return result
+    monkeypatch.setattr(torch.Tensor, 'copy_', fail_after_copy)
+    with pytest.raises(RuntimeError, match='synthetic pulse installation fault'):
+        env.step_with_pulse(torch.zeros(1, 10))
+    assert env.faulted
+    assert not env._view('xfrc_applied').any() and not env._view('qfrc_applied').any()
+
+
 def test_first_terminal_closed_row_gets_no_pulse_or_fifo_advance_while_sibling_runs():
     env = pulse_fixture()
     env.state.tilt[0] = .4

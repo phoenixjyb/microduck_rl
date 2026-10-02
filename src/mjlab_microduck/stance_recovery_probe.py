@@ -131,6 +131,15 @@ def seed_reset():
     torch.manual_seed(contract.EVALUATION_SEED)
 
 
+def require_cpu_prefix(replay):
+    require(replay['collection']['policy_ticks'] == CPU_QUAL_TICKS
+            and replay['collection']['stop_reason'] == 'policy-tick-limit'
+            and replay['pulse']['checked_physics_steps'] == CPU_QUAL_TICKS*10
+            and replay['pulse']['complete_pulse_delivery'] is True
+            and replay['actor_replay_max_abs_error'] == 0.,
+            'complete 52-tick CPU approach/pulse/post-pulse qualification')
+
+
 def prepare(source):
     check_window(launching=True)
     require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(),
@@ -150,9 +159,8 @@ def prepare(source):
         deadline_monotonic=started+CPU_QUAL_SECONDS, policy_tick_limit=CPU_QUAL_TICKS)
     raw = evidence.encode(value)
     replay = evidence.verify(raw, sha256(raw).hexdigest(), checkpoint_raw, initial['declaration'])
-    require(replay['pulse']['complete_pulse_delivery'] and replay['pulse']['checked_physics_steps'] >= 510
-            and replay['actor_replay_max_abs_error'] == 0.
-            and not torch.cuda.is_initialized(), 'complete CPU pulse and exact actor/control qualification before GPU')
+    require_cpu_prefix(replay)
+    require(not torch.cuda.is_initialized(), 'CPU qualification never initializes CUDA')
     elapsed = time.monotonic()-started
     require(0 < elapsed < CPU_QUAL_SECONDS, 'bounded actual D1 CPU prefix qualification')
     smoke.write_bytes(root/'checkpoint.pt', checkpoint_raw)
@@ -188,8 +196,8 @@ def checked(source, launch_sha):
         and type(q['elapsed_seconds']) is float and 0 < q['elapsed_seconds'] < CPU_QUAL_SECONDS,
         'authenticated CPU pulse qualification before tensor loading')
     replay = evidence.verify(raw, q['prefix_sha256'], checkpoint_raw, launch['declaration'])
-    require(replay == q['replay'] and replay['pulse']['complete_pulse_delivery']
-            and replay['actor_replay_max_abs_error'] == 0., 'reexecuted exact portable actor/control/pulse checks')
+    require_cpu_prefix(replay)
+    require(replay == q['replay'], 'reexecuted exact portable actor/control/pulse checks')
     return launch
 
 

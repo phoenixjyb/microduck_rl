@@ -186,7 +186,9 @@ def test_checked_reauthenticates_then_checks_exact_launch_and_checkpoint_bytes_b
     root.mkdir()
     prefix = b"cpu-qualified recovery prefix"
     checkpoint_raw = b"frozen checkpoint behind pinned-hash seam"
-    replay = {"pulse": {"complete_pulse_delivery": True}, "actor_replay_max_abs_error": 0.}
+    replay = {"pulse": {"complete_pulse_delivery": True, "checked_physics_steps": 520},
+              "collection": {"policy_ticks": 52, "stop_reason": "policy-tick-limit"},
+              "actor_replay_max_abs_error": 0.}
     q = dict(protocol="football-b1d-cpu-policy-pulse-qualification-v1", source=SOURCE,
         prefix_sha256=real_sha256(prefix).hexdigest(), prefix_bytes=len(prefix), elapsed_seconds=.5,
         checkpoint_sha256=contract.CHECKPOINT_SHA256, cpu_math_profile=probe.profile.expected_receipt(),
@@ -230,6 +232,7 @@ def test_prepare_requires_hidden_cuda_and_performs_cpu_archive_and_52_tick_quali
     checkpoint_raw = b"checkpoint"
     qualification_value = {"cpu": "prefix"}; encoded = b"serialized cpu prefix"
     replay = {"pulse": {"complete_pulse_delivery": True, "checked_physics_steps": 520},
+              "collection": {"policy_ticks": 52, "stop_reason": "policy-tick-limit"},
               "actor_replay_max_abs_error": 0., "cuda_initialized": False}
     events = []; runtime_box = []
     monkeypatch.setattr(probe, "check_window", lambda **kwargs: events.append(("window", kwargs)))
@@ -288,6 +291,22 @@ def test_prepare_rejects_visible_cuda_before_host_or_archive_auth(monkeypatch):
     with pytest.raises(ValueError, match="CPU-only D1 preparation"):
         probe.prepare(SOURCE)
     assert events == []
+
+
+@pytest.mark.parametrize("damage", ["ticks", "steps", "early-terminal", "wall-budget", "pulse", "actor"])
+def test_cpu_prefix_refuses_missing_promised_post_pulse_interval(damage):
+    score = {"collection": {"policy_ticks": 52, "stop_reason": "policy-tick-limit"},
+        "pulse": {"checked_physics_steps": 520, "complete_pulse_delivery": True},
+        "actor_replay_max_abs_error": 0.}
+    probe.require_cpu_prefix(score)
+    if damage == "ticks": score["collection"]["policy_ticks"] = 51
+    elif damage == "steps": score["pulse"]["checked_physics_steps"] = 510
+    elif damage == "early-terminal": score["collection"]["stop_reason"] = "all-first-attempts-complete"
+    elif damage == "wall-budget": score["collection"]["stop_reason"] = "wall-budget-exhausted"
+    elif damage == "pulse": score["pulse"]["complete_pulse_delivery"] = False
+    else: score["actor_replay_max_abs_error"] = .001
+    with pytest.raises(ValueError, match="complete 52-tick"):
+        probe.require_cpu_prefix(score)
 
 
 def test_child_inherits_lease_and_rechecks_cpu_before_cuda_or_runtime(monkeypatch):

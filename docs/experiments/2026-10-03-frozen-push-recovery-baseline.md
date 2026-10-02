@@ -132,9 +132,15 @@ binding and graph exclusion, and added forced-phase exception cleanup tests.
 The runner reuses the existing fixed 900-second stance watchdog rather than
 widening the generic 120-second subprocess wrapper. A negative test caught and
 closed partial-capture timing admission before any D1 GPU access.
+Final read-only review additionally required the exact 52-tick / 520-substep
+CPU prefix on both preparation and revalidation, and extended force cleanup to
+cover exceptions during pulse installation/setup itself. Six negative prefix
+tests and two after-copy failure tests cover those corrections. The initial
+`f3d8466e` snapshot was transported but never qualified or executed on WSL;
+only the corrected exact source may proceed to Linux qualification.
 
-The final Mac CUDA-hidden integrated suite passed **270 tests in 21.66 s**:
-115 new D1 contract/runtime/trace/runner checks and 155 unchanged D0, nominal,
+The final Mac CUDA-hidden integrated suite passed **278 tests in 27.38 s**:
+123 new D1 contract/runtime/trace/runner checks and 155 unchanged D0, nominal,
 forward-probe and portable-full-protocol regression checks. Python compilation
 and whitespace checks passed. These are source/CPU checks, not Linux execution,
 GPU recovery or skill acceptance. Exact-source Linux qualifications and the

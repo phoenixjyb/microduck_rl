@@ -7,6 +7,12 @@ new learner or GPU-job predeclaration. Keep the
 and all unchanged stance/motor/first-attempt gates. No admission, perception,
 observation, package/driver or physical-motion boundary is widened.
 
+The separately retained [genuine CPU diagnostic](2026-10-03-cpu-scheduled-diagonal-diagnostic.md)
+has now passed at exact source `1ae0a2956e10626679cabcac3a18c5c40ec383c3`,
+including actual parent loading and a fresh independent whole-capture CPU
+rescore. The predeclaration below is preserved; its single-cell result is not a
+learner or full held-out qualification.
+
 ## Exact parent, not an old-loader alias
 
 The separate `stance_recovery_parent.load_parent(raw)` accepts only the selected
@@ -142,7 +148,8 @@ checks, immutable CPU RNG and exact deterministic actor output comparison with
 the independently frozen old evaluation loader. Use a small declared synthetic
 observation tensor only to compare the two loaded actors, not to claim a real
 physical first attempt. Create no optimizer and run no PPO update. The real-parent
-qualification is retained in that diagnostic's launch/report; it has not yet run.
+qualification is now retained in that diagnostic's launch/report and independent
+closeout, not inferred from the synthetic unit tests.
 
 Any native runtime fixture with synthetic counters/support hooks must identify
 that seam; 10–20 actual CPU substeps exercise install/clear/control behavior,
@@ -152,3 +159,44 @@ caps. FilmBrain/protected service checks remain read-only. This qualification
 does not authorize new GPU training or extend the October 3 **08:00 Shanghai**
 cutoff. A future held-out matrix and retained GPU/optimizer throughput
 probe must be separately declared and budget-qualified before a learner job.
+
+## Standalone real-policy preparation, not a new learner
+
+`stance_recovery_policy_preparation.prepare_policy` composes the exact loaded
+parent objects directly into the pinned `FinitePPO` and fresh 24-step
+`RolloutStorage`. It does not subclass `CpuStanceLearner`, construct an old fresh
+initializer or extend historical seed/checkpoint allowlists. New learner seeds
+are only 653/659; preparation worlds are only 2 (future small probe) or 64
+(proposed lesson). Neither world count grants execution admission.
+
+It checks policy object identity, disjoint complete actor/critic parameter sets,
+the optimizer's exact unique parameter union, unchanged loaded state hash,
+float32/trainable CPU groups, fresh empty Adam, storage step zero and preserved
+caller CPU RNG. The new private CPU generator state is prepared but **not yet
+connected to an action sampler**. Nested parent receipt fields describe the
+loader's own non-installing action; the outer policy-wiring receipt describes
+the subsequent composition. Returned library objects can be used by a future
+consumer, but this module exposes no collection/update/reset/export/job runner.
+Finite-gradient/moment gates, real pulse transition/reset integration, student
+checkpoint/replay protocols and actual optimizer/throughput evidence are still
+required before a training job. All admission flags stay false.
+
+The local focused suite passed **25 tests in 6.90 s** with explicitly synthetic
+parent/profile seams, while using actual pinned PPO/storage constructors.
+Independent read-only review found no concrete wiring blocker; no sampling or
+training qualification follows from that review.
+
+The integrated Mac run passed **656 tests in 48.89 s**, including all 596
+scheduled-recovery regression checks, the new 25 preparation checks, and 35
+unchanged PPO/lean-lesson checks. No old initializer or checkpoint allowlist changed.
+
+After testing and pushing the exact revision, qualify this new suite in fresh
+actual portable-CPU execution and the relevant combined default-CPU regression.
+Then run one separate **120-second / 2-GiB / 200% CPU / Nice 10 /
+control-group** service with actual historical bytes and no test seams. Retain
+all four seed/world combinations, exact source/module paths, real parent and
+initial-state hashes, exact frozen-actor shadow comparison, actual CPU profile,
+empty optimizer/storage evidence and unchanged private/global RNG boundaries.
+Use no environment, rollout collection, optimizer step or CUDA allocation.
+Do not call these constructor timings learner or GPU-throughput measurements.
+Retain failures and diagnose before fixes; do not change packages or caps.

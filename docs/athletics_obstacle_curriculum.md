@@ -196,8 +196,11 @@ now preselects seed 577 / checkpoint 255, a 2-N / 20-ms world-frame push after
 one second, and unchanged five-second stability/motor gates. Its first +x case
 is only a full-length timing/retention probe. One WSL portable test batch hit
 its 2-GiB cap before GPU use; same-cap isolated CPU qualifications are required
-after the reviewed test-lifetime correction. No D1 GPU or recovery acceptance
-is claimed at this source revision.
+after the reviewed test-lifetime correction. Those corrected-source CPU checks
+passed, but the first GPU attempt could not retain its capture: an older
+16-MiB smoke writer conflicted with D1's declared 128-MiB bound. A separately
+tested, fresh-source writer-fix attempt is required; no D1 recovery acceptance
+or full-matrix budget is claimed from that failed run.
 
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled

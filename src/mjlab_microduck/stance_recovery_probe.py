@@ -124,6 +124,16 @@ def restored_actor(raw, identity):
         raw, contract.CHECKPOINT_SHA256, identity)[0]
 
 
+def write_capture(path, raw):
+    """Own the declared D1 capture bound; never widen the legacy smoke writer."""
+    require(type(raw) is bytes and 0 < len(raw) <= contract.CAPTURE_LIMIT,
+            'bounded D1 capture bytes')
+    path = files.native._plain_path(path)
+    with path.open('xb') as target:
+        target.write(raw); target.flush(); os.fsync(target.fileno())
+    files.native._fsync_dir(path.parent)
+
+
 def seed_reset():
     """Seed only this owned evaluator process, never an unrelated workload."""
     random.seed(contract.EVALUATION_SEED)
@@ -164,7 +174,7 @@ def prepare(source):
     elapsed = time.monotonic()-started
     require(0 < elapsed < CPU_QUAL_SECONDS, 'bounded actual D1 CPU prefix qualification')
     smoke.write_bytes(root/'checkpoint.pt', checkpoint_raw)
-    smoke.write_bytes(root/'cpu-prefix.pt', raw)
+    write_capture(root/'cpu-prefix.pt', raw)
     qualification = dict(protocol='football-b1d-cpu-policy-pulse-qualification-v1', source=source,
         prefix_sha256=sha256(raw).hexdigest(), prefix_bytes=len(raw), elapsed_seconds=elapsed,
         checkpoint_sha256=contract.CHECKPOINT_SHA256, cpu_math_profile=profile.checked_receipt(),
@@ -220,7 +230,7 @@ def child(source, launch_sha, fd, started):
         deadline_monotonic=started+contract.PROBE_CHILD_SECONDS-120)
     require(time.monotonic()-started < contract.PROBE_CHILD_SECONDS-60, 'fixed D1 serialization closeout reserve')
     serial_started = time.monotonic(); raw = evidence.encode(value)
-    smoke.write_bytes(root/'capture.pt', raw)
+    write_capture(root/'capture.pt', raw)
     capture = dict(protocol=contract.PROTOCOL, source=source, launch_sha256=launch_sha,
         capture_sha256=sha256(raw).hexdigest(), capture_bytes=len(raw),
         backend=value['backend'], construction_seconds=construction,

@@ -183,3 +183,75 @@ before installation or GPU access. This bounds cross-test/suite fixture
 lifetime; it does not widen the 2-GiB CPU-preparation or GPU-probe budgets.
 The corrected test-lifetime source passed the same **278 Mac CPU-hidden tests
 in 42.84 s**, with whitespace checks clean, before any new WSL qualification.
+
+## Corrected-source qualification and first GPU writer refusal
+
+Exact source `2b8ba547853f2b207c420b659a953492e46665ea` passed the integrated
+WSL suite (**278 tests, 48.23 s**; service
+`microduck-d1-regression-cpu-tests-2b8ba547853f.service`, invocation
+`3adc59c79b1d423bb4d8457e07dad71c`). All four actual-profile, 2-GiB one-file
+services also exited successfully: contract **51 / 0.04 s**, runtime **24 /
+10.04 s**, trace **16 / 7.64 s**, probe **32 / 0.06 s**. Their service runtimes
+were 8.562, 16.617, 14.224 and 6.615 s respectively; invocations in that order:
+`a50caeaa957545bc8ecc8dad63cd1116`, `cde2794d202b4d45a55f976d37ba4262`,
+`18119b15a9df4af38ebabcaa243aa86a`, `3fea338c77c140d0ad37cc8853651f51`.
+Some terminal systemd memory-peak summaries were implausibly small; they are
+not used as allocator measurements. The configured limits and successful
+terminal results, not those peak numbers, qualify these separate test runs.
+
+After a clean exact-source fast-forward under the shared lease and two idle
+samples, CPU preparation service `microduck-d1-cpu-prepare-2b8ba547853f.service`
+(invocation `7f4793620a8046c99f42dd6adbbacc42`) passed: **52 ticks / 520 steps,
+ten delivered pulse and ten post-pulse substeps, exact actor replay error 0**;
+qualification 7.433390758931637 s, collection 5.294208843959495 s. Prefix bytes
+8,118,535; no hard failure, soft-limit exposure 0, peak modeled torque
+0.11519977450370789 N m. This prefix still cannot pass the five-second scorer.
+
+Retained directory:
+`/home/yanbo/work/microduck_rl-stance-replication-20260930/artifacts/evaluations/stance-wsl-d1-frozen-recovery-probe-2b8ba547853f`.
+SHA256 values:
+
+| Artifact | SHA256 |
+| --- | --- |
+| launch.json | c064f3abaeacd63a95c4b92b2155298e620c4c2ece07d435c658ebebd124607a |
+| cpu-qualification.json | 1ee623fd03a0311633f6e75586d3934f662737410f2eadb651d39e45d1681524 |
+| cpu-prefix.pt | f474da111f4faa1d17eb96a7f57ce897f2500c8344ac1db9ab262960da00bd05 |
+| checkpoint.pt | 2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5 |
+| report.json | 35a2880a99c17b2e2033042dba57049c4d604f682d5f25b37433fe02c959c5a4 |
+| child.log | 14f7c794baa0dbf3fd0fa9dc4eab632f25de2a771447100f017a6a124b355354 |
+
+The GPU service `microduck-wsl-d1-recovery-probe-2b8ba547853f.service`, invocation
+`c58c519ea3484993a40fe1d490226382`, failed normally with exit 1, not OOM. Its
+exact child error was **`ValueError: bounded smoke bytes`**, at
+`stance_recovery_probe.child` → `stance_training_smoke.write_bytes`. Read-only
+source diagnosis showed a mismatch: D1 encode/read/declaration allow **128 MiB**,
+but that reused legacy writer allows only **16 MiB**. Serialization reached that
+writer, but **no capture.pt or capture.json was retained**. Therefore no complete
+duration, numerical recovery result or full-matrix budget is accepted from this
+attempt. Its 192.22105568787083-s child elapsed time is a failed-attempt timing,
+not qualified complete-case timing.
+
+All 153 ownership samples contained no GPU PID or only child **2073789**;
+maximum GPU temperature 41 C, maximum GPU memory 974 MiB, minimum free
+23,188 MiB, protected services inactive throughout. Read-only inspection during
+the service showed cgroup reclaim/swap pressure but `oom=0`, `oom_kill=0`;
+no memory/time cap was changed. After failure the GPU was idle at 0%, 33 C,
+663 MiB, no CUDA PID; FilmBrain remained at its original PIDs/restarts. The
+failed unit, source, prefix, report and child log remain durable and untouched.
+
+Before another outcome, predeclare a **new exact-source, fresh-path writer-fix
+attempt**, not a retry of that failed service/directory: D1 gets its own exclusive
+fsynced capture writer enforcing the already-declared 128-MiB limit. The
+legacy smoke writer remains byte-identical at 16 MiB; checkpoint writes retain
+that smaller helper. Tests must cover writing **16 MiB + 1 byte**, no overwrite,
+invalid bytes and rejection above 128 MiB, plus the child routing to this writer.
+Require the new exact-source integrated regression and all four separate actual
+portable suites first (now **282 / 127 tests** respectively), with the unchanged
+150-second / 6-GiB and per-file 120-second / 2-GiB caps. Then new CPU preparation
+and the same **900 / 960 seconds, 2 GiB, fixed checkpoint/pulse/gates and cutoff**
+may proceed. No automated retries or full matrix before a retained, CPU-scored,
+full-length probe succeeds. The Mac integrated writer-fix suite passed
+**282 tests in 30.32 s** before this new WSL declaration; the final focused
+runner check after the explicit routing assertion passed **36 tests in 8.24 s**.
+Whitespace checks passed. The unchanged legacy smoke-writer source SHA256 is
+`43186854a9d20197e88e5f68000c844f45717aa459d5f3b21675393fb46aeb57`.

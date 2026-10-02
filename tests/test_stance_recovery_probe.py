@@ -252,6 +252,8 @@ def test_prepare_requires_hidden_cuda_and_performs_cpu_archive_and_52_tick_quali
         events.append(("write-json", Path(path).name)), path.write_text(json.dumps(value, sort_keys=True)))[1])
     monkeypatch.setattr(probe.smoke, "write_bytes", lambda path, raw: (
         events.append(("write-bytes", Path(path).name)), Path(path).write_bytes(raw))[1])
+    monkeypatch.setattr(probe, "write_capture", lambda path, raw: (
+        events.append(("write-capture", Path(path).name)), Path(path).write_bytes(raw))[1])
     monkeypatch.setattr(probe.torch.cuda, "is_initialized", lambda: False)
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
 
@@ -360,13 +362,15 @@ def test_child_enforces_180_entry_reserve_and_fixed_capture_serialize_deadlines(
     monkeypatch.setattr(probe.evidence, "collect", collect)
     raw = b"bounded encoded capture"
     monkeypatch.setattr(probe.evidence, "encode", lambda _value: raw)
-    monkeypatch.setattr(probe.smoke, "write_bytes", lambda path, value: writes.append((Path(path).name, value)))
+    monkeypatch.setattr(probe, "write_capture", lambda path, value: writes.append((Path(path).name, value)))
+    monkeypatch.setattr(probe.smoke, "write_bytes", lambda *_args: pytest.fail("CUDA capture reached legacy smoke writer"))
     monkeypatch.setattr(probe.files, "write_json", lambda path, value: writes.append((Path(path).name, value)))
 
     probe.child(SOURCE, LAUNCH_SHA, 73, started)
     assert ("deadline", started+contract.PROBE_CHILD_SECONDS-120) in events
     assert contract.PROBE_CHILD_SECONDS == 900
     assert probe.contract.PROBE_CHILD_SECONDS-120 == 780
+    assert ("capture.pt", raw) in writes
     capture = next(value for name, value in writes if name == "capture.json")
     assert capture["serialization_seconds"] == pytest.approx(1.)
     assert capture["elapsed_seconds"] == pytest.approx(842.)
@@ -531,3 +535,31 @@ def test_parent_replay_must_not_accept_partial_capture_as_full_length_probe(tmp_
         probe.replay_capture(SOURCE, {"declaration": {}}, LAUNCH_SHA)
     assert json.loads(raised.value.__notes__[0])["collection"] == collection
     assert json.loads(raised.value.__notes__[0])["numerical_diagnostic"]["gates"]["full_duration"] is False
+
+
+def test_d1_writer_retains_above_legacy_smoke_limit_without_widening_it(tmp_path):
+    raw = b'c'*(16*1024*1024+1)
+    path = tmp_path/'capture.pt'
+    probe.write_capture(path, raw)
+    assert path.read_bytes() == raw
+    with pytest.raises(FileExistsError):
+        probe.write_capture(path, b'replacement')
+    assert path.read_bytes() == raw
+    with pytest.raises(ValueError, match='bounded smoke bytes'):
+        probe.smoke.write_bytes(tmp_path/'legacy.pt', raw)
+    assert not (tmp_path/'legacy.pt').exists()
+
+
+@pytest.mark.parametrize('raw', [b'', bytearray(b'not immutable bytes')])
+def test_d1_writer_rejects_invalid_bytes_before_creating_file(tmp_path, raw):
+    path = tmp_path/'invalid.pt'
+    with pytest.raises(ValueError, match='bounded D1 capture bytes'):
+        probe.write_capture(path, raw)
+    assert not path.exists()
+
+
+def test_d1_writer_rejects_above_predeclared_128_mib_limit(tmp_path):
+    path = tmp_path/'oversized.pt'
+    with pytest.raises(ValueError, match='bounded D1 capture bytes'):
+        probe.write_capture(path, b'c'*(contract.CAPTURE_LIMIT+1))
+    assert not path.exists()

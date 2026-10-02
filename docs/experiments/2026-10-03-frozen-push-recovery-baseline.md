@@ -255,3 +255,66 @@ full-length probe succeeds. The Mac integrated writer-fix suite passed
 runner check after the explicit routing assertion passed **36 tests in 8.24 s**.
 Whitespace checks passed. The unchanged legacy smoke-writer source SHA256 is
 `43186854a9d20197e88e5f68000c844f45717aa459d5f3b21675393fb46aeb57`.
+
+## Writer-fixed R1 full-length probe closeout
+
+Exact source `a44c1d70803012acf791de995a3d384c51162955` qualified on WSL:
+**282 integrated tests / 47.23 s** and all four fresh actual-profile suites
+(contract **51 / 0.06 s**, runtime **24 / 10.60 s**, trace **16 / 7.74 s**,
+probe **36 / 0.20 s**), under the unchanged declared caps. Default suite
+invocation `a9073ee9e2b447a5a8755320324b3eaa`; portable invocations, in order:
+`7739fd7e33074e9caa4622d5511e715e`, `fdda7452539b4c4bb49a45cd46612e73`,
+`599583e65fed47b3832ad8393fc4f661`, `d95983f1ecbe4baebe39dda6f4e7c49a`.
+
+CPU preparation invocation `1596e61bd8d341cb93e7072cfe8ccf25` passed the full
+52-tick / 520-step prefix, ten pulse and ten post-pulse substeps, exact actor
+replay error zero, CUDA uninitialized. Qualification took
+7.477534127887338 s; collection 5.223692099098116 s; 8,118,535 retained bytes.
+
+Service `microduck-wsl-d1-recovery-probe-a44c1d708030.service`, invocation
+`95c798e8f5c04334b7a8f8491cc539dd`, exited successfully at approximately
+05:23 Shanghai: **`frozen-recovery-timing-probe-replayed`**. Whole service
+244.01035961904563 s; child PID 2083933, 193.942176355049 s. The retained
+37,607,688-byte CUDA capture completed 250 ticks / 2,500 Euler steps, with
+all ten pulse steps and complete force/phase/post-clear checks. Construction
+1.8264992961194366 s, collection 161.54264794685878 s, serialization
+3.0357850762084126 s, recorded child elapsed 191.22737446101382 s.
+Independent CPU actor/control/recorded-state rescore took
+6.111677116947249 s and had exact actor error zero. BAM/FIFO accounting was
+checked; **BAM outputs were not recomputed**, and no fresh whole-trajectory
+physics re-simulation or thermal model is claimed.
+
+All nine numerical gates passed for this fixed **+x** case: displacement
+0.002404383849352598 m, soft-limit fraction 0, final-second speed p95
+0.00014086620057418667 m/s, tilt p95 0.02089402638375759 rad, minimum height
+0.11725661158561707 m, both-feet fraction 1. Transient maximum speed
+0.03192462399601936 m/s and tilt 0.024127312004566193 rad; maximum modeled
+motor torque 0.11519975960254669 N m and absolute joint mechanical power
+0.03776584193110466 W. Zero optimizer steps. All eight admission flags remain
+false: this one-direction timing diagnostic is not general recovery, B1,
+football, hopping or physical acceptance.
+
+All 152 ownership samples contained no CUDA PID or only child 2083933;
+maximum 41 C / 974 MiB used, minimum 23,188 MiB free. Both protected services
+remained inactive. FilmBrain PIDs/restarts were unchanged. Two final idle
+samples had 0% utilization, 36 C, 663 MiB used and no CUDA PID; a later
+05:28 read-only check confirmed idle GPU, clean exact source and unchanged
+FilmBrain. Every retained byte hash below was independently rechecked.
+
+Retained directory:
+`/home/yanbo/work/microduck_rl-stance-replication-20260930/artifacts/evaluations/stance-wsl-d1-frozen-recovery-probe-a44c1d708030`.
+
+| Artifact | SHA256 |
+| --- | --- |
+| launch.json | f1156ce35bbd335252c3747fde52ee1c362211078b30c0a7420df54c7bb5c331 |
+| cpu-qualification.json | c91d1acbc9aee9a46015c5e13790b510e621713e749ea36912b4f8d51e7c369f |
+| cpu-prefix.pt | 600a6246271439c88f409fc3bd95304d3e4d1ed90c19b2ab01c24037a4356a02 |
+| checkpoint.pt | 2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5 |
+| capture.json | f912e0314f85381b8dec0b623a95eeeadbf8be2182bdf66f9d8d1e1aa6a07b0b |
+| capture.pt | 36a81e7de6a3c9fab3400692c19fdad8cce4f6dca7e86f1dc1e793b257ce8573 |
+| child.log | 7b3dd58f4bf4574dc323272491680da2d104ad3ec674fd48cea9ddce23df866e |
+| report.json | 36a4473f2dded6be55e1402b63efd4377f2b0b53127fd1af5ea4d45e664d7e3a |
+
+The failed original writer attempt remains preserved separately. Only this
+successful, fully retained R1 timing may inform a separately predeclared
+[five-case baseline](2026-10-03-frozen-five-direction-recovery-baseline.md).

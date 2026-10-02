@@ -199,8 +199,13 @@ its 2-GiB cap before GPU use; same-cap isolated CPU qualifications are required
 after the reviewed test-lifetime correction. Those corrected-source CPU checks
 passed, but the first GPU attempt could not retain its capture: an older
 16-MiB smoke writer conflicted with D1's declared 128-MiB bound. A separately
-tested, fresh-source writer-fix attempt is required; no D1 recovery acceptance
-or full-matrix budget is claimed from that failed run.
+tested, fresh-source writer-fix attempt completed at approximately 05:23 Shanghai:
+the full +x case passed all numerical gates, retained 37.6 MB of evidence and
+passed independent CPU actor/control/recorded-state replay. Maximum displacement
+was 2.4 mm and soft-limit exposure zero. This remains one fixed timing diagnostic,
+not recovery or B1 acceptance. The [five-case frozen baseline](experiments/2026-10-03-frozen-five-direction-recovery-baseline.md)
+is now separately predeclared from its measured timings; no matrix outcome is
+claimed yet. The original failed attempt remains preserved.
 
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled

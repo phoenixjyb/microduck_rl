@@ -184,6 +184,12 @@ nominal stance. A future recovery path needs an explicit perturbation contract
 and focused fixtures, then its own source/timing/held-out gate. A nominal pass
 alone still does not accept B1.
 
+The next separately declared [D0 one-substep force fixture](experiments/2026-10-03-single-substep-force-fixture.md)
+qualifies the external-force timing and independent physics replay first. It has
+five fresh one-world 2-ms cases, no actor/checkpoint/optimizer, and no recovery
+acceptance. The nominal no-push guard remains unchanged. Only a successful D0
+result may precede a separately declared frozen-policy D1 recovery baseline.
+
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled
 rolling (B4). Ball-only tests or an unstepped geometry fixture do not clear B0.

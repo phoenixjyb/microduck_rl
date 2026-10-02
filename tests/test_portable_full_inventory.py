@@ -1,3 +1,4 @@
+import ast
 import hashlib
 import importlib.util
 import json
@@ -32,7 +33,7 @@ def _capture(root):
     receipts = []
     summary = {"decision": "lean-replication-rejected", "complete_attempts": 4608,
                "cases": 36,
-               "per_seed": {str(seed): {"decision": "lean-replication-rejected"}
+               "per_seed": {str(seed): {"decision": "lean-replication-seed-rejected"}
                             for seed in inventory.TRAINING_SEEDS},
                **{key: False for key in inventory.FALSE_FLAGS}}
     payload_rows = {}
@@ -148,6 +149,52 @@ def test_standalone_create_and_verify_inventory_329_streamed_files(completed):
     assert parsed["motion_authorized"] is False
     assert str(root) not in raw.decode()
     assert inventory.verify(root, raw, _sha(raw)) == raw
+
+
+def test_seed_verdict_names_match_unchanged_evaluator_declaration():
+    source = SCRIPT.parents[1] / "src/mjlab_microduck/stance_lean_evaluation.py"
+    tree = ast.parse(source.read_text())
+    declaration = next(node.value for node in tree.body if isinstance(node, ast.Assign)
+                       and any(isinstance(target, ast.Name) and target.id == "REPLICATION"
+                               for target in node.targets))
+    values = {item.arg: ast.literal_eval(item.value) for item in declaration.keywords
+              if item.arg in {"passed", "rejected"}}
+    assert inventory.SEED_DECISIONS == (values["passed"], values["rejected"])
+
+
+@pytest.mark.parametrize("aggregate, per_seed", [
+    ("lean-replication-passed", ["lean-replication-seed-passed"] * 3),
+    ("lean-replication-seed-dependent", ["lean-replication-seed-passed",
+       "lean-replication-seed-rejected", "lean-replication-seed-passed"]),
+])
+def test_completed_seed_verdict_schemas_are_retained_as_bytes(completed, aggregate, per_seed):
+    root, *_ = completed
+    comparison = json.loads((root / "comparison.json").read_bytes())
+    comparison["summary"]["decision"] = aggregate
+    comparison["summary"]["per_seed"] = {
+        str(seed): {"decision": verdict}
+        for seed, verdict in zip(inventory.TRAINING_SEEDS, per_seed)}
+    (root / "comparison.json").write_bytes(_json(comparison))
+    report = json.loads((root / "report.json").read_bytes())
+    report["decision"] = aggregate
+    report["summary"] = comparison["summary"]
+    (root / "report.json").write_bytes(_json(report))
+    launch_sha, report_sha = _reseal(root)
+    raw = inventory.create(root, launch_sha, report_sha)
+    assert json.loads(raw)["numerical_acceptance"] is False
+
+
+def test_aggregate_verdict_is_not_a_per_seed_verdict(completed):
+    root, *_ = completed
+    comparison = json.loads((root / "comparison.json").read_bytes())
+    comparison["summary"]["per_seed"]["577"]["decision"] = "lean-replication-passed"
+    (root / "comparison.json").write_bytes(_json(comparison))
+    report = json.loads((root / "report.json").read_bytes())
+    report["summary"] = comparison["summary"]
+    (root / "report.json").write_bytes(_json(report))
+    launch_sha, report_sha = _reseal(root)
+    with pytest.raises(ValueError, match="three completed replication seed verdicts"):
+        inventory.create(root, launch_sha, report_sha)
 
 
 @pytest.mark.parametrize("target", ["runtime.json", "packed-full-train-577-cp-64-eval-541/trace.pt"])

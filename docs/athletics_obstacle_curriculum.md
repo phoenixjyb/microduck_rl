@@ -158,9 +158,13 @@ all original GPU limits and every acceptance gate. The separately declared
 4,608-attempt evaluator has a [separate predeclaration](experiments/2026-10-03-portable-packed-full-evaluation.md)
 and focused implementation checks. After successful original and portable Linux
 CPU qualification, its source-frozen sequential CUDA evaluation started on
-October 3 at 00:56 Shanghai. It is still in progress; individual case passes do
-not establish the complete nominal replication decision. That decision and
-retained replay still precede disturbance recovery or football promotion.
+October 3 at 00:56 Shanghai and finished successfully at 03:11. All **4,608/4,608**
+attempts passed, and the CPU-only supervisor replayed the entire serialized
+matrix to re-derive `lean-replication-passed`; every checkpoint passed for every
+training seed. This clears nominal simulation replication only. The additional
+retained CPU closeout and byte-only delivery inventory are pending, and every
+capability/physical admission flag remains false. Disturbance recovery and
+football promotion are not established by the nominal result.
 
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate

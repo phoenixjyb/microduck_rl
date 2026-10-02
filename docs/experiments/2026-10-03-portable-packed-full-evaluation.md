@@ -284,3 +284,60 @@ flag is true; `tensor_replay_performed`, `numerical_acceptance` and
 supervisory GPU telemetry or campaign decision numerically, and does not replace
 the exact-source CPU replay required above. Full second-host delivery remains a
 separate unproven tier.
+
+## Completed full evaluation and closeout
+
+The exact source-frozen service finished successfully at **03:11 Shanghai**,
+exit status 0, with all 36 cases and **4,608/4,608** full first attempts passing.
+Its independent CPU-only supervisor replayed all serialized bundles and
+re-derived `lean-replication-passed`. Each training seed (577, 587, 593) passed
+at every declared checkpoint (64, 128, 192, 255) on every evaluation seed
+(541, 547, 557). The original per-seed criterion is unchanged; no checkpoint
+was discarded and no new common-iteration requirement was added.
+
+| Retained item | SHA256 |
+| --- | --- |
+| Launch | `1284cd7e94f381d82e9fc0e7652b132ecf35d4bb53907aa3c2f7d33622f04b2f` |
+| Comparison | `dbed07e9d41306c78a079f24c1fb4b8d76ee5380e1d64f4169475607e488cf4a` |
+| Terminal report | `c6f2719da866d9452e2771fc15e6b5684b56bece2b3acc96b2579ac7af8aec44` |
+
+The child exited 0 after **7,653.759795472957 s**; the full service took
+**8,072.639431586955 s**, within the original 10,981/11,728-second caps.
+All **5,970** ownership samples retained only child PID 1902173 or no compute
+PID, with protected services inactive. GPU peaks were **52°C / 1,305 MiB**,
+minimum free memory **22,857 MiB**. There were no hard failures, non-finite
+score metrics or soft-limit exposure; restored-actor error was exactly zero.
+Journal retention records 6.0-GiB peak cgroup memory and zero swap; live
+observations recorded reclaim pressure but zero OOM or OOM-kill counters.
+FilmBrain PIDs 521 and 298048 and their restart counts remained unchanged.
+
+A read-only size inventory found **329 regular files / 22,352,528,834 bytes**
+in 36 case directories plus top-level metadata. This stat-only count is not
+the byte-hashed delivery inventory. The worktree remains clean at capture source
+`0b73855a0dbddc7ae06303398177a706ac812dc6`; the durable inputs are not mutated.
+
+An additional exact-source CPU-only whole-matrix closeout is running in
+`microduck-full-retained-replay-0b73855a0dbd.service`, invocation
+`c9bedbdccc504069a3364f593205b2f9`, with the separately reserved **600-second**
+cap, 6 GiB, 200% CPU, Nice 10 and KillMode control-group. CUDA is hidden,
+portable math is set at process start, and the imported module must come from
+the qualified detached 0b73855a snapshot. A fresh receipt is written outside
+the original capture only after all plan, hash, bundle, actor, plant, control,
+scoring and deterministic-decision checks pass. Completion of this extra
+closeout is still pending; service liveness is not a replay result.
+
+Before using the byte-only helper against live retained evidence, inspection of
+the real completed report exposed a synthetic-fixture schema mismatch:
+individual verdicts are `lean-replication-seed-passed`/`-seed-rejected`, not the
+aggregate verdict names. Correct only that transport-schema check and its
+fixtures; the numerical evaluator and original decision rule remain unchanged.
+The corrected combined helper/full-runner/packed-probe suite passed **183 tests
+in 14.38 s**, including a source-declaration check for the individual verdict
+names. The earlier helper revision was not used to inventory live captures.
+
+This clears the **nominal simulation replication numerical gate only**.
+Every checkpoint/stance/football/motion/GPU-attestation/binary-equivalence
+admission flag remains false. It does not prove randomized generalization,
+disturbance recovery, hopping, rolling-football balance, physical motor thermal
+calibration or real-robot readiness. Second-host full-matrix delivery and replay
+are still unproven.

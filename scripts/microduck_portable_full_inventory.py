@@ -35,6 +35,7 @@ CHUNK = 1024 * 1024
 FALSE_FLAGS = ("checkpoint_admitted", "learned_stance_accepted", "football_balance_accepted",
                "physical_motion_authorized", "independent_gpu_attestation",
                "complete_binary_runtime_equivalence_verified")
+SEED_DECISIONS = ("lean-replication-seed-passed", "lean-replication-seed-rejected")
 
 
 def _require(ok, message):
@@ -287,11 +288,10 @@ def _validate(root, launch_sha_expected, report_sha_expected):
              and all(summary.get(flag) is False for flag in FALSE_FLAGS),
              "comparison and report summary/decision chain")
     per_seed = summary.get("per_seed")
-    seed_decisions = ("lean-replication-passed", "lean-replication-rejected")
     _require(type(per_seed) is dict and set(per_seed) == {str(seed) for seed in TRAINING_SEEDS}
              and all(type(per_seed[str(seed)]) is dict and "error" not in per_seed[str(seed)]
                      and "error_type" not in per_seed[str(seed)]
-                     and per_seed[str(seed)].get("decision") in seed_decisions
+                     and per_seed[str(seed)].get("decision") in SEED_DECISIONS
                      for seed in TRAINING_SEEDS),
              "three completed replication seed verdicts without errors")
 

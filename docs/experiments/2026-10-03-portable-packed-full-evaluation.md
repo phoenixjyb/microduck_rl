@@ -178,3 +178,74 @@ Mocked allocations are not GPU evidence. Diff, Python compilation and relative
 documentation link checks passed. A read-only review found no definite matrix,
 namespace, numerical-gate or lease defect. Linux qualification and actual
 capture remain separate prerequisites; no full evaluation is claimed here.
+
+### Linux qualification profile refusal
+
+First WSL CPU qualification used exact detached source
+`0b73855a0dbddc7ae06303398177a706ac812dc6` in service
+`microduck-full-default-cpu-tests-0b73855a0dbd.service`, invocation
+`2f4b5dc151f347f6bfbde1d6f879e141`. It ended with exit status 1:
+**13 failed, 1,274 passed, 2 skipped in 146.49 s**. No GPU launch followed.
+Read-only journal diagnosis found global `MICRODUCK_STANCE_PROFILE=wsl-10098-20260930`
+had changed historical default-profile test assumptions: four mock queries
+raised `KeyError` for `/usr/lib/wsl/lib/nvidia-smi`; default root assertions
+expected `/home/converge/...`; historical lesson/window/service assertions
+expected the native 1,693/1,753-second caps, not WSL 4,320/4,380. Those historical
+tests intentionally verify that default behavior remains unchanged.
+
+Correction is limited to the CPU qualification invocation, not runtime code,
+fixtures, solver or assertions: run the broad historical suite with the profile
+selector unset and test portable WSL contracts separately with the explicit WSL
+selector and DEFAULT CPU math. Each has a fresh source-unique CPU service,
+**360-second / 6-GiB / 200%-CPU / Nice-10** bounds and CUDA hidden. Preserve the
+failed service/journal. Require both successful terminal receipts before source
+installation and GPU entry; this is not an automatic GPU retry or cap extension.
+
+Native CPU qualification at the same detached source already passed in
+`microduck-full-native-plant-0b73855a0dbd.service`, invocation
+`7de2a873db1f4f77bbdd62d1ea4823bb`, with CUDA hidden and the selected compiled
+plant fingerprint unchanged:
+`6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
+This selected-field consistency check is not a full binary/MJB fingerprint or
+GPU evidence. Native historical main remains unchanged.
+
+### Corrected qualification completed
+
+At exact source `0b73855a0dbddc7ae06303398177a706ac812dc6`, the original-profile
+WSL CPU suite passed **1,287 tests, 2 skipped, in 144.19 s**, invocation
+`46b25c277eb4468b8a663ebe03cdbba2`; the separate portable WSL suite passed
+**438 tests in 39.87 s**, invocation `8d54dd78cefb4a84b60884cf8e2177fe`.
+Both services ended successfully with exit status 0, CUDA hidden/uninitialized.
+The two broad-suite skips were gitignored native-hold and pinned-parent artifacts
+absent from the detached source snapshot; complete live original training-archive
+authentication remains mandatory and is not replaced by those test results.
+No runtime, package, driver, historical test or gate was changed to obtain the
+passes. The failed mixed-profile journal remains preserved.
+
+The verified incremental Git bundle SHA256 was
+`1d4119acf3f71d0a39da2006587aebe65efac5ee180b68f13b26603bb4848fba`.
+The exact fork feature ref was independently read back. WSL installation
+fast-forwarded only after clean-source, FilmBrain PID/restart checks, the shared
+lease and two idle samples (30°C / 663 MiB / no compute PIDs); native main stayed
+at `978af672dd983b0fbfa57b4b4c1ff6092407da02`. CPU-only preparation is now the
+next gate; no full GPU evaluation result is recorded yet.
+
+## Full evaluation launched
+
+CPU-only preparation completed successfully at source
+`0b73855a0dbddc7ae06303398177a706ac812dc6`, invocation
+`7a7474ee42d34087b75807efe3bdea36`. All three original archives passed bounded
+AVX2 authentication, complete R4 replay passed again, and the fresh 36-case plan
+was retained. Launch SHA256:
+`1284cd7e94f381d82e9fc0e7652b132ecf35d4bb53907aa3c2f7d33622f04b2f`.
+
+At **2026-10-03 00:56 Shanghai**, the sequential full evaluation started in
+`microduck-wsl-portable-full-evaluation-0b73855a0dbd.service`, invocation
+`0ef57c969d8a42d4af38a93fbb05fe50`, supervisor PID `1901875`. Independently read
+service properties matched **3h 15min 28s / 6 GiB / 200% CPU / Nice 10 /
+KillMode control-group**. The supervisor starts with CUDA hidden; only its
+inherited-lease child may capture CUDA0. Exact launch and output are under
+`artifacts/evaluations/stance-wsl-portable-full-evaluation-0b73855a0dbd`.
+The active WSL worktree stays clean and frozen at the capture source while the
+job runs; evidence-only fork updates do not mutate it. No completed full result,
+nominal replication pass or new learner is claimed from service liveness.

@@ -205,3 +205,14 @@ R4 target hashes are
 The old archive is only a compression dictionary, never newly accepted evidence.
 Actual delta delivery/reconstruction requires a separate bounded declaration;
 only the complete exact R4 inventory followed by strict replay can close R4.
+
+The sizing service completed successfully in 51.920940133044496 seconds
+(invocation `eed3eb0a968443b28943341992ea9000`, peak memory 149.6 MiB).
+The two patches total **245,247,178 bytes**, versus 255,328,872 bytes for the
+complete gzip archive: this is too little saving to justify replacing the
+already-progressing resumed upload. No delta delivery or real-data decode was
+launched. Retained patch hashes: control
+`26f170d56ee6c8973328219107637a5581a79e9aa8ff25185dad97a2fefdfea7`,
+trace `c7e6729645d650d9e7d857d748f10533a85e453c452c5b9a227ed726cd271611`.
+The original compressed upload reached its watchdog (exit 124), preserving
+159,940,608 bytes; the separately declared checksum-based resume is CPU-only.

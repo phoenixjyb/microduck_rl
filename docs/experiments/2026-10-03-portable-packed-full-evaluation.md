@@ -249,3 +249,38 @@ inherited-lease child may capture CUDA0. Exact launch and output are under
 The active WSL worktree stays clean and frozen at the capture source while the
 job runs; evidence-only fork updates do not mutate it. No completed full result,
 nominal replication pass or new learner is claimed from service liveness.
+
+## Byte-only delivery inventory preparation
+
+While capture is active, `scripts/microduck_portable_full_inventory.py` is
+prepared and tested only on tiny synthetic Mac fixtures. It has no project,
+Torch, NumPy or pickle imports and never loads tensors. It streams the exact
+**329-file** completed capture inventory with independent launch/report hashes,
+ordered 36-case bindings, checkpoint/runtime/case-launch byte identities,
+manifest sizes and hashes, receipt/comparison/report chains and explicit
+non-admission flags. Missing or extra paths, traversal, symlinks, non-regular
+files, duplicate JSON keys, non-finite numbers and byte changes are refused.
+Metadata and binaries have separate bounds; the inventory contains relative
+keys, not source-host paths. CLI creation is exclusive and fsynced into an
+owned real directory **outside** the capture; CLI verification is read-only.
+
+Owner review identified missing input-byte-to-binding checks in the first
+implementation and requested fixes before acceptance. Revised focused fixtures
+also re-seal outer hashes so semantic rejection tests reach the intended gate.
+The final helper suite passed **30 tests in 2.07 s**, including exact case-launch
+schema/identity and isolated-import checks. The earlier combined helper,
+full-runner and original packed-probe suite passed **173 tests in 18.07 s**;
+six additional helper tests were then added and passed in the 30-test run.
+The final combined suite passed **179 tests in 14.79 s**. Python compilation,
+diff checks and relative documentation links passed as well.
+These are source/synthetic tests, not a live inventory or numerical result.
+
+Do not hash the large active traces or install this evidence-only source into
+the frozen WSL capture worktree while its service runs. Only after successful
+terminal capture and complete retained numerical verification may this helper
+create a separately retained delivery inventory. Its `byte_inventory_only`
+flag is true; `tensor_replay_performed`, `numerical_acceptance` and
+`motion_authorized` remain false. It does not validate the actor, solved fields,
+supervisory GPU telemetry or campaign decision numerically, and does not replace
+the exact-source CPU replay required above. Full second-host delivery remains a
+separate unproven tier.

@@ -156,8 +156,11 @@ new learner, disturbance recovery, hopping or football capability follows from
 the single capture. A separately bounded CPU-only delivery closeout preserves
 all original GPU limits and every acceptance gate. The separately declared
 4,608-attempt evaluator has a [separate predeclaration](experiments/2026-10-03-portable-packed-full-evaluation.md)
-and focused implementation checks; it has not yet run. Its complete nominal
-replication decision still precedes disturbance recovery or football promotion.
+and focused implementation checks. After successful original and portable Linux
+CPU qualification, its source-frozen sequential CUDA evaluation started on
+October 3 at 00:56 Shanghai. It is still in progress; individual case passes do
+not establish the complete nominal replication decision. That decision and
+retained replay still precede disturbance recovery or football promotion.
 
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate

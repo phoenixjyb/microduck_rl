@@ -239,3 +239,25 @@ path. No counter jumps or synthetic fixture may substitute for those native
 checks. A synthetic transition test is useful but must remain labelled as
 such. Keep numerical gates unchanged and predeclare bounded real update and
 GPU-throughput probes only after these dependencies pass.
+
+## Deadline closeout state
+
+Evidence/test commit `c0c0de3d3349fab56b68d0932431fbf48e235367` was pushed
+and the exact fork ref independently verified. Its detached WSL snapshot
+passed all **16 dose-screen tests in 9.62 s**, invocation
+`7f144170427c4874865e0105e0f60cee`, 60-second/2-GiB portable-CPU cap,
+service runtime 17.946 s. Production module bytes did not change from the
+executed screen; only documentation and tests changed.
+
+The optional final documentation/test-only main-worktree fast-forward then
+refused at its initial `assert cutoff - time.time() > 120` reserve check after
+interpreter/module startup. Service
+`microduck-dose-final-transition-c0c0de3d3349.service`, invocation
+`21cb2e58179648ea8245a0a03e655808`, exited 1 after 7.063 s at 07:58:07 Shanghai.
+The retained error was `AssertionError`; no merge or transition receipt was
+produced. Read-only inspection confirmed a clean WSL main worktree still at
+`d55e7ef5f86ffdee69e2de468be64dc023c1bafe`, no running Duck user service,
+and idle GPU (0%, 30 C, 663 MiB, no compute PID). This is a deadline-guard
+refusal, not a failed simulation, replay or policy-preparation gate. Do not
+retry it with a smaller reserve or extend the cutoff. The validated newer
+snapshot and fork commits remain available for the next authorized window.

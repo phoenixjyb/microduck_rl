@@ -142,6 +142,18 @@ replay; existing gates, old artifacts and all capability flags remain unchanged.
 It permits one fixed 255/541/128-world capture, not a new learner or full matrix.
 Independent whole-bundle replay remains required before evaluator advancement.
 
+October 2 renewed work runs through **October 3 08:00 Shanghai**, under the
+[current continuation](experiments/2026-10-02-overnight-continuation.md), not the
+expired windows above. The separate [R4 portable capture](experiments/2026-10-02-wsl-portable-probe-r4.md)
+completed on source `07466b58021c084dbc2f688effa936d9466ba456`: all 128 nominal
+first attempts passed and same-host actor replay was exact. The original
+training initializer/archive authentication passed separately under AVX2.
+Strict independent native-Linux replay is still **blocked on complete archive
+delivery**; timed-out partial copies are not accepted evidence. No full matrix,
+new learner, disturbance recovery, hopping or football capability follows from
+the single capture. A separately bounded CPU-only delivery closeout preserves
+all original GPU limits and every acceptance gate.
+
 The unchanged [replication rule](experiments/2026-09-17-stance-lean-replication.md)
 requires each training seed to have at least one checkpoint passing every gate
 at all three evaluation seeds, with at least 122/128 passes each. It does **not**

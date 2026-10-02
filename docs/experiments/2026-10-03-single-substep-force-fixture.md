@@ -136,4 +136,93 @@ and unchanged nominal runtime, Euler, forward-evidence and full-matrix contracts
 Python compilation and diff checks passed. Luna's bounded contract/tests and
 read-only integration review exposed the pre-GPU CPU-qualification ordering gap;
 the owner fixed it and added the tested CPU/child entry reserves before any WSL
-GPU execution. Linux qualification and actual CUDA evidence remain pending.
+GPU execution. Subsequent Linux and actual CUDA results are retained below.
+
+### Initial Linux regression qualification memory refusal
+
+The exact-source 155-test WSL regression qualification at
+`6d9f950254cc2127361c3384065217c8f19a1b42`, service
+`microduck-d0-original-cpu-tests-6d9f950254cc.service`, invocation
+`be6c7e2af3334e19b0bdf15d58d9114c`, was killed by its **2-GiB cgroup cap**:
+`Result=oom-kill`, `ExecMainStatus=9`, after 26.084 CPU seconds. No GPU capture
+or main-worktree installation followed. The failed service and journal remain.
+Read-only diagnosis found 121 completed test dots, placing the interruption in
+the unchanged historical forward-probe snapshot/revalidation fixtures, not a
+reported D0 assertion failure. The host had approximately 14.6 GiB available,
+and the GPU remained idle (30°C / 663 MiB / no compute PIDs).
+
+Separate qualification budget: the complete historical regression suite gets
+a new **120-second / 6-GiB / 200%-CPU / Nice-10 / control-group CPU-only service**,
+consistent with the earlier full-evaluator regression budget. The three new D0
+suites must also pass separately under the real portable WSL profile and the
+original **120-second / 2-GiB** qualification cap. No code, assertion, numerical
+tolerance, GPU fixture limit or accepted result is changed by this test-service
+separation. Both successful terminal qualifications remain mandatory before
+the original 180-second / 2-GiB D0 GPU service may start.
+
+### Exact-source WSL qualification
+
+Both separate qualifications completed successfully without CUDA. The unchanged
+155-test regression suite passed in **33.49 s** under the declared 6-GiB CPU
+test budget, service `microduck-d0-regression-cpu-tests-6d9f950254cc.service`,
+invocation `c9f6640ea56d4448bc9ee6f9bb8ae5c9`. The three D0 suites passed
+**75 tests in 10.75 s** under the actual portable WSL profile and 2-GiB cap,
+service `microduck-d0-portable-cpu-tests-6d9f950254cc.service`, invocation
+`ae0851ca5b9f4916beeeccfca97790e2`. Both terminal results were success / exit 0.
+
+After verifying the fork tip, clean frozen worktree and shared lease plus two
+idle samples, the WSL feature worktree was fast-forwarded to exact source
+`6d9f950254cc2127361c3384065217c8f19a1b42`. CPU preparation completed under
+the original 180-second / 2-GiB cap, invocation
+`800548e0d93d40b7af8c0beb1b09f78b`. Its five-case capture and fresh physics
+replay took **3.925283435964957 s**, with maximum solved-field difference **0**
+and CUDA uninitialized. Actual compiled binding: **16 bodies**, `trunk_base`
+at body ID **1**; retained CPU capture **232,087 bytes**. The source-unique
+launch SHA256 is
+`c80cbc3ac2d63a65ebafd1b5a639cb200f597df67ff12733ccd5392a71c558f2`.
+
+The original bounded CUDA fixture was launched as
+`microduck-wsl-d0-force-fixture-6d9f950254cc.service`, invocation
+`7022e182252043bdb152c7b01d7f6092`. Its terminal decision and independent
+CPU replay are not inferred from these CPU qualification results.
+
+### Terminal CUDA result and fresh CPU replay
+
+The service completed successfully at approximately **04:03 Shanghai**, exit
+0, decision **`single-substep-force-path-replayed`**. Whole service elapsed
+**37.11937826592475 s**; owned child PID **2053262**, supervised elapsed
+**19.234264987986535 s**, capture elapsed **16.098498686915264 s**. Actual
+backend was Torch `cuda:0` / Warp CUDA. All five declared fresh cases and five
+Euler steps completed, with **zero policy inferences and optimizer steps**.
+
+After authenticating the complete 232,087-byte CUDA payload, the CPU-only
+supervisor freshly compiled and reran all five physical cases. Exact layouts,
+integer rows, force matrices, controls and case order passed; all floating solved
+fields passed the fixed `atol=1e-5`, `rtol=1e-4` comparison. Maximum absolute
+solved-field difference was **2.0503997802734375e-5** (combined absolute/relative
+tolerance, not an absolute-only gate); CUDA was uninitialized during replay.
+No tolerance, case, cap or numerical gate was changed after capture.
+
+All 16 ownership samples showed only the owned CUDA child, protected services
+inactive, maximum **32°C / 972 MiB**, minimum **23,190 MiB free**. FilmBrain
+states/PIDs/restart counts matched their retained launch values. Two fresh
+post-closeout samples confirmed no compute process, 0% utilization, **31°C /
+663 MiB**. The transient service is terminal/inactive, and artifacts remain in
+`artifacts/evaluations/stance-wsl-d0-force-fixture-6d9f950254cc` on WSL.
+
+| Retained file | SHA256 |
+| --- | --- |
+| launch.json | `c80cbc3ac2d63a65ebafd1b5a639cb200f597df67ff12733ccd5392a71c558f2` |
+| cpu-qualification.json | `eb14762d8dd25a7b54d7a2e2015abfe8fbb78695a94a71d279ebfed51e2be839` |
+| cpu-capture.pt | `4b82126a4c8fcd2f18948bb266b7fa075c3862749230d44a36583c50bf7ffc5e` |
+| capture.json | `348e9eda64826367f84d02783ed6dad9e062fb70290d206684ec372910468806` |
+| capture.pt | `823f2902a5352c7b78ef2c62dcbd117995581644566502f33cfb256b9b7305f9` |
+| child.log | `923756654d29bdd94a5b1ef697ce1964cb465ba77bd2398a94398f92a4622377` |
+| report.json | `33743033bf292921d09df7ac682c4dd16910af03b10318fabf9137fd72ae05c4` |
+
+This closes **only the separate single-substep force-path fixture**. Every
+recovery, training, learned-stance, football, physical-motion, independent-GPU
+attestation and complete-binary-equivalence admission flag remains false. No
+policy responded to the push. The next legitimate question is how a fixed,
+already replicated stance policy responds over a complete recovery interval;
+that needs the separate D1 protocol described above.

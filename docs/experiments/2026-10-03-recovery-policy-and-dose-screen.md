@@ -92,3 +92,150 @@ independently rehash and rescore all three raw captures in a fresh capped CPU
 process and record its deterministic decision. Do not train already-passing
 cells or start a long GPU job, hopping promotion, ball balance, video, raw
 perception, actor-observation expansion or physical motion in this diagnostic.
+
+## Executed three-case screen
+
+Exact source `d55e7ef5f86ffdee69e2de468be64dc023c1bafe`, verified bundle SHA256
+`042b7300ae42f81e5eab76c8ef088082ac8b85aed4831fac653d568b4c76be03`.
+Mac combined tests passed **669 in 62.57 s**. Exact-source WSL default-CPU
+qualification passed **634 in 88.74 s**, invocation
+`1251eccebb3242359f4054e789c0e525`, service runtime 97.238 s, under the
+150-second/6-GiB cap. The retained service summary reported 6.0 GiB peak and
+350.1 MiB swap; do not use this test run as simulation memory qualification.
+A separate fresh portable-CPU service passed **13 in 9.49 s**, invocation
+`f361802d07ee4e50959b58f42e4267d2`, runtime 17.921 s. Its implausibly tiny
+service memory summary is not an interpreter RSS measurement. Relative links,
+compilation and whitespace checks passed. No legacy-profile fixture was
+silently run under a different profile or reclassified as passing.
+
+Guarded source transition invocation `2b231186196c49e18037b3e50acb7bff`
+completed in 8.397 s with two idle GPU samples and unchanged FilmBrain/runtime.
+The exact feature tip was independently verified on the fork. A first Mac
+push failed authentication through an invalid environment token; the existing
+keyring credential succeeded with that override omitted for the command only.
+No credential, repository URL or host dependency was modified.
+
+Screen service `microduck-cpu-dose-screen-d55e7ef5f86f.service`, invocation
+`9fcfbe064f9a484b9e2b8b616a1ce598`, exited successfully in **131.005 s**;
+runner elapsed **124.91009766608477 s**, memory peak **1.3 GiB**, no swap.
+All three attempts retained 250 policy ticks / 2,500 physics steps and all
+nine numerical gates passed. Every actor replay error was zero, both-feet
+support fraction 1.0, soft-limit exposure 0.0, no hard failure. All full force
+arrays and phase checks passed. Their identical authenticated step-250 prefix
+was `eb0be5ba1c88bc9864a8c8912369c413b414a55be9dae3245e57a7ebd1ef86df`.
+
+| Metric | Zero | 2 N / 40 ms | 4 N / 20 ms |
+| --- | ---: | ---: | ---: |
+| Recorded collection seconds | 27.088904812932014 | 26.863018410047516 | 26.527178867952898 |
+| Maximum planar speed m/s | 0.01514372043311596 | 0.057111047208309174 | 0.07479991763830185 |
+| Maximum tilt rad | 0.020444126799702644 | 0.029973795637488365 | 0.030983060598373413 |
+| Maximum displacement m | 0.002404326805844903 | 0.0023955872748047113 | 0.0023955872748047113 |
+| Final-second speed p95 m/s | 0.00016992714595323043 | 0.0005970817321356058 | 0.0004664328349076068 |
+| Final-second tilt p95 rad | 0.01976817660033703 | 0.02229626290500164 | 0.021177396178245544 |
+| Final-second minimum height m | 0.11728814989328384 | 0.11724031716585159 | 0.11723707616329193 |
+
+Maximum motor torque was 0.11519977450370789 Nm and absolute joint power
+0.037765782326459885 W in each case; the maximum can occur before the push.
+These are recorded model metrics, not real motor temperature or certified
+hardware limits. Both force doses delivered their exact 20/10 nonzero steps.
+
+Decision: **`frozen-dose-screen-no-deficit`**, only for these three fixed cells
+at seed 671. All eight admission flags remain false; zero optimizer steps.
+Do not train these already-passing cells or interpret this one-axis screen as
+randomized recovery, learned football balance, hopping retention, combined
+locomotion/obstacle competence or physical-robot qualification.
+
+Durable WSL evidence:
+`/home/yanbo/work/microduck_rl-stance-replication-20260930/artifacts/evaluations/stance-wsl-cpu-dose-screen-d55e7ef5f86f`.
+
+| Artifact | SHA256 |
+| --- | --- |
+| launch.json | `d65e57293ced0a23ee12de623ba22fa781b16f41912dd1df7ebb020c72304ab2` |
+| report.json | `220a5e7456468c0e175519a8a2d01423c495582d99a1768e15ad95c56fbf33f9` |
+| case-0.pt, 37,296,584 bytes | `44bccccccc3497cb627ff652bf09e6758887d68a06fd13e6b8c2441052927609` |
+| case-1.pt, 37,787,494 bytes | `1da985ea0c32572632f860d6c70c151a2d94af750c4f39b2537089a712704927` |
+| case-2.pt, 37,309,192 bytes | `a7e5119818238c7a2b4d796299d171a3053eb78e3a4afec228277b49afb4477a` |
+
+Separate fresh CPU closeout service
+`microduck-cpu-dose-independent-d55e7ef5f86f.service`, invocation
+`aae587e8eb8042d88fe8b638d5578c4a`, exited successfully under its 120-second /
+2-GiB / 200%-CPU / Nice-10 / control-group cap. Runtime **43.102 s**, independent
+check **35.22246901108883 s**, memory peak **526.8 MiB**, no swap. It rehashed
+the complete original twelve-file inventory and prerequisites, independently
+rescored all three full raw traces, and reproduced every score, prefix and the
+no-deficit decision exactly. Independent-closeout SHA256:
+`30bf131f203b8c38f20ee3644ba16912aa380e83130838504ee4322962066d12`.
+The closed directory has **13 files / 112,689,110 bytes**. This replay is
+recorded state/control/force consistency, not fresh whole-trajectory physics
+re-simulation, thermal-model qualification or independent attestation.
+Two final idle samples had no compute PID, 0% GPU, 663 MiB and 30 C; both
+user/system protected services remained inactive and FilmBrain unchanged.
+
+Three additional synthetic regression tests subsequently cover the strict
+100-second next-case boundary, strict 180-second final closeout boundary, and
+inventory failure not masking the original collection error. The focused Mac
+suite passed **16 in 13.54 s**. These tests do not alter the executed production
+source and are not additional native simulation attempts.
+
+The actual policy-preparation three-file Mac mirror was independently byte
+checked at
+`artifacts/retained/policy-preparation-d6a37650bfb5.9fF3hS/stance-wsl-recovery-policy-preparation-d6a37650bfb5`.
+The complete dose-screen Mac mirror, including all three raw captures and the
+independent closeout, was independently byte-checked: 13 files / 112,689,110
+bytes at
+`artifacts/retained/cpu-dose-screen-d55e7ef5f86f.X7RNwc/stance-wsl-cpu-dose-screen-d55e7ef5f86f`.
+Neither copy/hash operation is another simulation or replay.
+
+## Next work, not launched or admitted
+
+The lesson planner remains a proposal, not a trained capability. Next qualify
+the scheduled-force adapter on a short, leased CUDA integration capture with
+explicit paired control and force-phase parity; do not infer GPU parity from
+these CPU attempts. Then screen the unchanged parent across the predeclared
+timing/direction/held-out cells and seeds before selecting a real training
+deficit. Predeclare any harder force doses separately rather than changing
+this screen after seeing its result.
+
+Before recovery PPO execution, wire the private sampler RNG, collect a bounded
+rollout into the already-qualified fresh buffer, and test terminal/reset and
+motor-state semantics. Require finite optimizer updates and unchanged nominal
+regression evidence before a longer run. Actual 64-world throughput and memory
+still need measurement; neither constructor success nor one-world CPU timing
+qualifies a long GPU job. Keep obstacle observations external and compact,
+allow speed reduction during avoidance but track speed before/after, and keep
+hopping and rolling-ball progression in their separate numerical ledgers.
+
+### Concrete transition-bridge handoff
+
+Start from the final feature-branch evidence tip, retain the executed `d55e7ef5`
+snapshot and artifacts unchanged, and keep the old learner's seed/parent
+allowlists intact. Reuse the separately qualified real parent loader and
+composition-based preparation; do not bypass `CpuStanceLearner` constructor
+guards or resume old Adam/storage/simulator state.
+
+The next adapter must explicitly call `ScheduledRecoveryRuntime.step_with_schedule`,
+not its inherited nominal `step`: the latter intentionally installs no pulse.
+The existing `CpuStanceLearner.collect_one` calls `env.step`, so merely attaching
+the scheduled runtime to that wrapper would not implement the recovery lesson.
+Transfer the reviewed private CPU RNG-scope semantics into the new composition,
+including action sampling **and** minibatch shuffling, preserving caller RNG
+and faulting on exceptions. CUDA RNG/device semantics need a separate explicit
+qualification; a CPU-private generator is not a CUDA sampler.
+
+Store raw sampled actions and retain pre-reset terminal records. Use the
+reviewed terminal-observation timeout bootstrap once (omit stock `time_outs`),
+then reset only completed rows. Inherited runtime reset clears per-row episode
+steps, live masks, motor/delay and contact state; verify the fixed declared
+schedule restarts on the new episode clock while live rows remain unchanged.
+Do not add an unreviewed automatic cell resampler or mutate the hash-bound
+schedule after construction.
+
+A 24-step buffer spans only **0.48 simulated seconds** (20 ms per policy tick).
+It does not reach even the earliest current dose onset at 0.5 s; a one-buffer
+optimizer smoke therefore cannot be reported as a pulse/recovery learning
+test. Qualify pulse delivery separately, and predeclare enough genuine native
+ticks for the actual pulse and, separately, the five-second terminal/reset
+path. No counter jumps or synthetic fixture may substitute for those native
+checks. A synthetic transition test is useful but must remain labelled as
+such. Keep numerical gates unchanged and predeclare bounded real update and
+GPU-throughput probes only after these dependencies pass.

@@ -56,7 +56,7 @@ def _install_closeout(monkeypatch, tmp_path, events):
 
 def _install_run(monkeypatch, tmp_path, events, *, bad_property=None, collect_fault=None,
                  full=True, candidate=None, matched=True, delivered=True, zero_pass=True,
-                 drift=False):
+                 drift=False, elapsed_overrides=None):
     closeout_root = _install_closeout(monkeypatch, tmp_path, events)
     monkeypatch.setattr(dose.base.host, "ROOT", tmp_path)
     (tmp_path / "artifacts/evaluations").mkdir(parents=True, exist_ok=True)
@@ -82,8 +82,18 @@ def _install_run(monkeypatch, tmp_path, events, *, bad_property=None, collect_fa
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
     monkeypatch.setattr(dose.torch.cuda, "is_initialized", lambda: False)
     tick = [1000.]
+    calls = [0]
+    start_value = [None]
     def monotonic():
-        tick[0] += .01
+        calls[0] += 1
+        if calls[0] == 1:
+            tick[0] += .01
+            start_value[0] = tick[0]
+        elif elapsed_overrides and calls[0] in elapsed_overrides:
+            tick[0] = start_value[0] + elapsed_overrides[calls[0]]
+        else:
+            tick[0] += .01
+        events.append(("monotonic", calls[0], tick[0] - start_value[0]))
         return tick[0]
     monkeypatch.setattr(dose.time, "monotonic", monotonic)
     monkeypatch.setattr(dose, "check_window", lambda **_kwargs: events.append(("window", None)))
@@ -298,4 +308,52 @@ def test_returned_overbudget_capture_is_retained_scored_then_aborts_without_retr
     assert collect_i < capture_i < verify_i
     report = json.loads((root / "report.json").read_text())
     assert "over-budget dose trace retained and scored" in report["error"]
+    assert all(report[key] is False for key in dose.base.baseline.FALSE_FLAGS)
+
+
+def test_case_start_reserve_refuses_at_exactly_100_seconds_after_retaining_prior_case(monkeypatch, tmp_path):
+    events = []
+    # Calls 1-4 cover entry and the first case; call 5 is the next-case reserve
+    # check. Equality must refuse because the rule is elapsed < 100.
+    runtime, counters, _, _ = _install_run(monkeypatch, tmp_path, events, elapsed_overrides={5: 100.})
+    with pytest.raises(ValueError, match="reserve next full CPU collection and retention"):
+        dose.run(SOURCE)
+    root = dose.output_path(SOURCE)
+    assert counters["collect"] == counters["verify"] == 1 and len(runtime.instances) == 1
+    assert (root / "case-0.pt").is_file() and (root / "case-0-replay.json").is_file()
+    assert not (root / "case-1.pt").exists()
+    report = json.loads((root / "report.json").read_text())
+    assert report["error_type"] == "ValueError" and "reserve next full CPU collection" in report["error"]
+
+
+def test_final_closeout_refuses_at_exactly_180_seconds(monkeypatch, tmp_path):
+    events = []
+    # Calls 1-10 cover entry and three complete collection/score sequences;
+    # call 11 is the final service-deadline check.
+    runtime, counters, _, _ = _install_run(monkeypatch, tmp_path, events, elapsed_overrides={11: 180.})
+    with pytest.raises(ValueError, match="unchanged bounded CPU dose closeout"):
+        dose.run(SOURCE)
+    root = dose.output_path(SOURCE)
+    assert counters["collect"] == counters["verify"] == 3 and len(runtime.instances) == 3
+    assert all((root / f"case-{index}.pt").is_file() for index in range(3))
+    report = json.loads((root / "report.json").read_text())
+    assert report["error_type"] == "ValueError" and "bounded CPU dose closeout" in report["error"]
+    assert all(report[key] is False for key in dose.base.baseline.FALSE_FLAGS)
+
+
+def test_inventory_hash_failure_is_recorded_without_masking_primary_error(monkeypatch, tmp_path):
+    events = []
+    _install_run(monkeypatch, tmp_path, events, collect_fault=(0, TimeoutError("primary synthetic timeout")))
+    root = dose.output_path(SOURCE)
+    original_digest = dose.base.host.digest
+    def fail_output_inventory(path):
+        if Path(path).parent == root:
+            raise OSError("synthetic final inventory hash failure")
+        return original_digest(path)
+    monkeypatch.setattr(dose.base.host, "digest", fail_output_inventory)
+    with pytest.raises(TimeoutError, match="primary synthetic timeout"):
+        dose.run(SOURCE)
+    report = json.loads((root / "report.json").read_text())
+    assert report["error_type"] == "TimeoutError" and "primary synthetic timeout" in report["error"]
+    assert report["inventory_error"] == "synthetic final inventory hash failure"
     assert all(report[key] is False for key in dose.base.baseline.FALSE_FLAGS)

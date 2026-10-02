@@ -83,6 +83,10 @@ Prepare a distinct hash-first loader for both parent model groups, install them
 into the actual policy/optimizer modules with fresh empty Adam state, and retain
 the exact initial state hash. No optimizer/storage/simulator/RNG/normalizer resume.
 Do not widen the old parent or fresh-seed allowlists to disguise the new purpose.
+The [separate CPU preparation slice](2026-10-03-progressive-recovery-preparation.md)
+provides a pinned model-255 actor/critic loader and finite per-row schedule
+contract; real learner/optimizer installation and full scheduled replay are
+still separate requirements, not consequences of a synthetic unit test.
 
 The current D1 adapter only permits one-to-five unique cases and its trace only
 one fresh world; its checkpoint/schedule binding is deliberately frozen. A

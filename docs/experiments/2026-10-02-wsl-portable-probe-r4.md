@@ -162,3 +162,46 @@ input cannot erase the job fault via reset. The four negative cases passed in
 6.19 seconds, and all runtime/transition regressions passed **50 tests in 11.60
 seconds**, CUDA hidden. These are deliberate invalid-input tests, not an
 assisted trajectory, push lesson, recovery gate or new learner.
+
+### CPU transport follow-up, declared before another attempt
+
+At 23:39 the native compressed upload had retained 137,887,744 bytes and was
+still growing, without GPU activity. The first 1,800-second upload keeps its
+original watchdog. After it terminates, inspect its exact owned destination and
+resume only that partial compressed file with checksum-based rsync, for one
+separate attempt capped at 1,800 seconds. Start the resume before 23:55 and
+retain the same **00:30** CPU closeout deadline, 180-second whole-inventory /
+strict-replay cap and 60-second margin. No active watchdog is widened, original
+artifacts are never overwritten, and no capture is retried. A second transport
+failure closes this declaration as incomplete.
+
+For future large evidence copies, a separately reviewed byte-only ZIP delta
+helper is added in `scripts/microduck_lossless_zip_delta.py`. It never loads
+Torch tensors or pickle, never extracts paths from ZIP metadata, and does not
+relax any replay or capability gate. Matching stored entry payloads use XOR
+against an independently authenticated base; all remaining target bytes,
+headers, padding and central-directory bytes stay literal. Duplicate entry
+names stay literal. It requires regular non-symlink inputs, bounded artifacts
+(512 MiB), headers (16 MiB), descriptors (200,000), streaming one-MiB chunks,
+one strict gzip member and exclusive fsynced output; reconstructed whole-file
+size/SHA256 must equal the caller's independently supplied target identity.
+Focused CPU tests passed **23 tests in 0.33 seconds**, including shifted base
+offsets, corruption, truncation, extra gzip members, bounds, FIFO/symlink and
+exclusive-output refusals. This is transport unit evidence, not real-data
+reconstruction evidence.
+
+A CPU-only sizing experiment may encode the retained R4 `control.pt` and
+`trace.pt` sequentially against identical R1 bytes already retained on both
+hosts. Authenticate source inputs first, use a fresh ignored artifact directory,
+and bind the exact helper SHA256. Run as one CPU user service capped at 360
+seconds, 1 GiB, 200% CPU, Nice 10, CUDA hidden, before 00:18. Retain patch sizes
+and hashes, preserve failure output, and never overlap a second evidence upload.
+The R1 base hashes are respectively
+`0a088942bdc03ccebce76ae816b619d6a218e7b333cf3a71fb30bef89fb597d6` and
+`68c1f1bba3b7f30814471bd560d9956cf0e199e0513a314cd3848e124c821205`;
+R4 target hashes are
+`cd3b0381cf0421332242f044e2273ba55868b0959d600e02e3f41b9295ac626e` and
+`1148010d642a340af2925f37ccf3a78e78e98147fef852c39b05c5cafd364b89`.
+The old archive is only a compression dictionary, never newly accepted evidence.
+Actual delta delivery/reconstruction requires a separate bounded declaration;
+only the complete exact R4 inventory followed by strict replay can close R4.

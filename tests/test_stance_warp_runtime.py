@@ -116,6 +116,25 @@ def test_invalid_input_fault_cannot_be_erased_by_reset(env):
     with pytest.raises(RuntimeError, match='job closeout'): env.reset(torch.ones(2, dtype=torch.bool))
 
 
+@pytest.mark.parametrize('field', ['qfrc_applied', 'xfrc_applied'])
+def test_nominal_external_force_faults_before_euler_and_cannot_reset(env, field, monkeypatch):
+    # Deliberate invalid input, not a perturbation lesson or assisted trajectory.
+    applied = env._view(field)
+    applied[0].reshape(-1)[0] = .001
+    before = {name: env._view(name).clone() for name in ('qpos', 'qvel', 'time')}
+    monkeypatch.setattr(env.integrator, 'integrate',
+                        lambda *_: pytest.fail('undeclared force reached Euler'))
+    with pytest.raises(ValueError, match='does not permit external assistance or pushes'):
+        env.step(torch.zeros(2, 10))
+    assert env.faulted and not env.steps.any()
+    for name, value in before.items():
+        assert torch.equal(value, env._view(name)), name
+    # Removing bad input is not recovery from a faulted job.
+    applied.zero_()
+    with pytest.raises(RuntimeError, match='job closeout'):
+        env.reset(torch.ones(2, dtype=torch.bool))
+
+
 def test_rotated_nonzero_velocity_observations_use_exact_body_frame(env):
     # Deliberate state injection checks kinematic conventions, not policy success.
     q = [np.cos(.1), 0, np.sin(.1), 0]

@@ -152,3 +152,13 @@ all 14 decompressed files against the above inventory **before tensor loading**.
 No GPU work is allowed during this blocked gate. A late/failed delivery remains
 incomplete, not a replay pass, and must be diagnosed before another declaration.
 The full evaluator remains blocked until strict independent replay passes.
+
+During blocked delivery, a read-only recovery-contract inventory found that the
+existing nominal zero-applied-force guard lacked direct regression coverage.
+Added **tests only**, without changing runtime behavior: both `qfrc_applied`
+and `xfrc_applied` are rejected in legacy and packed CPU modes before Euler,
+with unchanged positions/velocities/clock and zero counted steps; clearing bad
+input cannot erase the job fault via reset. The four negative cases passed in
+6.19 seconds, and all runtime/transition regressions passed **50 tests in 11.60
+seconds**, CUDA hidden. These are deliberate invalid-input tests, not an
+assisted trajectory, push lesson, recovery gate or new learner.

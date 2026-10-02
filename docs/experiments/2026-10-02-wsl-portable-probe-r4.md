@@ -216,3 +216,26 @@ launched. Retained patch hashes: control
 trace `c7e6729645d650d9e7d857d748f10533a85e453c452c5b9a227ed726cd271611`.
 The original compressed upload reached its watchdog (exit 124), preserving
 159,940,608 bytes; the separately declared checksum-based resume is CPU-only.
+
+### Transient connectivity failure and fresh bounded CPU recovery
+
+The resume failed at 23:59 with SSH `Operation timed out`, `Broken pipe` and
+rsync `unexpected end of file` (exit 255). A following SSH connection reported
+`Host is down`. This closes the preceding two-attempt transport declaration as
+**incomplete**, not replayed. Read-only diagnosis at 00:00 found successful
+ICMP replies and restored SSH, the exact native machine ID, no remaining rsync
+process, and a regular **243,688,928-byte** partial compressed file. The error
+supports a transient connectivity interruption; it does not establish a host
+reboot, driver cause or archive validity. WSL remains idle and FilmBrain PIDs /
+restart counters are unchanged. No service, network or driver was changed.
+
+Declare one new **CPU-only** recovery within the existing 00:30 data closeout:
+before 00:15, copy the explicitly owned partial file into a fresh ignored native
+destination (a real copy / copy-on-write clone, never a shared writable hard
+link), preserving the failed source. Resume that new file once, capped at **600
+seconds** with a 60-second I/O timeout. Retain the unchanged 180-second complete
+archive/inventory/strict-replay cap and 60-second margin. Verify the full gzip
+SHA256 before extraction and all 14 inventory identities before tensor loading.
+No active bound, GPU window, numerical threshold or original artifact is
+modified. Another failure closes this recovery as incomplete; no automatic
+retry. The full evaluator remains blocked until strict replay actually passes.

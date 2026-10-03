@@ -1,6 +1,6 @@
 # Unchanged-parent gentle timing / diagonal gap screen
 
-Status: **predeclared; reviewed source/tests passed; native admission pending**.
+Status: **native 21-cell CPU screen independently closed: no deficit found**.
 This is a new first-attempt screening namespace, not training, promotion or an
 extension of an expired job. The authorized cutoff remains **2026-10-03 20:00
 Asia/Shanghai**. No job starts without its entire fixed closeout reserve.
@@ -143,3 +143,75 @@ use the real WSL audit directory and may not skip it under the frozen profile.
 Post-idle checks rehash every run input, reauthenticate prerequisites and enforce
 the remaining caps before writing an independent closeout. Native outcomes
 and exact source/service/receipt hashes must be appended after execution.
+
+## Closed native evidence, 2026-10-03 afternoon
+
+The exact run/evaluator source is
+`bb7c059d5dda13b3828887fb13c598bb554548cd` on
+`feat/athletics-obstacle-curriculum`, in the frozen 100.98 WSL worktree. Native
+source tests passed **367 tests in 40.19 seconds**, with no skips, under the
+CUDA-hidden profile. Their wrapper took 54.740475 seconds; that is not learner
+throughput. The source-test invocation is
+`b3be89514eb84c73afb0d8b967205387`.
+
+The run service was `microduck-cpu-gentle-gap-run-bb7c059d5dda.service`,
+invocation `f7bbae5169ef4d07b6ae7b999475b334`. It finished in
+**871.855801 seconds**. Independent saved-record closeout used
+`microduck-cpu-gentle-gap-closeout-bb7c059d5dda.service`, invocation
+`c5ade3d140a64b4b9d993d0f4168a73e`, and finished in **225.591384 seconds**.
+Both services were observed inactive, PID 0, restart count 0 and successful
+exit status 0. Their manager journals each report **2.0 GiB memory peak and
+zero swap peak**; the source-test journal reports 527.8 MiB and zero swap.
+All runs stayed inside their declared caps. Do not transfer this memory
+observation to CUDA64 preparation or training.
+
+All **21/21** fresh first attempts retained 250 calls / 2500 accepted substeps
+and passed all nine unchanged numerical gates. Independent replay reproduced
+every raw capture, force phase, score and common prefix, with actor maximum
+absolute replay error **0**. No hard failure occurred; maximum soft-limit
+exposure was **0**, and minimum both-feet support fraction was **1.0**. Across
+the matrix, observed maxima were 0.003753958 m displacement, 0.038134716 m/s
+planar speed, 0.024184071 rad tilt, 0.115199775 Nm motor torque and
+0.037765782 W absolute joint power. These are recorded simulation metrics,
+not motor thermal validation or physical limits.
+
+The deterministic decision is **`cpu-gentle-gap-no-deficit`** with no candidate
+cells. The unchanged parent remains selected; this screen does not justify
+an optimizer update or a new recovery-policy claim. One seed and the declared
+finite catalog do not prove randomized disturbance generalization. CUDA64
+policy/storage preparation is the next separate integration boundary, not
+permission to train passing cells. The existing hopping, obstacle, contact,
+football and physical gates remain separate and unchanged.
+
+The WSL evaluation directory
+`artifacts/evaluations/stance-wsl-cpu-gentle-gap-bb7c059d5dda` retains exactly
+**68 files / 783,930,274 bytes**, including the immutable parent, all raw first
+attempts and the independent closeout. Whole-file SHA256 pins:
+
+| Retained file or receipt | SHA256 |
+| --- | --- |
+| `launch.json` | `ca2c7cdc5b7a446f096512b7bbde94e2a53a5dfad6aa4afc4633df73679f4628` |
+| `cpu-qualification.json` | `3e334001e4304bc166b9f45654eae4c2e29f6c9311c2446732f70ef08f9eceb8` |
+| `report.json` | `58fdf6863752f7e3e8238d8cebaf7dd2dd8b7d9fc731c1349c59d8b300570e54` |
+| `independent-closeout.json` | `b5f58afa0739b7ce6214b45497f441cf04516e4c1b1ddad9399b3bf55af1304e` |
+| Source-transition receipt | `44910f2af3022c00b0bff1cdf63dbc6e51cc7842d58774e32c5a43299dfb5637` |
+| Native source-test receipt | `861dc8e3ed04e0e80b73ae48a731ac9822d7ab1b4bdb0d8daabec21996c374d4` |
+| Run-admission receipt | `a4745a26d706259ce7fa95bce9c5d0ed765a85b791d47dabd10e54538f1c6727` |
+| External retained verification | `f6e0df22eabd737e047dc290d8202bbfd5d22452cfb868be2381fa13a66c3e76` |
+
+The external verification directory
+`artifacts/tools/gentle-gap-verified-bb7c059d5dda` retains the full 68-file
+inventory, exact successful invocation states, native-test result, six complete
+process/manager journals and their hashes, numerical maxima and the final
+two-sample idle gate. All five older failed services and the 95-leaf source
+closure remain authenticated and untouched. FilmBrain remained unchanged;
+both protected AI Mission services remained inactive in system and user scope.
+The final idle samples were 0% utilization, 30 C, 691 MiB and no compute PIDs.
+
+A compact byte-verified Mac mirror contains **56 metadata/journal files /
+565,215 bytes** at
+`artifacts/retained/gentle-gap-closed-bb7c059d5dda.n3GlnP`. The 22 binary
+parent/raw files remain on WSL, avoiding a large duplicate on the Mac. All
+eight capability/admission flags remain false, optimizer steps and simulator
+resets remain zero, and no whole-trajectory resimulation, thermal model,
+protected-service restoration or physical motion occurred.

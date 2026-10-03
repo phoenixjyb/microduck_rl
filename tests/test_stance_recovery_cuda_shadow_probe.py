@@ -253,6 +253,72 @@ def test_complete_work_deadline_is_not_a_start_only_gate():
         )
 
 
+@pytest.fixture
+def sync_failure(monkeypatch):
+    state = {
+        "MainPID": "0",
+        "ActiveState": "failed",
+        "NRestarts": "0",
+        "ExecMainStatus": "1",
+        "Result": "exit-code",
+        "InvocationID": "c6e0d08a618244c5badd9d4bf6333643",
+        "WorkingDirectory": "!/home/yanbo",
+    }
+    original = b"SYNTHETIC original failed wrapper receipt"
+    journal = b"SYNTHETIC whole journal, not actual native provenance"
+    receipt = {
+        "original_terminal": deepcopy(state),
+        "original_receipt_sha256": probe.base.digest(original),
+        "original_receipt_bytes": len(original),
+    }
+    raw = (canonical(receipt) + "\n").encode()
+    monkeypatch.setattr(probe, "SYNC_FAILURE_RECEIPT", probe.base.digest(raw))
+    monkeypatch.setattr(probe, "SYNC_FAILURE_JOURNAL", probe.base.digest(journal))
+    monkeypatch.setattr(probe.base, "_exact_inventory", lambda *args: None)
+
+    def read(path, _limit):
+        if str(path).endswith("journal.jsonl"):
+            return journal
+        if "source-sync-failure-" in str(path):
+            return raw
+        return original
+
+    monkeypatch.setattr(probe.base, "_read_file", read)
+    monkeypatch.setattr(probe.base.host, "read", lambda *args: state[args[-2]])
+    return state, read
+
+
+def test_original_failed_sync_is_preserved_not_retried(sync_failure):
+    assert probe.source_sync_failure_binding()["original_terminal"] == sync_failure[0]
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("ActiveState", "inactive"),
+        ("NRestarts", "1"),
+        ("Result", "success"),
+        ("InvocationID", "f" * 32),
+        ("WorkingDirectory", "/changed"),
+    ],
+)
+def test_failed_sync_reset_restart_replacement_or_cwd_drift_refused(
+    sync_failure, field, value
+):
+    sync_failure[0][field] = value
+    with pytest.raises(ValueError, match="neither reset restarted nor replaced"):
+        probe.source_sync_failure_binding()
+
+
+def test_failed_sync_whole_hash_before_schema(sync_failure, monkeypatch):
+    original_read = sync_failure[1]
+    monkeypatch.setattr(
+        probe.base, "_read_file", lambda path, limit: original_read(path, limit) + b" "
+    )
+    with pytest.raises(ValueError, match="whole original source-sync failure"):
+        probe.source_sync_failure_binding()
+
+
 def test_whole_launch_hash_refused_before_schema(monkeypatch):
     monkeypatch.setattr(probe.base, "_read_file", lambda *args: b"{}\n")
     with pytest.raises(ValueError, match="whole shadow launch before parse"):

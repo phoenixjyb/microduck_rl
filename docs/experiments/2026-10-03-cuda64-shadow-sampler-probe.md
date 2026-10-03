@@ -106,7 +106,7 @@ Source binds both unchanged old gate leaves and every new reader, RNG, sampler,
 scorer, probe, focused test and this predeclaration. The source suite is the exact
 25-file list in
 [stance_recovery_cuda_shadow_probe.py](../../src/mjlab_microduck/stance_recovery_cuda_shadow_probe.py),
-with **672 passes**, zero failures and zero skips required; retain its whole log
+with **679 passes**, zero failures and zero skips required; retain its whole log
 and original terminal invocation before launching CUDA.
 
 Each child retains a whole before-sampling preparation subpayload and the full
@@ -162,3 +162,39 @@ use explicitly synthetic CPU sampler envelopes and mocked CUDA APIs, even where
 they include authentic old parent/storage tensors. They do not admit this native
 experiment. Review corrected explicit child startup math settings and retained
 closeout failure handling before integration.
+
+## First external source-sync wrapper failure, retained unchanged
+
+The source-only wrapper aimed at `5eca76e0b85decfd7c7adfaf520355ba8c35df69`
+failed before changing the frozen `48653c58121dec9a2b6ae2db059fc4d0911410cf`
+checkout. It omitted systemd's working-directory property; the actual unit started
+in `!/home/yanbo`. `git rev-parse HEAD` exited **128**, with the whole journal's
+exact message `fatal: not a git repository (or any of the parent directories): .git`.
+No CUDA allocation, optimizer step, source fast-forward or protected-service
+change occurred. Its measured body elapsed 0.033342347 seconds; systemd reported
+11.148 seconds including import/startup, 1.0 GiB memory peak and zero swap.
+
+The failed original unit
+`microduck-cuda64-shadow-source-sync-5eca76e0b85d.service` stays failed, exit 1,
+PID 0, restarts 0, invocation `c6e0d08a618244c5badd9d4bf6333643`. Original receipt
+SHA256 `d88fcfe9a5e29bb1483a1c953c9cd8a7e1897dc00bdda952eefe296bc0a0bc78`
+(887 bytes); whole retained journal
+`a123208f263b4f79782965f2a2e0211deadfd64e49988ed4ff619ce582a55e51`
+(100,804 bytes). The independent failure-retention receipt is
+`44c2b12a3553da6fa177b496672f7c4f0454e031684bcd36c31154a77bea3abb`.
+
+The diagnosis was read-only before any correction. The smallest correction is a
+new source-sync namespace/service with **explicit `WorkingDirectory` equal to
+the exact frozen checkout** and an early actual-directory/property guard, plus
+the same 60-second/2-GiB/leased/idle/fast-forward-only limits. Do not restart,
+reset, overwrite or relabel the failed original. All subsequent shadow source
+bindings authenticate the whole failed receipt/journal and unchanged original
+terminal unit, separate from the older closed preparation's six failure bindings.
+Every later preflight/test/run/closeout command must likewise pass the explicit
+working-directory property. The initial 672-test source result remains true for
+its original revision; the new seven failure-binding cases require a new complete
+679-test source result before this corrected revision may launch CUDA.
+That complete owner regression subsequently passed **679 tests in 80.18 seconds**,
+CUDA hidden, no skips; the final 48-case probe suite passed in **7.24 seconds**.
+Ruff 0.15.7, compilation, relative links and whitespace checks passed. A bounded
+read-only Luna review found no remaining hard blocker in the new failure binding.

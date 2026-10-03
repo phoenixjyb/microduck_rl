@@ -74,7 +74,13 @@ OWN_FILES = (
     + tuple("tests/" + n for n in TEST_FILES[-5:])
     + ("docs/experiments/2026-10-03-cuda64-shadow-sampler-probe.md",)
 )
-EXPECTED_TESTS = 672  # Fixed count of the complete declared 25-file source suite.
+EXPECTED_TESTS = 679  # Fixed count of the complete declared 25-file source suite.
+SYNC_FAILURE_RECEIPT = (
+    "44c2b12a3553da6fa177b496672f7c4f0454e031684bcd36c31154a77bea3abb"
+)
+SYNC_FAILURE_JOURNAL = (
+    "a123208f263b4f79782965f2a2e0211deadfd64e49988ed4ff619ce582a55e51"
+)
 FALSE_FLAGS = {
     **sampling.FALSE_FLAGS,
     "execution_admitted": False,
@@ -240,7 +246,63 @@ def source_binding(source):
             "exact committed shadow leaf " + relative,
         )
         leaves[relative] = base.digest(raw)
-    return {"original_frozen_leaves": record, "shadow_leaves": leaves}
+    return {
+        "original_frozen_leaves": record,
+        "shadow_leaves": leaves,
+        "retained_source_sync_failure": source_sync_failure_binding(),
+    }
+
+
+def source_sync_failure_binding():
+    """Preserve the first wrapper's missing-WorkingDirectory failure unchanged."""
+    root = (
+        base.execution.ROOT
+        / "artifacts/tools/cuda64-shadow-source-sync-failure-5eca76e0b85d"
+    )
+    base._exact_inventory(root, {"receipt.json", "journal.jsonl"})
+    raw = base._read_file(root / "receipt.json", base.JSON_LIMIT)
+    journal = base._read_file(root / "journal.jsonl", base.LOG_LIMIT)
+    require(
+        base.digest(raw) == SYNC_FAILURE_RECEIPT
+        and base.digest(journal) == SYNC_FAILURE_JOURNAL,
+        "whole original source-sync failure and journal",
+    )
+    unit_name = "microduck-cuda64-shadow-source-sync-5eca76e0b85d.service"
+    state = {
+        key: base.host.read(
+            "systemctl", "--user", "show", unit_name, "-p", key, "--value"
+        )
+        for key in (
+            "MainPID",
+            "ActiveState",
+            "NRestarts",
+            "ExecMainStatus",
+            "Result",
+            "InvocationID",
+            "WorkingDirectory",
+        )
+    }
+    recorded = base.parse_json(raw)
+    require(
+        state == recorded["original_terminal"],
+        "original failed source-sync unit neither reset restarted nor replaced",
+    )
+    original = base._read_file(
+        base.execution.ROOT
+        / "artifacts/tools/cuda64-shadow-source-sync-5eca76e0b85d/receipt.json",
+        base.JSON_LIMIT,
+    )
+    require(
+        base.digest(original) == recorded["original_receipt_sha256"]
+        and len(original) == recorded["original_receipt_bytes"],
+        "whole original failed source-sync receipt unchanged",
+    )
+    return {
+        "receipt_sha256": SYNC_FAILURE_RECEIPT,
+        "journal_sha256": SYNC_FAILURE_JOURNAL,
+        "original_receipt_sha256": recorded["original_receipt_sha256"],
+        "original_terminal": state,
+    }
 
 
 def _hidden():

@@ -49,8 +49,13 @@ Failure kills/reaps only the owned child group and preserves partial artifacts.
 No overlapping unrelated compute is permitted, even if memory would fit.
 
 Independent closeout: another CUDA-hidden 120-second, 2 GiB CPU user service
-rehashes the exact inventory and freshly re-scores both whole captures and the
-matched prefix. Launch requires the complete 120 + 240 + 120 + 60 = **540-second**
+rehashes the statically fixed inventory and freshly re-scores both whole captures
+and the matched prefix, for either a complete qualification or rejection.
+Timeout/error paths retain their actual partial files and the failed report;
+they require read-only failure diagnosis and an exact partial-file inventory,
+not a successful closeout or an automatic retry. A failed preparation is likewise
+not an independent qualification. Launch requires the complete
+120 + 240 + 120 + 60 = **540-second**
 prepare/supervise/closeout/margin reserve before the fixed20:00 cutoff.
 
 Passing means only `scheduled-cuda-integration-qualified`. The five-second

@@ -62,3 +62,11 @@ def test_numeric_warning_and_log_size_guards_preserve_owned_log(tmp_path):
     assert path.read_text() == 'Warning: nonfinite force\n'
     path.write_bytes(b'x'*(probe.LOG_LIMIT+1))
     with pytest.raises(ValueError, match='bounded owned'): probe.check_log(tmp_path)
+
+
+def test_independent_closeout_has_a_static_inventory():
+    assert len(probe.PREPARE_FILES) == 9
+    assert len(probe.CAPTURE_FILES) == 4
+    assert probe.PREPARE_FILES.isdisjoint(probe.CAPTURE_FILES)
+    assert probe.COMPLETE_FILES == probe.PREPARE_FILES | probe.CAPTURE_FILES | {'child.log'}
+    assert len(probe.COMPLETE_FILES) == 14

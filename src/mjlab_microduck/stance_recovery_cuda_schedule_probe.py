@@ -26,6 +26,10 @@ PREPARE_SECONDS, SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS = 120, 240, 18
 LAUNCH_RESERVE = PREPARE_SECONDS + SERVICE_SECONDS + CLOSEOUT_SECONDS + 60
 COLLECTION_SECONDS, SERIALIZATION_RESERVE = 60, 30
 LOG_LIMIT = 1024 * 1024
+PREPARE_FILES = {'checkpoint.pt', 'launch.json', 'cpu-qualification.json'} | {
+    f'cpu-{i}{suffix}' for i in range(2) for suffix in ('.pt', '.json', '-replay.json')}
+CAPTURE_FILES = {f'cuda-{i}{suffix}' for i in range(2) for suffix in ('.pt', '.json')}
+COMPLETE_FILES = PREPARE_FILES | CAPTURE_FILES | {'child.log'}
 
 
 def output_path(source):
@@ -242,9 +246,7 @@ def supervise(source, launch_sha):
     try:
         require(os.environ.get('CUDA_VISIBLE_DEVICES') == '' and not torch.cuda.is_initialized(), 'CPU supervisor')
         launch, cp = checked(source, launch_sha)
-        names = {'checkpoint.pt', 'launch.json', 'cpu-qualification.json'} | {
-            f'cpu-{i}{suffix}' for i in range(2) for suffix in ('.pt', '.json', '-replay.json')}
-        require({p.name for p in root.iterdir()} == names, 'one fresh exact CPU-qualified CUDA attempt')
+        require({p.name for p in root.iterdir()} == PREPARE_FILES, 'one fresh exact CPU-qualified CUDA attempt')
         with base.files.gpu_lease() as fd:
             report['idle_before'] = base.host.wait_idle()
             child_started = time.monotonic()
@@ -282,8 +284,11 @@ def closeout(source, launch_sha):
     report_raw = base.files.file_bytes(root/'report.json'); report = base.files.parse(report_raw)
     require(report['protocol'] == PROTOCOL and report['source'] == source
             and report['launch_sha256'] == launch_sha and report['child']['returncode'] == 0
-            and report['decision'] == 'scheduled-cuda-integration-qualified', 'successful numerical integration report')
-    require({p.name for p in root.iterdir()} == set(report['files']) | {'report.json'}, 'exact independently closed inventory')
+            and report['decision'] in ('scheduled-cuda-integration-qualified', 'scheduled-cuda-integration-rejected'),
+            'complete qualified or rejected numerical integration report')
+    require(set(report['files']) == COMPLETE_FILES
+            and {p.name for p in root.iterdir()} == COMPLETE_FILES | {'report.json'},
+            'exact static independently closed inventory')
     inventory = {}
     for name, digest in report['files'].items():
         require(type(name) is str and '/' not in name and name not in ('.', '..')

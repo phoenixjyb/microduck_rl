@@ -1,8 +1,7 @@
 # Natural terminal/reset integration: bounded CPU2 diagnostic
 
-Status: **v2 collected the first natural terminal; independent closeout failed
-on the verifier's reset-qpos layout. Saved-record-only repair is predeclared;
-the numerical gate remains open.**
+Status: **saved-record-only repair closed the full-timeout/reset integration
+gate. Selective reset, recovery acceptance and training admission remain open.**
 This is a sibling of the closed 28-transition/one-update diagnostic, not an
 extension, recapture or relabeling of that evidence. The campaign deadline stays
 2026-10-03 **20:00 Asia/Shanghai**; expired protocols remain unchanged.
@@ -276,3 +275,79 @@ Final focused checks after the canonical-newline writer/concise CLI review and
 three additional whole-file-tampering cases passed **27 tests in 25.18 seconds**;
 Ruff and diff whitespace checks passed again. The future native selection has
 341 tests; its actual pass count and no-skip journal must be checked before audit.
+
+## Native saved-record repair: closed integration, unchanged policy
+
+Exact evaluator source `3338b5f381e9a9ae39f73240e5ad49b3b1bd547c` was
+committed, pushed and fast-forwarded into the clean WSL worktree. Before audit,
+the capped native source-test unit
+`microduck-terminal-repair-tests-3338b5f381e9.service`, invocation
+`23f7f077f931497989079526f34aadd0`, passed **341 tests in 41.17 seconds**,
+without skips. Its receipt SHA is
+`c06c486fa60b9d5af6253a6d0f867bb4b9ad5c3791713198c6b01e28810d2218`.
+The source-transition and external admission receipt SHAs are respectively
+`28438e834745d6dab82cd8cd185b977545fe7bc25548ceb510f792a31477eac1` and
+`3395c17d68b143425180237156bd472933df374c10476ce86b7c73aa3f95a7a8`.
+
+The saved-record audit unit
+`microduck-cpu-terminal-receipt-repair-3338b5f381e9.service`, invocation
+`25578ce25d4248178039a62f4a3ee425`, finished successfully, status 0,
+inactive, PID 0 and restart count 0. Audit elapsed time was
+**20.182555282022804 seconds**. It created no environment, rollout, simulator
+reset, storage, optimizer or revised checkpoint. All original five artifact
+hashes, both failure files, all five failed unit invocations and the 95-leaf
+source closure were authenticated again; only the predeclared strict-layout
+trace correction differed from the original closure.
+
+The new three-file directory is
+`artifacts/evaluations/stance-wsl-cpu-terminal-receipt-repair-3338b5f381e9`:
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| launch.json | 40175 | `47fd7b5ea76550367a080604e38c3266547cd46640bddbf165510bf520f3a699` |
+| source-inventory.json | 22760 | `09e5e579051a651c2e6997a94017df34345b890b0ccfdaba1173e0130e3ca10e` |
+| receipt.json | 50061 | `53af66761f38c0612f929e3b0af1e8587956f6e4b3b33378767a7b18d31076a5` |
+
+The independent decision is **`cpu-natural-full-timeout-and-reset-replayed`**.
+The retained unchanged parent's 250 stochastic policy calls and 2,500 accepted
+physics steps passed exact actor/critic/RNG, control/plant and every force-phase
+check. Full window counts were `[10,20]`, nonzero delivery counts `[0,20]`.
+The terminal critic bootstrap and one original common timeout/reset passed;
+`original_full_timeout_reset_qualified=true` and
+`original_selective_reset_qualified=false`. There is no untouched live sibling.
+This verifies the existing recording, not fresh whole-trajectory resimulation,
+motor thermal modeling, learned skill improvement or physical qualification.
+All eight capability/admission flags remain false.
+
+Post-audit verification retained the exact process and unit-manager journals
+plus a separate receipt in
+`artifacts/tools/terminal-repair-verified-3338b5f381e9`; receipt SHA
+`3552da22826a0073db57ed48ade51aea7bac8bea48567f3c7ef5e9b3999177f6`.
+The source-test and audit process-journal SHAs are
+`a2037651726a84132d12ffe6ef696eea9e3cee31a0096737910eca20749a0539` and
+`20d8c43bd531012b55c19936e3f33421b8f9d54f88fb7befbf4494e1957446e4`;
+their manager-journal SHAs are
+`2619b640151d2a5767fd855a9ac4be745a3dceede59d8a6f04de768ee1c583ce` and
+`d77d3107e1c13c221b1950fef5ed303f35a1b744ba4999a3b73019bf41ca2491`.
+Manager journals report source tests at **2.0G memory / 2.0G swap peak** and
+audit at **979.3M memory / 0B swap peak**. Successful tests are not a native
+training-throughput measurement; the test swap observation is not zero.
+
+Eleven new metadata/journal files totaling **298264 bytes** were copied and
+whole-byte verified on the Mac under
+`artifacts/retained/terminal-repair-closed-3338b5f381e9.KLlNRi`. The original
+seven-file raw/failure mirror was not recopied. GPU postchecks found idle
+occupancy, approximately 30 C and 696 MiB in use; FilmBrain and both protected
+service scopes remained unchanged. The failed original closeout stays failed
+and its namespace remains immutable.
+
+The next scientific step is a separately predeclared unchanged-parent gentle
+timing/diagonal gap screen. The previously passed strong cardinal matrix does
+not justify training it again merely to consume GPU time. Any future learning
+requires a reproducible trainable deficit and its own native learner gate.
+
+Closing documentation checks passed: **132 focused terminal/repair tests in
+27.11 seconds**, file-only receipt semantics and all eleven documented hashes,
+local-link checks and diff whitespace checks. The Mac checks authenticate
+retained files and source behavior; they do not replace the actual frozen-profile
+native audit above.

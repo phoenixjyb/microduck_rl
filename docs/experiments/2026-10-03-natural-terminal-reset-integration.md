@@ -1,7 +1,8 @@
 # Natural terminal/reset integration: bounded CPU2 diagnostic
 
-Status: **v1 failed before collection; bounded v2 construction repair prepared,
-not yet natively admitted**.
+Status: **v2 collected the first natural terminal; independent closeout failed
+on the verifier's reset-qpos layout. Saved-record-only repair is predeclared;
+the numerical gate remains open.**
 This is a sibling of the closed 28-transition/one-update diagnostic, not an
 extension, recapture or relabeling of that evidence. The campaign deadline stays
 2026-10-03 **20:00 Asia/Shanghai**; expired protocols remain unchanged.
@@ -172,3 +173,106 @@ Repair source checks: the unchanged 14-file regression selection passed
 namespace, authenticated original failure, whole-file tampering and actual
 launch construction/profile disagreement. Native v2 qualification remains
 open until the separately capped run and independent closeout finish.
+
+## Native v2 collection and immutable closeout failure
+
+Exact source `9ad48b96abf6528c2f837399dc8fedd83a286464` passed the capped
+frozen-profile native 309-test selection before collection. Its successful run
+unit `microduck-cpu-terminal-run-9ad48b96abf6.service`, invocation
+`f67c95456c3842f5a54035aa4d82a149`, captured **250 policy calls** in
+28.991513116052374 seconds; the complete runner took 39.78638452687301 seconds.
+Metadata records `first-natural-terminal` with no collection failure. No
+optimizer or policy update occurred.
+
+The original directory
+`artifacts/evaluations/stance-wsl-cpu-stochastic-first-terminal-9ad48b96abf6`
+contains exactly these five immutable files:
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| checkpoint.pt | 256368 | `2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5` |
+| launch.json | 25858 | `4529c25ce1a728805196a7c8b7be290ab87f019239aae24cf40a6da31fb50bf5` |
+| capture.pt | 49950070 | `82ef6175674a520448a3e6cfc19ca075377f1f2f90428cb945883f1e6695db76` |
+| capture.json | 2664 | `76633ec5c77aed675a632190d9c1b2615178930e9f2816a3f0427d19f79ad6e8` |
+| report.json | 5584 | `712a7201bad070b8c431f3310cb27566799f14af7832bda77af0feff9237a98e` |
+
+Independent closeout unit `microduck-cpu-terminal-closeout-9ad48b96abf6.service`,
+invocation `ab8b2d101f6f42a1ba94d7f8f9aa5df4`, failed with exactly
+`ValueError: trace tensor layout: original reset qpos`. It remains failed,
+PID 0, restart count 0, status 1. Memory peak was 574603264 bytes.
+No independent-closeout receipt was written. This is a verifier failure, not
+evidence of policy failure or accepted terminal/reset integration.
+
+Read-only, hash-before-load diagnosis found the actual collector retains
+`terminal_reset.initial_qpos` as float32 **(2,21)**, exactly equal to the
+physical trace's initial qpos. The scorer incorrectly demanded **(21,)** and
+broadcast it. Both actual rows record timeout at step 2500, neither terminated;
+before/after live masks are `[false,false]` / `[true,true]`, reset counters are
+`[2500,2500]` / `[0,0]`, and one actual reset was called. Those are recorded
+facts, not an independently accepted gate. There is no untouched live sibling,
+so this recording cannot qualify selective reset.
+
+Durable diagnosis directory
+`artifacts/tools/terminal-reset-qpos-failure-9ad48b96abf6` contains exactly a
+receipt and the original invocation journal. Receipt SHA:
+`fd83806a4fb92807e35289208f3d33c95ae6af1ef7d12c8ba0fbfedd953c2b1a`.
+The 6203-byte journal SHA is
+`cce0d9b412a5bd86e3d485b0a188a4e40dc6fa93ea000707ec2bf760e0ea4378`.
+All five failed service invocations, prior raw artifacts, closed one-update
+evidence, FilmBrain and protected services remain unchanged.
+All seven original/diagnostic files were copied and byte-verified on the Mac
+under `artifacts/retained/terminal-reset-failed-9ad48b96abf6.7kplFw`, totaling
+50265589 bytes. A file-only regression over the authentic saved qpos passed
+the strict per-world check and rejected single-row/wrong-dtype variants. It
+does not qualify this Mac for the frozen WSL inference/replay profile.
+
+## Saved-record-only repair predeclaration
+
+The smallest source correction validates both recorded and physical initial
+qpos as finite CPU float32 **(2,21)** and compares every row exactly. It does
+not reshape, broadcast, weaken tolerance, change the collector, or alter the
+numerical gate. Original trace source SHA
+`c18ea88da58ba8eac3f387e02175f1646ccbe0529ce17f716c30d91439524453`;
+fixed strict-layout trace SHA
+`a746923941c514e58e9b785b4fa645dc75275e9f7eee457999b3427be110f1c0`.
+The unchanged original probe SHA is
+`f863a9edd9c034de9c14aa6230bde6734c0e9924c70a3f795ca55eea2695ca13`.
+
+A new source-bound sibling audit must authenticate those original five files,
+both pinned failure files and the untouched failed invocation. Its transitive
+source inventory allows **only** the strict terminal-trace leaf to differ from
+the immutable artifact source. Actual host context must match the launch apart
+from the evaluator revision. All earlier profile/source/parent, failure and
+closed-optimizer prerequisites remain required.
+
+The audit creates **no environment**, policy rollout, simulator reset, storage
+or optimizer. It independently verifies the saved raw stochastic policy, RNG,
+physical/control/full-force ledgers, terminal critic/bootstrap and real reset
+record under the frozen CPU profile. It writes only a new unique three-file
+audit directory, never the original namespace. Use one retained user service:
+**180-second cap / 240-second launch reserve / 2 GiB / CPU 200% / Nice 10 /
+control-group**, startup CUDA hidden, shared GPU lease and two idle checks
+before and after. Commit/push and capped native source tests precede launch.
+Do not retry the failed closeout or recapture an episode to repair the receipt.
+
+The strict-layout source/schema checks passed **105 tests in 7.70 seconds** on
+the Mac; the unchanged 14-file regression selection then passed **314 tests in
+23.39 seconds**. Ruff and `git diff --check` passed. Distinct per-world positions,
+single-row broadcasting, wrong dtype, nonfinite data and malformed physical
+layout are covered. These checks do not close the native gate. Any accepted
+saved-record decision must still preserve all eight capability flags as false;
+full timeout/reset, selective reset, skill improvement, thermal modeling and
+physical acceptance remain separate claims.
+
+The saved-record sibling is
+`football-b1d-cpu-stochastic-first-terminal-receipt-repair-v1`, implemented in
+`stance_recovery_terminal_receipt_repair.py`. Its unique service/output names
+include the evaluator source; the original artifact source stays `9ad48b96`.
+The combined **15-file** source/regression selection passed **338 tests in
+69.16 seconds** on the Mac with startup CUDA hidden, including the authentic
+saved failure reader and strict source-closure checks. Ruff and diff whitespace
+checks passed after owner review. These tests are not native replay evidence.
+Final focused checks after the canonical-newline writer/concise CLI review and
+three additional whole-file-tampering cases passed **27 tests in 25.18 seconds**;
+Ruff and diff whitespace checks passed again. The future native selection has
+341 tests; its actual pass count and no-skip journal must be checked before audit.

@@ -253,6 +253,33 @@ def test_reset_rows_must_return_to_initial_qpos_qvel_and_observation():
         trace._check_reset_rows(bad, done, initial)
 
 
+def test_original_reset_qpos_uses_exact_per_world_rows_without_broadcast():
+    initial = _valid_frame([0, 0])["qpos"]
+    initial[1, 0] = .125
+    assert trace._check_reset_initial_qpos(initial.clone(), initial) is None
+    # A single row, even when it matches world zero, is not the packed capture.
+    with pytest.raises(ValueError, match="tensor layout"):
+        trace._check_reset_initial_qpos(initial[0], initial)
+    with pytest.raises(ValueError, match="exact original per-world"):
+        trace._check_reset_initial_qpos(initial[0:1].expand(2, -1), initial)
+
+
+@pytest.mark.parametrize("change", ["row", "dtype", "nonfinite", "physical-layout"])
+def test_original_reset_qpos_rejects_bad_values_and_layout(change):
+    initial = _valid_frame([0, 0])["qpos"]
+    recorded = initial.clone()
+    if change == "row":
+        recorded[1, 4] += .01
+    elif change == "dtype":
+        recorded = recorded.double()
+    elif change == "nonfinite":
+        recorded[0, 0] = float("nan")
+    elif change == "physical-layout":
+        initial = initial[0]
+    with pytest.raises(ValueError):
+        trace._check_reset_initial_qpos(recorded, initial)
+
+
 def test_selective_reset_preserves_untouched_sibling_state_and_controls():
     before, after = _sibling_fixture()
     done = torch.tensor([True, False])

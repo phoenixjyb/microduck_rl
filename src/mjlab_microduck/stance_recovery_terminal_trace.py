@@ -524,6 +524,13 @@ def _check_terminal_policy(value, done, critic):
             "single exact timeout bootstrap reward")
 
 
+def _check_reset_initial_qpos(recorded, initial):
+    """The actual packed runtime records one initial position row per world."""
+    attempt.tensor(recorded, (WORLDS, 21), torch.float32, "original reset qpos")
+    attempt.tensor(initial, (WORLDS, 21), torch.float32, "physical initial qpos")
+    require(torch.equal(recorded, initial), "exact original per-world reset qpos")
+
+
 def _validate_terminal(value, critic):
     terminal = value["terminal_reset"]
     if terminal is None:
@@ -575,10 +582,8 @@ def _validate_terminal(value, critic):
     untouched = ~done
     _check_reset_siblings(before, after, done)
     _check_reset_rows(after, done, value["payload"]["initial"])
-    attempt.tensor(terminal["initial_qpos"], (21,), torch.float32, "original reset qpos")
-    require(torch.equal(terminal["initial_qpos"].expand(WORLDS, -1),
-                        value["payload"]["initial"]["qpos"])
-            and torch.equal(before["qpos"], frame["qpos"])
+    _check_reset_initial_qpos(terminal["initial_qpos"], value["payload"]["initial"]["qpos"])
+    require(torch.equal(before["qpos"], frame["qpos"])
             and torch.equal(before["qvel"], frame["qvel"])
             and torch.equal(after["frame"]["qpos"], after["qpos"])
             and torch.equal(after["frame"]["qvel"], after["qvel"]),

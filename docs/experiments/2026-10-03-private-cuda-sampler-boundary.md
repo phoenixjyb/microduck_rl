@@ -108,3 +108,31 @@ All positive CUDA API behavior in this suite is mocked and labelled synthetic;
 none of these results is a native CUDA sampler receipt. The WSL source remains
 frozen at the completed preparation revision until a separately guarded source
 transition and tested native predeclaration are ready.
+
+## Closed preparation reader for a later source
+
+The new
+[stance_recovery_cuda_preparation_evidence.py](../../src/mjlab_microduck/stance_recovery_cuda_preparation_evidence.py)
+does not reuse a successful Boolean as admission. It authenticates the original
+whole external verifier, all five original service journals, the ten-file
+preparation inventory (including both raw tensors), original CPU preflight and
+492-test receipt. It reruns the raw preparation consistency checks and checks
+that the original services are still terminal without restarting them.
+
+Only two source revision fields may change for an explicitly separate evaluator:
+the prerequisite source revision and current-context source identity. Every
+other context, source-file pin, history, parent, failure binding and retained
+receipt must remain equal. The current provenance chain is freshly checked under
+the shared lease with CUDA hidden. The raw parent is kept separate from JSON-safe
+launch bindings. This callable neither allocates CUDA nor admits a new job.
+
+The owner's focused tests passed **40 tests in 7.35 seconds**. The authentic
+21-file local test mirror was independently rehashed against the original
+external verifier: **2,949,468 bytes**, including both raw preparation payloads.
+The positive reader test uses those real old bytes but explicitly synthetic
+current host/service/prerequisite observations. It is a source consistency test,
+not current native attestation or CUDA replay. A later native consumer must
+authenticate its own clean source, test receipt and declared service limits.
+The affected 22-file regression passed **557 tests in 85.92 seconds**, with CUDA
+hidden and no skips. Ruff 0.15.7 and compilation/relative-link/whitespace checks
+also passed. Native execution of this new reader remains pending.

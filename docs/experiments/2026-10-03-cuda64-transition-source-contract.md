@@ -31,7 +31,7 @@ The per-call order is:
 
 1. Clone typed finite CUDA0 pre-action actor/critic observations; require the
    actor prefix. Sample the stock policy and retain raw actions, pre-action
-   values/log probabilities and positive Gaussian mean/scale.
+   values/log probabilities, Gaussian means and positive scales.
 2. Pass a **separate raw-action clone** to the scheduled runtime, preserving
    unclipped PPO actions independently of motor correction/clamping. Retain a
    whole copied runtime result before any reset.

@@ -236,6 +236,8 @@ or new learned skill. Natural terminal/storage/reset, physical CUDA64 feedback,
 native finite-return replay and optimizer qualification remain distinct open
 gates. The renewed window ends **October 3 at 20:00 Shanghai**; start no new work
 at that cutoff and leave FilmBrain/protected services unchanged.
+The [evening handoff](experiments/2026-10-03-evening-handoff.md) records exact
+Mac/WSL starting revisions, retained evidence and the next non-admitting gates.
 
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled

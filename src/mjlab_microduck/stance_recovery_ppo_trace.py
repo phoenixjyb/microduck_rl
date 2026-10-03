@@ -395,6 +395,15 @@ def _check_storage(value, cursor):
         require(not item[cursor:].any(), "unused Gaussian storage remains zero")
 
 
+def _check_bridge_reward(receipt_reward, stored_reward):
+    """Bind native vector rewards to RSL's column layout without broadcasting."""
+    attempt.tensor(receipt_reward, (2,), torch.float32, "bridge vector reward")
+    attempt.tensor(stored_reward, (2, 1), torch.float32, "stored column reward")
+    require(torch.equal(receipt_reward, stored_reward[:, 0]),
+            "bridge and stored reward values match exactly")
+    return True
+
+
 @torch.no_grad()
 def score(value, checkpoint_raw, expected_schedule, expected_plant):
     required = {"protocol", "binding", "declaration", "compiled_plant", "payload",
@@ -449,7 +458,7 @@ def score(value, checkpoint_raw, expected_schedule, expected_plant):
                 and torch.equal(tick["actions"], policy["raw_action"])
                 and value["bridge_receipts"][index]["storage_step"] == index
                 and torch.equal(value["bridge_receipts"][index]["raw_actions"], policy["raw_action"])
-                and torch.equal(value["bridge_receipts"][index]["reward"], policy["stored_reward"])
+                and _check_bridge_reward(value["bridge_receipts"][index]["reward"], policy["stored_reward"])
                 and value["bridge_receipts"][index]["terminal_records"] == tick["terminal_records"]
                 and type(value["bridge_receipts"][index]["reset_records"]) is list
                 and len(value["bridge_receipts"][index]["reset_records"]) == 2

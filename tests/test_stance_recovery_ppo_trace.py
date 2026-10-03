@@ -152,3 +152,38 @@ def test_wall_expired_prefix_rescores_as_rejected_without_becoming_success():
 def test_elapsed_codec_rejects_invalid_elapsed_values(elapsed):
     with pytest.raises(ValueError, match="elapsed time"):
         trace._elapsed_within_cap(elapsed)
+
+
+def test_native_reward_layout_binding_accepts_vector_and_column_without_broadcast():
+    # Synthetic values, but the exact distinct native bridge and RSL layouts.
+    receipt = torch.tensor([.125, -.25], dtype=torch.float32)
+    stored = receipt[:, None].clone()
+    assert not torch.equal(receipt, stored)
+    assert trace._check_bridge_reward(receipt, stored) is True
+
+
+@pytest.mark.parametrize("damage", [
+    "receipt-column", "stored-vector", "receipt-float64", "stored-float64",
+    "receipt-nan", "stored-inf", "value", "reordered",
+])
+def test_reward_binding_rejects_wrong_shape_dtype_nonfinite_or_values(damage):
+    receipt = torch.tensor([.125, -.25], dtype=torch.float32)
+    stored = receipt[:, None].clone()
+    if damage == "receipt-column":
+        receipt = receipt[:, None]
+    elif damage == "stored-vector":
+        stored = stored[:, 0]
+    elif damage == "receipt-float64":
+        receipt = receipt.double()
+    elif damage == "stored-float64":
+        stored = stored.double()
+    elif damage == "receipt-nan":
+        receipt[0] = float("nan")
+    elif damage == "stored-inf":
+        stored[1, 0] = float("inf")
+    elif damage == "value":
+        stored[0, 0] += .001
+    else:
+        stored = stored.flip(0)
+    with pytest.raises(ValueError):
+        trace._check_bridge_reward(receipt, stored)

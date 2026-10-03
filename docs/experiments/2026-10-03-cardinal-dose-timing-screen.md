@@ -198,4 +198,50 @@ the unchanged-source Git inventory still covered 85 files. These are file/source
 checks, not replay evidence. The preflight-failure Mac mirror at
 `artifacts/retained/receipt-repair-preflight-failure-1dc0b3415942.FqSsyi`
 matches both whole-byte pins.
-Native v2 execution and successful independent closure are still pending.
+## Native v2 audit closed
+
+Evaluator source `b1878b8715efbb7ea6e166bc7d345efecf5285de` passed the frozen
+WSL regression suite: **147 in 26.23 seconds**, test invocation
+`4dcb7df82d1b414fa224e2f52bbf64a2`, receipt SHA
+`747dcdf6fb61d9bc4aee3a367736f3d02e73a417a1acf98c1602a18fb1e229ce`.
+The actual pinned failure-file readers succeeded before and after the tests.
+The test service used 38.854 seconds CPU, a 2-GiB memory peak and 2.1-GiB swap
+peak; these fixture resources do not qualify native replay or throughput.
+The gated source-transition receipt SHA is
+`16e68cbecbbc51caa1df86f8126e1679f1bb9e6b5d63ccee72ae917f5fdf5dc9`.
+
+`microduck-cpu-broad-repair-b1878b8715ef.service`, invocation
+`f8cd113a24cf4c18acfc9d0c671e8a49`, completed successfully at 11:25 Shanghai.
+The audit took **292.11429974390194 seconds**, within its unchanged 600-second
+cap, with 4 min 55.882 s CPU, a 2-GiB memory peak and no swap. It independently
+re-scored all 25 retained captures and produced the same
+`cpu-cardinal-dose-timing-no-deficit` decision. All nine numerical gates passed
+for every case; no hard failure or motor soft-limit exposure occurred. Across
+these captures the maxima were 7.751 mm displacement, 0.08412 m/s planar speed,
+0.04964 rad tilt, 0.11520 N m motor torque and 0.03777 W absolute joint power.
+These are simulated trace diagnostics, not measured hardware or thermal claims.
+
+All 79 original files were rehashed unchanged, and the transitive scoring-source
+inventory bound 85 files. Both failed earlier audit units remained failed with
+zero PID, zero restarts and exit status 1. FilmBrain retained its existing PIDs;
+protected services stayed inactive, and the idle GPU samples showed 0% use,
+30 C and 658 MiB used. No capture, optimizer update, reset or physics rerun was
+performed by this audit. All capability/admission/physical flags remain false.
+
+The new three-file directory is
+`artifacts/evaluations/stance-wsl-cpu-broad-receipt-repair-b1878b8715ef`:
+
+| File | SHA256 |
+| --- | --- |
+| `launch.json` | `f84687480b9769c9db37a33293dc485f46e7d9ef56d4a19e391be8f78672bade` |
+| `source-inventory.json` | `41426a686508efe4eb28bc10667bf362ce667aa85cbd268b5ba49c3dd729b832` |
+| `receipt.json` | `adba134d905c8e07c9b871cce85b26a5704335944b47b6001ddfa9ecd0c2fcac` |
+
+The Mac mirror at
+`artifacts/retained/cardinal-screen-closed-b1878b8715ef.gIcnKb` contains all
+53 original JSON metadata files, the three repair JSON files and two source/test
+receipts: **439,698 bytes**, all whole-byte hashes verified. It deliberately
+does not mirror the 25 raw captures or original checkpoint; the complete raw
+inventory remains durable on WSL and is bound by the repair receipt. This closes
+the original capture audit without rewriting its failed closeout history. The
+tested disturbance range does not justify training those same passing cells.

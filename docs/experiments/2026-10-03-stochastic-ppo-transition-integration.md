@@ -314,3 +314,92 @@ capture marker cannot be retained, typed partial-step/RNG context and the
 closed saved-audit prerequisite reader. These are source checks, not a WSL
 native optimizer or capability result. A capped frozen-profile WSL test and
 exact launch/source gates remain required before the diagnostic is admitted.
+
+## One-update native result: independently closed
+
+The exact reviewed source
+`0f245126837220297d5bd93d58c021997d3c9fb3` was pushed to the fork and gated into
+the clean WSL worktree. Frozen-profile WSL regression passed **209 tests in
+28.27 seconds**; the test receipt SHA is
+`9ce5b631bf8757959d942711d2d0648b9a6ab86118616c36008b4b62f5a24650`.
+The source-transition and external run-admission receipt hashes are
+`40dd34ae0962c007e08642ffa849f7af300921005d8cca0179cd0e36e312dbd2` and
+`39be06e63079da87720bafbf059d8e12b8a0da1cde0f31ed2b70f81dc14d7833`.
+
+`microduck-cpu-ppo-update-run-0f2451268372.service`, invocation
+`2fafcf235eaa43a2947709d0a9ec6aa9`, completed once, successfully. The runner
+took **13.61271581822075 seconds**, retaining the fresh 28-transition/280-substep
+trace before one real bridge update and **20 finite Adam steps**. Diagnostic
+states 000 through 020 are durable, but are not accepted or resumable policies.
+The journal reports 18.978 seconds CPU time, 1.2 GiB displayed memory peak and
+zero swap peak. Actual raw retention was **25,034,564 bytes**, below 64 MiB.
+
+The separate capped closeout service, invocation
+`e072b838d12249a4ba100d34b1774e9c`, completed successfully in
+**8.062207269947976 seconds**. Its independent environment-free replay exactly
+matched GAE, updated model, named Adam moments and scalar steps, private RNG and
+metrics, with all 20 finite pre/post-hook observations. It returned
+`one-update-cpu-optimizer-integration-replayed`. The journal reports 13.640
+seconds CPU time, 642.1 MiB displayed memory peak and zero swap peak.
+
+The unchanged parent state hash is
+`e5f51035fe5886b32295a9f39ce1a803dc16ac8a12bae13d3433b897f2ca8329`;
+the diagnostic updated state hash is
+`62166d84ed83741c716612cde17393cb98a48541c8165245e18a108ebd093d8a`.
+Finite metrics were value `0.01550058540306054`, surrogate
+`0.03854419930139556` and entropy `3.4721965193748474`. These optimizer values
+are **not a held-out performance comparison or evidence of improved recovery**.
+
+The exact 31-file artifact directory is
+`artifacts/evaluations/stance-wsl-cpu-scheduled-ppo-one-update-0f2451268372`:
+
+| Evidence | SHA256 |
+| --- | --- |
+| Launch | `40bcc1525edb7a49ff65646ed0d1e8a88810e13d328423b1522a3c574662c613` |
+| Transition raw | `7171880af971a480a69ccd72f7bfd14daed89b2d9bdcd56c133b30b96d67e62f` |
+| Optimizer raw | `c2e8ca96f86893abd0df0fe4f0fb90d85f1c7041d4002b80ccc36388b8d5cd07` |
+| Run report | `7cf696dc1c9be8f2eaf61521d22705db78a588f9062ba529530a4e1042270c6e` |
+| Independent closeout | `0e1154de7c2093a1ee9e9bb0fa4433b28577f448edccbbe6b8f973fcdae233ba` |
+| External verification | `514e6c5a19ce7caaf168129a4d63da2e8c8b78fc111654e6b6d83b74c2de53c2` |
+
+The external verifier rehashed the full inventory, checked service completion,
+exact replay flags, all unchanged historical evidence/failure invocations and
+the source/profile/FilmBrain context. Two idle samples showed no GPU compute
+PID, 0% use, 30 C and 674 MiB used. Protected services remained inactive; no
+owned Duck service remained running. The Mac mirror
+`artifacts/retained/ppo-update-closed-0f2451268372.Q9z5r0` holds all 31 artifacts,
+five supporting receipt directories and three invocation journals: **39 files,
+25,157,962 bytes**, whole-byte verified. Mac verification was data/schema-only,
+not a substitute native optimizer replay.
+
+This closes one CPU optimizer-integration gate only. No accepted recovery,
+stance, football, checkpoint, training, GPU, thermal or physical flag changed.
+Full natural timeout/reset and native learner throughput remain open.
+
+## Next smallest runtime gate
+
+Choose a **new unchanged-parent, record-only first-terminal protocol**, rather
+than a mixed-policy continuation of the optimizer diagnostic. A fresh CPU2
+runtime may collect up to 250 stochastic policy calls (2,500 Euler substeps,
+five simulated seconds) or stop at the first naturally observed terminal.
+Keep the original 28-step RSL storage/GAE protocol unchanged; the new ledger
+does not call `process_env_step`, create an optimizer, or advance a storage
+cursor. Preserve raw sampling/RNG, force phases, terminal observations and
+critic values before a single native reset of only the actual done rows.
+Stop immediately after that reset; no injected clock or terminal is permitted.
+
+Both rows reaching the real common timeout can qualify timeout/reset-at-timeout,
+but **not selective reset**. A naturally staggered terminal can qualify
+untouched-sibling reset behavior if its physical clocks, kinematics, time and
+controls remain exact; it does not borrow full-timeout qualification. Early
+failure or a time cap must remain retained evidence, with no recapture/retry.
+Independent replay is recorded-state/control and exact stochastic/critic/math
+consistency only, never fresh whole-trajectory physics re-simulation.
+
+This is source preparation, not admission. Before any native execution,
+predeclare fixed service/collection/closeout caps and source/receipt hashes,
+test the exact implementation, verify an idle exclusive lease and unchanged
+frozen profile/services, and reserve all caps plus a retention margin before
+20:00. Existing full CPU1 timing and short CPU2 timing are context, not a measured
+CPU2 full-episode throughput bound. Do not motivate curriculum training with
+the unaccepted diagnostic updated actor; use unchanged-parent deficits only.

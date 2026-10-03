@@ -52,6 +52,7 @@ def launch_record():
         "parent_state_sha256": probe.preparation.parent.PARENT_STATE_SHA256,
         "parent_identity": probe.preparation.parent.expected_identity(),
         "native_prerequisites": {
+            "preflight_failure_binding": {},
             "source": {"source": SOURCE},
             "gap_inventory": {"case-0.pt": {"sha256": "c" * 64, "bytes": 1}},
             "gap_receipts": {"launch_sha256": "d" * 64},
@@ -650,3 +651,82 @@ def test_independent_closeout_requires_successful_original_terminal_service(
         with pytest.raises(ValueError):
             probe._completed_run_service(SOURCE, ID)
         state[key] = original
+
+
+def test_cpu_validator_returns_binding_not_none(monkeypatch):
+    """Regression for the retained failed native wrapper assertion."""
+    expected = probe.preparation.cpu_parent_binding(SOURCE, "e" * 64)
+    calls = []
+
+    def validator(receipt, digest, binding, *, source):
+        calls.append((receipt, digest, binding, source))
+        return deepcopy(expected)
+
+    monkeypatch.setattr(probe.preparation, "validate_cpu_parent_receipt", validator)
+    assert (
+        probe._validated_cpu_binding(SOURCE, {"synthetic": True}, "e" * 64) == expected
+    )
+    assert len(calls) == 1
+    monkeypatch.setattr(
+        probe.preparation, "validate_cpu_parent_receipt", lambda *a, **k: None
+    )
+    with pytest.raises(ValueError, match="actual validated CPU binding"):
+        probe._validated_cpu_binding(SOURCE, {}, "e" * 64)
+
+
+def test_preflight_has_its_own_fixed_source_namespace_and_service_caps():
+    assert probe.MODE_SECONDS["preflight"] == 180
+    assert probe.MODE_MEMORY["preflight"] == 2 * 1024**3
+    assert probe.preflight_path(SOURCE).name == "cuda64-prerequisites-" + SOURCE[:12]
+    assert (
+        probe.service_name(SOURCE, "preflight")
+        == "microduck-cuda64-policy-preflight-" + SOURCE[:12] + ".service"
+    )
+    assert probe.FAILED_PREFLIGHT_SOURCE == "7b234e6fb49d2f8cfb93a6383d24d418109c74bd"
+    assert probe.FAILED_PREFLIGHT_INVOCATION == "cdc81099961d4da49d5e2be06f3b987d"
+
+
+def test_preserved_native_preflight_failure_is_authenticated_not_relabelled(
+    monkeypatch, tmp_path
+):
+    native = (
+        probe.execution.ROOT / "artifacts/tools/cuda64-preflight-failure-7b234e6fb49d"
+    )
+    mirror = (
+        Path(__file__).resolve().parents[1]
+        / "artifacts/retained"
+        / "cuda64-preflight-failure-7b234e6fb49d.cq9z31"
+    )
+    original = native if native.is_dir() else mirror
+    if not original.is_dir():
+        assert not probe.execution.ROOT.is_dir(), (
+            "original failed native receipt is mandatory on the host"
+        )
+        pytest.skip(
+            "optional failure evidence is unavailable outside its authorized hosts"
+        )
+    root = tmp_path / "artifacts/tools/cuda64-preflight-failure-7b234e6fb49d"
+    root.mkdir(parents=True)
+    for name in ("receipt.json", "journal.log"):
+        shutil.copyfile(original / name, root / name)
+    state = {
+        "MainPID": "0",
+        "ActiveState": "failed",
+        "Result": "exit-code",
+        "ExecMainStatus": "1",
+        "NRestarts": "0",
+        "InvocationID": probe.FAILED_PREFLIGHT_INVOCATION,
+    }
+    monkeypatch.setattr(probe.execution, "ROOT", tmp_path)
+    monkeypatch.setattr(probe.host, "read", lambda *command: state[command[-2]])
+    result = probe._previous_preflight_failure_binding()
+    assert result["receipt_sha256"] == probe.FAILED_PREFLIGHT_RECEIPT_SHA256
+    assert result["service"]["ActiveState"] == "failed"
+    state["ActiveState"] = "inactive"
+    with pytest.raises(ValueError, match="original sixth failed"):
+        probe._previous_preflight_failure_binding()
+    state["ActiveState"] = "failed"
+    with (root / "journal.log").open("ab") as stream:
+        stream.write(b"relabelled")
+    with pytest.raises(ValueError, match="whole original preflight failure"):
+        probe._previous_preflight_failure_binding()

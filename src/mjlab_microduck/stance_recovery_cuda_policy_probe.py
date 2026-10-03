@@ -61,6 +61,24 @@ WORLDS, HORIZON = 64, 28
 SUPERVISOR_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN_SECONDS = 360, 120, 180, 60
 LAUNCH_RESERVE_SECONDS = SUPERVISOR_SECONDS + CLOSEOUT_SECONDS + MARGIN_SECONDS
 SUPERVISOR_MEMORY_BYTES, CLOSEOUT_MEMORY_BYTES = 3 * 1024**3, 2 * 1024**3
+MODE_SECONDS = {
+    "supervise": SUPERVISOR_SECONDS,
+    "closeout": CLOSEOUT_SECONDS,
+    "preflight": 180,
+}
+MODE_MEMORY = {
+    "supervise": SUPERVISOR_MEMORY_BYTES,
+    "closeout": CLOSEOUT_MEMORY_BYTES,
+    "preflight": 2 * 1024**3,
+}
+FAILED_PREFLIGHT_SOURCE = "7b234e6fb49d2f8cfb93a6383d24d418109c74bd"
+FAILED_PREFLIGHT_RECEIPT_SHA256 = (
+    "b2e34353f2ec355692d9a87c8b496a42bf9ecb5a07ea0b17c70f5b758a4cb122"
+)
+FAILED_PREFLIGHT_JOURNAL_SHA256 = (
+    "e3eee38fd75496fd0c2c425848b28d76726e50b726164f64f7c04d3895c97519"
+)
+FAILED_PREFLIGHT_INVOCATION = "cdc81099961d4da49d5e2be06f3b987d"
 CPU_QUOTA, NICE, KILL_MODE = "2s", "10", "control-group"
 LOG_LIMIT, RAW_LIMIT, JSON_LIMIT = 1024**2, 8 * 1024**2, 2 * 1024**2
 HISTORICAL_TRACE_LIMIT = gap.evidence.LIMIT
@@ -143,16 +161,13 @@ def output_path(source):
 
 def service_name(source, mode):
     output_path(source)
-    require(mode in ("supervise", "closeout"), "declared CUDA preparation service mode")
+    require(mode in MODE_SECONDS, "declared CUDA preparation service mode")
     name = "run" if mode == "supervise" else mode
     return f"microduck-cuda64-policy-{name}-{source[:12]}.service"
 
 
 def service_properties(source, mode):
-    seconds = {"supervise": SUPERVISOR_SECONDS, "closeout": CLOSEOUT_SECONDS}[mode]
-    memory = {"supervise": SUPERVISOR_MEMORY_BYTES, "closeout": CLOSEOUT_MEMORY_BYTES}[
-        mode
-    ]
+    seconds, memory = MODE_SECONDS[mode], MODE_MEMORY[mode]
     unit = service_name(source, mode)
     props = {
         key: host.read("systemctl", "--user", "show", unit, "-p", key, "--value")
@@ -197,10 +212,7 @@ def service_properties(source, mode):
 
 
 def _recorded_service_properties(value, mode):
-    seconds = {"supervise": SUPERVISOR_SECONDS, "closeout": CLOSEOUT_SECONDS}[mode]
-    memory = {"supervise": SUPERVISOR_MEMORY_BYTES, "closeout": CLOSEOUT_MEMORY_BYTES}[
-        mode
-    ]
+    seconds, memory = MODE_SECONDS[mode], MODE_MEMORY[mode]
     require(
         type(value) is dict
         and set(value)
@@ -640,6 +652,60 @@ def _source_binding(source):
     }
 
 
+def _previous_preflight_failure_binding():
+    root = execution.ROOT / "artifacts/tools/cuda64-preflight-failure-7b234e6fb49d"
+    _exact_inventory(root, {"receipt.json", "journal.log"})
+    raw = _read_file(root / "receipt.json", JSON_LIMIT)
+    journal = _read_file(root / "journal.log", LOG_LIMIT)
+    require(
+        digest(raw) == FAILED_PREFLIGHT_RECEIPT_SHA256
+        and digest(journal) == FAILED_PREFLIGHT_JOURNAL_SHA256,
+        "whole original preflight failure receipt and journal bytes",
+    )
+    receipt = parse_json(raw)
+    require(
+        receipt.get("source") == FAILED_PREFLIGHT_SOURCE
+        and receipt.get("status") == "failed-retained"
+        and receipt.get("error_type") == "ValueError"
+        and receipt.get("error") == "actual CPU receipt validates"
+        and receipt.get("cuda_allocated") is False
+        and receipt.get("optimizer_steps") == 0
+        and receipt.get("service_properties", {}).get("InvocationID")
+        == FAILED_PREFLIGHT_INVOCATION
+        and all(receipt.get(key) is False for key in FALSE_FLAGS),
+        "unchanged failed wrapper assertion, not a successful preflight",
+    )
+    unit = "microduck-cuda64-preflight-7b234e6fb49d.service"
+    state = {
+        key: host.read("systemctl", "--user", "show", unit, "-p", key, "--value")
+        for key in (
+            "MainPID",
+            "ActiveState",
+            "Result",
+            "ExecMainStatus",
+            "NRestarts",
+            "InvocationID",
+        )
+    }
+    require(
+        state
+        == {
+            "MainPID": "0",
+            "ActiveState": "failed",
+            "Result": "exit-code",
+            "ExecMainStatus": "1",
+            "NRestarts": "0",
+            "InvocationID": FAILED_PREFLIGHT_INVOCATION,
+        },
+        "original sixth failed service remains untouched and terminal",
+    )
+    return {
+        "receipt_sha256": digest(raw),
+        "journal_sha256": digest(journal),
+        "service": state,
+    }
+
+
 def _native_prerequisites(source):
     source_record = _source_binding(source)
     gap_record = _authenticate_gap_artifact(ARTIFACT_SOURCE)
@@ -650,6 +716,7 @@ def _native_prerequisites(source):
     current_record = gap._context_record(
         source, current_context, original_context, terminal
     )
+    preflight_failure = _previous_preflight_failure_binding()
     prior_gap_context = gap_record["run_context"]
     require(
         prior_gap_context["source_identity"].get("source") == ARTIFACT_SOURCE,
@@ -669,6 +736,7 @@ def _native_prerequisites(source):
         "closed_parent_context": original_context,
         "raw_parent": terminal["fresh"][2],
         "launch_binding": {
+            "preflight_failure_binding": preflight_failure,
             "source": source_record,
             "gap_inventory": gap_record["inventory"],
             "gap_receipts": {
@@ -704,6 +772,135 @@ def _cpu_parent_prepare(raw_parent):
         digest(receipt_raw),
         preparation._cpu_parent_receipt_digest(receipt),
     )
+
+
+def _validated_cpu_binding(source, receipt, canonical_sha):
+    expected = preparation.cpu_parent_binding(source, canonical_sha)
+    actual = preparation.validate_cpu_parent_receipt(
+        receipt, canonical_sha, expected, source=source
+    )
+    require(
+        type(actual) is dict and actual == expected,
+        "actual validated CPU binding return value",
+    )
+    return actual
+
+
+def preflight_path(source):
+    output_path(source)
+    return execution.ROOT / "artifacts/tools" / ("cuda64-prerequisites-" + source[:12])
+
+
+def preflight(source):
+    require(
+        os.environ.get("CUDA_VISIBLE_DEVICES") == ""
+        and not torch.cuda.is_initialized(),
+        "initially CUDA-hidden native prerequisite preflight",
+    )
+    started = time.monotonic()
+    window.check(
+        reserve_seconds=MODE_SECONDS["preflight"] + 240 + LAUNCH_RESERVE_SECONDS
+    )
+    service = service_properties(source, "preflight")
+    root = preflight_path(source)
+    root.mkdir(parents=True, exist_ok=False)
+    record = {
+        "protocol": PROTOCOL + ":preflight-v1",
+        "source": source,
+        "status": "failed-retained",
+        "optimizer_steps": 0,
+        "native_cuda_preparation_qualified": False,
+        **PREPARATION_FALSE_FLAGS,
+    }
+    try:
+        with gap.base.files.gpu_lease():
+            idle_before = gpu_idle_gate.wait_idle()
+            prerequisites = _native_prerequisites(source)
+            rng_before = torch.random.get_rng_state().clone()
+            loaded, raw_receipt, file_sha, canonical_sha = _cpu_parent_prepare(
+                prerequisites["raw_parent"]
+            )
+            caller_binding = _validated_cpu_binding(
+                source, loaded["receipt"], canonical_sha
+            )
+            require(
+                torch.equal(rng_before, torch.random.get_rng_state()),
+                "CPU parent caller RNG preserved",
+            )
+            del loaded
+            _write_exclusive(root / "cpu-parent-receipt.json", raw_receipt, JSON_LIMIT)
+            idle_after = gpu_idle_gate.wait_idle()
+            final = _native_prerequisites(source)
+            require(
+                final == prerequisites
+                and service_properties(source, "preflight") == service
+                and not torch.cuda.is_initialized(),
+                "unchanged hidden-CPU preflight source and provenance",
+            )
+            require(
+                digest(_read_file(root / "cpu-parent-receipt.json", JSON_LIMIT))
+                == file_sha,
+                "whole actual CPU parent receipt retained unchanged",
+            )
+            require(
+                time.monotonic() - started < MODE_SECONDS["preflight"],
+                "bounded native CPU preflight",
+            )
+            window.check(reserve_seconds=240 + LAUNCH_RESERVE_SECONDS)
+            record.update(
+                status="hidden-cpu-prerequisites-and-parent-constructor-checked",
+                native_prerequisites=_json_safe(prerequisites["launch_binding"]),
+                cpu_parent_receipt_file_sha256=file_sha,
+                cpu_parent_receipt_canonical_sha256=canonical_sha,
+                cpu_parent_binding=caller_binding,
+                service_properties=service,
+                idle_before=idle_before,
+                idle_after=idle_after,
+                native_cpu_provenance_authenticated=True,
+            )
+    except BaseException as error:
+        record.update(error_type=type(error).__name__, error=str(error))
+        raise
+    finally:
+        record["elapsed_seconds"] = float(time.monotonic() - started)
+        write_json(root / "receipt.json", record)
+    return record
+
+
+def _closed_preflight(source, prerequisites):
+    root = preflight_path(source)
+    _exact_inventory(root, {"receipt.json", "cpu-parent-receipt.json"})
+    raw = _read_file(root / "receipt.json", JSON_LIMIT)
+    record = parse_json(raw)
+    cpu_raw = _read_file(root / "cpu-parent-receipt.json", JSON_LIMIT)
+    cpu_receipt = parse_json(cpu_raw)
+    canonical_sha = preparation._cpu_parent_receipt_digest(cpu_receipt)
+    require(
+        record.get("protocol") == PROTOCOL + ":preflight-v1"
+        and record.get("source") == source
+        and record.get("status")
+        == "hidden-cpu-prerequisites-and-parent-constructor-checked"
+        and record.get("native_cpu_provenance_authenticated") is True
+        and record.get("native_cuda_preparation_qualified") is False
+        and record.get("optimizer_steps") == 0
+        and record.get("native_prerequisites")
+        == _json_safe(prerequisites["launch_binding"])
+        and record.get("cpu_parent_receipt_file_sha256") == digest(cpu_raw)
+        and record.get("cpu_parent_receipt_canonical_sha256") == canonical_sha
+        and _validated_cpu_binding(source, cpu_receipt, canonical_sha)
+        == record.get("cpu_parent_binding")
+        and all(record.get(key) is False for key in PREPARATION_FALSE_FLAGS),
+        "successfully retained exact-source CPU provenance preflight",
+    )
+    _recorded_service_properties(record.get("service_properties"), "preflight")
+    terminal = _completed_service(
+        source, "preflight", record["service_properties"]["InvocationID"]
+    )
+    return {
+        "receipt_sha256": digest(raw),
+        "cpu_parent_receipt_file_sha256": digest(cpu_raw),
+        "service_terminal": terminal,
+    }
 
 
 def _make_launch(
@@ -1239,6 +1436,7 @@ def supervise(source):
             idle_before = gpu_idle_gate.wait_idle()
             prerequisites = _native_prerequisites(source)
             raw_parent = prerequisites["raw_parent"]
+            preflight_binding = _closed_preflight(source, prerequisites)
             loaded, receipt_raw, receipt_sha, canonical_sha = _cpu_parent_prepare(
                 raw_parent
             )
@@ -1257,6 +1455,11 @@ def supervise(source):
                 idle_before,
                 time.time(),
             )
+            require(
+                preflight_binding["cpu_parent_receipt_file_sha256"] == receipt_sha,
+                "same actual CPU parent receipt as independently completed preflight",
+            )
+            launch["native_preflight_binding"] = preflight_binding
             launch_sha = write_json(root / "launch.json", launch)
             report.update(
                 launch_sha256=launch_sha,
@@ -1317,6 +1520,10 @@ def supervise(source):
             require(
                 final_prerequisites == prerequisites,
                 "source and authenticated native inputs remain exact after final idle sample",
+            )
+            require(
+                _closed_preflight(source, final_prerequisites) == preflight_binding,
+                "completed native preflight binding remains unchanged",
             )
             require(
                 digest(raw_parent) == baseline.CHECKPOINT_SHA256
@@ -1417,7 +1624,13 @@ def _validate_launch_record(source, launch):
     require(
         type(native) is dict
         and set(native)
-        == {"source", "gap_inventory", "gap_receipts", "current_context"}
+        == {
+            "source",
+            "gap_inventory",
+            "gap_receipts",
+            "current_context",
+            "preflight_failure_binding",
+        }
         and native["source"].get("source") == source
         and native["current_context"].get("source_identity", {}).get("source")
         == source,
@@ -1907,14 +2120,14 @@ def closeout_result(
     }
 
 
-def _completed_run_service(source, invocation_id):
+def _completed_service(source, mode, invocation_id):
     _hex(invocation_id, 32, "original run invocation ID")
     state = {
         key: host.read(
             "systemctl",
             "--user",
             "show",
-            service_name(source, "supervise"),
+            service_name(source, mode),
             "-p",
             key,
             "--value",
@@ -1943,6 +2156,10 @@ def _completed_run_service(source, invocation_id):
     return state
 
 
+def _completed_run_service(source, invocation_id):
+    return _completed_service(source, "supervise", invocation_id)
+
+
 def closeout(source, launch_sha256):
     require(
         os.environ.get("CUDA_VISIBLE_DEVICES") == ""
@@ -1959,6 +2176,11 @@ def closeout(source, launch_sha256):
     with gap.base.files.gpu_lease():
         idle_before = gpu_idle_gate.wait_idle()
         prerequisites = _native_prerequisites(source)
+        require(
+            _closed_preflight(source, prerequisites)
+            == launch.get("native_preflight_binding"),
+            "retained successful native CPU preflight before closeout",
+        )
         require(
             _json_safe(prerequisites["launch_binding"])
             == launch["native_prerequisites"],
@@ -2048,6 +2270,11 @@ def closeout(source, launch_sha256):
             == launch["native_prerequisites"],
             "fresh authenticated source/history context after final idle sample",
         )
+        require(
+            _closed_preflight(source, final_prerequisites)
+            == launch.get("native_preflight_binding"),
+            "completed native preflight unchanged after closeout idle sample",
+        )
         rng_after_idle = torch.random.get_rng_state().clone()
         final_parent, final_receipt_raw, final_receipt_sha, final_canonical_sha = (
             _cpu_parent_prepare(final_prerequisites["raw_parent"])
@@ -2096,13 +2323,15 @@ def closeout(source, launch_sha256):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("supervise", "child", "closeout"))
+    parser.add_argument("mode", choices=("preflight", "supervise", "child", "closeout"))
     parser.add_argument("--source", required=True)
     parser.add_argument("--launch-sha256")
     parser.add_argument("--seed", type=int)
     parser.add_argument("--lease-fd", type=int)
     args = parser.parse_args(argv)
-    if args.mode == "supervise":
+    if args.mode == "preflight":
+        result = preflight(args.source)
+    elif args.mode == "supervise":
         result = supervise(args.source)
     elif args.mode == "child":
         require(

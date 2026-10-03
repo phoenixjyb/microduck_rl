@@ -69,6 +69,11 @@ inventory. The latter must exercise the real pinned gap/terminal readers and
 actual parent loader; portable synthetic fixtures cannot replace it. Neither
 check allocates CUDA or admits learning. Check the complete remaining campaign
 reserve separately before these checks and again before launching the run.
+The corrected prerequisite check is the runner's `preflight` mode, with service
+`microduck-cuda64-policy-preflight-<source12>.service` and an exclusive two-JSON
+directory `artifacts/tools/cuda64-prerequisites-<source12>`. The run and closeout
+must authenticate this completed preflight, its actual terminal service and its
+whole CPU receipt. A failed old wrapper is not a substitute for that gate.
 The run consists of the source-bound launch, actual CPU-parent receipt, two
 raw payloads, two child summaries, two bounded logs and the report. Independent
 closeout adds exactly one receipt. A partial/failure inventory cannot borrow
@@ -198,3 +203,47 @@ Native source tests, authentic prerequisite/CPU-parent constructor evidence,
 actual CUDA children and independent closeout remain unperformed at this source
 declaration. No optimizer step, learned recovery or capability acceptance is
 claimed by this commit.
+
+## Retained first native preflight refusal
+
+At source `7b234e6fb49d2f8cfb93a6383d24d418109c74bd`, the external source-transition
+and CPU-preflight wrapper fast-forwarded WSL from `bb7c059d5dda` cleanly, then
+stopped with **`ValueError: actual CPU receipt validates`**. Its assertion wrongly
+expected `validate_cpu_parent_receipt(...) is None`; read-only source inspection
+confirmed that the validator returns the exact source-bound **binding mapping**.
+The real validator had returned without error. This is a wrapper return-contract
+mistake, not a Duck policy, driver, package or native CUDA failure.
+
+Original service `microduck-cuda64-preflight-7b234e6fb49d.service`, invocation
+`cdc81099961d4da49d5e2be06f3b987d`, remains failed with exit 1, PID 0 and zero
+restarts. Measured wrapper elapsed time was **7.102938449010253 seconds**; the
+manager reported **1.0 GiB peak / zero swap** within its 180-second / 2-GiB cap.
+No CUDA child, rollout, optimizer step or accepted preparation resulted.
+Do not restart, clear, overwrite or relabel this failed attempt.
+
+Its immutable original receipt and whole journal were independently retained in
+`artifacts/tools/cuda64-preflight-failure-7b234e6fb49d` and byte-verified in the Mac
+mirror `artifacts/retained/cuda64-preflight-failure-7b234e6fb49d.cq9z31`:
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| `receipt.json` | 849 | `b2e34353f2ec355692d9a87c8b496a42bf9ecb5a07ea0b17c70f5b758a4cb122` |
+| `journal.log` | 18,734 | `e3eee38fd75496fd0c2c425848b28d76726e50b726164f64f7c04d3895c97519` |
+
+The reviewed correction puts the CPU preflight in the source-controlled runner,
+checks its real mapping return, and authenticates these failed bytes and the
+unchanged sixth failed service on every future native prerequisite read. It
+requires a fresh committed source and new namespace; the prior five failure
+bindings and all successful historical evidence remain unchanged. Regression
+tests cover the mapping-versus-None mistake, the new preflight caps and failure
+receipt/journal/service tampering. Fresh native qualification is still required.
+
+Correction evidence: **40 focused tests passed in 8.64 seconds**; the final
+20-file regression passed **492 tests in 66.97 seconds**, with no skips. Ruff
+0.15.7 check/format and whitespace checks passed. The bounded worker independently
+reviewed the integration read-only and found no concrete fail-open blocker.
+The native prerequisite and CUDA results are still pending. Any exact-source
+fast-forward before that check uses a separate CUDA-hidden source-sync service
+capped at 60 seconds / 2 GiB, with the same quota/priority/kill scope, held shared
+lease, two idle samples and before/after unchanged host/profile/service checks.
+No live Duck job may be present while source is advanced.

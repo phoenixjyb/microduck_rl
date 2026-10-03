@@ -97,7 +97,13 @@ def test_changed_recorded_caps_refused(key, value):
 
 @pytest.mark.parametrize(
     "source",
-    [p.UPDATE_SOURCE, p.previous.AUDIT_SOURCE, p.previous.ARTIFACT_SOURCE, "bad"],
+    [
+        p.UPDATE_SOURCE,
+        p.previous.AUDIT_SOURCE,
+        p.previous.ARTIFACT_SOURCE,
+        p.FAILED_SOURCE,
+        "bad",
+    ],
 )
 def test_old_artifact_namespace_cannot_be_reused(source):
     with pytest.raises(ValueError):
@@ -120,6 +126,47 @@ def test_partial_inventory_does_not_prove_closed_update(tmp_path):
     (tmp_path / "independent-closeout.json").write_text("{}")
     with pytest.raises(ValueError):
         p._read_closed_update(tmp_path)
+
+
+def _saved_launch_failure():
+    relative = Path("artifacts/tools/terminal-launch-construction-failure-f04e07ce157d")
+    original = Path(
+        "artifacts/evaluations/stance-wsl-cpu-stochastic-first-terminal-f04e07ce157d"
+    )
+    native = p.base.host.ROOT
+    if (native / relative).is_dir() and (native / original).is_dir():
+        return native / relative, native / original
+    mirror = (
+        Path(__file__).resolve().parents[1]
+        / "artifacts/retained/terminal-launch-failed-f04e07ce157d.zujnXr"
+    )
+    if not mirror.is_dir():
+        pytest.skip("optional authentic saved launch failure unavailable")
+    return mirror / relative.name, mirror / original.name
+
+
+def test_actual_launch_failure_is_authenticated_without_fake_native_context():
+    root, original = _saved_launch_failure()
+    receipt = p._read_launch_failure(root, original)
+    assert receipt["source"] == p.FAILED_SOURCE
+    assert receipt["state"]["InvocationID"] == p.FAILED_INVOCATION
+    assert receipt["policy_calls"] == receipt["optimizer_steps"] == 0
+    assert set(receipt["inventory"]) == {"checkpoint.pt", "report.json"}
+
+
+@pytest.mark.parametrize("changed", ["receipt.json", "journal.log", "report.json"])
+def test_saved_launch_failure_whole_bytes_cannot_be_rewritten(tmp_path, changed):
+    saved, original = _saved_launch_failure()
+    root, capture = tmp_path / "diagnosis", tmp_path / "original"
+    root.mkdir()
+    capture.mkdir()
+    for source, target in ((saved, root), (original, capture)):
+        for path in source.iterdir():
+            (target / path.name).write_bytes(path.read_bytes())
+    target = (capture if changed == "report.json" else root) / changed
+    target.write_bytes(target.read_bytes() + b" ")
+    with pytest.raises(ValueError):
+        p._read_launch_failure(root, capture)
 
 
 def test_actual_retained_one_update_prerequisite_can_be_read_without_fake_host_context():
@@ -164,7 +211,7 @@ def launch_fixture(monkeypatch):
     compiled = old["compiled_plant"]
     profile = old["cpu_math_profile"]
     fresh = (
-        {},
+        {"cpu_math_profile": profile},
         {"synthetic-prior": True},
         raw_parent,
         {"synthetic-audit": True},
@@ -209,6 +256,36 @@ def test_launch_declares_real_units_and_fixed_campaign_schema(monkeypatch):
     launch, fresh = launch_fixture(monkeypatch)
     assert p._check_launch(launch, SOURCE, fresh)
     assert launch["trace_binding"]["horizon"] == 250
+
+
+def test_actual_launch_builder_emits_native_context_profile_once(monkeypatch):
+    launch, fresh = launch_fixture(monkeypatch)
+    constructed = p._build_launch(
+        SOURCE,
+        fresh,
+        launch["checkpoint"],
+        launch["declaration"],
+        launch["compiled_plant"],
+        launch["cpu_math_profile"],
+        properties("run"),
+    )
+    assert constructed == launch
+    assert p._check_launch(constructed, SOURCE, fresh)
+
+
+def test_launch_builder_refuses_disagreeing_context_profile(monkeypatch):
+    launch, fresh = launch_fixture(monkeypatch)
+    fresh[0]["cpu_math_profile"] = {"different-profile": True}
+    with pytest.raises(ValueError, match="verified native context"):
+        p._build_launch(
+            SOURCE,
+            fresh,
+            launch["checkpoint"],
+            launch["declaration"],
+            launch["compiled_plant"],
+            launch["cpu_math_profile"],
+            properties("run"),
+        )
 
 
 @pytest.mark.parametrize(

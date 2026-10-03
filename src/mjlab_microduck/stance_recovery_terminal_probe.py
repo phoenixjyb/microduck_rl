@@ -16,7 +16,15 @@ from mjlab_microduck import stance_recovery_optimizer_probe as previous
 from mjlab_microduck import stance_recovery_terminal_trace as trace
 from mjlab_microduck.first_attempt_smoke import require
 
-PROTOCOL = "football-b1d-cpu-stochastic-first-terminal-probe-v1"
+PROTOCOL = "football-b1d-cpu-stochastic-first-terminal-probe-v2"
+FAILED_SOURCE = "f04e07ce157d247a61558701019dab885be84f74"
+FAILED_INVOCATION = "4f00a3301c27432781dfc184030a07f0"
+FAILURE_RECEIPT_SHA256 = (
+    "5c9524f1e02a878d63c1249e02fca8833004dd7ef62532d8c961bac95d6ed9b7"
+)
+FAILURE_JOURNAL_SHA256 = (
+    "d759f90ed3da24572975aa182be02b9c8aa9fb60bd1b15ced41e555bfeccd7b2"
+)
 UPDATE_SOURCE = "0f245126837220297d5bd93d58c021997d3c9fb3"
 UPDATE_CLOSEOUT_SHA256 = (
     "0e1154de7c2093a1ee9e9bb0fa4433b28577f448edccbbe6b8f973fcdae233ba"
@@ -43,7 +51,13 @@ base, baseline, window = previous.base, previous.baseline, previous.window
 def output_path(source):
     base.files.hex_id(source, 40)
     require(
-        source not in (UPDATE_SOURCE, previous.AUDIT_SOURCE, previous.ARTIFACT_SOURCE),
+        source
+        not in (
+            UPDATE_SOURCE,
+            previous.AUDIT_SOURCE,
+            previous.ARTIFACT_SOURCE,
+            FAILED_SOURCE,
+        ),
         "distinct new first-terminal protocol source",
     )
     return base.host.ROOT / "artifacts/evaluations" / (OUTPUT_PREFIX + source[:12])
@@ -174,7 +188,97 @@ def _fresh(source):
         sha256(raw_parent).hexdigest() == baseline.CHECKPOINT_SHA256,
         "unchanged parent bytes, not the diagnostic updated actor",
     )
+    context = dict(context, terminal_launch_failure_binding=_launch_failure_binding())
     return context, prior, raw_parent, audit, _read_closed_update()
+
+
+def _read_launch_failure(root=None, original=None):
+    """Authenticate saved failure files without re-running the failed attempt."""
+    root = (
+        base.host.ROOT
+        / "artifacts/tools/terminal-launch-construction-failure-f04e07ce157d"
+        if root is None
+        else root
+    )
+    original = (
+        base.host.ROOT
+        / "artifacts/evaluations/stance-wsl-cpu-stochastic-first-terminal-f04e07ce157d"
+        if original is None
+        else original
+    )
+    require(
+        {p.name for p in root.iterdir()} == {"receipt.json", "journal.log"},
+        "exact retained launch failure evidence",
+    )
+    receipt_raw = base.files.file_bytes(root / "receipt.json", limit=2 * 1024**2)
+    journal = base.files.file_bytes(root / "journal.log", limit=16 * 1024**2)
+    require(
+        sha256(receipt_raw).hexdigest() == FAILURE_RECEIPT_SHA256
+        and sha256(journal).hexdigest() == FAILURE_JOURNAL_SHA256,
+        "whole launch failure receipt and journal hashes",
+    )
+    receipt = base.files.parse(receipt_raw)
+    inventory = _inventory(original, {"checkpoint.pt", "report.json"})
+    require(
+        receipt.get("protocol") == "cpu-first-terminal-launch-failure-evidence-v1"
+        and receipt.get("source") == FAILED_SOURCE
+        and receipt.get("service")
+        == f"microduck-cpu-terminal-run-{FAILED_SOURCE[:12]}.service"
+        and receipt.get("invocation_id") == FAILED_INVOCATION
+        and receipt.get("inventory") == inventory
+        and receipt.get("journal_sha256") == FAILURE_JOURNAL_SHA256
+        and receipt.get("journal_bytes") == len(journal)
+        and receipt.get("error")
+        == "dict() got multiple values for keyword argument 'cpu_math_profile'"
+        and receipt.get("error_type") == "TypeError"
+        and receipt.get("failure_stage")
+        == "launch-dictionary-construction-before-launch-or-collection"
+        and receipt.get("policy_calls") == receipt.get("optimizer_steps") == 0
+        and receipt.get("training_update_performed") is False
+        and receipt.get("execution_admitted") is False
+        and receipt.get("student_export_available") is False
+        and receipt.get("original_artifacts_modified") is False
+        and receipt.get("original_service_restarted") is False
+        and all(receipt.get(k) is False for k in baseline.FALSE_FLAGS),
+        "authenticated launch-construction failure before collection",
+    )
+    return receipt
+
+
+def _launch_failure_binding():
+    receipt = _read_launch_failure()
+    state = {
+        key: base.host.read(
+            "systemctl", "--user", "show", receipt["service"], "-p", key, "--value"
+        )
+        for key in (
+            "ActiveState",
+            "MainPID",
+            "NRestarts",
+            "ExecMainStatus",
+            "InvocationID",
+        )
+    }
+    require(
+        state
+        == receipt["state"]
+        == {
+            "ActiveState": "failed",
+            "MainPID": "0",
+            "NRestarts": "0",
+            "ExecMainStatus": "1",
+            "InvocationID": FAILED_INVOCATION,
+        }
+        and receipt["old_failed_services_unchanged"] == previous._old_failed_states(),
+        "all four failed units and invocation IDs remain unchanged",
+    )
+    return {
+        "source": FAILED_SOURCE,
+        "receipt_sha256": FAILURE_RECEIPT_SHA256,
+        "journal_sha256": FAILURE_JOURNAL_SHA256,
+        "inventory": receipt["inventory"],
+        "service_state": state,
+    }
 
 
 def _write_raw(path, raw):
@@ -198,6 +302,51 @@ def _lease():
         "idle_gate": "two-idle-samples-before-and-after",
         "cuda_learner": False,
     }
+
+
+def _build_launch(
+    source, fresh, checkpoint_record, declaration, compiled_plant, cpu_math, props
+):
+    """Pure launch construction; host profile is emitted once from verified context."""
+    context, prior, raw_parent, audit, update = fresh
+    require(
+        context.get("cpu_math_profile") == cpu_math,
+        "launch CPU math profile agrees with verified native context",
+    )
+    require(
+        checkpoint_record
+        == {"sha256": sha256(raw_parent).hexdigest(), "bytes": len(raw_parent)},
+        "launch parent record matches actual retained bytes",
+    )
+    return dict(
+        protocol=PROTOCOL,
+        source=source,
+        **context,
+        prerequisite_receipt=prior,
+        closed_audit_binding=audit,
+        closed_update_binding=update,
+        parent_checkpoint_sha256=baseline.CHECKPOINT_SHA256,
+        checkpoint=checkpoint_record,
+        declaration=declaration,
+        compiled_plant=compiled_plant,
+        trace_binding=trace.binding(declaration, compiled_plant, cpu_math),
+        policy_call_limit=250,
+        physics_step_limit=2500,
+        simulation_seconds=5.0,
+        collection_seconds=trace.WALL_LIMIT,
+        service_seconds=RUN_SECONDS,
+        closeout_seconds=CLOSEOUT_SECONDS,
+        launch_reserve_seconds=LAUNCH_RESERVE,
+        raw_capture_limit_bytes=RAW_LIMIT,
+        campaign_window=window.declaration(),
+        service_properties=props,
+        lease=_lease(),
+        optimizer_steps=0,
+        training_update_performed=False,
+        execution_admitted=False,
+        student_export_available=False,
+        **baseline.FALSE_FLAGS,
+    )
 
 
 def _score_decision(score):
@@ -298,7 +447,7 @@ def run(source):
         idle_before = base.host.wait_idle()
         props = _properties(source, "run")
         fresh = _fresh(source)
-        context, prior, raw_parent, audit, update = fresh
+        raw_parent = fresh[2]
         root = output_path(source)
         root.mkdir(exist_ok=False)
         checkpoint_record = _write_raw(root / "checkpoint.pt", raw_parent)
@@ -328,35 +477,14 @@ def run(source):
             declaration = previous.collection_probe.declaration(source)
             env = ScheduledRecoveryRuntime(declaration, device="cpu")
             cpu_math = previous.trace.profile.checked_receipt()
-            launch = dict(
-                protocol=PROTOCOL,
-                source=source,
-                **context,
-                prerequisite_receipt=prior,
-                closed_audit_binding=audit,
-                closed_update_binding=update,
-                parent_checkpoint_sha256=baseline.CHECKPOINT_SHA256,
-                checkpoint=checkpoint_record,
-                declaration=declaration,
-                compiled_plant=env.binding,
-                cpu_math_profile=cpu_math,
-                trace_binding=trace.binding(declaration, env.binding, cpu_math),
-                policy_call_limit=250,
-                physics_step_limit=2500,
-                simulation_seconds=5.0,
-                collection_seconds=trace.WALL_LIMIT,
-                service_seconds=RUN_SECONDS,
-                closeout_seconds=CLOSEOUT_SECONDS,
-                launch_reserve_seconds=LAUNCH_RESERVE,
-                raw_capture_limit_bytes=RAW_LIMIT,
-                campaign_window=window.declaration(),
-                service_properties=props,
-                lease=_lease(),
-                optimizer_steps=0,
-                training_update_performed=False,
-                execution_admitted=False,
-                student_export_available=False,
-                **baseline.FALSE_FLAGS,
+            launch = _build_launch(
+                source,
+                fresh,
+                checkpoint_record,
+                declaration,
+                env.binding,
+                cpu_math,
+                props,
             )
             base.files.write_json(root / "launch.json", launch)
             value = trace.collect(

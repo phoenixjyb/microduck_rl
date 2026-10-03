@@ -1,6 +1,7 @@
 # Natural terminal/reset integration: bounded CPU2 diagnostic
 
-Status: **source preparation only; no native first-terminal run admitted yet**.
+Status: **v1 failed before collection; bounded v2 construction repair prepared,
+not yet natively admitted**.
 This is a sibling of the closed 28-transition/one-update diagnostic, not an
 extension, recapture or relabeling of that evidence. The campaign deadline stays
 2026-10-03 **20:00 Asia/Shanghai**; expired protocols remain unchanged.
@@ -118,3 +119,56 @@ sequential float32 time increments, original controls retained before
 collection, frame/terminal linkage, restored done-row state and untouched
 sibling controls. Pure fixtures test malformed receipts and contradictory
 claims without presenting synthetic terminals as native qualification.
+
+## Native v1 refusal and v2 predeclaration
+
+Source `f04e07ce157d247a61558701019dab885be84f74` was committed/pushed and
+fast-forwarded into the clean WSL worktree. Its capped native source-test unit
+passed **302 tests in 28.27 seconds**, invocation
+`e0c6bca383b54952a7fa832873d4a0e1`; source-test receipt SHA
+`91399a9ff4e6c0c0cccff8376c888d348326f6b66819c25f2babdd25085c2f09`.
+The source transition receipt SHA is
+`d8dcc5918662fc19f19a3676bdda53200c0a59ce3e2fefa5e3cb84257e1522b2`;
+external run-admission receipt SHA is
+`04ab7ecb41a6e757218b02ffbf4f1f847a4c9b31f9aa249574a52c870961922f`.
+
+The native v1 run unit `microduck-cpu-terminal-run-f04e07ce157d.service`,
+invocation `4f00a3301c27432781dfc184030a07f0`, failed with exactly
+`TypeError: dict() got multiple values for keyword argument 'cpu_math_profile'`.
+Read-only diagnosis verified the host context already owned that field and
+the launch constructor supplied it a second time. The failure occurred after
+CPU environment construction but **before launch serialization or any policy
+collection**: zero calls, zero optimizer steps, no capture or reset evidence.
+Runner elapsed time was **3.789056434063241 seconds**, memory peak 574,451,712
+bytes. Do not call this a failed learned policy or completed timeout attempt.
+
+The immutable original directory contains exactly the 256,368-byte parent and
+1,791-byte report. Report SHA:
+`136f069740526963f6db0160533a617d56c821a2e88b4841b6e8e2957525db2f`.
+The retained diagnostic receipt SHA is
+`5c9524f1e02a878d63c1249e02fca8833004dd7ef62532d8c961bac95d6ed9b7`;
+the exact 7,695-byte invocation journal SHA is
+`d759f90ed3da24572975aa182be02b9c8aa9fb60bd1b15ced41e555bfeccd7b2`.
+Both files live in
+`artifacts/tools/terminal-launch-construction-failure-f04e07ce157d` on WSL;
+all four files were mirrored and byte-verified on the Mac under
+`artifacts/retained/terminal-launch-failed-f04e07ce157d.zujnXr`.
+The failed service and all three earlier failed services remain unchanged.
+
+The separately reviewed repair uses supervisor protocol
+`football-b1d-cpu-stochastic-first-terminal-probe-v2`. It emits the verified
+context's CPU profile once, explicitly compares it with the actual capture
+profile, and tests the real launch constructor, not only hand-built receipts.
+Every fresh admission and postcheck authenticates the original failure bytes
+and all four failed service invocation IDs. The failed source/namespace cannot
+be reused. The trace protocol, unchanged parent, seed, force schedule, numeric
+gates and all resource/cutoff bounds above remain identical. Commit/push and
+capped frozen-profile native source tests must pass before a **new source-bound
+unit** can collect once; never restart or overwrite the v1 attempt.
+
+Repair source checks: the unchanged 14-file regression selection passed
+**309 tests in 23.77 seconds** with startup CUDA hidden; Ruff and
+`git diff --check` passed. The seven added cases cover the forbidden failed
+namespace, authenticated original failure, whole-file tampering and actual
+launch construction/profile disagreement. Native v2 qualification remains
+open until the separately capped run and independent closeout finish.

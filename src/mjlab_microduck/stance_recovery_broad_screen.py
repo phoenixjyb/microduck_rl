@@ -556,18 +556,24 @@ def closeout(source, launch_sha256):
     window.check()
     inventory['report.json'] = dict(sha256=sha256(report_raw).hexdigest(),
         bytes=len(report_raw))
-    result = dict(protocol=PROTOCOL, source=source,
+    result = closeout_result(source, launch_sha256, report_raw, rescored, inventory,
+                             properties, float(time.monotonic() - started))
+    base.files.write_json(root / 'independent-closeout.json', result)
+    return result
+
+
+def closeout_result(source, launch_sha256, report_raw, rescored, inventory, properties, elapsed):
+    """Receipt construction only; native validation is exclusively in closeout."""
+    return dict(protocol=PROTOCOL, source=source,
         launch_sha256=launch_sha256, report_sha256=sha256(report_raw).hexdigest(),
         decision=rescored['screening']['decision'], screening=rescored['screening'],
         files_rehashed=inventory, cases_checked=len(CELL_IDS),
         whole_cpu_rescore_identical=True, cuda_initialized=False,
-        independent_gpu_attestation=False, whole_trajectory_physics_resimulated=False,
+        whole_trajectory_physics_resimulated=False,
         thermal_model_applied=False, service_properties=properties,
         optimizer_steps=0, simulator_resets=0, auto_reset=False,
-        elapsed_seconds=float(time.monotonic() - started),
+        elapsed_seconds=elapsed,
         **base.baseline.FALSE_FLAGS)
-    base.files.write_json(root / 'independent-closeout.json', result)
-    return result
 
 
 def main(argv=None):

@@ -61,6 +61,15 @@ balance nor physical readiness is accepted by this diagnostic.
 Reviewed implementation, focused contract checks (**46 passed in 8.40 s**)
 and broader adjacent regressions (**147 passed in 17.19 s**) passed locally
 with CUDA hidden. These are source/synthetic checks, not native evidence.
-No native capture has started; the WSL worktree remains frozen for the active 25-case CPU screen.
+No native capture has started. The broad screen's independent closeout exposed
+a duplicate false-flag keyword in its final receipt constructor. Read-only
+diagnosis found the same latent constructor issue in this unrun probe. It is
+corrected before launch, with direct constructor regressions for both admissible
+and inadmissible capture receipts; no integration gate or acceptance flag changes.
+The WSL worktree remains at the original broad-capture source until its separately
+predeclared repair audit is ready and all owned native jobs are terminal.
+The final combined repair/PPO/schedule source regression suite passed 145 tests
+in 18.95 seconds with CUDA explicitly hidden, including both actual constructor
+paths. Native capture, reset and optimizer qualification remain pending.
 Exact reviewed source, service invocations and artifact hashes will be appended
 after execution and independent closeout.

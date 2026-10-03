@@ -245,7 +245,16 @@ def closeout(source, launch_sha256):
             'independent retained transition score and unchanged bounded CPU closeout')
     window.check()
     inventory['report.json'] = dict(sha256=sha256(report_raw).hexdigest(), bytes=len(report_raw))
-    result = dict(protocol=PROTOCOL, source=source, launch_sha256=launch_sha256,
+    result = closeout_result(source, launch_sha256, report_raw, capture, score, inventory,
+        report, run_admissible, properties, float(time.monotonic() - started))
+    base.files.write_json(root / 'independent-closeout.json', result)
+    return result
+
+
+def closeout_result(source, launch_sha256, report_raw, capture, score, inventory,
+                    report, run_admissible, properties, elapsed):
+    """Receipt construction only; no standalone replay or native attestation."""
+    return dict(protocol=PROTOCOL, source=source, launch_sha256=launch_sha256,
         report_sha256=sha256(report_raw).hexdigest(), capture_sha256=capture['capture_sha256'],
         decision=('cpu-ppo-transition-integration-qualified' if
             run_admissible and score['complete_two_world_transition_qualification']
@@ -256,11 +265,9 @@ def closeout(source, launch_sha256):
                     if key in report} if not report['postchecks_passed'] else None),
         optimizer_steps=0, training_update_performed=False, cuda_initialized=False,
         full_episode_timeout_reset_qualified=False, finite_optimizer_step_qualified=False,
-        independent_gpu_attestation=False, whole_trajectory_physics_resimulated=False,
+        whole_trajectory_physics_resimulated=False,
         thermal_model_applied=False, service_properties=properties,
-        elapsed_seconds=float(time.monotonic() - started), **base.baseline.FALSE_FLAGS)
-    base.files.write_json(root / 'independent-closeout.json', result)
-    return result
+        elapsed_seconds=elapsed, **base.baseline.FALSE_FLAGS)
 
 
 def main(argv=None):

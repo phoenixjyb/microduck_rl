@@ -69,10 +69,80 @@ Remaining native PPO/reset/finite-optimizer, held-out and GPU/throughput gates
 still apply before a bounded learning job. No recovery/football/hopping/obstacle
 or physical-motion acceptance is changed by this screen.
 
-## Retention and current state
+## Retained capture and failed receipt closeout
 
-The source-bound implementation and focused tests are in preparation; no matrix
-run has started. Source SHA, capped service invocations, raw hashes and results
-will be recorded after the final reviewed commit and native execution. Large raw
-files should stay in the WSL source-derived evidence directory; mirror the closed
-metadata and exact inventory to the Mac, whose free disk space is limited.
+The capture source is `1079a104a9e3bf83d56c0586cd2dd0374990e259`.
+The CUDA-hidden service `microduck-cpu-broad-run-1079a104a9e3.service`, invocation
+`d89a897ba1eb46dc8fcbf5a5740884aa`, completed with exit status 0 on 2026-10-03
+at approximately 10:16 Shanghai. The runner used 1,040.678 seconds; the service
+reported 2.0 GiB memory peak and zero swap. All 25 original five-second captures
+are retained in `artifacts/evaluations/stance-wsl-cpu-cardinal-dose-timing-1079a104a9e3`
+on WSL. The run's decision is `cpu-cardinal-dose-timing-no-deficit`: each row
+passed the nine unchanged numerical checks, with complete force phases, exact
+actor replay, the matched pre-force prefix and no soft-limit exposure. This is
+not independently closed yet and is only one CPU evaluation seed.
+
+Exact retained byte hashes:
+
+- Launch: `cd016be8c088842f2697611d54047f937ff85f07298f347e6fcb7624adcfa7f8`.
+- Report: `2cfce295e32317d0ef4dafe201859b932235406679b1d4e66e850404dd39c783`.
+- Qualification: `11eea1a3d5c65f2df555c234d599b7bda61d8212754d1f19e205b52a3bf5d84d`.
+
+The independent service `microduck-cpu-broad-closeout-1079a104a9e3.service`,
+invocation `5cf35c7873924d9d9218c3d8764c0b56`, exited with status 1 at about
+10:23 Shanghai. It used 5 minutes 5.312 seconds of service CPU time, a 1.3 GiB
+memory peak and zero swap. The exact exception was
+`TypeError: dict() got multiple values for keyword argument 'independent_gpu_attestation'`.
+Read-only diagnosis located the error in the final receipt constructor after
+the replay guards: the flag was supplied explicitly and again through
+`FALSE_FLAGS`. No `independent-closeout.json` was written. Completion of earlier
+guards does not substitute for a successful independent receipt.
+
+The original 79-file evidence directory and failed service are preserved, not
+restarted or relabeled. Separate failure evidence is retained under
+`artifacts/tools/cardinal-closeout-failure-1079a104a9e3`:
+
+- Failure receipt: `5d64c57fe65e3e38272f8f4aeafeef81017d338a499ffb4744073477f03a5cb2`.
+- Invocation journal: `8d4f162edab25b285f15bc294b30b7ce8ef5d728f3533545cffefd55cb763bc2`.
+- Original evaluator file SHA-256: `1c62fc70a4a0e6669f99dd8a115a6867b3dab1dca2a33f50810a2fef2340aedc`
+  (Git blob ID `f8b87e612f77f1ad1e3ab4811fa1b5d07574e043`, a different identifier).
+
+## Separately predeclared receipt-repair audit
+
+Remove the duplicate constructor keyword and exercise the actual final receipt
+constructor in a focused regression test. The analogous unrun stochastic PPO
+probe receives the same prelaunch correction. No scoring, replay, declaration,
+acceptance, inventory or original protocol cap is weakened.
+
+A new, source-bound repair audit may read the immutable original 25 captures
+once and freshly reproduce all scores, prefixes and the screen decision. It
+does not collect new physics, restart the failed unit or write in the old evidence
+directory. Keep `artifact_source` fixed to the original `1079a104...` and record
+the new exact clean `evaluator_source` separately; never pretend a changed
+evaluator produced the old launch. Authenticate the old launch/report/failure
+hashes, original file bytes in Git history, unchanged replay/scoring dependencies
+and the exact 79-file inventory. Current host, math profile, FilmBrain and
+protected-service identities must match the old launch except for that explicitly
+separate source SHA.
+
+The one new CUDA-hidden user service is capped at 600 seconds, 2 GiB, 200% CPU,
+Nice 10 and control-group ownership, with at least 660 seconds before the fixed
+20:00 Shanghai deadline. It writes a separate receipt and exact hash inventory
+in a new evaluator-source-derived repair directory. Only successful fresh replay,
+unchanged contexts, in-cap completion and durable output can close this repair
+audit. Failure remains a separate failure, with no automatic retry or capture
+rerun. All capability and physical-acceptance flags remain false.
+
+Large raw files stay on WSL. Mirror only closed metadata, the repair receipt and
+the exact original inventory to the Mac, whose free disk space is limited.
+
+The reviewed repair and adjacent broad/PPO/schedule suites passed **145 tests
+in 18.95 seconds** on the Mac with CUDA explicitly hidden. A preceding local
+invocation omitted that environment flag and correctly failed eight schedule
+guards (125 passed); the corrected invocation passed without changing those
+guards. The actual read-only Git source-inventory check also passed across 85
+in-package files. These are source checks, not native replay. Independent
+read-only review found no concrete launch blocker. The failure receipt and
+journal Mac mirror at
+`artifacts/retained/cardinal-closeout-failure-1079a104a9e3.cdZVv5` matches both
+original whole-byte hashes. No repair service has run yet.

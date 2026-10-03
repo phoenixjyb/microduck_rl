@@ -109,3 +109,14 @@ def test_malformed_capture_status_fails_closed():
     for value in (None, {}, {'accepted_complete': 1}):
         with pytest.raises(ValueError, match='typed retained collection outcome'):
             probe._capture_decision(value)
+
+
+@pytest.mark.parametrize('admissible', [True, False])
+def test_receipt_construction_cannot_duplicate_or_promote_false_flags(admissible):
+    score = dict(complete_two_world_transition_qualification=True)
+    result = probe.closeout_result(SOURCE, DIGEST, b'synthetic report',
+        dict(capture_sha256='c'*64), score, {}, dict(postchecks_passed=True),
+        admissible, {}, 1.0)
+    assert all(result[key] is False for key in probe.base.baseline.FALSE_FLAGS)
+    assert result['decision'] == ('cpu-ppo-transition-integration-qualified'
+        if admissible else 'cpu-ppo-transition-integration-rejected')

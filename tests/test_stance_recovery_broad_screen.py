@@ -167,6 +167,16 @@ def test_completed_three_case_timing_receipt_is_separately_pinned():
         expected | {'independent-closeout.json'})
 
 
+def test_receipt_construction_has_one_owner_for_all_false_flags():
+    # Synthetic metadata exercises the actual final constructor, not native proof.
+    screen_result = screen._screen_inputs(synthetic_rows(), ['f' * 64] * 25)
+    result = screen.closeout_result(SOURCE, 'b'*64, b'synthetic report',
+        dict(screening=screen_result), {}, {}, 1.0)
+    assert result['cases_checked'] == 25
+    assert result['decision'] == 'cpu-cardinal-dose-timing-no-deficit'
+    assert all(result[key] is False for key in screen.base.baseline.FALSE_FLAGS)
+
+
 @pytest.mark.parametrize('damage', ['report-hash', 'source', 'cases', 'decision', 'inventory', 'cuda'])
 def test_timing_receipt_rejects_mismatched_closeout_or_report(damage):
     closeout, report, expected = dose_timing_receipts()

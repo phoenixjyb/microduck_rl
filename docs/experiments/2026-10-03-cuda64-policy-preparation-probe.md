@@ -1,10 +1,11 @@
 # CUDA64 exact-parent policy/storage preparation probe
 
-Status: **source implementation reviewed and tested; native preflight pending**.
-No native CUDA64 result or learner admission is claimed. Commit and push the
-reviewed runner/tests and this declaration before exact-source WSL tests and
-native launch. Work must fit the unchanged **2026-10-03 20:00 Asia/Shanghai**
-cutoff, including complete independent closeout and retention.
+Status: **native CUDA64 preparation independently closed, non-admitting**, at
+exact source `48653c58121dec9a2b6ae2db059fc4d0911410cf`. Both ordered seeds and
+the whole-record CPU consistency closeout passed; no rollout, action sampling,
+return calculation or optimizer step occurred. The original predeclaration and
+failed first wrapper remain below. Continued work must fit the unchanged
+**2026-10-03 20:00 Asia/Shanghai** cutoff, including closeout and retention.
 
 ## Question and unchanged acceptance boundary
 
@@ -247,3 +248,85 @@ fast-forward before that check uses a separate CUDA-hidden source-sync service
 capped at 60 seconds / 2 GiB, with the same quota/priority/kill scope, held shared
 lease, two idle samples and before/after unchanged host/profile/service checks.
 No live Duck job may be present while source is advanced.
+
+## Closed native preparation result
+
+On October 3 at about 17:12 Shanghai time, the separate CPU closeout finished
+successfully. External verification then rehashed the complete ten-file run,
+rescored both raw payloads, checked the actual source/history/preflight/test
+bindings and original terminal services, and retained their whole journals.
+Decision: **`cuda64-preparation-closed-non-admitting`**. This qualifies the
+measured device **preparation** path only, not learner throughput, CUDA math
+replay, a stochastic sampler, a rollout, an update or a new Duck capability.
+
+| Retained service | Original invocation | Measured elapsed / cap | Manager memory peak / swap peak |
+| --- | --- | --- | --- |
+| `microduck-cuda64-source-sync-48653c58121d.service` | `d5dd92a752144364909210c838533c70` | 3.9039764599874616 s / 60 s | 1.4 GiB / zero |
+| `microduck-cuda64-policy-preflight-48653c58121d.service` | `d87e5eb667bf472ea7d95dd8766833a4` | 8.18338698381558 s / 180 s | 1.7 GiB / zero |
+| `microduck-cuda64-tests-48653c58121d.service` | `559c118fd8c74a7a8810457fb670d018` | 51.61565655004233 s / 240 s | 2.0 GiB / **2.0 GiB** |
+| `microduck-cuda64-policy-run-48653c58121d.service` | `3e53413286e54d47bc0a0ad208b5c54b` | 32.55153685482219 s / 360 s | 2.3 GiB / zero |
+| `microduck-cuda64-policy-closeout-48653c58121d.service` | `3da42837e1524a5db342d4b5c648ec27` | 7.634504311019555 s / 180 s | 585.2 MiB / zero |
+
+Elapsed values are the recorded wrapper/runner intervals, not a claim that
+imports or manager lifetime were excluded from the service cap. Every service
+was independently observed inactive with PID 0, zero restarts, exit 0 and
+`Result=success`. Successful transient invocation properties were garbage
+collected to an empty string; recorded invocation IDs were also checked against
+the original process entries in the whole journals. The native test child passed
+**492 tests in 40.06 seconds**, with no skips. Its swap peak is retained above;
+a successful CPU test is not a zero-swap or GPU-memory claim.
+
+Both CUDA children retained the exact unchanged actor/critic state hash
+`e5f51035fe5886b32295a9f39ce1a803dc16ac8a12bae13d3433b897f2ca8329`,
+real zero CUDA64-by-28 storage, empty Adam and unchanged caller CPU/CUDA RNG.
+The private generators stayed unconnected and unadvanced. Child compute PIDs
+were **2343925**, then **2344046**; the periodic samples observed only the
+respective owned PID. Maximum **sampled** GPU usage was **965 MiB total** and
+maximum sampled temperature **31 C**; these are not continuous peaks, training
+resource estimates or motor thermal metrics. Final two idle samples showed
+695 MiB, no compute process and 30 C. Both FilmBrain services retained their
+original active PIDs; all four protected system/user service states stayed
+inactive. All eight capability/admission flags and the additional learner gates
+remain false.
+
+The WSL run directory
+`artifacts/evaluations/stance-wsl-cuda64-policy-preparation-48653c58121d`
+contains exactly **10 files / 2,285,868 bytes**:
+
+| File | Bytes | Whole-file SHA256 |
+| --- | ---: | --- |
+| `launch.json` | 55,566 | `cb164a7171d08e0ddac7f7c424aef7b429798ad1ca15406d059be108550222e9` |
+| `cpu-parent-receipt.json` | 2,232 | `0f8e15e803ae13070c067ce5614651d9c0fc106e3d6fe81a16d22f408de9c2a7` |
+| `seed-653.pt` | 1,069,190 | `aef5a5d0f838aad8e3fb172adeba42b71d692982639fecbcd17580d8097e7fe1` |
+| `seed-653.json` | 16,838 | `bb094f15007012f520ce7a73a636858438267a373d7392122216291546c0c712` |
+| `seed-653.log` | 4,391 | `6aa1e08a7ad30fc7d6ae871837d5c04d668edf63cf13cc7d22fd1bebf37d27c1` |
+| `seed-659.pt` | 1,069,190 | `bd043bfd11929c2810dfcb8d86121a9b63f7082f80c444d6d12f0fbf45727ebe` |
+| `seed-659.json` | 16,838 | `801599e46a6944e44cc5a544aaa3503533d1e7aba617b420b215355a48e2f45b` |
+| `seed-659.log` | 4,391 | `f5037eaf46c383cc429e5b2f23ad42398ad6047eef54b529b01c5fc34a8b71f6` |
+| `report.json` | 41,500 | `ba94a173940499e2af1cc98cb5688453f826f812d44957f27109153cc9f7e72f` |
+| `independent-closeout.json` | 5,732 | `9b66dd80be8fd13c175c1385b16bf72b0a83018db13826b8fac54874e02d0e05` |
+
+Actual CPU preflight receipt SHA256:
+`68b9a971d312ad7ac7e625dd1ecb5633f973a7d5bb8ee6aa74e29add2b2a5a93`;
+native source-test receipt SHA256:
+`1052b5cf227602689caf358e03e33cf4bfddf2e62611e063af6d14226ab3fc3e`.
+The external verification directory is
+`artifacts/tools/cuda64-verified-48653c58121d`: its 59,090-byte `receipt.json`
+has SHA256 `25a0b5fdde74d41578a9ce1c74506f706ddba36085b3b54f779071a8bf09a6b2`
+and pins all original receipts, ten run files, five whole JSONL journals,
+original invocations, unchanged provenance and terminal states. Raw snapshots
+remain on WSL; they are diagnostic records, not student checkpoints.
+
+A compact Mac mirror at
+`artifacts/retained/cuda64-policy-closed-48653c58121d.oEZ9OK` contains exactly
+**19 files / 811,088 bytes**: eight non-binary run records, five source/preflight/
+test records and the six-file external verification directory. Every selected
+whole-file hash and byte count was verified after transfer. The original failed
+preflight and all previous successful/failed evidence were left untouched.
+
+The next useful source boundary is private CUDA0 default-stream isolation for
+the pinned stochastic sampler, then a separately declared no-update capture.
+Preparation's private generator does **not** yet drive `PPO.act`. Neither this
+result nor the no-deficit gentle screen justifies updating the passing parent.
+Real terminal/storage/reset, finite CUDA GAE, optimizer replay, per-attempt
+curriculum assignment and capability promotion remain separate gates.

@@ -1,8 +1,10 @@
 # Next learner boundary: CUDA64 is not the CPU2 gate
 
-Status: **reviewed source architecture and preparation callable; native CUDA64
-preparation remains pending**. No CUDA64 job or update is predeclared or admitted
-by this document. Existing protocols, artifacts and
+Status: **reviewed architecture; native CUDA64 preparation separately closed**.
+The [two-seed preparation probe](2026-10-03-cuda64-policy-preparation-probe.md)
+passed at exact source `48653c58121dec9a2b6ae2db059fc4d0911410cf`, without
+sampling, a rollout or an update. This architecture document itself admits no
+CUDA learner job or weight update. Existing protocols, artifacts and
 source closures stay immutable. The current authorization ends at 20:00
 Asia/Shanghai on 2026-10-03; any new job still needs its own tested source,
 retained fixed caps and sufficient complete closeout reserve.
@@ -11,6 +13,9 @@ retained fixed caps and sufficient complete closeout reserve.
 
 - Exact-parent CPU policy preparation supports real empty PPO/storage/Adam
   objects for 2 or 64 worlds. It does not collect or update.
+- Separately closed native CUDA64 preparation supports the exact transferred
+  parent, empty stock PPO/Adam/storage and preserved caller RNG for seeds
+  653/659. The private CUDA stream remains disconnected from the sampler.
 - The closed CPU2 28-transition record and one real 20-step Adam update qualify
   that CPU integration path. Its updated actor is diagnostic, not a new parent
   or accepted recovery policy.

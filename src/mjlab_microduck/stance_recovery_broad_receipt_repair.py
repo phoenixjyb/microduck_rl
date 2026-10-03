@@ -19,7 +19,7 @@ from mjlab_microduck import stance_recovery_broad_screen as broad
 from mjlab_microduck import stance_recovery_campaign_window as window
 from mjlab_microduck.first_attempt_smoke import require
 
-PROTOCOL = 'football-b1d-cpu-cardinal-dose-timing-receipt-repair-v1'
+PROTOCOL = 'football-b1d-cpu-cardinal-dose-timing-receipt-repair-v2'
 ARTIFACT_SOURCE = '1079a104a9e3bf83d56c0586cd2dd0374990e259'
 ARTIFACT_LAUNCH_SHA256 = 'cd016be8c088842f2697611d54047f937ff85f07298f347e6fcb7624adcfa7f8'
 ARTIFACT_REPORT_SHA256 = '2cfce295e32317d0ef4dafe201859b932235406679b1d4e66e850404dd39c783'
@@ -32,6 +32,13 @@ FAILURE_RECEIPT_SHA256 = '5d64c57fe65e3e38272f8f4aeafeef81017d338a499ffb47440734
 FAILURE_JOURNAL_SHA256 = '8d4f162edab25b285f15bc294b30b7ce8ef5d728f3533545cffefd55cb763bc2'
 FAILURE_RECEIPT_RELATIVE_PATH = 'artifacts/tools/cardinal-closeout-failure-1079a104a9e3/receipt.json'
 FAILURE_JOURNAL_RELATIVE_PATH = 'artifacts/tools/cardinal-closeout-failure-1079a104a9e3/journal.log'
+FAILURE_RECEIPT_LIMIT = 2 * 1024 * 1024
+FAILURE_JOURNAL_LIMIT = 16 * 1024 * 1024
+PREFLIGHT_FAILURE_SOURCE = '1dc0b3415942b36b854e9ceaa699fdc3eb56d57c'
+PREFLIGHT_FAILURE_INVOCATION = 'a2bf9ef353dc46db87cf4bbb0a0909b7'
+PREFLIGHT_FAILURE_RECEIPT_SHA256 = 'afb3d961fb0d98d69475ca80563ee9ab85d2442b3f616177f84330171791eaa9'
+PREFLIGHT_FAILURE_JOURNAL_SHA256 = 'fa998ca0608df7771b7362a5edfb35885db2e3108a172c6a1afef7f4374b70c3'
+PREFLIGHT_FAILURE_DIRECTORY = 'artifacts/tools/receipt-repair-preflight-failure-1dc0b3415942'
 
 SERVICE_SECONDS = 600
 WINDOW_MARGIN_SECONDS = 60
@@ -322,8 +329,8 @@ def _failure_link():
     root = base.host.ROOT
     receipt_path = root / FAILURE_RECEIPT_RELATIVE_PATH
     journal_path = root / FAILURE_JOURNAL_RELATIVE_PATH
-    receipt_raw = base.files.file_bytes(receipt_path, limit=2 * 1024**20)
-    journal_raw = base.files.file_bytes(journal_path, limit=16 * 1024**20)
+    receipt_raw = base.files.file_bytes(receipt_path, limit=FAILURE_RECEIPT_LIMIT)
+    journal_raw = base.files.file_bytes(journal_path, limit=FAILURE_JOURNAL_LIMIT)
     require(sha256(receipt_raw).hexdigest() == FAILURE_RECEIPT_SHA256
             and sha256(journal_raw).hexdigest() == FAILURE_JOURNAL_SHA256,
             'exact immutable original closeout failure receipt and journal bytes')
@@ -366,6 +373,49 @@ def _old_failed_service_state():
     require(state == dict(ActiveState='failed', MainPID='0', NRestarts='0',
         ExecMainStatus='1'), 'original failed closeout service remains untouched')
     return state
+
+
+def _preflight_failure_link():
+    """Authenticate the separate v1 preflight failure; never restart that unit."""
+    root = base.host.ROOT / PREFLIGHT_FAILURE_DIRECTORY
+    receipt = base.files.file_bytes(root / 'receipt.json', limit=FAILURE_RECEIPT_LIMIT)
+    journal = base.files.file_bytes(root / 'journal.log', limit=FAILURE_JOURNAL_LIMIT)
+    require(sha256(receipt).hexdigest() == PREFLIGHT_FAILURE_RECEIPT_SHA256
+            and sha256(journal).hexdigest() == PREFLIGHT_FAILURE_JOURNAL_SHA256
+            and b"OverflowError: cannot fit 'int' into an index-sized integer" in journal,
+            'exact retained v1 preflight failure evidence')
+    service = 'microduck-cpu-broad-repair-1dc0b3415942.service'
+    _check_preflight_failure_evidence(base.files.parse(receipt), journal)
+    state = {key: base.host.read('systemctl', '--user', 'show', service,
+        '-p', key, '--value') for key in ('ActiveState', 'MainPID', 'NRestarts', 'ExecMainStatus')}
+    require(state == dict(ActiveState='failed', MainPID='0', NRestarts='0', ExecMainStatus='1'),
+            'v1 preflight failure remains untouched')
+    return dict(evaluator_source=PREFLIGHT_FAILURE_SOURCE,
+        invocation_id=PREFLIGHT_FAILURE_INVOCATION,
+        receipt_sha256=PREFLIGHT_FAILURE_RECEIPT_SHA256,
+        journal_sha256=PREFLIGHT_FAILURE_JOURNAL_SHA256, service=service, service_state=state,
+        exact_error="OverflowError: cannot fit 'int' into an index-sized integer")
+
+
+def _check_preflight_failure_evidence(receipt, journal):
+    require(receipt['protocol'] == 'cpu-cardinal-repair-preflight-failure-evidence-v1'
+            and receipt['evaluator_source'] == PREFLIGHT_FAILURE_SOURCE
+            and receipt['artifact_source'] == ARTIFACT_SOURCE
+            and receipt['invocation_id'] == PREFLIGHT_FAILURE_INVOCATION
+            and receipt['service'] == 'microduck-cpu-broad-repair-1dc0b3415942.service'
+            and receipt['status'] == 'failed' and receipt['exec_main_status'] == 1
+            and receipt['source_file_sha256'] == '5d1e396f619f86b3796dc11c319571feb873f9d808f11e928f0d9d327a78e508'
+            and receipt['report_sha256'] == ARTIFACT_REPORT_SHA256
+            and receipt['failure_stage'] == 'failure-evidence-read-before-replay'
+            and receipt['error'] == 'OverflowError: cannot fit an integer read limit into a platform index'
+            and receipt['journal_sha256'] == PREFLIGHT_FAILURE_JOURNAL_SHA256
+            and receipt['journal_bytes'] == len(journal)
+            and all(receipt[key] is False for key in ('original_artifacts_modified',
+                'original_service_restarted', 'repair_service_restarted',
+                'capture_collection_performed', 'replay_started',
+                'repair_output_created', 'acceptance_changed')),
+            'v1 preflight failure receipt semantics match exact retained linkage')
+    return True
 
 
 def receipt_result(evaluator_source, launch_sha256, inventory,
@@ -457,6 +507,8 @@ def run(evaluator_source):
             'qualification file remains in original report inventory')
     inventory = _check_inventory(old_root, report)
     failure = _failure_link()
+    preflight_failure = _preflight_failure_link()
+    failure['previous_repair_preflight'] = preflight_failure
     old_service_before = _old_failed_service_state()
     failure['old_service_state'] = old_service_before
     source_hashes = source_inventory()
@@ -499,7 +551,8 @@ def run(evaluator_source):
                 and _old_failed_service_state() == old_service_before
                 and _check_inventory(old_root, report) == inventory
                 and _failure_link() == {key: value for key, value in failure.items()
-                    if key != 'old_service_state'}
+                    if key not in ('old_service_state', 'previous_repair_preflight')}
+                and _preflight_failure_link() == preflight_failure
                 and time.monotonic() - started < SERVICE_SECONDS,
                 'source/profile/services unchanged after bounded replay')
         window.check()

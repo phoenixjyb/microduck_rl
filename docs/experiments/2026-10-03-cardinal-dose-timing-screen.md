@@ -145,4 +145,57 @@ in-package files. These are source checks, not native replay. Independent
 read-only review found no concrete launch blocker. The failure receipt and
 journal Mac mirror at
 `artifacts/retained/cardinal-closeout-failure-1079a104a9e3.cdZVv5` matches both
-original whole-byte hashes. No repair service has run yet.
+original whole-byte hashes.
+
+## Repair v1 preflight failure and separately declared v2
+
+The reviewed repair source `1dc0b3415942b36b854e9ceaa699fdc3eb56d57c`
+was pushed and verified on the fork. A clean guarded WSL fast-forward retained
+transition receipt SHA
+`4fb5ba39ecd9cd91e34f5533b2a95548158691b5ea1ba61383d96dda2d88a729`.
+Fresh WSL source tests passed **145 in 27.02 seconds**, invocation
+`e25f9148f9cf44ebb03f2e36b49d62af`; test-receipt SHA
+`3d429c41ef4af270471c825160514962d43a8279adb4db3ea5d3311026a094cb`.
+The capped test service reached about 2 GiB memory and 1.86 GiB swap; this is
+test-fixture resource evidence, not native simulation memory qualification.
+
+Repair service `microduck-cpu-broad-repair-1dc0b3415942.service`, invocation
+`a2bf9ef353dc46db87cf4bbb0a0909b7`, failed at preflight on 2026-10-03
+10:57:05 Shanghai, approximately 12 seconds after starting. It reported
+9.83964 CPU seconds, 947,298,304 bytes peak memory and zero swap. Exact error:
+`OverflowError: cannot fit 'int' into an index-sized integer`.
+Read-only diagnosis found the intended 2/16 MiB failure-evidence read bounds
+were incorrectly written as `2 * 1024**20` and `16 * 1024**20`, exceeding
+the platform index range. The error occurred before replay and before a repair
+output directory was created. Parsed-schema tests had not exercised this
+actual bounded-reader path.
+
+The original 79 files were fully rehashed unchanged. Both failed services remain
+failed with no restarts. Separate preflight-failure evidence is retained under
+`artifacts/tools/receipt-repair-preflight-failure-1dc0b3415942`:
+
+- Receipt SHA: `afb3d961fb0d98d69475ca80563ee9ab85d2442b3f616177f84330171791eaa9`.
+- Journal SHA: `fa998ca0608df7771b7362a5edfb35885db2e3108a172c6a1afef7f4374b70c3`.
+- Failed repair file SHA: `5d1e396f619f86b3796dc11c319571feb873f9d808f11e928f0d9d327a78e508`.
+
+The receipt's `error` field is a diagnosis summary; the pinned invocation
+journal contains the exact exception quoted above. No native replay or successful
+repair is implied by these hashes.
+
+Protocol `football-b1d-cpu-cardinal-dose-timing-receipt-repair-v2` fixes only
+those read bounds, naming the literal **2 MiB / 16 MiB** limits and testing the
+actual bounded reader on small synthetic files. It additionally authenticates
+the v1 preflight-failure receipt/journal and verifies that failed unit remains
+untouched before and after replay. The same original captures, gates, 600-second
+/ 2-GiB service cap and 660-second deadline reserve apply. One separately
+predeclared new-source audit may run after its focused tests and exact-source
+WSL checks pass; do not restart the v1 unit or rerun any physics capture.
+The updated CUDA-hidden Mac integration suite passed **146 in 17.91 seconds**.
+After adding parsed preflight-failure identity checks and a second actual-file
+regression, the final adjacent suite passed **147 in 17.71 seconds**. The exact
+mirrored native preflight receipt/journal passed those parsed semantic checks;
+the unchanged-source Git inventory still covered 85 files. These are file/source
+checks, not replay evidence. The preflight-failure Mac mirror at
+`artifacts/retained/receipt-repair-preflight-failure-1dc0b3415942.FqSsyi`
+matches both whole-byte pins.
+Native v2 execution and successful independent closure are still pending.

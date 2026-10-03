@@ -1,4 +1,6 @@
-"""Pure policy/receipt checks; no host, simulator, CUDA, or replay evidence."""
+"""Synthetic policy/receipt/file checks; no host, simulator or replay evidence."""
+from hashlib import sha256
+
 import pytest
 
 from mjlab_microduck import stance_recovery_broad_receipt_repair as repair
@@ -177,3 +179,62 @@ def test_failure_linkage_semantics_are_pure_checks_not_host_attestation():
     receipt['original_service_restarted'] = True
     with pytest.raises(ValueError, match='original failed closeout invocation'):
         repair._check_failure_evidence(receipt, journal)
+
+
+def test_failure_link_reads_real_small_files_with_exact_mebibyte_limits(tmp_path, monkeypatch):
+    # Exercise the actual bounded reader, not only the parsed schema or a spy.
+    assert repair.FAILURE_RECEIPT_LIMIT == 2 * 1024**2
+    assert repair.FAILURE_JOURNAL_LIMIT == 16 * 1024**2
+    journal = b"TypeError: dict() got multiple values for keyword argument 'independent_gpu_attestation'"
+    receipt = dict(protocol='cpu-cardinal-closeout-failure-evidence-v1',
+        invocation_id=repair.FAILED_INVOCATION, artifact_source=ARTIFACT,
+        report_sha256=repair.ARTIFACT_REPORT_SHA256,
+        source_file_sha256=repair.ARTIFACT_BROAD_SHA256,
+        service='microduck-cpu-broad-closeout-1079a104a9e3.service',
+        failure_stage='receipt-construction-after-replay-guards',
+        error=journal.decode(), journal_sha256=sha256(journal).hexdigest(),
+        journal_bytes=len(journal), exec_main_status=1, status='failed',
+        acceptance_changed=False, original_artifacts_modified=False,
+        original_service_restarted=False)
+    receipt_path = tmp_path / repair.FAILURE_RECEIPT_RELATIVE_PATH
+    receipt_path.parent.mkdir(parents=True)
+    repair.base.files.write_json(receipt_path, receipt)
+    (tmp_path / repair.FAILURE_JOURNAL_RELATIVE_PATH).write_bytes(journal)
+    monkeypatch.setattr(repair.base.host, 'ROOT', tmp_path)
+    monkeypatch.setattr(repair, 'FAILURE_RECEIPT_SHA256', sha256(receipt_path.read_bytes()).hexdigest())
+    monkeypatch.setattr(repair, 'FAILURE_JOURNAL_SHA256', sha256(journal).hexdigest())
+    result = repair._failure_link()
+    assert result['receipt_sha256'] == repair.FAILURE_RECEIPT_SHA256
+    assert result['journal_sha256'] == repair.FAILURE_JOURNAL_SHA256
+
+
+def test_preflight_link_reads_real_small_files_and_binds_parsed_identity(tmp_path, monkeypatch):
+    journal = b"OverflowError: cannot fit 'int' into an index-sized integer"
+    receipt = dict(protocol='cpu-cardinal-repair-preflight-failure-evidence-v1',
+        evaluator_source=repair.PREFLIGHT_FAILURE_SOURCE, artifact_source=ARTIFACT,
+        invocation_id=repair.PREFLIGHT_FAILURE_INVOCATION,
+        service='microduck-cpu-broad-repair-1dc0b3415942.service', status='failed', exec_main_status=1,
+        source_file_sha256='5d1e396f619f86b3796dc11c319571feb873f9d808f11e928f0d9d327a78e508',
+        report_sha256=repair.ARTIFACT_REPORT_SHA256,
+        failure_stage='failure-evidence-read-before-replay',
+        error='OverflowError: cannot fit an integer read limit into a platform index',
+        journal_sha256=sha256(journal).hexdigest(), journal_bytes=len(journal),
+        original_artifacts_modified=False, original_service_restarted=False,
+        repair_service_restarted=False, capture_collection_performed=False,
+        replay_started=False, repair_output_created=False, acceptance_changed=False)
+    root = tmp_path / repair.PREFLIGHT_FAILURE_DIRECTORY
+    root.mkdir(parents=True)
+    repair.base.files.write_json(root / 'receipt.json', receipt)
+    (root / 'journal.log').write_bytes(journal)
+    monkeypatch.setattr(repair.base.host, 'ROOT', tmp_path)
+    monkeypatch.setattr(repair, 'PREFLIGHT_FAILURE_RECEIPT_SHA256', sha256((root / 'receipt.json').read_bytes()).hexdigest())
+    monkeypatch.setattr(repair, 'PREFLIGHT_FAILURE_JOURNAL_SHA256', sha256(journal).hexdigest())
+    state = dict(ActiveState='failed', MainPID='0', NRestarts='0', ExecMainStatus='1')
+    monkeypatch.setattr(repair.base.host, 'read', lambda *args: state[args[-2]])
+    result = repair._preflight_failure_link()
+    assert result['invocation_id'] == repair.PREFLIGHT_FAILURE_INVOCATION
+    assert result['service_state'] == state
+    for field, value in (('evaluator_source', 'b'*40), ('invocation_id', 'c'*32),
+                         ('repair_service_restarted', True), ('replay_started', True)):
+        with pytest.raises(ValueError, match='receipt semantics'):
+            repair._check_preflight_failure_evidence(receipt | {field: value}, journal)

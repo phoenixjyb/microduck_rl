@@ -245,3 +245,72 @@ retains all nine audit/source/test/admission/verification files and invocation
 journals: **169,962 bytes**, whole-byte verified. The original capture is already
 mirrored separately; this copy adds no replacement rollout. Mac checks parsed
 and rehashed those files only, and did not pretend to run the native WSL scorer.
+
+## Next bounded one-update predeclaration
+
+Protocol `football-b1d-cpu-scheduled-ppo-one-update-probe-v1` is an integration
+diagnostic, not recovery-curriculum training or an accepted replacement policy.
+Before execution its reviewed implementation and focused tests must be committed
+and pushed, and the clean frozen WSL checkout must fast-forward to that exact
+fork revision with no owned job active. Its launch must bind the three closed
+audit hashes above, distinct artifact/evaluator sources, the unchanged parent,
+historical prerequisite receipts, source/profile identity and fixed campaign
+cutoff. Retain FilmBrain and all three failed service invocations unchanged.
+
+Use one new retained CUDA-hidden **360-second, 2-GiB, 200%-CPU, Nice-10,
+control-group** capture service and a separate **240-second** CPU closeout with
+the same memory/CPU/ownership properties. Reserve **660 seconds** before 20:00
+at launch. These conservative ceilings are not throughput guarantees: the
+earlier warm-cache collection took 3.56 seconds and its saved audit 3.22 seconds.
+Collection remains capped at 120 seconds; leave a fixed retention/update margin
+inside the service cap, and enough remaining window for independent closeout.
+No owned Duck service may overlap another; preserve the existing GPU lease,
+idle/source/protected-service checks and frozen CPU math profile.
+
+Construct one fresh actual eager packed CPU2 scheduled runtime and exact
+non-synthetic bridge from the unchanged parent, training seed 653, with the
+same zero and early +x-2-N/40-ms rows. Collect exactly 28 transitions/280 physics
+steps, without retuning, replaying collection, moving a cursor or changing actor
+observations. Persist checkpoint and launch first, then the complete raw
+transition trace and metadata before any scoring or optimizer attempt. Update
+only after fresh independent source-trace verification, complete nonterminal
+collection, empty Adam and exact learner storage/RNG/model/endpoint binding.
+
+Attempt `optimizer_trace.capture()` once: exactly one actual bridge update and
+20 Adam steps. Prewrite a typed capture-attempt marker and durable pre-update
+diagnostic state. Observe the real Adam hooks and retain unique, non-overwritten
+CPU model/Adam/storage/GAE/counter/RNG snapshots after each completed finite step.
+On a Python exception, retain a separate typed failure-state snapshot and error
+report, remove observers and stop without retry. Such diagnostic states are not
+scorable accepted checkpoints, exports or resume permissions. A hard kill can
+leave a step in progress after the last durable state; report that uncertainty
+instead of treating the durable prefix as a complete update. Raw transition
+and optimizer artifacts are individually bounded at 64 MiB. The supervisor also
+enforces a 64-MiB aggregate raw budget, including the parent, transition, optimizer
+and intermediate diagnostic states. Persist successful optimizer evidence and
+metadata immediately, before later host/deadline checks.
+
+Independent closeout must rehash the exact retained file inventory and replay
+the same optimizer math from the parent and transition storage via public
+`add_transition()`: exact GAE, updated actor/critic state, named Adam moments and
+scalar steps, private minibatch RNG, metrics and 20 finite-hook observations.
+It creates no environment and performs no fresh physics simulation. Only a
+complete successful run, unchanged source/profile/services/caps and exact replay
+may receive an optimizer-integration decision. All capability/admission/export/
+GPU/thermal/physical flags remain false; full timeout/selective-reset and learner
+throughput remain separate unrun gates. An unexpected terminal rejects collection
+before updating; the existing bridge may already selectively reset that terminal
+row, so a rejected attempt must not falsely declare zero simulator resets.
+
+This source preparation admits no job until the tested exact revision is ready.
+Do not train the 25 passing unchanged-parent screen cells for presumed improvement.
+
+Local CUDA-hidden source regression on 2026-10-03 passed **209 tests in 28.78
+seconds** across the 12 affected recovery-screen/bridge/trace/supervisor test
+files. The focused optimizer trace and supervisor set passed **34 tests**;
+Ruff and `git diff --check` were clean. The new supervisor tests cover fresh
+Adam pre/post hooks, once-only update invocation, observer cleanup if the
+capture marker cannot be retained, typed partial-step/RNG context and the
+closed saved-audit prerequisite reader. These are source checks, not a WSL
+native optimizer or capability result. A capped frozen-profile WSL test and
+exact launch/source gates remain required before the diagnostic is admitted.

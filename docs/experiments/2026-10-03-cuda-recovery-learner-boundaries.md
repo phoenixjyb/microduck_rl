@@ -1,6 +1,7 @@
 # Next learner boundary: CUDA64 is not the CPU2 gate
 
-Status: **reviewed architecture; native CUDA64 preparation separately closed**.
+Status: **reviewed architecture; native CUDA64 preparation and fixed-input
+sampler separately closed**.
 The [two-seed preparation probe](2026-10-03-cuda64-policy-preparation-probe.md)
 passed at exact source `48653c58121dec9a2b6ae2db059fc4d0911410cf`, without
 sampling, a rollout or an update. This architecture document itself admits no
@@ -15,7 +16,13 @@ retained fixed caps and sufficient complete closeout reserve.
   objects for 2 or 64 worlds. It does not collect or update.
 - Separately closed native CUDA64 preparation supports the exact transferred
   parent, empty stock PPO/Adam/storage and preserved caller RNG for seeds
-  653/659. The private CUDA stream remains disconnected from the sampler.
+  653/659. Preparation alone leaves the private stream disconnected.
+- The separately [closed fixed-input CUDA sampler](2026-10-03-cuda64-shadow-sampler-probe.md)
+  at `1b96ccaac1326d6f0a1e00cdff8950b91a2916be` installs and advances private
+  CUDA0 state around 28 stock calls in each of four fresh children; both seed
+  capture/replay pairs are exact under the declared caller-state exclusions.
+  This uses synthetic zero inputs, no physics or storage writes. It qualifies
+  only sampler/RNG wiring, not physical feedback, terminal transitions or GAE.
 - The closed CPU2 28-transition record and one real 20-step Adam update qualify
   that CPU integration path. Its updated actor is diagnostic, not a new parent
   or accepted recovery policy.

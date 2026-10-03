@@ -1,6 +1,10 @@
 # CUDA64 private-state shadow sampler predeclaration
 
-Status: **owner-reviewed and source-tested predeclaration; no native job launched**.
+Status: **native fixed-input capture/replay independently closed, non-admitting**.
+The original predeclaration below was executed at exact source
+`1b96ccaac1326d6f0a1e00cdff8950b91a2916be`; its separately retained outcome is
+recorded at the end of this document. No environment rollout or weight update
+was performed.
 This is a wiring diagnostic after the independently closed
 [CUDA64 preparation](2026-10-03-cuda64-policy-preparation-probe.md), not Duck
 training, a rollout, a curriculum promotion or physical permission. Authorization
@@ -198,3 +202,72 @@ That complete owner regression subsequently passed **679 tests in 80.18 seconds*
 CUDA hidden, no skips; the final 48-case probe suite passed in **7.24 seconds**.
 Ruff 0.15.7, compilation, relative links and whitespace checks passed. A bounded
 read-only Luna review found no remaining hard blocker in the new failure binding.
+
+## Native outcome and independent retention
+
+All four fresh CUDA0 children completed in the declared order, PIDs
+2373842 / 2374104 / 2374366 / 2374628. Each retained 28 stock `PPO.act` calls,
+29 private-state boundaries and its own preserved actual caller streams.
+Both seed pairs matched exactly except the two predeclared caller-state fields;
+there were no additional exclusions. The unchanged D1 weights, empty Adam and
+zero storage were authenticated before and after. There were **zero simulation
+steps, zero optimizer steps and no new checkpoint or accepted Duck skill**.
+
+The hidden-CPU native 25-file source suite passed **679 tests in 41.57 seconds**,
+with no skips. All five new original services finished successfully, exit 0,
+PID 0, restart count 0. Their whole retained process journals authenticate the
+original invocation IDs even after transient-unit garbage collection:
+
+| Phase / unit suffix `1b96ccaac132.service` | Original invocation | Body elapsed | Systemd elapsed / peak memory / swap |
+| --- | --- | --- | --- |
+| `microduck-cuda64-shadow-source-sync-` | `d1264b46097446d7b9ce618f2cba74ba` | 3.968 s | 12.369 s / 936.8 MiB / 0 |
+| `microduck-cuda64-shadow-preflight-` | `c2846242d34349d6b5d8290838e9d278` | 8.652 s | 16.223 s / 1.7 GiB / 0 |
+| `microduck-cuda64-shadow-tests-` | `0e5ec4bd16e340eda5d0725b08212939` | 58.353 s | 65.803 s / 2.0 GiB / **2.1 GiB** |
+| `microduck-cuda64-shadow-run-` | `a4e6238c17a142e6b2d3fb97ad0aa169` | 54.463 s | 62.300 s / 1.6 GiB / 0 |
+| `microduck-cuda64-shadow-closeout-` | `888087ec299742ed90f66b0e652baf4f` | 8.083 s | 15.764 s / 605.7 MiB / 0 |
+
+The test phase did use swap; the successful CUDA run did not. Body and systemd
+startup-inclusive times are distinct. All stayed inside their predeclared
+service caps. Sampled GPU maxima were **32°C** and **992 MiB total occupancy**;
+afterward it was idle at 0%, 691 MiB, 31°C with no compute PID. These are sampled
+GPU observations, not continuous peaks or motor-thermal measurements.
+
+The independent closeout rescored all raw preparation and sampler tensors and
+both exact pairs. A separate CUDA-hidden external verifier then repeated whole
+inventory, original journals/invocations, current prerequisites, source bundle,
+native test log, failed-unit preservation and raw decision checks in **8.626 s**
+under its 180-second cap. Decision:
+`fixed-input-cuda64-shadow-closed-non-admitting`.
+Only `native_fixed_input_cuda_capture_replay_verified` is true;
+`cuda_math_replayed_by_cpu_verifier`, transition/optimizer qualification and all
+eight capability flags remain false. CPU algebra/equality checks are not an
+independent replay of CUDA mathematics.
+
+Native namespace `artifacts/evaluations/stance-wsl-cuda64-shadow-1b96ccaac132`
+contains **16 files / 17,246,164 bytes**. Whole-file SHA256 anchors:
+
+| Retained record | SHA256 |
+| --- | --- |
+| `launch.json` | `73c27d905023b19a7713dedf2fc4637f16f6eee7f123107533e611b0b480acf6` |
+| `report.json` | `553787df5fa3db6260b7b6d417d781309b5d6578d37475652719d3532dfb99ad` |
+| `independent-closeout.json` | `5893050238944cc006fea386549d7aa5975b747a1a537020043bd1794ccddc83` |
+| External verification `receipt.json` | `38c3714d23b1b3c217027a623960e0232654109f4b87d85754edeec1e1bb7460` |
+| Corrected source-sync `receipt.json` | `8141d50e0f95545ae29abc4f44301745e3a23b2e6cbdff5178446d86bc750395` |
+| Actual native preflight `receipt.json` | `66502426ebe18eb2e955a36cb7c1a0594c04474d06e6fefb22c309f604ec1ebd` |
+| Native test `receipt.json` | `708e6fbde967c2a6ab6ff315dbaea71fc90ed012302d72a6448089942f0ed726` |
+| Whole native `pytest.log` | `09fc1049541edc76753e63d41cba06b71a3770cc137df1772c419ee56f2d41c8` |
+
+The external receipt pins every raw/JSON/log file, six source/preflight/test
+files and five whole original journals. Both native originals and a separately
+copied Mac mirror are durable. The mirror at
+`artifacts/retained/cuda64-shadow-closed-1b96ccaac132.GZesKH` was independently
+rehashed against those pins and the unchanged failed original source-sync
+receipt/bundle/failure journal/receipt: **all 32 files / 18,319,761 bytes match**.
+The original failed unit remains failed and has never been reset or retried.
+FilmBrain's two original services/PIDs/restart counts stayed unchanged; both
+system/user AI Mission services stayed inactive.
+
+The next open boundary is terminal-aware CUDA transition/storage integration,
+including pre-reset critic observations, exactly-once timeout bootstrap,
+raw-action storage and store-before-reset ordering. Fixed-input sampling does
+not close that boundary or justify updating a passing no-deficit parent.

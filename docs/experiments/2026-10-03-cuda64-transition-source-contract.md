@@ -87,7 +87,10 @@ A 28-call fresh-runtime trace can reach only 280 accepted substeps, not the
 timeout/storage/reset and untouched-sibling selective-reset gates open. They
 require a separately designed naturally observed episode protocol; never inject
 clocks or failures to manufacture qualification. Stock NaN-filling GAE and
-CUDA optimizer replay also remain unimplemented/unqualified for this sibling.
+CUDA optimizer replay remain unqualified for this sibling. A separate
+[finite-return source helper](2026-10-03-cuda64-finite-returns-source-contract.md)
+now computes checked GAE without invoking the stock NaN repair; it still has
+no native qualification or optimizer/update path.
 
 The [combined catalog coverage](2026-10-03-recovery-catalog-coverage.md) found
 no unchanged-parent deficit across all 45 declared push cells. Keep that parent

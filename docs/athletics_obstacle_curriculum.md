@@ -214,6 +214,29 @@ keeps timing and dose expansion separate from the frozen D1 protocol and screens
 the unchanged actor before spending training time. It is source-only: no new
 learner, job admission or football capability follows from that proposal.
 
+October 3 evening addition: the separately closed cardinal and gentle
+screens cover all **45 declared dose/timing/diagonal cells**, with **46 complete
+passing first attempts** and the zero-control cell repeated. The
+[whole-byte checked coverage synthesis](experiments/2026-10-03-recovery-catalog-coverage.md)
+is not a new experiment or randomized recovery promotion: both screens used
+one deterministic evaluation seed. Keep the passing D1 actor unchanged rather
+than train those same cells again. A genuine new gap requires an explicit
+initial-state, plant or terrain declaration and independently replicated
+first-attempt failure; the original held-out and motor gates stay unchanged.
+
+The [CUDA64 fixed-input sampler](experiments/2026-10-03-cuda64-shadow-sampler-probe.md)
+has separately closed native private-RNG capture/replay at frozen WSL source
+`1b96ccaac1326d6f0a1e00cdff8950b91a2916be`, using synthetic zero inputs and no
+physics, storage writes or updates. The subsequent
+[transition collector](experiments/2026-10-03-cuda64-transition-source-contract.md)
+and [finite-return helper](experiments/2026-10-03-cuda64-finite-returns-source-contract.md)
+are reviewed source contracts only; neither is installed or qualified on WSL.
+The final CUDA-hidden source regression passes **737 tests**, not a GPU rollout
+or new learned skill. Natural terminal/storage/reset, physical CUDA64 feedback,
+native finite-return replay and optimizer qualification remain distinct open
+gates. The renewed window ends **October 3 at 20:00 Shanghai**; start no new work
+at that cutoff and leave FilmBrain/protected services unchanged.
+
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled
 rolling (B4). Ball-only tests or an unstepped geometry fixture do not clear B0.

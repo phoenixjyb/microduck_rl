@@ -858,3 +858,305 @@ def test_twenty_eight_step_bound_never_updates(synthetic_collector, monkeypatch)
         collector.collect_one()
     assert collector.storage.step == 28
     assert SYNTHETIC_BACKEND == "SYNTHETIC_CPU_RSL_NO_CUDA"
+
+
+class _SyntheticMathRngScope:
+    """CPU fork fixture; explicitly does not inspect or preserve CUDA RNG."""
+
+    def __enter__(self):
+        self.cpu_before = torch.random.get_rng_state().clone()
+        self.context = torch.random.fork_rng(devices=[])
+        self.context.__enter__()
+        return None
+
+    def __exit__(self, exc_type, exc, tb):
+        result = self.context.__exit__(exc_type, exc, tb)
+        assert torch.equal(self.cpu_before, torch.random.get_rng_state())
+        return result
+
+
+def _full_synthetic_collector(collector):
+    for _ in range(28):
+        collector.collect_one()
+    assert collector.phase == "full"
+    return collector
+
+
+def _independent_gae_reference(rewards, values, dones, last, gamma, lam):
+    horizon, worlds, _ = rewards.shape
+    reference_returns = torch.zeros_like(values)
+    advantage = torch.zeros_like(last)
+    for index in range(horizon - 1, -1, -1):
+        following = last if index == horizon - 1 else values[index + 1]
+        continuation = 1.0 - dones[index].float()
+        delta = rewards[index] + gamma * continuation * following - values[index]
+        advantage = delta + gamma * lam * continuation * advantage
+        reference_returns[index] = advantage + values[index]
+    raw = reference_returns - values
+    normalized = (raw - raw.mean()) / (raw.std(correction=1) + 1e-8)
+    assert reference_returns.shape == (horizon, worlds, 1)
+    return reference_returns, raw, normalized
+
+
+def test_finite_returns_match_independent_gae_and_preserve_inputs(
+    synthetic_collector, monkeypatch
+):
+    from mjlab_microduck import stance_recovery_cuda_returns as finite_returns
+
+    collector = _full_synthetic_collector(synthetic_collector)
+    monkeypatch.setattr(finite_returns, "_math_rng_scope", _SyntheticMathRngScope)
+    storage = collector.storage
+    storage.rewards.copy_(torch.linspace(-0.4, 1.1, 28 * 64).reshape(28, 64, 1))
+    storage.values.copy_(torch.linspace(-0.2, 0.3, 28 * 64).reshape(28, 64, 1))
+    storage.dones.zero_()
+    storage.dones[2, 0, 0] = 1
+    storage.dones[10, 1, 0] = 1
+    storage.dones[27, 2, 0] = 1
+    rewards = storage.rewards.clone()
+    values = storage.values.clone()
+    dones = storage.dones.clone()
+    model_states = checkpoint.states_of(collector.actor, collector.critic)
+    model_states = {
+        model: {name: tensor.clone() for name, tensor in state.items()}
+        for model, state in model_states.items()
+    }
+    private_before = collector.scope.state
+    caller_before = torch.random.get_rng_state().clone()
+    optimizer_state_before = deepcopy(collector.algorithm.optimizer.state_dict())
+    critic_calls = []
+    original_forward = collector.critic.forward
+
+    def record_next_observations(obs, *args, **kwargs):
+        critic_calls.append({key: value.clone() for key, value in obs.items()})
+        return original_forward(obs, *args, **kwargs)
+
+    monkeypatch.setattr(collector.critic, "forward", record_next_observations)
+    result = finite_returns.compute_finite_returns(collector)
+    expected_returns, expected_raw, expected_normalized = _independent_gae_reference(
+        rewards,
+        values,
+        dones,
+        result["last_critic_values"],
+        collector.algorithm.gamma,
+        collector.algorithm.lam,
+    )
+    assert torch.equal(result["returns"], expected_returns)
+    assert torch.equal(result["raw_advantages"], expected_raw)
+    assert torch.allclose(result["normalized_advantages"], expected_normalized)
+    assert torch.equal(storage.returns, expected_returns)
+    assert torch.allclose(storage.advantages, expected_normalized)
+    assert len(critic_calls) == 1
+    assert all(
+        torch.equal(critic_calls[0][key], collector.env.observations()[key])
+        for key in critic_calls[0]
+    )
+    assert torch.equal(storage.rewards, rewards)
+    assert torch.equal(storage.values, values)
+    assert torch.equal(storage.dones, dones)
+    assert torch.equal(private_before, collector.scope.state)
+    assert torch.equal(caller_before, torch.random.get_rng_state())
+    assert all(
+        torch.equal(model_states[model][name], tensor)
+        for model, state in checkpoint.states_of(
+            collector.actor, collector.critic
+        ).items()
+        for name, tensor in state.items()
+    )
+    assert collector.algorithm.optimizer.state_dict() == optimizer_state_before
+    assert collector.storage.step == collector.transitions == 28
+    assert collector.phase == "returns-computed"
+    assert result["receipt"]["optimizer_steps"] == 0
+    assert result["receipt"]["storage_cleared"] is False
+    assert result["receipt"]["native_finite_gae_qualified"] is False
+    assert all(result["receipt"][key] is False for key in preparation.FALSE_FLAGS)
+
+
+def test_finite_returns_constant_advantage_is_finite_zero(
+    synthetic_collector, monkeypatch
+):
+    from mjlab_microduck import stance_recovery_cuda_returns as finite_returns
+
+    collector = _full_synthetic_collector(synthetic_collector)
+    monkeypatch.setattr(finite_returns, "_math_rng_scope", _SyntheticMathRngScope)
+    collector.storage.rewards.fill_(1.25)
+    collector.storage.values.fill_(0.25)
+    collector.storage.dones.fill_(1)
+    result = finite_returns.compute_finite_returns(collector)
+    assert torch.equal(result["returns"], torch.full((28, 64, 1), 1.25))
+    assert torch.equal(result["raw_advantages"], torch.ones((28, 64, 1)))
+    assert torch.isfinite(result["normalized_advantages"]).all()
+    assert torch.equal(result["normalized_advantages"], torch.zeros((28, 64, 1)))
+
+
+@pytest.mark.parametrize(
+    "corrupt,match",
+    [
+        ("incomplete", "full 28-transition collector"),
+        ("repeat", "full 28-transition collector"),
+        ("nonfinite", "stored rewards"),
+        ("overflow", "GAE intermediate"),
+        ("nonbinary-dones", "binary stored dones"),
+        ("wrong-layout", "stored returns"),
+        ("written-targets", "fresh unwritten returns and advantages"),
+    ],
+)
+def test_finite_returns_reject_invalid_or_repeated_targets(
+    synthetic_collector, monkeypatch, corrupt, match
+):
+    from mjlab_microduck import stance_recovery_cuda_returns as finite_returns
+
+    collector = synthetic_collector
+    monkeypatch.setattr(finite_returns, "_math_rng_scope", _SyntheticMathRngScope)
+    if corrupt != "incomplete":
+        _full_synthetic_collector(collector)
+    if corrupt == "repeat":
+        finite_returns.compute_finite_returns(collector)
+        with pytest.raises(ValueError, match=match):
+            finite_returns.compute_finite_returns(collector)
+        assert collector.faulted and collector.phase == "faulted"
+        return
+    if corrupt == "nonfinite":
+        collector.storage.rewards[0, 0, 0] = float("nan")
+    elif corrupt == "overflow":
+        collector.storage.rewards.fill_(3e38)
+    elif corrupt == "nonbinary-dones":
+        collector.storage.dones[0, 0, 0] = 2
+    elif corrupt == "wrong-layout":
+        collector.storage.returns = collector.storage.returns[:, :, 0]
+    elif corrupt == "written-targets":
+        collector.storage.advantages.fill_(0.5)
+    error = (
+        AssertionError
+        if corrupt in ("nonfinite", "overflow", "wrong-layout")
+        else ValueError
+    )
+    if corrupt == "overflow":
+        error = AssertionError
+    with pytest.raises(error, match=match):
+        finite_returns.compute_finite_returns(collector)
+    assert collector.faulted and collector.phase == "faulted"
+    assert not collector.algorithm.optimizer.state
+
+
+@pytest.mark.parametrize("draw", ["none", "cpu", "synthetic-cuda"])
+def test_actual_finite_math_rng_scope_refuses_draws_and_restores_callers(
+    monkeypatch, draw
+):
+    from mjlab_microduck import stance_recovery_cuda_returns as finite_returns
+
+    cuda_state = {"value": torch.tensor([11, 22, 33], dtype=torch.uint8)}
+    before_cuda = cuda_state["value"].clone()
+    before_cpu = torch.random.get_rng_state().clone()
+    calls = []
+
+    def fake_get_rng_state(device=0):
+        assert device == 0
+        calls.append("get")
+        return cuda_state["value"].clone()
+
+    def fake_set_rng_state(state, device=0):
+        assert device == 0
+        calls.append("set")
+        cuda_state["value"] = state.detach().cpu().clone()
+
+    monkeypatch.setattr(torch.cuda, "get_rng_state", fake_get_rng_state)
+    monkeypatch.setattr(torch.cuda, "set_rng_state", fake_set_rng_state)
+    scope = finite_returns._math_rng_scope()
+    if draw == "none":
+        with scope:
+            pass
+    else:
+        with pytest.raises(
+            ValueError, match="finite returns must consume no caller random draws"
+        ):
+            with scope:
+                if draw == "cpu":
+                    torch.rand(3)
+                else:
+                    cuda_state["value"] = torch.tensor([44, 55, 66], dtype=torch.uint8)
+    assert torch.equal(before_cpu, torch.random.get_rng_state())
+    assert torch.equal(before_cuda, cuda_state["value"])
+    assert calls.count("get") >= 2 and calls.count("set") >= 1
+
+
+def test_actual_finite_math_rng_scope_restores_after_body_exception(monkeypatch):
+    from mjlab_microduck import stance_recovery_cuda_returns as finite_returns
+
+    cuda_state = {"value": torch.tensor([4, 5, 6], dtype=torch.uint8)}
+    before_cuda = cuda_state["value"].clone()
+    before_cpu = torch.random.get_rng_state().clone()
+
+    def fake_get_rng_state(device=0):
+        assert device == 0
+        return cuda_state["value"].clone()
+
+    def fake_set_rng_state(state, device=0):
+        assert device == 0
+        cuda_state["value"] = state.detach().cpu().clone()
+
+    monkeypatch.setattr(torch.cuda, "get_rng_state", fake_get_rng_state)
+    monkeypatch.setattr(torch.cuda, "set_rng_state", fake_set_rng_state)
+    with pytest.raises(RuntimeError, match="synthetic critic failure"):
+        with finite_returns._math_rng_scope():
+            torch.rand(2)
+            cuda_state["value"] = torch.tensor([7, 8, 9], dtype=torch.uint8)
+            raise RuntimeError("synthetic critic failure")
+    assert torch.equal(before_cpu, torch.random.get_rng_state())
+    assert torch.equal(before_cuda, cuda_state["value"])
+
+
+def test_finite_returns_match_python_closed_form_boundaries(
+    synthetic_collector, monkeypatch
+):
+    from mjlab_microduck import stance_recovery_cuda_returns as finite_returns
+
+    collector = _full_synthetic_collector(synthetic_collector)
+    monkeypatch.setattr(finite_returns, "_math_rng_scope", _SyntheticMathRngScope)
+    collector.storage.rewards.fill_(1.0)
+    collector.storage.values.zero_()
+    collector.storage.dones.zero_()
+    collector.storage.dones[5, 1, 0] = 1
+    collector.storage.dones[27, 2, 0] = 1
+    last_value = 2.0
+    critic_inputs = []
+
+    def fixed_last_value(obs):
+        critic_inputs.append({key: value.clone() for key, value in obs.items()})
+        return torch.full((64, 1), last_value)
+
+    monkeypatch.setattr(collector.critic, "forward", fixed_last_value)
+    result = finite_returns.compute_finite_returns(collector)
+    gamma, lam = collector.algorithm.gamma, collector.algorithm.lam
+    ratio = gamma * lam
+    # These are geometric-series identities, independent of the source loop.
+    no_terminal = [
+        sum(ratio**power for power in range(28 - step))
+        + ratio ** (27 - step) * gamma * last_value
+        for step in range(28)
+    ]
+    terminal_at_five = [
+        sum(ratio**power for power in range(6 - step)) for step in range(6)
+    ]
+    after_five = [
+        sum(ratio**power for power in range(28 - step))
+        + ratio ** (27 - step) * gamma * last_value
+        for step in range(6, 28)
+    ]
+    terminal_at_last = [
+        sum(ratio**power for power in range(28 - step)) for step in range(28)
+    ]
+    expected = (
+        torch.tensor(no_terminal, dtype=torch.float32)[:, None].expand(28, 64).clone()
+    )
+    expected[:6, 1] = torch.tensor(terminal_at_five)
+    expected[6:, 1] = torch.tensor(after_five)
+    expected[:, 2] = torch.tensor(terminal_at_last)
+    assert torch.allclose(
+        result["returns"][:, :, 0],
+        expected,
+        rtol=1e-5,
+        atol=1e-5,
+    )
+    assert len(critic_inputs) == 1
+    assert torch.equal(critic_inputs[0]["actor"], collector.env.observations()["actor"])
+    assert torch.equal(result["last_critic_values"], torch.full((64, 1), last_value))

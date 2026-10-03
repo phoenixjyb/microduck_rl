@@ -57,7 +57,9 @@ service, authentic parent bytes, frozen CPU math profile, two fresh native rows
 (zero and early +x pulse), learner seed653,28 transitions, no optimizer update,
 and retained whole control/force/terminal/storage evidence. Check private and
 caller RNG, exact raw action storage, complete20-step pulse delivery/cleanup and
-the matched approach conditions. This is a transition gate, not a deficit screen.
+fresh fixed approach clocks. Stochastic rows have different sampled actions;
+matched frozen-parent prefixes belong to the separate unchanged-parent screens.
+This is a transition gate, not a deficit screen.
 
 A full native timeout/selective-reset check is still needed separately. Do not
 shortcut it by moving episode counters, replacing a real result with a synthetic

@@ -231,13 +231,23 @@ physics, storage writes or updates. The subsequent
 [transition collector](experiments/2026-10-03-cuda64-transition-source-contract.md)
 and [finite-return helper](experiments/2026-10-03-cuda64-finite-returns-source-contract.md)
 are reviewed source contracts only; neither is installed or qualified on WSL.
-The final CUDA-hidden source regression passes **737 tests**, not a GPU rollout
+The preceding CUDA-hidden source regression passed **737 tests**, not a GPU rollout
 or new learned skill. Natural terminal/storage/reset, physical CUDA64 feedback,
 native finite-return replay and optimizer qualification remain distinct open
-gates. The renewed window ends **October 3 at 20:00 Shanghai**; start no new work
-at that cutoff and leave FilmBrain/protected services unchanged.
+gates. That renewed window **closed October 3 at 20:00 Shanghai**; its expired
+launch declaration is not reopened by subsequent bounded continuation.
 The [evening handoff](experiments/2026-10-03-evening-handoff.md) records exact
 Mac/WSL starting revisions, retained evidence and the next non-admitting gates.
+
+The subsequent [CUDA64 raw-record archive](experiments/2026-10-04-cuda64-record-archive-source-contract.md)
+adds source-only CPU ownership, whole-byte verification and explicit per-row
+force-window accounting. A fresh 28-call run can reach a 0.5-second push, but
+not a 1.0- or 1.5-second push; completed collection does not imply every declared
+push was delivered. This helper is not installed or qualified on WSL and does
+not independently replay CUDA physics, solved phases or the optimizer. The
+parent weights and separate skill gates remain unchanged. The owner-reviewed
+27-file CUDA-hidden integration regression now passes **787 tests**; this is
+source consistency evidence, not a new learned skill or native qualification.
 
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled

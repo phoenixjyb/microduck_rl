@@ -197,3 +197,51 @@ that path, not the Mac mirror. After separating native and test-mirror paths,
 the same **193 tests passed in 22.39 seconds**, with no skips on the Mac campaign
 checkout. The frozen WSL test/preflight must exercise the actual native reader
 before launching the audit.
+
+## Saved-capture audit closed
+
+Evaluator source `75ed100d2b8470c86e0327224073013dab393d23` passed the
+frozen WSL suite: **193 tests in 27.96 seconds**, with no skips, invocation
+`67cf8084cfea43be98c969015dabbf8a`. Its pre/postflight used the actual native
+failure-file reader and 89-file source inventory, and rehashed all five original
+capture files unchanged. The test receipt SHA is
+`8de01e12d10f84b3483de8f4a8f43d8b15bbf795ab07653698477769be88f2e5`.
+The gated fast-forward receipt SHA is
+`d7dbc6ff935ccce7599cdba03c6155e148dd7be301535daa56387a12da14df70`;
+the separate audit-admission receipt SHA is
+`823bc0b331fc97515e82fb05cb675f6072d4755648a3f0e33d46182e535fa8fb`.
+
+`microduck-cpu-ppo-receipt-repair-75ed100d2b84.service`, invocation
+`c3ecf887ace04900b71a07fb313e1ded`, completed successfully. Fresh independent
+CPU scoring took **3.2168950780760497 seconds**, within the unchanged 120-second
+cap, and returned `cpu-ppo-receipt-repair-replayed-complete-cpu2-trace`.
+All **28 transitions / 280 force substeps** validated; stochastic policy replay
+was exact, private RNG matched the retained final state and caller RNG remained
+unchanged. Full pulse delivery and full-batch force-phase checks passed.
+This audit performed no collection, optimizer update or simulator reset.
+
+The immutable artifact source remains
+`b1878b8715efbb7ea6e166bc7d345efecf5285de`; only the pinned strict reward-layout
+leaf differs in the evaluator's 89-file transitive replay closure. All five
+original files and all three retained failed service invocations remained
+unchanged. FilmBrain and the frozen profile were unchanged; protected services
+stayed inactive. Two postflight GPU samples showed no compute PID, 0% use,
+30 C and 669 MiB used. No GPU replay, full timeout/reset, finite optimizer,
+throughput, capability, thermal or physical qualification is implied.
+
+The new directory is
+`artifacts/evaluations/stance-wsl-cpu-ppo-receipt-repair-75ed100d2b84`:
+
+| File | SHA256 |
+| --- | --- |
+| `launch.json` | `d8cb9f0142e4497eb9c3b9091e54ab63041411a1e50046d89672f89bac8fd701` |
+| `source-inventory.json` | `d1d7423c4d3a9605994d54f3dce3e8f4a079aa1370bb1d0f3991d2312d82aecc` |
+| `receipt.json` | `8a1d1ed03dcaee29a7d8dbdcaed58c189eecf57a6928075670d27c8fcf75785f` |
+
+The external verification receipt SHA is
+`8b3f69e890ce8e9330a61aea793ec6f22e9acb43cd91420b9ddc4c0bff5fa380`.
+The Mac mirror at `artifacts/retained/ppo-audit-closed-75ed100d2b84.p059P8`
+retains all nine audit/source/test/admission/verification files and invocation
+journals: **169,962 bytes**, whole-byte verified. The original capture is already
+mirrored separately; this copy adds no replacement rollout. Mac checks parsed
+and rehashed those files only, and did not pretend to run the native WSL scorer.

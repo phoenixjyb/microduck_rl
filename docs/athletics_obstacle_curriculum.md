@@ -249,6 +249,15 @@ parent weights and separate skill gates remain unchanged. The owner-reviewed
 27-file CUDA-hidden integration regression now passes **787 tests**; this is
 source consistency evidence, not a new learned skill or native qualification.
 
+The next [populated-storage and physical-record consistency layer](experiments/2026-10-04-cuda64-storage-and-record-replay.md)
+adds exact stock-storage slot/tail checks and CPU checks of separately retained
+initial-state continuity, motor controls and complete force-phase payloads.
+These remain source-only helpers, not independent solver re-execution or
+native execution qualification. A fresh bounded supervisor, whole-byte reader,
+model/caller-state witnesses and serial leased capture/replay are still required.
+The owner-reviewed 29-file CUDA-hidden integration regression passes **838
+tests**; the two new helpers have not been installed or qualified on WSL.
+
 After B0 full-robot/foot feasibility and B1 stance/recovery, football progresses
 to fixed support (B2), prescribed slow rolling (B3) and only then free coupled
 rolling (B4). Ball-only tests or an unstepped geometry fixture do not clear B0.

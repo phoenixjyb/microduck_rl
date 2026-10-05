@@ -52,11 +52,12 @@ TEST_FILES = identity.TEST_FILES + (
     "test_stance_recovery_early_inertia_trace.py",
     "test_stance_recovery_cuda_inertia_probe.py",
 )
-EXPECTED_TESTS = 1084  # Owner-reviewed complete 37-file suite, no skips.
+EXPECTED_TESTS = 1094  # Owner-reviewed complete 37-file suite, no skips.
 SYNC_FROM_SOURCE = "af47d912501a3df7db7f9a9ab7af6c09ba63a215"
 SYNC_ROOT = "/home/yanbo/work/microduck_rl-stance-replication-20260930"
 SYNC_ORIGIN = "https://github.com/phoenixjyb/microduck_rl.git"
 SYNC_SECONDS, SYNC_MEMORY, SYNC_CPU_QUOTA = 120, 256 * 1024**2, 100
+SYNC_BUNDLE_LIMIT = 2 * 1024**2
 ALLOWED = (
     "src/mjlab_microduck/stance_recovery_cuda_inertia_probe.py",
     "tests/test_stance_recovery_cuda_inertia_probe.py",
@@ -157,7 +158,7 @@ def source_sync_unit(source):
     return f"microduck-cuda64-inertia-sync-{source[:12]}.service"
 
 
-def source_sync_script(source):
+def source_sync_script(source, *, bundle_sha256=None):
     """Pure reviewed Bash declaration; host/caps/authority checked by launcher.
 
     The service is already running while it checks the unit inventory. Refuse
@@ -165,6 +166,19 @@ def source_sync_script(source):
     Nothing executes in this function; no environment, Git or service changes.
     """
     name = source_sync_unit(source)
+    fetch = "git fetch origin refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum"
+    if bundle_sha256 is not None:
+        base._hex(bundle_sha256, 64, "whole source bundle SHA256")
+        bundle = (
+            f"{SYNC_ROOT}/artifacts/tools/cuda64-inertia-source-{source[:12]}.bundle"
+        )
+        fetch = f"""test -f {bundle}
+test ! -L {bundle}
+test "$(stat -c %s {bundle})" -le {SYNC_BUNDLE_LIMIT}
+test "$(sha256sum {bundle} | awk '{{print $1}}')" = {bundle_sha256}
+git bundle verify {bundle}
+test "$(git bundle list-heads {bundle})" = '{source} refs/heads/feat/athletics-obstacle-curriculum'
+git fetch {bundle} refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum"""
     return f"""set -euo pipefail
 trap 'printf "source-sync command failed on line %s (exit %s)\\n" "$LINENO" "$?" >&2' ERR
 test "$(git rev-parse --show-toplevel)" = {SYNC_ROOT}
@@ -177,7 +191,7 @@ if test "$duck_sync_running" != {name}; then
     printf '%s\\n' 'source-sync must be the sole running Duck service' >&2
     exit 1
 fi
-git fetch origin refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum
+{fetch}
 test "$(git rev-parse refs/remotes/origin/feat/athletics-obstacle-curriculum)" = {source}
 git merge --ff-only {source}
 test "$(git rev-parse HEAD)" = {source}

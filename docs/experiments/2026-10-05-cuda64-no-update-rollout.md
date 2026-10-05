@@ -926,3 +926,48 @@ concrete bootstrap blocker. All 22 frozen observer/reader leaves match their
 immutable base bytes. Native receipts and the full CUDA pair remain pending.
 After count freeze and final formatting, all 72 direct tests passed again in
 **7.46 s**; Ruff lint/format and `git diff --check` passed.
+
+### Native HTTPS transport failure and predeclared bundle route
+
+The repaired bootstrap source
+`514e1653fe1f01b39b26a91f076035337ab022d3` passed its shell guards, then failed
+at fetch with the exact message: `GnuTLS recv error (-110): The TLS connection
+was non-properly terminated.` Retained unit
+`microduck-cuda64-inertia-sync-514e1653fe1f.service`, invocation
+`4269c3303cb54169a7d614a0358a26be`, is terminal failed/PID 0/exit 128/zero
+restarts. Its full JSON journal stream SHA256 is
+`57c47ed47304dbaae1d14679118bd85ac72060340bd0658a011d53852980cbf8`.
+Read-only HTTPS probing also timed out after 10.002469 s with HTTP 000 at
+140.82.116.4. Native HEAD/reflog remained unchanged and clean at `af47d912...`;
+no GPU compute process ran. The failed service is not restarted.
+
+The smallest transport workaround keeps all existing source/service guards and
+caps. An optional reviewed bootstrap accepts a **2-MiB maximum Git bundle**
+over the already working SSH route, not a changed network/driver/runtime
+configuration. The bundle is generated locally from the exact clean committed
+feature tip after its fork push is verified, excludes the already retained
+`af47d912501a3df7db7f9a9ab7af6c09ba63a215` history, and advertises exactly that
+new feature tip. Its whole-file SHA256 is bound at launch; before fetching,
+the shell checks a regular non-symlink file, byte cap, whole hash, successful
+`git bundle verify`, and exactly one expected branch/head. The explicit bundle
+refspec updates the same tracking ref; the exact fetched-source and fast-forward
+checks are unchanged. The fixed artifact path is
+`artifacts/tools/cuda64-inertia-source-<new-source12>.bundle` in the native
+checkout. It must be absent before transfer and is retained, not overwritten.
+Only the next freshly source-tagged sync service may consume it. This route
+does not make any source-only or native rollout qualification claim.
+
+The missing-bundle stub test caught an `errexit` pitfall before commit or native
+use: a standalone `test -f ... && test ! -L ...` AND-list can suppress a failed
+first test under Bash `set -e`. The two checks are now standalone commands;
+the refusal assertion was preserved, not weakened. This test-only failure
+caused no transfer or native execution. Final bundle tests and count are
+remeasured after that correction.
+
+The corrected bundle matrix passed **82 direct tests in 7.31 s**. Owner final
+CUDA-hidden regression passed **1,094 tests in 109.57 s**, zero skips, across
+all 37 files; the fresh supervisor now freezes exactly 1,094. Independent
+review found no remaining concrete bundle-mode blocker. These supersede the
+earlier source-only prerequisite counts without changing any frozen old reader.
+After the final count freeze, the 82 direct tests passed again in **7.88 s**;
+Ruff lint/format and whitespace checks passed.

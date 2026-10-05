@@ -1037,6 +1037,12 @@ def _source_sync_run(
     remote=None,
     root=None,
     origin=None,
+    bundle_sha256=None,
+    bundle_file="regular",
+    bundle_size=None,
+    checksum_output=None,
+    verify_bundle=True,
+    bundle_heads=None,
 ):
     """Run only the returned bootstrap Bash against local Git/systemctl stubs."""
     source = "f" * 40
@@ -1054,6 +1060,35 @@ def _source_sync_run(
     (state / "root").write_text((probe.SYNC_ROOT if root is None else root) + "\n")
     (state / "origin").write_text(
         (probe.SYNC_ORIGIN if origin is None else origin) + "\n"
+    )
+    bundle_path = (
+        Path(probe.SYNC_ROOT)
+        / "artifacts/tools"
+        / f"cuda64-inertia-source-{source[:12]}.bundle"
+    )
+    if bundle_sha256 is not None and bundle_file != "missing":
+        bundle_path.parent.mkdir(parents=True, exist_ok=True)
+        if bundle_file == "symlink":
+            target = bundle_path.with_suffix(".target")
+            target.write_bytes(b"synthetic source bundle")
+            bundle_path.symlink_to(target)
+        elif bundle_file == "oversize":
+            bundle_path.write_bytes(b"x")
+        else:
+            bundle_path.write_bytes(b"synthetic source bundle")
+    (state / "bundle_size").write_text(
+        str(bundle_size if bundle_size is not None else bundle_path.stat().st_size)
+        if bundle_path.exists()
+        else "0"
+    )
+    (state / "bundle_hash").write_text(
+        checksum_output if checksum_output is not None else (bundle_sha256 or "")
+    )
+    (state / "bundle_verify").write_text("1" if verify_bundle else "0")
+    (state / "bundle_heads").write_text(
+        bundle_heads
+        if bundle_heads is not None
+        else f"{incoming_head} refs/heads/feat/athletics-obstacle-curriculum"
     )
     git_script = """#!/usr/bin/env bash
 set -euo pipefail
@@ -1077,10 +1112,23 @@ case "$1" in
     test "$2" = get-url && test "$3" = origin
     cat "$SYNC_STATE/origin"
     ;;
+  bundle)
+    case "$2" in
+      verify)
+        if test "$(cat "$SYNC_STATE/bundle_verify")" != 1; then exit 94; fi
+        ;;
+      list-heads) cat "$SYNC_STATE/bundle_heads" ;;
+      *) exit 95 ;;
+    esac
+    ;;
   branch) cat "$SYNC_STATE/branch" ;;
   fetch)
-    test "$2" = origin
-    test "$3" = refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum
+    if test "$2" = origin; then
+      test "$3" = refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum
+    else
+      test "$2" = "$SYNC_BUNDLE_PATH"
+      test "$3" = refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum
+    fi
     cat "$SYNC_STATE/incoming" > "$SYNC_STATE/tracked-ref"
     touch "$SYNC_STATE/fetched"
     ;;
@@ -1092,6 +1140,17 @@ case "$1" in
   *) exit 92 ;;
 esac
 """
+    stat_script = """#!/usr/bin/env bash
+set -euo pipefail
+printf 'stat %s\\n' "$*" >> "$SYNC_LOG"
+test "$1" = -c && test "$2" = %s
+printf '%s\\n' "$(cat "$SYNC_STATE/bundle_size")"
+"""
+    sha_script = """#!/usr/bin/env bash
+set -euo pipefail
+printf 'sha256sum %s\\n' "$*" >> "$SYNC_LOG"
+printf '%s  %s\\n' "$(cat "$SYNC_STATE/bundle_hash")" "$1"
+"""
     systemctl_script = """#!/usr/bin/env bash
 set -euo pipefail
 printf 'systemctl %s\\n' "$*" >> "$SYNC_LOG"
@@ -1099,17 +1158,28 @@ cat "$SYNC_STATE/units"
 """
     git_path = stub_bin / "git"
     service_path = stub_bin / "systemctl"
+    stat_path = stub_bin / "stat"
+    sha_path = stub_bin / "sha256sum"
     git_path.write_text(git_script)
     service_path.write_text(systemctl_script)
+    stat_path.write_text(stat_script)
+    sha_path.write_text(sha_script)
     git_path.chmod(0o755)
     service_path.chmod(0o755)
+    stat_path.chmod(0o755)
+    sha_path.chmod(0o755)
     env = {
         "PATH": f"{stub_bin}:/usr/bin:/bin",
         "SYNC_LOG": str(tmp_path / "calls.log"),
         "SYNC_STATE": str(state),
+        "SYNC_BUNDLE_PATH": str(bundle_path),
     }
     process = subprocess.run(
-        ["bash", "-c", probe.source_sync_script(source)],
+        [
+            "bash",
+            "-c",
+            probe.source_sync_script(source, bundle_sha256=bundle_sha256),
+        ],
         cwd=tmp_path,
         env=env,
         capture_output=True,
@@ -1235,3 +1305,88 @@ def test_source_sync_remote_head_mismatch_fetches_but_never_merges(tmp_path):
     assert "git merge" not in log
     assert (state / "fetched").exists() and not (state / "merged").exists()
     assert (state / "head").read_text().strip() == probe.SYNC_FROM_SOURCE
+
+
+def test_bundle_source_sync_validates_and_fetches_only_bundle_head(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(probe, "SYNC_ROOT", str(tmp_path))
+    source = "f" * 40
+    checksum = "d" * 64
+    process, log, state, _ = _source_sync_run(
+        tmp_path,
+        units=_own_sync_unit(source),
+        remote=source,
+        bundle_sha256=checksum,
+        checksum_output=checksum,
+    )
+    assert process.returncode == 0, process.stderr
+    assert process.stdout.strip() == source
+    assert (state / "tracked-ref").read_text().strip() == source
+    bundle_path = (
+        f"{probe.SYNC_ROOT}/artifacts/tools/cuda64-inertia-source-{source[:12]}.bundle"
+    )
+    validation = [
+        "stat -c %s " + bundle_path,
+        "sha256sum " + bundle_path,
+        "git bundle verify " + bundle_path,
+        "git bundle list-heads " + bundle_path,
+    ]
+    positions = [log.index(item) for item in validation]
+    fetch = (
+        "git fetch "
+        + bundle_path
+        + " refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum"
+    )
+    assert positions == sorted(positions)
+    assert log.index(fetch) > positions[-1]
+
+
+@pytest.mark.parametrize(
+    "damage",
+    ["missing", "symlink", "oversize", "hash", "verify", "heads"],
+)
+def test_bad_bundle_metadata_blocks_before_fetch_or_merge(
+    tmp_path, monkeypatch, damage
+):
+    monkeypatch.setattr(probe, "SYNC_ROOT", str(tmp_path))
+    source = "f" * 40
+    checksum = "d" * 64
+    options = {"bundle_sha256": checksum, "checksum_output": checksum}
+    if damage == "missing":
+        options["bundle_file"] = "missing"
+    elif damage == "symlink":
+        options["bundle_file"] = "symlink"
+    elif damage == "oversize":
+        options["bundle_file"] = "oversize"
+        options["bundle_size"] = probe.SYNC_BUNDLE_LIMIT + 1
+    elif damage == "hash":
+        options["checksum_output"] = "e" * 64
+    elif damage == "verify":
+        options["verify_bundle"] = False
+    else:
+        options["bundle_heads"] = (
+            "e" * 40 + " refs/heads/feat/athletics-obstacle-curriculum"
+        )
+    process, log, state, _ = _source_sync_run(
+        tmp_path, units=_own_sync_unit(source), **options
+    )
+    assert process.returncode != 0
+    assert "git fetch" not in log and "git merge" not in log
+    assert not (state / "fetched").exists() and not (state / "merged").exists()
+    if damage == "missing":
+        assert "git bundle verify" not in log and "sha256sum" not in log
+    elif damage == "oversize":
+        assert "stat " in log and "sha256sum" not in log
+    elif damage == "hash":
+        assert "sha256sum " in log and "git bundle verify" not in log
+    elif damage == "verify":
+        assert "git bundle verify " in log and "git bundle list-heads" not in log
+    elif damage == "heads":
+        assert "git bundle list-heads " in log
+
+
+@pytest.mark.parametrize("checksum", ["bad", "d" * 63, "D" * 64])
+def test_bundle_source_sync_rejects_malformed_checksum_before_shell(checksum):
+    with pytest.raises(ValueError, match="whole source bundle SHA256"):
+        probe.source_sync_script("f" * 40, bundle_sha256=checksum)

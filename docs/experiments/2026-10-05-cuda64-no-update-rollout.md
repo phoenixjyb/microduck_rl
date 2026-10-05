@@ -1135,3 +1135,80 @@ source review found no remaining concrete blocker after the protected-service
 receipt was added. This is local source evidence, not native map or physics
 qualification; the original rejection and all original source/test bytes remain
 unchanged.
+
+### Native compiled-coordinate diagnosis retained
+
+The new source `f749649d5925f197ee2a995e76aaa1915854f9f9` was pushed and
+independently verified at the exact fork branch ref. The separate bootstrap
+`microduck-inertia-components-sync-f749649d5925.service`, invocation
+`f26d386a072f4dd999923535c0f8784f`, completed inactive, PID 0, exit 0 and
+zero restarts. It fast-forwarded the clean native worktree from the immutable
+full inertia source through the verified 23,930-byte Git bundle:
+`5bd1ad80653426729bda40e66cc09986dbfd936872d0fcca34f9ae8712efa442`.
+No old unit was restarted and no installed package/driver/runtime file changed.
+
+Native tests, invocation `5e1e03708a4a4d5090a6817da4baf5b5`, passed all
+**1,182 tests, zero skips, in 83.22 seconds** (whole capped service
+88.26951458398253 seconds). Its exact receipt SHA256 is
+`12734187fbdcde77971436aaa80fd7f752e4b1516a6d245b62631a4e4e69a014`;
+whole pytest log SHA256
+`5e2ff6a48d10bfdc476b004ca8c311a498a1d42b69cfa09e00efae94dfb50e30`.
+The receipt records all four system/user protected service observations
+inactive before/after. The unit completed inactive, PID 0, exit 0, zero restarts
+before analysis launched.
+
+The CPU analysis `microduck-inertia-components-run-f749649d5925.service`,
+invocation `e161d7339d904a4baaac1be2be74c36a`, completed inactive, PID 0,
+exit 0, zero restarts in 19.285922741051763 seconds, with 1.3 GiB memory peak.
+Its **tool status is passed, not rollout accepted**. The retained
+`artifacts/evaluations/stance-inertia-components-run-f749649d5925/` contains:
+
+| File | Whole bytes | SHA256 |
+| --- | ---: | --- |
+| comparison.json | 72,770 | e1e85c0eb76ee579fd15357f3be098cef951434c1ba83fa6846f487c1435d8e9 |
+| report.json | 14,873 | e1321c1cc3787240e01039f877032869f735ed5fdbb0e93d34726d4c00077e93 |
+
+The owner independently rehashed both new files and all 23 original files;
+every original hash matches the preceding retained owner snapshot. The reader
+reproduced the original strict whole-body rejection before mapping, kept the
+unchanged complete six-event comparison, and left all qualification flags false.
+Fresh compiled topology hash:
+`5b445215f52d61d10bc892a14b0d0b15e3041ff3a5dfb6c1964f06211d0cb43a`.
+
+The earliest persistent disagreement remains event 0, scheduled-pre, step 0,
+world 53. Its two CRB coordinates both belong to body 1, `trunk_base`
+(ancestry world → trunk_base):
+
+| CRB numeric component | Capture raw bits | Replay raw bits |
+| --- | --- | --- |
+| 3 | 0xb6f5e8f8 | 0xb6f5e8f4 |
+| 6 | 0x2fe00000 | 0x30280000 |
+
+Component 3 values are -7.32869011699222e-06 /
+-7.328688298002817e-06; component 6 values are
+4.0745362639427185e-10 / 6.111804395914078e-10.
+The six qM coordinates, all world 53, are (1,5), (2,4), (3,4), (4,2),
+(4,3), (5,1). Every row/column is a DOF of
+`trunk_base_freejoint` on the same body, with numeric local offsets 1–5.
+The 18 differing qLD coordinates extend into neck/head and leg DOFs.
+Neither tensor listing order nor this map proves causal/temporal ordering.
+
+Actual compiled direct children of trunk_base are body 2 `yaw2roll`,
+body 7 `neck`, and body 11 `bearing_roll`. Owner read-only inspection of
+the native installed `mujoco_warp/_src/smooth.py` found whole-file SHA256
+`63b2d4093745762309bb335826a1f741a1baab26d93277ba92859fea1495880f`.
+Its CRB routine copies cinert into crb, then launches child-to-parent
+`wp.atomic_add` by reversed body-tree levels before assembling qM.
+This is a hypothesis lead, not captured kernel-order evidence or a proven bug.
+
+The smallest next diagnostic is a separately predeclared, tested CPU-only
+raw-bit addition-order oracle over the retained identical cinert/child CRB
+inputs. Enumerate all six orders of these three direct children, retain every
+candidate and both observed matches without selecting a winning schedule.
+This may test arithmetic plausibility; it cannot qualify CUDA replay, prove
+actual atomic scheduling, edit the runtime, waive the gate, or admit training.
+
+Owner post-analysis audit: no running Duck unit or GPU compute PID, 0% GPU,
+666 MiB used / 23,496 MiB free, 30 C. FilmBrain and protected services remain
+preserved. This is another retained campaign milestone; work remains active
+until the authorized 21:00 cutoff and its final audit.

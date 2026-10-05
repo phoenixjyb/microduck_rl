@@ -783,3 +783,91 @@ GPU compute PID; GPU 0%, 666 MiB used / 23,496 MiB free, 30 C. FilmBrain remains
 active at PIDs 521 / 298048 with zero restarts; protected user/system ReCoMo AI
 units remain inactive PID 0. No native job, worktree update, package/driver
 change or protected-service action was made for this helper preparation.
+
+## Fresh inertia-observed full-rollout declaration
+
+The next separately source-bound supervisor is
+`stance_recovery_cuda_inertia_probe`, protocol
+**`football-b1d-cuda64-inertia-probe-20261005-v1`**, starting from immutable
+observer/test tip `c4fb6062a30ccef0365b21ef9c91aecacb3a8ba9`. Only the new
+supervisor, its tests and this experiment document may differ from that base.
+The original v3 supervisor/readers, identity tools and new persistent observer
+remain byte-for-byte frozen. Their prior test counts and all failed output
+namespaces are unchanged. No original service is restarted.
+
+This is the **same full 64-world, seed-653, 28-call/280-substep** no-update
+capture/replay diagnostic, not a reduced zero-force or forward-only substitute.
+It retains the same initializer checkpoint, fixed nominal motor parameters,
+constructor seeds 977/983, private learner RNG stream, mandatory committed
+controls, complete phase/force/physical records, populated stock storage,
+initial physical/control state, model/empty-Adam preservation and caller-RNG
+checks. The schedule remains 32 exact-zero rows and 32 +x 2-N rows at step 250
+for 20 substeps; a complete run reaches the full pulse at 0.5 s. First terminal
+stops collection and retains a truthful incomplete prefix; no later auto-reset
+trajectory is collected. No optimizer step or return computation is performed.
+
+Only the first six observed forward events gain the separately tested
+persistent fields. The launch pins their protocol, exact shapes, observation
+boundary and excluded postconstraint scratch fields. The original body pair
+gate remains strict. The new trace additionally compares whole logical tensor
+bytes, including signed zero, without contact sorting, canonicalization,
+proximity tolerances or a waiver. A failed pair is diagnosed independently in a
+new failure-only artifact; it cannot produce a successful closeout or admission.
+If complete and identical, independent closeout still yields only a
+non-admitting short-window diagnostic, never a trained recovery capability.
+
+| Service / child | Hard cap | Memory |
+| --- | ---: | ---: |
+| preflight / tests | 300 s each | 4 GiB |
+| full capture + replay supervisor | 1,200 s | 6 GiB |
+| each isolated CUDA child | 480 s | Within supervisor's 6-GiB cgroup |
+| successful independent CPU closeout | 600 s | 4 GiB |
+| failed-pair independent CPU diagnosis | 300 s | 4 GiB |
+
+Every user service has CPUQuota=200%, Nice=10, KillMode=control-group and an
+exact source/invocation binding. The supervisor, preflight, tests and readers
+start with CUDA hidden; only one fresh CUDA0 child is visible at a time. Both
+children inherit the single existing FilmBrain-shared lock inode. No competing
+compute process is allowed; live telemetry aborts only the owned child if an
+unexpected compute owner, protected service, memory/temperature violation or
+time/log limit appears. Two idle telemetry samples gate each allocation;
+FilmBrain and protected user/system service state are pinned before and after.
+No package, driver or installed runtime file is modified.
+
+The new window starts at **2026-10-05 16:12:08 Asia/Shanghai** and ends at
+**21:00**. Complete run/closeout reserve is 1,860 s; each preflight/test tool reserves
+all declared modes plus 60 s (2,760 s). Children independently reserve their
+480-s cap plus 600-s closeout and 60 s. No launch is allowed without its full
+remaining reserve. No new Duck work starts at cutoff; owned processes and
+durable evidence are checked before the campaign closes, without restoring
+protected services.
+
+New output prefixes are `stance-cuda64-inertia-<source12>` under evaluations
+and `cuda64-inertia-{preflight,tests}-<source12>` under tools. Units are
+`microduck-cuda64-inertia-<mode>-<source12>.service`. Body payload cap remains
+256 MiB (128-MiB tensor / 250,000-node ownership budget); preparation,
+constructor and trace payloads remain 8 MiB each, logs 1 MiB, JSON sidecars
+2 MiB. Trace projection keeps original six-phase trajectory/control/clock
+validation and the independently checked compiled plant. Exclusive writes,
+fsync, truthful failed retention, whole-file hashes before weights-only CPU
+loads and independent inventory rehash remain mandatory.
+
+The complete native source suite consists of the previously frozen 35 files,
+the new persistent-observer test file and the new supervisor test file (37
+files). Its exact passed count must be measured, reviewed and frozen before
+commit/push and native launch; passing the old suite alone cannot validate the
+new supervisor. Native preflight, native suite, full run and independent
+closeout/diagnosis must use one clean exact source, with old artifacts preserved.
+
+Owner local CUDA-hidden regression measured **1,072 tests in 110.18 s**, no
+skips, across all 37 files. The count is now frozen at 1,072; the new direct
+supervisor matrix accounts for 60 of those tests. The independently reviewed
+mechanical delta retains all original body/constructor/control/storage/RNG
+contracts and adds no solver/integration call. Source, malformed artifact,
+source-change allowlist, frozen-leaf, service/process/time/log caps,
+first-terminal and independent-failure tests exercise the new module directly;
+finite and signed-zero trace differences still fail the strict pair gate.
+Ruff lint/format and `git diff --check` passed. Native prerequisite receipts,
+CPU rescore and CUDA observations remain pending, not implied by this local result.
+After the count freeze and final formatting, all 60 direct supervisor tests
+passed again in **7.01 s** with CUDA hidden.

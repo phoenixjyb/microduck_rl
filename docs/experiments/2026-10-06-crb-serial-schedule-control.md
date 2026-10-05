@@ -152,3 +152,87 @@ flags remain false; the selected CPU order is not replaced by six-order membersh
 
 At this predeclaration no serial native job or control decision is claimed;
 the original full-window replay and training gates remain open.
+
+### Retained native control at `c9708cf6`
+
+Execution source: `c9708cf68fdb812733f7a9fddd336c36a8241d26`, pushed to the fork
+and cleanly fast-forwarded from the retained B72 source. Source sync invocation
+`eecef0634bdd46c9bf7a51ba771d48c5` completed at its 120-s / 256-MiB / 100%-CPU cap.
+Native CUDA-hidden qualification passed **1,436 tests, zero skips**, in
+**116.43 s**, invocation `d31a6013091b48f28262383289069818`, at the declared
+300-s / 6-GiB / 200%-CPU cap. Before the GPU run, a separate NumPy calculation
+predicted the entire 32-output byte stream's SHA256; its order was unchanged.
+
+The single GPU control completed in **13.5772 s**, invocation
+`2eeda48c67444383b27d0be278b9011a`, at the 600-s / 6-GiB cap. Actual child PID
+`3155686` matched its owner/parent receipt and all three monitor samples; one
+sample observed it as the sole compute PID. Monitored peak was **31 C / 943 MiB**
+used VRAM. The child log identifies the actual Blackwell `cuda:0` device and
+unchanged cached smooth kernel module `95a0b8b`. Warp alone owned CUDA; Torch
+CUDA stayed uninitialized, no actor/model/optimizer was constructed, and both
+retained 5,056-byte caller CPU RNG states were identical.
+
+All **32** complete output matrices were identical and matched the predeclared
+left-to-right float32 candidate in all **640 root scalars per repeat**. There
+were **zero mismatched scalars**, one root snapshot, zero between-repeat delta,
+and all non-root bodies remained identical to the baseline. The complete
+1,310,720-byte stream matched the independently predicted hash, not merely one
+of six possible addition-order candidates.
+
+| Fixed derived fixture | Concurrent control | Serial control |
+| --- | ---: | ---: |
+| Kernel launches per repeat | 1 | 3 |
+| Repeats | 32 | 32 |
+| Distinct complete outputs | 7 | 1 |
+| Varying root scalar cells | 4 | 0 |
+| Maximum same-cell repeat delta | `4.656612873077393e-10` | `0` |
+
+| Whole retained artifact | SHA256 |
+| --- | --- |
+| Native tests receipt | `53fbef0500ecc0bc654f8b59186122adbd97c0865e903c6f3858c2e7eccc67d3` |
+| All 32 complete outputs / independent pre-run prediction | `95028a532f79e97d1d20acbf376d47a4db4757a5ca2c98c5039c1736a6074dd8` |
+| Selected complete root bits | `bb903b58e385a86b249baffcd97424c9c053e724bc08cc38d1c051f6f01f3bec` |
+| Before/after CPU RNG bytes | `ad5f96a3f877299c66753455cabbb9b5918b1216652525f74014d122e4f7e771` |
+| Run report | `584cb1bf11cf9714da093ed19d44a56160ccdf994e5ac5caecf6e64f7599cca7` |
+| Independent native owner packet | `186dea37ef643c510bf3285a5c2a9785dd91c1152a64587fc95fec085db9af02` |
+| CPU closeout terminal packet | `f431fc6f3677fcba16ba530351b2fd970f4d8cf276e2ed76f42978a3cbf7062d` |
+
+Run assets remain at `artifacts/evaluations/stance-crb-serial-run-c9708cf68fdb`;
+tests at `artifacts/tools/stance-crb-serial-tests-c9708cf68fdb`. Independent packets
+are `artifacts/tools/stance-crb-serial-owner-terminal-c9708cf68fdb.json` and
+`artifacts/tools/stance-crb-serial-closeout-terminal-c9708cf68fdb.json`.
+
+The first standalone CPU verifier failed with
+`warp-clang.so: failed to map segment from shared object` under an owner-added
+**6-GiB virtual-address-space** limit. Read-only diagnosis retained the successful
+GPU service and unchanged output/report hashes; a constrained CPU startup also
+reported driver allocation failure. No package, driver, kernel, GPU job or gate
+was changed. The verifier was then run as a separate CUDA-hidden CPU service with
+the intended **6-GiB cgroup memory** limit, a **120-s** runtime cap, CPU quota
+200%, Nice 10 and KillMode control-group. Invocation
+`e7f777dd9f924438a5485c407aac9995` completed successfully with cgroup memory peak
+**1,130,577,920 bytes**. Its recorded virtual-space peak was **14,786,828 KiB**;
+virtual address space and charged resident memory are distinct budgets.
+
+That independent verifier recompiled topology, reauthenticated all 38 predecessor
+files, rebuilt the fixture, checked every output byte against both the selected
+checker and a separate NumPy implementation, rechecked source/runtime/inputs,
+and retained successful terminal invocations/caps for sync/tests/run. The CPU
+closeout's own terminal packet separately binds its successful exit and cap.
+A second CUDA-hidden Mac receiver authenticated both packets and all ten new
+run/test files, checked committed source leaves, rebuilt the pinned oracle
+fixture, reproduced the summary and exact whole-output prediction, and checked
+RNG bytes and historical terminal caps. The GPU returned idle; FilmBrain service
+PIDs/restart counts and both protected-service namespaces remained unchanged.
+
+The deterministic control decision is **`stable-exact-candidate` for this
+fixture/schedule only**. It is consistent with a role for same-parent contention
+in the isolated kernel's variation. It is not actual atomic-order observation,
+a universal determinism claim, a repair of the original trajectory, or full-window
+or training acceptance. The original failed pair remains rejected.
+
+The next smallest source slice is a bounded whole-tree plan: preserve all seven
+original levels and both parent-zero no-ops, splitting only `[2,7,11]` into the
+same fixed order. That yields nine accumulation launches rather than seven.
+Planning and CPU/mock checks alone cannot qualify an actual whole-CRB launch,
+the other forward kernels, joint-space mass matrices or a full trajectory.

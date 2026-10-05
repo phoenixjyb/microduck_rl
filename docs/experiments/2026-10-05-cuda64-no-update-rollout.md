@@ -1604,3 +1604,85 @@ names. A source/test pass is not a host pass; accept a host witness only after
 its independent reader succeeds, whole retained files are reauthenticated and
 its terminal-success invocation is recorded. The original CUDA rejection and
 all admission flags remain unchanged.
+
+#### Native CPU witness retained, not native CUDA acceptance
+
+The fork and native worktree were verified at exact source
+`f190d24dbb4b185f581462c36c0b2104a743cdfd`. The 50,768-byte source bundle had
+SHA-256 `2627c14c1f02d7750decf96beb33ec9f10fa55281b168c7d49e146395494b5fa`,
+with the single predeclared branch head and native prerequisite `76627154…`.
+The capped bootstrap completed successfully under invocation
+`a2248ebbfc2948119b8774072edd0f2a`.
+
+Native **pytest** passed **1,374 tests in 113.69 s**; the entire test **service**
+took **118.98876484297216 s**. These are separate from the local suite's 144.60 s.
+Test invocation was `dfdae339d75547b28a9477fd48fc1f86`; peak memory was
+4,441,460,736 bytes, below the unchanged 6 GiB cap. The complete test directory
+is `artifacts/tools/stance-crb-archive-cpu-tests-f190d24dbb4b`:
+receipt SHA-256 `dfc433f9cb9ca550d4f4a8e1623bba3e44ec817f3ec796c740d62bc5fe8e4edf`,
+report `1642520dca71340a452c065d3b034d052e081f4d80974f76a7c04523a2de495a`,
+whole pytest log `91f6f952ef6647700add00d15a28ce430c1979ce9f8e5c0999fece1b669ee237`.
+
+The separate 64-world **CPU pre-pulse witness** and its capped independent parent
+reader succeeded in **13.728010023012757 s**, invocation
+`f1c21d5c92f2444687837f0d2900e76f`, peak memory 2,128,363,520 bytes. It retained
+six events, seven stages per event, and 6,881,280 stage tensor bytes. Complete
+reconstructed trace-tree SHA-256 was
+`c72f046807ddb684b5d19b8975e5d93f32fa90122c3b3e4799f55b86cd8941c9`.
+Caller CPU RNG bytes were preserved. The unchanged nine-file run directory is
+`artifacts/evaluations/stance-crb-archive-cpu-witness-f190d24dbb4b`:
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `inertia.pt` | 6,193,895 | `c58c48c275a6111f718e13edf3a326177ff47f4cf15e16e1497ed9974d8acf9a` |
+| `stages.bin` | 6,884,709 | `e8be81dcbc60959d130d235b613216b35dcf95a870dc58a0228d91b95be8e14e` |
+| `first-record.pt` | 1,923,819 | `10cc5b19b904e517af0e5a1485a5adb3528616bdb69a15cba579d9ac9ff83117` |
+| `witness.json` | 10,755 | `8e025efd1dfc8d24409947ac20c76b46861e23353eee9c0df6f574a3da068e7c` |
+| `report.json` | 22,896 | `dffb8a495692e38279eb553269fd113041c4e9bcd01414558657a23b549705f0` |
+
+The owner independently rehashed **all nine run files, three test files, all 23
+original files, both map files and installed smooth source** without tensor
+loading outside the capped reader. Both exact service invocations were verified
+terminal `active/exited`, PID 0, exit 0, zero restarts and successful before any
+cleanup. The 7,772-byte owner terminal receipt is retained both locally and on
+100.98 at
+`artifacts/tools/stance-crb-archive-cpu-owner-terminal-f190d24dbb4b.json`, SHA-256
+`a570126aec891c8b3c8ebd033543bdc4a89da147420b8355e868ff11dbb2eaa4`.
+Its native file and parent directory were fsynced. A separate source/receipt
+review found no inconsistency; it loaded no tensor artifacts and made no host
+changes.
+
+Only after that durable receipt were the four owned **already exited, zero-PID**
+lifecycle/bootstrap/test/witness units stopped and unloaded. No running workload
+was stopped. At 20:42 Shanghai there was no running Duck unit or GPU compute PID;
+GPU utilization was 0%, temperature 30°C, memory 666 MiB used / 23,496 MiB free.
+FilmBrain remained active at the same PIDs 521 and 298048 with zero restarts;
+both protected AI Mission services remained inactive, PID 0, in both managers.
+100.100, drivers, installed runtime files and unrelated workloads were untouched.
+
+**No numerical or skill gate was promoted.** The original full CUDA pair remains
+rejected. This first tick precedes the force onset: no force-active recovery,
+uninstrumented GPU replay, atomic-order cause, training update, learned hopping,
+obstacle skill, football balance or physical motion was qualified. All such
+admission flags remain false.
+
+#### Next source gate, deferred from late native execution
+
+The useful next slice is a separately reviewed, bounded **GPU-producer
+publication path** plus independent CPU closeout. The existing public checked
+archive encoder/decoder remain CUDA-hidden; do not bypass that boundary by
+calling them inside an initialized GPU child. A future producer must retain
+every raw phase/level matrix, exact topology and source, full first record and
+caller/control bindings in individually capped, exclusive, durable artifacts.
+Only the separate capped CPU reader may authenticate and validate those bytes;
+producer publication alone must carry no accepting flags.
+
+Before any new native observer job, predeclare a fresh exact source and
+namespace, the original 64-world / 28-call / 280-step window and step-250 pulse,
+retained uninstrumented control, immutable caller/model/Adam/RNG state, total
+artifact and memory budgets, graph/stream compatibility, independent replay,
+lease ownership and complete terminal closeout reserve. Observation must not
+silently become a replacement rollout or relax the original exact-bit gate.
+Retain numerical failure even if the observer explains it. No optimizer update
+or curriculum promotion follows until the applicable full-window numerical and
+protocol gates pass. No new GPU job is launched during this late closeout slice.

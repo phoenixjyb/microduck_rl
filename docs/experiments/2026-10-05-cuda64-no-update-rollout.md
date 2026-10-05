@@ -1683,6 +1683,14 @@ retained uninstrumented control, immutable caller/model/Adam/RNG state, total
 artifact and memory budgets, graph/stream compatibility, independent replay,
 lease ownership and complete terminal closeout reserve. Observation must not
 silently become a replacement rollout or relax the original exact-bit gate.
+Source inspection narrows that compatibility gate: `step_with_schedule` already
+refuses a non-null forward graph with `scheduled recovery requires the declared
+eager solver`; the next diagnostic must preserve that eager protocol. The current
+CRB observer synchronizes and makes CPU-owned snapshots before and after each
+owned level launch. Those snapshots can localize a stage discrepancy but cannot
+observe the order of atomic additions inside the kernel. Preserve a separate
+uninstrumented control and keep `actual_atomic_order_observed=false`; do not
+interpret an instrumented stage trace as proof of an uninstrumented kernel cause.
 Retain numerical failure even if the observer explains it. No optimizer update
 or curriculum promotion follows until the applicable full-window numerical and
 protocol gates pass. No new GPU job is launched during this late closeout slice.

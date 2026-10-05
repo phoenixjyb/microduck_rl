@@ -298,6 +298,19 @@ control/trajectory/storage differences propagate. This distinguishes the
 failure from random initialization, model updates or an early fall, but does
 not yet prove a specific native kernel/reduction cause.
 
+Bounded read-only source review found a plausible support-ordering path:
+`stance_contact_evidence.contact_summary()` uses floating duplicate-world
+`index_add_` at line 118; pinned MuJoCo-Warp 3.8.1 assigns shared contact slots
+with `wp.atomic_add` in `collision_core.py:213`. However support feeds the
+critic/reward/late support-loss check, **not actor control directly**. Do not
+infer that support drift itself caused qpos/qvel drift. The latter follows
+forward–Euler–forward; pinned source has separate floating accumulation
+candidates in `smooth.py:970-978` and `solver.py:1469,1516-1518,1984`. These are
+source-based hypotheses, not native causal proof. The first-call record lacks
+per-phase pre-aggregation contact tables and complete forward intermediates
+needed to distinguish them. Preserve the strict gate and isolate that missing
+evidence before proposing any solver, reduction or curriculum change.
+
 The read-only diagnosis invocation was `4062fa2721c548b0993278ea3133f8a3`,
 exit status 0, runtime 22.837 s, using `systemd-run --pipe --wait`; stdout was
 returned to the owner, **not stored as a diagnosis JSON or service journal**.

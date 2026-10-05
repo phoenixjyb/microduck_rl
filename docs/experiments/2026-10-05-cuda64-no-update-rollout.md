@@ -1338,3 +1338,105 @@ protected services remained inactive at PID 0 in user and system managers.
 Campaign work remains active through 21:00; the next useful boundary must
 separate stage observation from scalar arithmetic speculation without changing
 the original gate or installed runtime.
+
+An additional independent CUDA-hidden NumPy audit authenticated the whole
+comparison before parsing, then recomputed all six candidates with explicit
+float32 `add` at each step. All **3,840 candidate scalar bits** and **1,280
+observed membership masks** matched, including signed-zero representation.
+This validates the arithmetic implementation, not native order or admission.
+
+Read-only installed-source inspection on 100.98 adds a compatible mechanism:
+MuJoCo Warp `types.py` defines vec10 as a ten-component float vector; Warp
+`native/vec.h:2044-2051` implements vector `atomic_add` as a loop of scalar
+component additions. `native/builtin.h:1494-1503` uses CUDA `atomicAdd` for the
+scalar device path and ordinary addition on CPU. Whole installed-source hashes:
+
+- vec.h: `05a0753422e8995c97efa23e7a69a402412c4e1f06533643c45a755692c67dbe`
+- builtin.h: `1a9f56467382132f8c82064244cb605308e05e066c51d3f9389074f65b2bd61c`
+- types.py: `8f0b19d7b2bc039a419fa547ba6b732837327c0735f688ad34ace5afc4843e50`
+
+Together with the pinned smooth `_crb_accumulate` source, this supports a
+component-atomic interpretation rather than a transaction over the whole vec10.
+It does not authenticate the compiled kernel binary, establish which atomics
+ran in which order, or convert source inspection into runtime causal proof.
+
+### Next source-only slice: CRB launch-boundary observer
+
+Prepare only new `stance_crb_launch_trace.py`, its new focused test file, and
+this document from the exact evidence tip
+`ac644fb966561b843d9b90a8b593eb81e0af5b44`. Do not edit any earlier observer,
+runtime, supervisor, reader, source test or installed package. This slice is
+**not a native-job predeclaration** and contains no optimizer/training launcher.
+
+The next observable distinction is the output of each reversed body-tree-level
+`_crb_accumulate` launch, not the unobservable atomic order inside that launch.
+Use an exclusive, non-reentrant, process-local hook of the actual Warp launch
+callable only around each inherited observed forward invocation. Keep the Warp
+module object intact, forward every unrelated launch with untouched arguments,
+and invoke the matching original launch exactly once with its original arguments
+and return value. Require actual kernel identity, owned model/data array
+identities, level ordering and complete batch dimensions. The level count and
+body IDs come from the real model, not a guessed tree.
+
+Retain synchronized, detached whole-batch cinert/CRB float32 snapshots immediately
+before and after each accumulation launch for all six early phases. Later
+forwards are pass-through. Restore the owned callable on every normal/error path;
+fail closed on competing ownership, reentry or foreign replacement. Do not
+overwrite an externally replaced callable or swallow a launch/snapshot error.
+Keep the unchanged complete-forward inertia observations and their reader
+bindings; the new reader must validate its exact stage schema before projection.
+
+Source acceptance requires actual two-world CPU observed/unobserved trajectory,
+control, force and caller-RNG equivalence under identical construction seeds,
+exact original forward/launch counts and call identity, owned copies/finite
+shapes, stage-order and inter-stage raw-bit bindings, and failure-path restoration
+tests. CPU results cannot qualify CUDA timing or scheduling equivalence.
+
+Device synchronization and host copies change launch timing. Even a future
+matching launch-boundary trace is instrumented, does not reveal scalar atomic
+execution order, and does not qualify the uninstrumented failed pair. Every
+new and inherited qualification/admission flag remains false. A future native
+experiment would need its own reviewed exact source, complete 64-world/28-call
+schedule and pulse, authenticated inputs, fresh capped service, independent
+reader and full closeout reserve before 21:00. This source slice authorizes none
+of those launches by itself and no gate relaxation or installed-runtime change.
+
+The actual pinned tree has seven reversed levels: [6,15], [5,10,14], [4,9,13],
+[3,8,12], [2,7,11], [1], [0]. The root-child group is stage index 4. Retain all
+seven levels, including the parent-zero no-op levels; do not replace the full
+stage set with just the suspected root group. Four full cinert/CRB snapshots per
+stage across six 64-world phases contain **6,881,280 raw float32 bytes** before
+metadata. Combined with the original 6,193,895-byte inertia trace, that exceeds
+the unchanged 8 MiB raw-artifact limit. Any future serializer must therefore
+retain a separately authenticated bounded stage payload and the unchanged
+inertia payload, not widen the old limit or pass the combined in-memory capture
+to the old serializer. Exact whole-file size/hashes and reassembly validation
+are still unimplemented execution gates in this source-only slice.
+
+#### Completed source-only observer preparation
+
+The new observer source SHA256 is
+`39e7d18f50d92a85fb5331fb29575e03a0b92b4d3d863fae488bb2ee7e04644c`;
+its focused test source SHA256 is
+`0c0027e3d180879861ed3835d4537c2af7ac34f539d4c1a4b9719278106af387`.
+Owner checks: **22 focused tests passed in 15.39 s** and the full CUDA-hidden
+42-file regression **1,294 passed in 141.23 s**, with no skips. Ruff check,
+format check and whitespace checks passed. Independent source review found no
+remaining concrete blocker at these hashes. The old runtime and observers were
+not edited.
+
+The two-world CPU fixture also exercised the unchanged full 28-call/280-step
+schedule, including the +X 2 N pulse at steps 250 through 269. Observed and
+unobserved trajectories, controls and caller RNG bytes matched; each ran exactly
+560 original complete forwards. All 20 physical pulse steps were counted, the
+control world stayed unforced, and applied-force buffers cleared afterward.
+Only the six declared early phases (42 accumulation stages) were captured;
+later pulse forwards remained pass-through. Hook failure, foreign replacement,
+partial capture, signed zero, unsafe source reads and bounded schema traversal
+have focused negative coverage.
+
+This result is source/CPU equivalence only. It neither establishes CUDA timing
+equivalence nor repairs or admits the original rejected native pair. No new
+native observer service, GPU rollout, optimizer update or training was launched.
+The separately bounded artifact encoding and authenticated reassembly described
+above remain the next source preparation gate, before any native predeclaration.

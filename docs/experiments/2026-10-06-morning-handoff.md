@@ -40,6 +40,18 @@ CPU authentication/math, not a second native experiment or acceptance.
 No new policy training, football-balancing capability, hop promotion, obstacle
 video, graph, raw perception or physical result was produced in this slice.
 
+The later [CPU field inspection](2026-10-06-cpu-plant-field-inspection.md)
+completed at clean native 2ECE without CUDA. Its exact descriptor matches the
+retained native descriptor; the Mac CPU mismatch is confined to tiny differences
+in five compiled fields, not proven package/driver drift. Keep exact model
+binding and CPU/CUDA boundaries intact. Source-bound native CPU annotations
+locate the serial constructor bias/smooth negatives at environment 10, free-base
+DOF 4. Post-forward CoM negatives reach both bodies 0 and 1 in environments 10
+and 53. Neither observation captures the actual reduction entry or establishes
+the runtime cause. The fresh diagnosis and terminal packet are separately durable
+under `artifacts/tools/stance-cpu-field-diagnosis-20261006-0735/`, with whole
+hashes and the preserved failed model-binding attempt in the inspection document.
+
 ## Prepared source/CPU helpers
 
 1. [Forward reduction plan](2026-10-06-forward-reduction-plan.md), commit

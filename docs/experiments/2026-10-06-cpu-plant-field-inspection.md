@@ -77,5 +77,73 @@ mismatches, retain that result and stop model-dependent interpretation.
 
 ## Result
 
-Pending the declared native CPU export and independent whole-byte comparison.
-This is not a new GPU experiment or a repaired full-window gate.
+The declared service completed from 07:17:45 to 07:17:55 CST, invocation
+`1837a5778f8c40eba395321cfe626ec6`. PID 3271972 was observed active; the
+terminal audit found `MainPID=0`, exit 0, `Result=success`, zero restarts and all
+declared caps intact. Its raw terminal `MemoryPeak=966656` is retained as an
+accounting value, **not an observed RSS or live-peak proof**. The 38,611-byte
+`fields.json` whole SHA is
+`e8160827a52db740a6edc2e89973e5313f0020ed7be79ef609c903a1cf8f6ace`;
+the 4,437-byte `compile.log` whole SHA is
+`6cd45b6b879425fdf0d9a10172385004c9b4b7db168d1273cd3fb8c30587d9c5`.
+Both received files were authenticated before decoding. CUDA stayed hidden
+and uninitialized; the native source remained clean at 2ECE.
+
+The fresh native **CPU** descriptor exactly matches the authenticated native
+descriptor; its CPU `ntendon=0`. All 34 selected array fields were compared
+without a tolerance. The finite cross-host differences are:
+
+| Field | Float64 reencoded differing scalars | Float32 reencoded differing scalars | Maximum absolute delta |
+| --- | ---: | ---: | ---: |
+| body_inertia | 11 | 0 | 1.0842021724855044e-19 |
+| body_iquat | 17 | 0 | 2.8935187579293142e-15 |
+| geom_pos | 109 | 10 | 1.3877787807814457e-17 |
+| geom_quat | 72 | 15 | 1.5543122344752192e-15 |
+| geom_size | 99 | 0 | 1.231653667943533e-16 |
+
+All other selected field values match. These are comparisons of exported CPU
+values reencoded as float64/float32, **not** full MJB fingerprints or observed
+CUDA model bytes. They are consistent with cross-host compilation/arithmetic
+differences, but do not prove an architecture cause, package/driver change or
+the cause of the original same-host CUDA replay failure. Keep the failed strict
+Mac model-binding guard; do not turn these deltas into an acceptance tolerance.
+
+After reauthenticating the original 20 files and reproducing the exact partial
+result hash, the separate coordinate diagnosis found both serial constructor
+force negatives at `[environment=10, dof=4]`. The native CPU binding labels that
+as `trunk_base_freejoint`, body 1, local DOF 4; it is a CPU annotation, not a new
+CUDA binding observation. Bias values are `-0.004055817145854235` versus
+`-0.004055815748870373` (bits `0xbb84e6a9` versus `0xbb84e6a6`); smooth force has
+the corresponding positive values/bits. The other 15 recorded fields match
+for that constructor pair. Constructor-to-frame-2 CoM negatives in each serial
+child are eight scalars: four on root body 0 and four on trunk body 1, confined
+to environments 10 and 53. These are post-forward observations, not actual
+CoM/RNE kernel-entry state or proof of a particular reduction cause.
+
+The first new analysis-helper attempt hit `AttributeError` before writing a
+result because its import order selected an older private reader. The corrected
+helper requires the literal authenticated reader/helper module paths before
+analysis. It does not change either retained reader or the original failure.
+The final 13,520-byte diagnosis whole SHA is
+`79ce773aa3adb30bce03b28eff86f9c5de54b8ceb2e5015b1fb36a49d19bc45e`;
+its tool SHA is
+`d7f8d524247b100f30541751c867b1cb6d2f84e9014cf6dd50d3264ce83cb385`.
+The 2,512-byte terminal owner packet whole SHA is
+`c91a218e41095243ae55089f4a6202ee4054a2b8629a21bb306f2b887c6b3a73`;
+its writer SHA is
+`5d305c93334a14487666f20a68e88fc89ec8adc5452442a3c37b2ef1bbff00e5`.
+
+Tools, reviewed Mac input, diagnosis, terminal packet and synthetic negative
+test are separately retained at
+`artifacts/tools/stance-cpu-field-diagnosis-20261006-0735/`. Complete file hashes
+were checked on both hosts after transfer and the directory was synced. The
+old 20-file inventory, seven-tool directory and failed services are unchanged.
+The private negative tests passed: every terminal identity/cap mutation fails
+before publishing, wrong whole-input hashes and symlink inputs are rejected.
+Ruff and formatting passed; this documentation-only update does not need a new
+native execution or another full source regression.
+
+At the result audit the GPU had no compute PID, FilmBrain retained PIDs 521 and
+298048 with zero restarts, and both protected services were inactive in user
+and system namespaces. This is not a new GPU experiment or a repaired full-window
+gate. Runtime-cause, full-window, training and physical acceptance remain false.

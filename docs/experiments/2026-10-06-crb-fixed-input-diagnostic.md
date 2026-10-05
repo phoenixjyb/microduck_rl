@@ -143,4 +143,66 @@ The final narrow environment check also pins the existing sanitized startup
 profile: `ATEN_CPU_CAPABILITY=default`, `MKL_CBWR=COMPATIBLE`, and one thread
 each for OMP, MKL and OpenBLAS; it does not inherit credentials or injection paths.
 
-No new native job or numerical gate acceptance is claimed by this declaration.
+At initial predeclaration no native job had run; the subsequent evidence is
+recorded below. No full-window numerical gate acceptance is claimed.
+
+### Retained native result at `b72cf952`
+
+Exact execution source: `b72cf952a265ac69bbe6affec470f39dbf3ad042`, pushed to the
+fork and cleanly fast-forwarded from `f190d24`. Source sync finished with
+invocation `655b33a438eb4b2584cb5852639176da`, PID 0, zero restarts and its
+120-s / 256-MiB / 100%-CPU cap. Native CUDA-hidden tests passed **1,415 tests,
+zero skips**, in **117.70 s**, under invocation
+`7c5c21aad5824b189964597d72fa94e4` and the declared 300-s / 6-GiB cap.
+
+The run completed in **10.8507 s**, invocation
+`5c69382e97b14515b616ca4b881671f2`, at the declared 600-s / 6-GiB cap; child
+PID `3135333` was bound to three supervisor monitoring samples. Both retained
+units exited successfully with PID 0 and zero restarts. The initialized child
+was observed as the sole compute PID, with monitored peak 31 C / 924 MiB used.
+Its authenticated log identifies the actual `cuda:0` Blackwell device and
+installed cached `mujoco_warp._src.smooth` kernel module. It
+used Warp only; Torch CUDA stayed uninitialized, no model/actor/optimizer was
+constructed, and both retained 5,056-byte CPU RNG states were identical.
+
+The 32 identical derived-fixture repeats produced **seven distinct complete
+outputs**. Four parent-1 scalar cells varied: world 10/component 1 and world
+53/components 1, 3 and 6. Maximum pairwise same-cell delta was
+`4.656612873077393e-10`; all other bodies were unchanged bitwise, and every
+observed root scalar matched at least one independently computed addition-order
+candidate (**zero unmatched cells**). World 53 matched the original whole
+capture root vector in **11** repeats and the original whole replay root vector
+in **7** repeats. This is an observed result of the isolated concurrent kernel
+under the declared schedule, not an inferred actual atomic order.
+
+| Whole retained artifact | SHA256 |
+| --- | --- |
+| Native tests receipt | `1b71fc3388c39ca117d87d846ac487ea74662a399663700486f907fdf9ad3516` |
+| Derived baseline | `554aa8cccf4dbede45ac8f03b3d6e9e8433b0f567f30da454ab2cacd754a80d6` |
+| All 32 complete outputs | `3fb806410d9596e774c8bf23eac0236e6cf736383db79c94f5384102e35db1d6` |
+| Before/after CPU RNG bytes | `3e8f37f858bef1e06e85d1a008196b1008ffa962510f9123025f11ea29c9a296` |
+| Run report | `2f1e363c3281703cf7a5e583ede2bfcc569d7220a611a66283e14cdaa20c9492` |
+| Independent owner terminal packet | `82c3c4110113f245bb3302a5354c6194176b30ed81769af6aa9405fddae0d1d1` |
+
+Run assets remain at
+`artifacts/evaluations/stance-crb-kernel-run-b72cf952a265`; native test assets
+are at `artifacts/tools/stance-crb-kernel-tests-b72cf952a265`. The separate owner
+packet is `artifacts/tools/stance-crb-kernel-owner-terminal-b72cf952a265.json`.
+Independent native CUDA-hidden closeout recompiled topology, reauthenticated all
+27 immutable original files, reproduced the whole result, and checked terminal
+invocations/caps, clean source, runtime/assets, FilmBrain and both protected
+service namespaces. A second pure NumPy reader on the Mac authenticated the
+owner packet and all ten new run/test files, independently rebuilt the fixture
+from the pinned oracle, checked full baseline/output/RNG bytes, and reproduced
+the exact summary. The GPU returned idle at 30 C; protected services remained
+inactive and FilmBrain service PIDs/restart counts were unchanged. The hidden
+CPU topology compiler's CUDA-error-100 startup diagnostic is expected when CUDA
+is intentionally invisible; it was not emitted by the initialized GPU child.
+
+This **demonstrates reduction variability without the per-level observer**.
+It does not prove the cause of the original trajectory failure or qualify its
+full window; no training gate has passed. The smallest next numerical control
+is a separately declared fixed `[2]`, `[7]`, `[11]` three-launch schedule with
+the same aliased kernel/inputs, checking all 32 full results against its exact
+CPU addition-order candidate. It changes launch timing/count and must not be
+presented as production replay equivalence or a repair of the original protocol.

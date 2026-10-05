@@ -1266,3 +1266,75 @@ source and its sole new `microduck-inertia-orders-sync-*` unit. Do not restart
 old failed units. No GPU rollout, optimizer, training, driver/package mutation,
 raw perception, video, physical motion or service restoration follows from this
 CPU diagnostic result.
+
+### Retained addition-order result: arithmetic membership, not kernel proof
+
+Reviewed source `766271542f4c168ebe00c56e8e03755c3f44be2b` was committed and
+pushed to the exact fork feature branch after the local complete **1,272-test**
+suite passed in **136.33 s**, with no skips. Focused oracle/probe suites passed
+35/55 tests; owner Ruff and staged whitespace checks passed. Earlier rollout,
+observer, component-map and reader source/test bytes are unchanged.
+
+The 24,990-byte single-ref source bundle had SHA256
+`849b18f2bcfe1cb66db8a2283f24c19811484b74ee21f624ebb88a00444f13b1`.
+Fresh capped bootstrap `microduck-inertia-orders-sync-766271542f4c.service`,
+invocation `420c20c4bf0c4631a97b00becbc732fb`, fast-forwarded clean native
+`f749649d` to the exact reviewed source. Terminal state was inactive, PID 0,
+exit 0, no restarts. The original failed source-sync units were not restarted.
+
+Native CPU test service `microduck-inertia-orders-tests-766271542f4c.service`,
+invocation `2f6ac34ad90c4555b51ab7f2cbd63209`, completed **1,272 tests in
+100.48 s**, **106.11296769208275 s** including supervisor checks. Retained at
+`artifacts/tools/stance-inertia-orders-tests-766271542f4c`:
+
+- report SHA256 `ec35de30f86925d594a998d2abc0fa248eb16720e65647a87c8b9f484983bd0b`
+- whole pytest log SHA256 `8ce6e7997dedeb81592bf14777f60cfd9433dbbf852b7185e45d4f7ee32ab7d1`
+
+It was terminal inactive/PID 0/exit 0/no restarts before the analysis service.
+Fresh `microduck-inertia-orders-run-766271542f4c.service`, invocation
+`a9d9328cf1cc46df8b1fd9395d5f86f7`, completed its CPU-only diagnostic in
+**19.57611904805526 s**, again terminal inactive/PID 0/exit 0/no restarts.
+Retained at `artifacts/evaluations/stance-inertia-orders-run-766271542f4c`:
+
+- `comparison.json`, 443,540 bytes, SHA256 `7731633338071aeb1435c0dd613f1216cc1b528b15edc8e658cbcad8691fa45c`
+- `report.json`, 15,877 bytes, SHA256 `38d860e97cdbe898c560b8522c3191348984c778f8d772d899f6f02ef7a5517a`
+
+All 640 observed scalar cells in each side have at least one candidate among
+the six hypothetical float32 child orders: **zero unmatched capture or replay
+elements**. Only world 53 components 3 and 6 differ across the original pair.
+The lexicographic order IDs are 0=[2,7,11], 1=[2,11,7], 2=[7,2,11],
+3=[7,11,2], 4=[11,2,7], 5=[11,7,2]. Their memberships are:
+
+| Component | Capture candidate IDs / mask | Replay candidate IDs / mask |
+| --- | --- | --- |
+| 3 | 3,5 / 40 | 0,1,2,4 / 23 |
+| 6 | 2,3 / 12 | 0 / 1 |
+
+Do not misread the complete-vector match counters as accepted attempts. They
+sum **(world, order) matches**, 63 for capture and 64 for replay. Owner
+independent intersection of all ten scalar membership masks found **no single
+whole-vector order for capture world 53**, and no such empty intersection on
+replay. Capture component 1 requires order 0 or 2, while component 3 requires
+order 3 or 5. Thus a single vector-wide order does not explain that captured
+root vector even though every individual scalar value has a candidate. This
+is consistent with component-dependent atomic interleaving, not observation or
+proof of any actual kernel execution order.
+
+Both sides' sampled root cinert and direct-child CRB inputs were bit-identical.
+This strengthens the arithmetic plausibility of the root reduction lead, but
+the samples remain after a complete forward. Actual stage inputs and execution
+order were not captured. The unchanged original full-pair rejection was
+reproduced: `paired rollout semantic state exactness`; `original_pair_accepted`
+and every qualification/admission flag remain false. No physics modification,
+tolerance, canonicalization, optimizer update, learned-skill promotion or GPU
+execution occurred in this diagnostic.
+
+Owner independently hashed both new whole JSON files before parsing, rehashed
+all **23 original files + 2 prior map files**, and verified the installed smooth
+source hash unchanged. Post-analysis audit: exact clean native source, no
+running Duck unit or GPU compute PID, 0% GPU, 666 MiB used / 23,496 MiB free,
+30 C. FilmBrain remained active at PIDs 521/298048 without restarts; both
+protected services remained inactive at PID 0 in user and system managers.
+Campaign work remains active through 21:00; the next useful boundary must
+separate stage observation from scalar arithmetic speculation without changing
+the original gate or installed runtime.

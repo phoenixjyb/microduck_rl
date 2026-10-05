@@ -247,3 +247,85 @@ checks pass. Independent review cleared the arithmetic, predecessor-binding,
 input/launch/alias/stream and hardened reporting paths; the owner also validated
 the actual 12-file historical serial packet against its pinned hashes and C970
 source leaves. These are source/CPU checks only; native admission remains open.
+
+## Completed native fixed-input control
+
+Execution source was clean `d923275040b3538f6ed48b867f1b1e6bc42304d3`
+on the exact fork feature branch, on 100.98 only. The newly retained native
+51-file suite passed **1,522 tests in 116.05 s**, zero skips. The CPU fixture
+and independent CPU owner both freshly re-scored the authenticated original
+pair and reproduced `paired rollout semantic state exactness`; that pair is
+still rejected. All 50 predecessor files were authenticated afresh.
+
+The one predeclared GPU batch completed successfully in **13.400 s** with
+512 installed-kernel launches. Serial outputs were `stable-exact-candidate`:
+all 327,680 scalars matched the independently frozen prediction, with one
+complete snapshot and zero root variability. Concurrent outputs had **five
+complete variants**, 186 root-scalar mismatches against the fixed prediction,
+four varying root cells, and maximum pairwise same-cell root delta
+`4.656612873077393e-10`. Every non-root output scalar was exact in both banks.
+No favorable-output retry or intermediate observer was added.
+
+The actual child PID was 3188116; one of three monitor samples observed that
+PID owning CUDA. Peak sampled temperature was **31 C**, peak used VRAM
+**942 MiB**. Two idle post-samples showed no compute PID and 661 MiB used.
+FilmBrain remained active at PIDs 521 and 298048, zero restarts; both protected
+services remained inactive in both system and user namespaces. 100.100 and
+installed package/kernel files were not changed.
+
+### Durable artifact anchors
+
+All paths below are relative to native root
+`/home/yanbo/work/microduck_rl-stance-replication-20260930`:
+
+| Artifact | Whole SHA-256 |
+| --- | --- |
+| `artifacts/evaluations/stance-crb-fulltree-run-d923275040b3/report.json` | `e3f70f68a49132db05e23907fc22dc857e142dcb90f8473d0cac1c0c2184e4b2` |
+| Run `concurrent.bin` (1,310,720 bytes) | `44115f6bc6e3e68f2f15c29d4820907160056308103d528695ab7037cf9c0a63` |
+| Run `serial.bin` (1,310,720 bytes) | `a638d20a4485a0e0e30343f652a16e9ef0ddd4139d648671ecbcc1bc5f2fc8ad` |
+| `artifacts/evaluations/stance-crb-fulltree-fixture-d923275040b3/declaration.json` | `563c5be1b1df29c0ed95b5ffdf00d5949499d847858ca2c507ae103a56e742f4` |
+| Fixture `report.json` | `8c2f62678c1314c1153b2ac250c7fb8e04018213001a2b88c19202b1d9ad72d1` |
+| `artifacts/tools/stance-crb-fulltree-tests-d923275040b3/receipt.json` | `d4186da1c03e4f9e77f94e7b6bb9a57103efb6a1381f395a5176b2d3b0a6b765` |
+| `artifacts/tools/stance-crb-fulltree-owner-terminal-d923275040b3.json` (141,834 bytes) | `718b61f3d08e61a2e27410fe8b8b62ae3be52a9a74dad0034e4998bc074ae707` |
+| `artifacts/tools/stance-crb-fulltree-closeout-terminal-d923275040b3.json` (1,389 bytes) | `4806842ddf6b664858875b632246d40df384ef72564f99852b96a1ff1d93dc2f` |
+
+The independently capped native owner reauthenticated all inputs, source/runtime,
+full bank bytes, literal NumPy arithmetic, RNG, retained GPU monitor and completed
+service invocations. Its post-exit packet confirms PID zero, success, zero
+restarts, original caps and resident-memory peak **1,600,233,472 bytes** below
+6 GiB. Exact invocations for the `microduck-crb-fulltree-*-d923275040b3.service`
+units are:
+
+- Sync: `c76c64903ee84b09b1a290a2e6cd72d1`.
+- Tests: `8cf05493d0ec41c5babde4924d05d8b1`.
+- Fixture: `75286b04bbc84471ae8387541853fa8a`.
+- Run: `f9779454708f4e9c97ed2714cf5f9d89`.
+- Independent closeout: `5f50f3f71f8e4aa198dcc96e83ab1371`.
+
+The initial terminal-recorder SSH invocation started in `/home/yanbo` and
+refused with `ValueError: exact Linux worktree` before publishing a terminal
+file. Read-only checks verified successful owner exit and unchanged owner/output
+hashes. Only the unchanged CPU recorder was rerun with the exact working
+directory; no GPU batch, source or retained publication was rerun/overwritten.
+
+The Mac receiver authenticated both whole owner/terminal packets before decoding,
+all **20** new artifact files and committed D923 source leaves, and independently
+reproduced complete prediction/output-bank statistics. The hardened 5,897-byte
+result is retained at
+`/private/tmp/microduck-crb-fulltree-20261006.yz5aYX/mac-verification-v2.json`,
+SHA-256 `20b5bcf1ca84c1f20f41f8cabd0e95090c1f16c49b9aa60050a06de6f7fe0b59`.
+It also cross-binds publication/terminal invocations, the exact original-trace
+forecast wrapper and the receiver/predictor implementation hashes. The initial
+successful v1 result is preserved separately; no result was overwritten.
+Mac checking is CPU/transport evidence, not a fresh live native GPU attestation
+or full original-trajectory scoring on Mac.
+
+This establishes that the fixed-input serial schedule removes observed root
+variation in this bounded batch. It changes timing/schedule and uses a derived
+completed-forward full-cinert fixture, not actual original kernel-entry capture.
+Original-cause proof, actual atomic order, full-runtime/full-window replay,
+training, learned stance and physical acceptance remain **unqualified**.
+The next useful question is a separately predeclared process-local runtime
+schedule control covering the constructor's first forward as well as subsequent
+eager forwards. Do not edit installed libraries or reuse this isolated acceptance
+as original replay admission.

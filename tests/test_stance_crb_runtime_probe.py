@@ -580,6 +580,90 @@ def test_field_comparison_is_signed_zero_sensitive_and_retains_delta():
     assert result["fields"]["cinert"]["exact_raw_bits"] is True
 
 
+def _torch_frame():
+    return {
+        name: torch.zeros(
+            (probe.WORLDS, *shape) if shape else (probe.WORLDS,),
+            dtype=torch.float32,
+            device="cpu",
+        )
+        for name, shape in probe.FRAME_FIELDS.items()
+    }
+
+
+def test_four_torch_payloads_produce_all_28_pairs_and_476_field_results():
+    payloads = {}
+    metadata = {"worlds": probe.WORLDS, "schedule": "pinned"}
+    for attempt in probe.ATTEMPTS:
+        payloads[attempt] = {
+            "runtime_metadata": metadata,
+            "frames": [_torch_frame() for _ in range(4)],
+        }
+
+    summary = probe._compare_four(payloads)
+
+    assert summary["pair_count"] == 28
+    assert sum(len(pair["fields"]) for pair in summary["pairs"]) == 476
+    assert summary["all_exact_raw_bits"] is True
+    assert all(
+        field["exact_raw_bits"]
+        for pair in summary["pairs"]
+        for field in pair["fields"].values()
+    )
+
+
+def test_torch_field_comparison_preserves_signed_zero_and_finite_delta():
+    left = _torch_frame()
+    right = {name: value.clone() for name, value in left.items()}
+    right["crb"].view(-1)[0] = -0.0
+    right["qpos"].view(-1)[1] = 0.25
+
+    result = probe._field_comparison("torch-runtime-pair", left, right)
+
+    assert result["fields"]["crb"]["bit_mismatch_scalars"] == 1
+    assert result["fields"]["qpos"]["bit_mismatch_scalars"] == 1
+    assert result["fields"]["qpos"]["max_abs_delta"] == 0.25
+
+
+@pytest.mark.parametrize("invalid", ["nonfinite", "dtype", "device", "layout", "shape"])
+def test_torch_field_comparison_rejects_invalid_tensor_contract(invalid):
+    left = _torch_frame()
+    right = {name: value.clone() for name, value in left.items()}
+    if invalid == "nonfinite":
+        right["qpos"].view(-1)[0] = torch.nan
+    elif invalid == "dtype":
+        right["qpos"] = right["qpos"].double()
+    elif invalid == "device":
+        right["qpos"] = torch.empty(
+            right["qpos"].shape, dtype=torch.float32, device="meta"
+        )
+    elif invalid == "shape":
+        right["qpos"] = torch.zeros((probe.WORLDS, 20), dtype=torch.float32)
+    else:
+        right["qpos"] = torch.zeros((probe.WORLDS, 42), dtype=torch.float32)[:, ::2]
+
+    with pytest.raises(ValueError, match="owned finite CPU float32 qpos"):
+        probe._field_comparison("invalid-torch-runtime-pair", left, right)
+
+
+def test_four_torch_payloads_retain_upstream_and_crb_finite_negatives():
+    payloads = {
+        attempt: {
+            "runtime_metadata": {"worlds": probe.WORLDS},
+            "frames": [_torch_frame() for _ in range(4)],
+        }
+        for attempt in probe.ATTEMPTS
+    }
+    payloads["concurrent-replay"]["frames"][0]["crb"].view(-1)[0] = 1e-6
+    payloads["serial-replay"]["frames"][3]["cinert"].view(-1)[3] = -1e-6
+    summary = probe._compare_four(payloads)
+    assert summary["pair_count"] == 28
+    assert sum(len(pair["fields"]) for pair in summary["pairs"]) == 476
+    assert summary["all_exact_raw_bits"] is False
+    assert summary["numerical_negative_outcomes_retained"] is True
+    assert summary["no_tolerance_or_rerun"] is True
+
+
 def test_four_child_comparator_retains_finite_negative_results():
     frames = []
     for _ in range(4):

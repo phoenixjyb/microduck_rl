@@ -298,3 +298,65 @@ Synthetic evidence is not native evidence. Whole private tool hashes are:
 
 The receiver remains CUDA-hidden, authenticates all bytes before decoding, and
 cannot admit training or overturn the original full-rollout rejection.
+
+### Retained runtime and CPU comparison failure; CPU-only recovery declaration
+
+At exact native source `2ecee471f7b999822ed19defd7e2d1c7ad09df07`,
+all 1,581 CUDA-hidden tests passed in 126.11 s with zero skips, CPU preflight
+passed, and all four predeclared CUDA children completed successfully. Their
+four payloads, receipts and logs are immutable; do not repeat the GPU runs to
+repair a CPU reader. The original full-rollout rejection remains unchanged.
+
+The CPU closeout exited 1 before writing a receipt or numerical result:
+`_load_and_compare_run` passes the real retained Torch frames to
+`_field_comparison`, whose NumPy-only `a.view(np.uint32)` raises `TypeError`.
+The existing numerical tests exercised NumPy frames and missed this boundary.
+Retain the failed invocation `8531be13b48a4d4f8c63bf0d6e6023b6`, owner PID
+3251146, terminal PID 0, zero restarts and measured peak 560,336,896 bytes.
+Whole observed report hashes are:
+
+- tests `70fc98e0e9ad83703ca92854cccff8b6ebbf489ce7793d8be58b7589853d46e3`;
+- preflight `6c470f72725e7f1cd99ce64c66ccb9b0a264e7cf896c4cd52b0ea4f111340d3a`;
+- runtime `dae635a1dcd68be5790395a7fb876c3f50a7d810460db5e7c96a17863e3f431a`;
+- failed closeout `02202ab30181629ea2dac4b5305643b972c15dceb994f1719031261b239ea0d8`.
+
+Predeclare a separate **partial-evidence CPU recovery**, not successful native
+closeout: authenticate exactly 20 retained files (three tests, two preflight,
+14 runtime, and the failed closeout report), explicitly reject an unexpected
+closeout receipt, and preserve the exact failed report and terminal state.
+Keep the native source at the runtime revision while recording fresh source,
+host/package, idle GPU, protected/FilmBrain state, service invocations/caps and
+the four actual observed child PID/resource histories. A separately reviewed
+CPU-hidden reader must retain all payload/schema/RNG/byte authentication and
+independently compute the same 28 pairs / 476 field comparisons; it must not
+invent a producer comparison or convert the failed closeout into success.
+No tolerance, GPU retry, numerical admission or training authorization follows.
+
+The short source-sync service has `MemoryAccounting=yes` but its removed
+cgroup leaves `MemoryPeak=[not set]`, `ControlGroup=''` and
+`MemoryCurrent=[not set]`. Preserve those observations and explicitly mark the
+sync peak unavailable. The sync-only exception requires exact source/invocation,
+120-s/256-MiB/100% caps and successful PID-zero terminal state; all four test/
+numerical services still require positive measured peaks below their 6-GiB caps.
+
+The bounded comparator correction validates real retained CPU float32 Torch
+frames with the existing exact shape/contiguity/finiteness contract before
+converting to NumPy, retaining raw-bit and signed-zero checks. Eight additional
+regressions cover 28 real-Torch pairs / 476 fields, finite upstream/CRB negatives,
+signed zero, and nonfinite/dtype/device/layout/shape rejection. The complete
+53-file CUDA-hidden Mac suite passed **1,589 tests in 207.65 s**, zero skips;
+the focused adapter/supervisor suite passed 67 tests in 25.69 s. Independent
+source review, Ruff check/format and `git diff --check` passed. These checks do
+not retroactively change the frozen native revision or its 1,581-test receipt.
+
+The separate partial-owner recorder authenticates all 20 files (8,114,151 bytes)
+and all five terminal units, retaining the one failed CPU closeout. Its whole
+tool SHA is `25bcb30c1876990a09d051cb8c649708b3b35bd641356b5ca4b7d2813b12823b`;
+the 22 terminal schema regressions passed without producer imports or CUDA.
+The native 20,732-byte packet has independently observed whole SHA
+`dc2aa2d344fcad58d2054a2238c15d0d3678724852160834dc5a2a29bef8151a`.
+Its four monitor histories observed actual child PIDs 3248986, 3249394, 3249842
+and 3250255, each in four samples; used VRAM was at most 973 MiB and temperature
+at most 33 C. Protected namespaces remained inactive, FilmBrain PIDs/restarts
+unchanged and the GPU idle at closure. The standalone partial numerical reader
+is still pending; no successful original closeout is implied by this packet.

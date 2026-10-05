@@ -102,7 +102,7 @@ TEST_RESERVE = (
     + SECONDS["closeout"]
     + MARGIN
 )
-EXPECTED_TESTS = 1581  # Exact reviewed 53-file CUDA-hidden suite; zero skips.
+EXPECTED_TESTS = 1589  # Exact reviewed 53-file CUDA-hidden suite; zero skips.
 TEST_FILES = (
     *fulltree.TEST_FILES,
     "test_stance_crb_runtime_control.py",
@@ -1087,7 +1087,10 @@ def _field_comparison(label, left, right):
     )
     fields = {}
     for name in FRAME_FIELDS:
-        a, b = left[name], right[name]
+        suffix = FRAME_FIELDS[name]
+        shape = (WORLDS, *suffix) if suffix else (WORLDS,)
+        a = _comparison_array(left[name], name, shape)
+        b = _comparison_array(right[name], name, shape)
         count = a.size
         aa = a.view(np.uint32)
         bb = b.view(np.uint32)
@@ -1113,6 +1116,21 @@ def _field_comparison(label, left, right):
             )
         },
     }
+
+
+def _comparison_array(value, label, shape):
+    if torch.is_tensor(value):
+        _tensor_raw(value, label, shape)
+        return value.detach().numpy()
+    require(
+        type(value) is np.ndarray
+        and value.dtype == np.dtype("<f4")
+        and value.shape == shape
+        and value.flags.c_contiguous
+        and bool(np.isfinite(value).all()),
+        "owned finite CPU float32 " + label,
+    )
+    return value
 
 
 def _compare_four(payloads):

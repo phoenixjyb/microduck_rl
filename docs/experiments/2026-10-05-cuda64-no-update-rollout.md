@@ -1212,3 +1212,57 @@ Owner post-analysis audit: no running Duck unit or GPU compute PID, 0% GPU,
 666 MiB used / 23,496 MiB free, 30 C. FilmBrain and protected services remain
 preserved. This is another retained campaign milestone; work remains active
 until the authorized 21:00 cutoff and its final audit.
+
+### Addition-order oracle: fresh CPU-only predeclaration
+
+Use new `stance_inertia_order_oracle.py` and `stance_inertia_order_probe.py`,
+their two new test files, and this document only. Diff base is
+`3af51c89ee923b46491a3ea9c861876298b003cf`; all earlier full-rollout, reader,
+observer and component-map source/test bytes are frozen at
+`f749649d5925f197ee2a995e76aaa1915854f9f9`. The original rejected pair remains
+at source `65abe930caa16476e4d8ece44f937492da47ce2e`, not re-executed.
+
+Before any tensor load, authenticate all 23 original whole files and original
+failed invocation as above, both whole component-map JSON hashes and successful
+map invocation `e161d7339d904a4baaac1be2be74c36a`, and the actual installed
+smooth source hash `63b2d4093745762309bb335826a1f741a1baab26d93277ba92859fea1495880f`
+(regular non-symlink leaf, maximum 1 MiB). These 25 evidence files and installed
+source must rehash identically after the oracle. No installed file is edited.
+Rerun the immutable complete body/trace readers and reproduce the exact original
+pair rejection before applying the new arithmetic diagnostic. Require the
+unchanged 64-world retained schedule and the same freshly compiled plant binding.
+
+The oracle uses only the event-0 scheduled-pre complete-forward snapshot. Body 1
+trunk_base must have exactly direct children 2 yaw2roll, 7 neck and 11 bearing_roll
+from the actual compiled map. Root cinert and all three child CRB input vectors
+must be raw-bit identical across capture/replay. For each of all six child-ID
+permutations, start from the root cinert and perform three sequential **float32**
+CPU additions of the sampled child composite vectors. No float64 accumulation,
+FMA, tolerance, numeric value sorting, partial batch or chosen winning order.
+
+Retain all six full 64-by-10 candidate values/raw bit matrices, both complete
+observed root value/bit matrices, per-order match counts, and the six-bit candidate
+membership mask for every observed world/component. All ten components are
+numeric indices. A match means arithmetic plausibility only: these are
+complete-forward observations, not captured atomic inputs, kernel stage samples
+or a CUDA execution order. Both new addition-order qualification and causal-proof
+flags, plus every inherited qualification flag, remain false even if every bit
+can be reproduced. Preserve the unchanged original full component comparison.
+
+The complete suite is the earlier 39 files plus these two tests, with the
+owner-frozen count of 1,272 tests and zero skips before commit/native launch.
+Use separate fresh
+CPU-hidden test/run services: 300 seconds, 4 GiB, CPU quota 200%, Nice 10,
+KillMode control-group, pytest subcommand 255 seconds, log 1 MiB and JSON 2 MiB.
+Retain the existing lease, two-sample GPU idle gate, exact source/host binding,
+terminal test invocation/whole log, and inactive unchanged protected services plus
+unchanged FilmBrain context. Reserve 660 seconds for tests and 360 seconds for
+analysis before 21:00; never overlap another Duck job.
+
+The separate 120-second, 256-MiB, CPU-quota-100% source bootstrap preserves the
+same bounded whole-bundle/single-ref/root/origin/clean/fast-forward template.
+Its two exact guard replacements require native HEAD at the frozen component
+source and its sole new `microduck-inertia-orders-sync-*` unit. Do not restart
+old failed units. No GPU rollout, optimizer, training, driver/package mutation,
+raw perception, video, physical motion or service restoration follows from this
+CPU diagnostic result.

@@ -358,5 +358,54 @@ The native 20,732-byte packet has independently observed whole SHA
 Its four monitor histories observed actual child PIDs 3248986, 3249394, 3249842
 and 3250255, each in four samples; used VRAM was at most 973 MiB and temperature
 at most 33 C. Protected namespaces remained inactive, FilmBrain PIDs/restarts
-unchanged and the GPU idle at closure. The standalone partial numerical reader
-is still pending; no successful original closeout is implied by this packet.
+unchanged and the GPU idle at closure. No successful original closeout is
+implied by this packet.
+
+### Independently authenticated partial numerical result
+
+The separate CPU-hidden reader authenticated all 20 files before decoding and
+independently compared all **28 pairs / 476 fields**. Its first actual read
+rejected a private-fixture assumption: the archived constructor anchor's source
+is original `65abe930caa16476e4d8ece44f937492da47ce2e`, not the fresh
+runtime source. Read-only inspection of `_constructor_anchor(old_ctor)` and the
+authenticated declaration confirmed this distinction. Bind that exact historical
+source, keep fresh payload constructor receipts bound to the runtime revision,
+and add a complete synthetic negative substituting the fresh source for the
+old anchor. Do not accept an arbitrary source or regenerate CUDA RNG on CPU.
+The corrected synthetic test and actual reader then passed; the preserved CPU
+closeout still failed and has no receipt.
+
+Whole reader / fixture / independent-math hashes are respectively
+`de1aeabb7316a525a18a1d041f1798f9a369185e25b08117b2bfddc412b6742a`,
+`4124e39c4c1799e297d97bfb9cc41518e950baa4d39b0a965c61e71bd96c6319`,
+and `f64b373cc0eb9b016ff12dc7e29b09a9cd01145b8f3f287cb879f902b741c944`.
+The 133,091-byte result whole SHA is
+`5d77483122dc390a53c5d277828f9d8eb7196856b0d950e2445bf9694ab4b167`.
+Its protocol is `microduck-independent-runtime-partial-evidence-receiver-v1`,
+status `authenticated-partial-artifacts-and-independent-math`,
+`closeout_succeeded=false` and `all_exact_raw_bits=false`.
+
+| Comparison family | Pairs | Bitwise-negative pairs | Negative field pairs |
+| --- | ---: | ---: | ---: |
+| Concurrent capture/replay | 4 | 3 | 7 |
+| Serial capture/replay | 4 | 1 | 2 |
+| Capture concurrent/serial | 4 | 4 | 26 |
+| Replay concurrent/serial | 4 | 4 | 26 |
+| Constructor/subsequent forwards | 12 | 10 | 68 |
+
+Serial CRB has exact paired CRB, qM and qLD in all four frames, but the paired
+constructor still differs in `qfrc_bias` / `qfrc_smooth` (one scalar each,
+maximum 1.3969838619232178e-9). Both serial children also have a later forward
+whose `subtree_com`, `cinert` and `cdof` differ from their own constructor
+(8 / 91 / 39 raw-bit scalar mismatches; maxima 1.4901161193847656e-8 /
+3.026798367500305e-9 / 1.4901161193847656e-8). This is evidence against
+CRB-only runtime exactness, not proof of another kernel's cause: unchanged
+kinematics is not a full scratch reset, and the adapter changes timing.
+The original full rollout remains rejected; no training admission follows.
+
+Retain the result, literal reader/fixture/math tools, 20-file anchor manifest,
+anchor extractor and terminal schema regressions under native
+`artifacts/tools/stance-crb-runtime-partial-mac-2ecee471f7b9/`.
+The next source-only slice may plan CoM/RNE reductions with their actual
+body-zero activity rules; do not reuse CRB's parent-zero no-op assumption,
+perform a new GPU replay or claim original cause from this result.

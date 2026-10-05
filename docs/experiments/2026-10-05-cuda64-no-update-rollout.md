@@ -1440,3 +1440,84 @@ equivalence nor repairs or admits the original rejected native pair. No new
 native observer service, GPU rollout, optimizer update or training was launched.
 The separately bounded artifact encoding and authenticated reassembly described
 above remain the next source preparation gate, before any native predeclaration.
+
+### Next source-only slice: split CRB stage archive
+
+Prepare only new `stance_crb_trace_archive.py`, its focused test file and this
+document from observer preparation
+`984ff9d3d56fa676c4db26c517008b50b17b0279`. No existing reader, observer,
+runtime, package or byte cap may change. This is not a native predeclaration.
+
+Keep the exact projected persistent-inertia object encoded by the unchanged
+rollout encoder, and store the CRB launch stages in a separate artifact. Each
+artifact is independently capped at the unchanged **8 MiB** limit. The new
+stage representation uses fixed protocol framing, a bounded canonical JSON
+header and fixed-order raw float32 matrices. It must retain every world, early
+phase, actual tree level and all four matrices; no compression, omitted fields,
+deduplication, numeric canonicalization or signed-zero waiver is allowed.
+
+The manifest binds exact source, topology, whole payload sizes and SHA256 hashes
+with all qualification/admission flags false. Authenticate both complete raw
+payloads before JSON parsing or stage tensor allocation; reject duplicate keys,
+noncanonical JSON, nonfinite values, extra/truncated bytes, variable shape/dtype,
+wrong phase/level metadata and partially completed traces.
+
+The new codec must not deserialize PyTorch files. Its decode API receives an
+already-decoded inertia object, validates it through the unchanged reader and
+requires its unchanged encoder bytes to equal the authenticated retained inertia
+payload. This deliberately fails closed if mapping order, storage representation
+or the pinned encoder differs. It does not establish cross-version serialization
+compatibility or make a small authenticated ZIP safe for arbitrary allocation.
+The future independently capped native reader is still responsible for any old
+payload loading; this source slice does not authorize that execution path.
+
+Acceptance requires a real two-world CPU observer roundtrip and a real full
+64-world CPU first-tick archive, exact signed-zero/raw tensor bytes, owned decoded
+storage, authentication-before-parsing negative tests and strict reassembly via
+the unchanged full stage/inertia checks. These CPU format checks do not replace
+the rejected native pair or admit an optimizer update.
+
+#### Completed source-only split-archive preparation
+
+Final new source SHA256:
+`4cd5a31b213be018545ec20554be4efe014fecb5e9565de94063de3b208e920f`.
+Final focused test source SHA256:
+`5b7bf39e5231bb253c0f715bbcbf49c95d03c23cf2fc3b09472af67511f7fd1f`.
+Owner checks: **44 focused tests passed in 7.42 s**; the complete CUDA-hidden
+43-file suite **1,338 passed in 139.46 s**, without skips. Ruff check/format
+and whitespace checks passed. Independent review found no remaining concrete
+boundedness or ownership blocker at these exact hashes.
+
+Owner separately constructed and roundtripped a real 64-world CPU first tick,
+with 32 zero-wrench and 32 declared early-pulse rows. This checks the archive
+format and all six early phases, not delivery of the later pulse or a replacement
+for the full native 28-call/280-step window. Selected complete-byte evidence:
+
+| Payload | Bytes | SHA256 |
+| --- | ---: | --- |
+| Unchanged projected inertia encoding | 6,193,895 | `4293bcdcc1c067837ad53f4e1f7f2c91439267ef4ae78ff004f669db8dce11f8` |
+| Separate framed launch stages | 6,884,709 | `fd06dbf7b1fbd514b0d68e955c0c5cda4488bf1241bf94399016f21734426cbc` |
+
+The stage artifact retains **6,881,280 tensor bytes** plus 3,429 framing/header
+bytes. Each artifact is below 8 MiB; their combined size is deliberately not
+passed to the old capped serializer. The stage-topology SHA256 is
+`08bd8473012ffc7bf2ed056366dd373d3ab2f541586793af7916a23c00956cf2`,
+the new observer's own subset schema, not the earlier component-map hash.
+Every raw tensor/tree byte matched after reassembly; all flags were false and
+CUDA remained uninitialized.
+
+Negative coverage includes hash/size/type/schema faults before parsing, bounded
+key materialization, valid-but-different topology before reconstruction,
+inherited-tree caps before its old reader, UTF-8/integer/container limits before
+encoding, signed zero, no PyTorch deserialization, detached storage and caller
+mutation isolation. Two owner-added tests initially demanded the wrong error
+message: those malformed roots were already rejected by header schema validation
+before allocation. Corrected tests assert that fail-closed boundary; a separate
+synthetic canonicalization-recursion test exercises the guarded parser path.
+
+Neither this codec nor its CPU checks authorize a native producer, loader or
+service. The public checked encode/decode boundary is CUDA-hidden; any future
+GPU producer still needs its own bounded, tested publication path and exact
+source/service predeclaration. Installed runtime files, previous observers and
+the original native rejection remain unchanged. No optimizer update, native
+observer rollout, learned-skill promotion or physical motion occurred.

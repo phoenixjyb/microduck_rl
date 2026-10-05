@@ -556,3 +556,60 @@ Source documentation validation matched all 23 file and 5 journal hash rows to
 the freshly collected metadata, checked the 33-file / 960-test freeze, and
 passed `git diff --check`. This documentation commit does not rewrite the WSL
 job source or its immutable artifacts.
+
+## Separately declared post-hoc constraint identity reader
+
+The next exact tested source may add only `stance_constraint_identity.py`,
+`stance_constraint_identity_probe.py`, their two new test files, and this
+document. It must descend from the clean v3 source
+`695f19cc3173bb5e257e31105988cd91f846d9e7`; all original rollout/helper source
+and its 33-file / 960-test declaration remain unchanged. This is a new CPU-only
+post-hoc protocol, not another GPU rollout or a retry of either failed namespace.
+
+`football-b1d-constraint-identity-v1` validates both traces/record bindings, then
+reports each of six phases and each world: raw `(type,id)` row ordering (full
+order hash and bounded prefix), identity multiplicities, and aligned J/D/aref/
+force/state values. Duplicate identities are explicitly ambiguous and never
+assigned invented occurrence indices. Only unique-common keys are compared;
+duplicate/missing keys cannot produce a complete identity comparison. Actual
+DOF-friction rows (pinned type 1) are separately checked against retained `nf=14`
+and compared by identity. Per-field solved-dynamics deltas are also retained.
+All qualification and constraint-order-waiver flags are false; strict original
+ordered replay is still required for acceptance.
+
+`football-b1d-constraint-identity-probe-20261005-v1` has serial `tests` and `run`
+user services, each **300 s / 4 GiB / CPUQuota=200% / Nice=10 /
+KillMode=control-group**, CUDA hidden, exact WSL profile and frozen environment.
+It uses the existing shared GPU lease, requires idle GPU and protected services
+inactive before/after, and verifies unchanged FilmBrain plus exact source,
+machine/GPU/driver/assets/dependency trees before/after. Tests reserve 660 s;
+run reserves 360 s before the existing October 5 21:00 cutoff. No GPU child,
+driver/package change, optimizer, raw perception or physical motion is allowed.
+
+The immutable original `independent-failure-diagnosis.json` is anchored by
+predeclared whole SHA256
+`c7ceea3628ada574100e6c65d3818b950dd3ea6deb034fcfe49fc2d3badcbc97`.
+Its 22-file inventory authenticates every original file before tensor loads;
+the exact 23-file namespace and original failed invocation
+`3efb8baea8db4ac4bc90f327856385c8` must remain unchanged. The reader re-runs both
+whole-byte individual readers and reproduces the same exact strict pair error
+before identity diagnostics. It cannot replace that failure with success.
+
+New exclusive output namespaces are
+`artifacts/tools/stance-constraint-identity-tests-{new_source12}` and
+`artifacts/evaluations/stance-constraint-identity-run-{new_source12}`.
+Test output is bounded `pytest.log` (1 MiB) and `report.json` (2 MiB);
+analysis output is `comparison.json` plus truthful `report.json` (each 2 MiB).
+All output is exclusive/fsynced. The final report includes rehashed originals,
+test receipt binding and source/context evidence, with all acceptance flags
+false. Failed partial outputs are retained, never overwritten. Launch requires
+the new owner-frozen complete **35-file / 988-test** CPU suite and tested exact
+pushed source.
+
+Source validation: 28 focused tests passed in 11.89 s; the complete 35-file
+suite **988 passed in 117.88 s**, zero skips. The old 33-file / 960-test CUDA
+supervisor/reader declaration is unchanged. Independent Luna source review
+found no concrete comparator/authentication/cap/context blocker; owner reviewed
+the files and checks. The suite count is frozen only after the complete pass.
+Actual two-world CPU trace tests and synthetic protocol seams remain distinct
+from native CUDA equivalence or any accepted learned policy.

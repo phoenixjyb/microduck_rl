@@ -429,3 +429,130 @@ trajectory, and ordered-contact versus explicitly non-admitting multiset
 diagnostics. Envelope/orchestration fixtures additionally verify refusal before
 unauthenticated trace deserialization and distinct failed-pair diagnosis without
 success closeout. These are source/CPU checks, not native CUDA qualification.
+
+## Retained v3 native outcome: earliest solve mismatch, no update
+
+Exact source **`695f19cc3173bb5e257e31105988cd91f846d9e7`**, clean fast-forward on 100.98; output
+`artifacts/evaluations/stance-cuda64-rollout-695f19cc3173`. CUDA-hidden
+preflight passed in **8.229850 s**, receipt SHA256
+`1696d0b803d30d27e323d3adf0386672a54700421e56c7e05d3b610c3e5e390d`. Native CPU suite: **960 passed in 61.84 s**,
+zero skips, whole tool **76.840926 s**, receipt SHA256
+`88c334d6f440cadcdf9712aada022f81214135dd6ba400497a1c9f9b2c7c4182`; pytest log SHA256
+`97f0714ea34443d020a196cc73fab6ccdda5f7894db42a869e6db88e202c92e9`.
+
+Original `microduck-cuda64-rollout-run-695f19cc3173.service` finished
+**failed / PID 0 / exit 1 / zero restarts**, after **146.038089 s**:
+`ValueError: paired rollout semantic state exactness`. Both actual CUDA children
+finished 28 calls / 280 substeps and all 32 nonzero 2-N pulse deliveries. Each
+body/constructor/early trace passed its individual reader. Caller CPU/CUDA
+streams were preserved; constructor private CPU unchanged and CUDA advanced
+as declared. Both windows had zero terminal/timeout rows and zero soft-limit
+exposure. No optimizer step, training acceptance or successful closeout.
+
+Separate capped CUDA-hidden `diagnose` succeeded in **22.791138 s**, rehashed
+the exact 22 original files, reauthenticated both attempts, reproduced the
+strict pair failure, and verified the original failed invocation unchanged.
+Its exclusive **100,477-byte** `independent-failure-diagnosis.json` has SHA256
+`c7ceea3628ada574100e6c65d3818b950dd3ea6deb034fcfe49fc2d3badcbc97`. All qualification flags and pair acceptance
+remain false. This is durable failure diagnosis, not successful replay.
+
+Earliest traced difference: **event 0, scheduled-pre at physics step 0**.
+All eight inputs, ordered contacts, solved kinematics/dynamics and solver
+counters were exact. After the same forward solve, dense qM had **2 different
+elements, max absolute delta 1.8189894035458565e-12**; active constraint tables
+also differed (including positional row IDs/Jacobians). Event 1, unforced-post
+step 0: physical inputs still exact except preceding qM; ordered contacts exact,
+solved dynamics/constraints differ, recomputed qM exact. Event 2, scheduled-pre
+step 1: all inputs exact again, qM after differs **8 elements, max delta
+2.0372681319713593e-10**, plus dynamics/constraint differences. Event 3,
+unforced-post step 1, first sampled physical drift: qpos **9 elements /
+1.375644390066988e-12**, qvel **19 elements / 1.3756453753899223e-9**.
+
+This locates nonexactness inside forward solving with equal physical inputs,
+before sampled physical drift. It does not prove a particular kernel caused
+it or that constraint-row permutation explains all numerical differences.
+Ordered contacts remain exact through events 0–2; a differing retained contact
+table does not explain the earliest difference in this instrumented run.
+The strict gate is unchanged; uninstrumented equivalence remains unqualified.
+
+Reviewed pinned local MuJoCo-Warp 3.8.1 source: `_src/smooth.py:807-823`
+atomically accumulates child composite inertia into parent `crb`; then
+`:856-912` assembles dense qM with a serial ancestor walk per DOF. **The dense
+qM loop itself is not an atomic reduction.** Upstream composite-inertia ordering
+is a hypothesis, not proof: no pre-assembly `crb`/`cdof` snapshots exist.
+`_src/constraint.py:1386-1440` allocates positive DOF-friction rows with
+`atomic_add(nefc)` and writes row identity/Jacobian at the chosen slot.
+This can explain positional row permutations, but does not by itself establish
+unchanged per-identity row values or explain later dynamic drift. Independent
+Luna source review returned these pointers; owner inspected the actual code.
+
+Smallest next read-only diagnostic: compare retained active rows per world by
+`(type,id)`, explicitly detect duplicate identities, report raw ordering,
+`nf`, and per-identity J/D/aref/force/state differences. Canonicalization is
+diagnostic only, never an acceptance waiver. Any subsequent instrumentation
+requires a separate tested declaration; do not mutate/retry this namespace.
+
+| Short-window metric | Capture | Replay |
+| --- | ---: | ---: |
+| max tilt, rad | 0.04342888668179512 | 0.043430257588624954 |
+| max planar speed, m/s | 0.06580285727977753 | 0.06580619513988495 |
+| max absolute motor torque, Nm | 0.11817769706249237 | 0.11817769706249237 |
+| max absolute joint power, W | 0.042330484837293625 | 0.04231280833482742 |
+| summed environment reward | 150.893798828125 | 150.8931121826172 |
+
+Motor thermal model was not evaluated. These 0.56-second metrics are not
+learned skill, sustained stability, thermal or physical robot acceptance.
+
+All 23 retained files, independently whole-byte rehashed after diagnosis:
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| capture.constructor.json | 758 | `cd76398b74808b45fcbd54c79c5302fdf7ddb8ce6bab56db962dfb2ada73a9c5` |
+| capture.constructor.pt | 27196 | `d198dc677471741bd1efa3566f106d248244cc6cfab0a25f21c7be07717e2d83` |
+| capture.early-trace.json | 734 | `c468af49f1471ab61c90a42b0ca4f5f427c10be85c21094ec164f6a2c35fcc79` |
+| capture.early-trace.pt | 3805219 | `e16f16cd5471eb238a9e96d3e1e217cef029a8aa88188ebd94606c97639e0bd0` |
+| capture.json | 858 | `e8ef73ef5d87dc5745d94d312215761935fadcc91f38aa2cf151d6628afc487a` |
+| capture.log | 8017 | `1437506fede1abf20a91dca51be4396ee5363765b956e8927ebb400499f744d7` |
+| capture.prepared.json | 16490 | `54d81e43e36eea0416df7c16cba7d9bc8e463b0f036874f27311762b007a5a3c` |
+| capture.prepared.pt | 1070342 | `1ee8ad1d1c951745a97ec4520334f6c0e7bbead23b51816b34da6f97969bf729` |
+| capture.pt | 95182535 | `b8a1df0ae0df882a54cfa9fd35df5cf50eb7995bdc1886ca28e33880875f7bee` |
+| checkpoint.pt | 256368 | `2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5` |
+| cpu-parent-receipt.json | 2232 | `0f8e15e803ae13070c067ce5614651d9c0fc106e3d6fe81a16d22f408de9c2a7` |
+| independent-failure-diagnosis.json | 100477 | `c7ceea3628ada574100e6c65d3818b950dd3ea6deb034fcfe49fc2d3badcbc97` |
+| launch.json | 138402 | `0285e8d67dbd3f5f31f711ef35a4d982934cd287c7c4e6ec9380f1a42cd8bf05` |
+| replay.constructor.json | 757 | `70fd64e43f20e9a0d553ebd06ea5fb3527d004266723f660dd24b6c813ac8f35` |
+| replay.constructor.pt | 27196 | `0058ee8bee25290a501466304815956393b04c44a666229521dd09e198b1b67f` |
+| replay.early-trace.json | 733 | `46479e5f6b5c1c68f651cc3df8426867c96d6de012218f4df07e1048cff0cfe7` |
+| replay.early-trace.pt | 3805219 | `697eb444dfad5702b58d138d1f9521e1ea0089a3ed3c289d779911eca5435a89` |
+| replay.json | 857 | `16676613de5f37f62df75b23d0ec76a51ffa1678e2126941acc2079a46a5fed6` |
+| replay.log | 8016 | `b843819481d24aef07a55c0f2728ca167266ff29ec8392e98fa980e2129b04fa` |
+| replay.prepared.json | 16490 | `0d485f28a64aca2edcc3783f5844196a206ba3134b0701cd15e8c88879d24143` |
+| replay.prepared.pt | 1070342 | `fa4dfd93b21d9ec4553f3c25a0916780a6d8bef7c7f4476508b8ab33b0cd6537` |
+| replay.pt | 95188103 | `8157d2ec2ebbb16e9ed519112d502ab77763464bcc735fe9d142ab7df238275d` |
+| report.json | 3006 | `803237862b19558f478d3df67715c6b4bb20f807379622b50619e6faeb67624b` |
+
+Original invocation identities and whole JSON-journal hashes (journal evidence,
+not an external independent service attestation):
+
+| Mode | Invocation | Journal bytes | SHA256 |
+| --- | --- | ---: | --- |
+| sync | `0f82a751e0f44163b387d0e34c47b128` | 17081 | `3a002a245418893d9741713da7fffdfd3f1fc195829e7e8b1422c63972aaaf8d` |
+| preflight | `3ddc1acf74b94a4bba45878a4a87613c` | 93860 | `2b4914b55cbf227660220481cc8e9536d497cfb851544946571681557bf5a77b` |
+| tests | `3e219ea3a19b4701bb4fc1810b624bc1` | 93118 | `fe8383cb28fee19b6e482b69903bd44b161834a4b298ce7c247c03dd6b22714e` |
+| run | `3efb8baea8db4ac4bc90f327856385c8` | 122883 | `99388f057466dd1e497bf922fc5ec64ae40ef959858a23cd6e749706386608cf` |
+| diagnose | `4118476a04db45d093dd2df2a24ef215` | 97480 | `d717c7227ab8105c647517ece73d3af2da05bfb25486271e8096df535a36ba9d` |
+
+Independent idle-after samples: no compute PID, 0% GPU, 665 MiB used, 32 C;
+both protected user/system ReCoMo AI services inactive. FilmBrain's existing
+active PIDs 521 / 298048 and zero restarts are checked separately. No
+package/driver/historical runtime, unrelated workload or physical motion changed.
+
+Post-diagnosis owner check: WSL remains clean at the exact tested v3 source;
+run remains failed PID 0 / exit 1, diagnosis terminal success PID 0 / exit 0,
+both zero restarts. GPU has no compute PID, 0% utilization, 665 MiB used,
+23,497 MiB free and 30 C. FilmBrain remains active at those same PIDs with zero
+restarts; both user and system protected AI services remain inactive PID 0.
+Source documentation validation matched all 23 file and 5 journal hash rows to
+the freshly collected metadata, checked the 33-file / 960-test freeze, and
+passed `git diff --check`. This documentation commit does not rewrite the WSL
+job source or its immutable artifacts.

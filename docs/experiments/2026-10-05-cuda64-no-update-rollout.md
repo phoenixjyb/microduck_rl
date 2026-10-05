@@ -1521,3 +1521,86 @@ GPU producer still needs its own bounded, tested publication path and exact
 source/service predeclaration. Installed runtime files, previous observers and
 the original native rejection remain unchanged. No optimizer update, native
 observer rollout, learned-skill promotion or physical motion occurred.
+
+### Next bounded host-side CPU qualification
+
+Prepare only new `stance_crb_archive_cpu_probe.py`, its focused test and this
+document from exact archive source
+`90f8edc7230ed8f7aac3b7e0c2b1ec230d9f1e81`. The actual native worktree is still
+clean at `766271542f4c168ebe00c56e8e03755c3f44be2b`; only a fresh source-tagged
+bootstrap may fast-forward it after local review, full tests and fork push.
+Do not restart any previous unit or reuse an artifact namespace.
+
+This qualification is **CPU-only and non-admitting**. It does not replace the
+rejected full CUDA64/28-call/280-step pair with an easier first-tick case. Its
+purpose is to check that the new observer and split artifact format also work in
+the already pinned WSL environment, and retain enough complete bytes for a
+separate CPU reader to reconstruct that format.
+
+Predeclared limits: source bootstrap 120 s / 256 MiB / 100% CPU; each new CPU
+test or witness service 300 s / 6 GiB / 200% CPU, Nice 10, `KillMode=control-group`.
+The host has 16,092,336 KiB total and 14,919,572 KiB available RAM at the read-only
+19:23 Shanghai audit; 6 GiB is a bounded service limit, not permission to mutate
+the environment. Keep CUDA hidden, cap every child and log, hold the existing
+shared lease, require GPU-idle samples and preserve FilmBrain plus protected
+service state before and after. Final runtime and invocation properties must
+match the declaration. Source/bootstrap/test counts are not authorized until the
+owner freezes their exact tested revision; an unset expected count must block.
+
+Each new service also uses `RemainAfterExit=yes`. Successful process completion
+is the exact retained `active/exited`, PID 0, exit 0, no-restart state with the
+same invocation, not merely an in-process passed report. An earlier successful
+inactive transient unit had already been unloaded by systemd, losing its live
+invocation metadata. A bounded native `/bin/true` lifecycle check (5 s / 64 MiB /
+100% CPU, Nice 10, control-group) at 20:24 verified that retained invocation
+`0a93f56acb0a40ac8927794ec2320bb4` remained loaded and successful after its process
+exited, while the running-Duck inventory was empty. This is an OS lifecycle
+check, not Duck simulation or numerical qualification. Retain terminal receipts
+before targeted cleanup of these owned, already exited zero-PID units; leave
+protected and unrelated services untouched.
+
+The witness is an explicitly separate genuine CPU 64-world first tick, with the
+same declared 32 zero and 32 +X-2-N early-pulse rows, construction seed 977,
+zero action and complete control capture. Retain every early phase/level/matrix,
+the exact declaration, the entire first runtime record and caller CPU RNG bytes.
+This first tick covers steps 0–9, before the declared step-250 pulse; it checks
+row assignment and pre-pulse capture, not force-active execution or recovery.
+No policy, optimizer or learned-skill evaluation is involved. A local feasibility
+check serialized the complete PhysicsState-normalized first record to
+**1,923,819 bytes**, below the unchanged 8 MiB cap; omission is unnecessary.
+
+A controlled child requires the actual parent PID, exact capped service,
+committed source and inherited lease. Authenticate the entire retained inventory
+and all whole payload hashes before the separate capped parent reader loads any
+old PyTorch payload. The new split codec itself continues to perform no loading.
+Reassembly must preserve raw bits, topology, source, control/trajectory bindings
+and all false flags. Existing 23 original files, prior map files and installed
+smooth source must remain authenticated and unchanged. A passed CPU tool status
+does not accept the original native pair or authorize training.
+
+Reserve both capped CPU modes and final receipt review before the 21:00 cutoff;
+start no late job that cannot fit. Preserve partial evidence on any failure and
+diagnose read-only. No driver/package change, GPU observer rollout, protected
+service restoration, raw perception, gate relaxation or physical motion is
+authorized by this CPU qualification.
+
+#### Reviewed CPU supervisor source freeze
+
+The complete 44-file CUDA-hidden local suite passed **1,374 tests in 144.60 s**,
+with zero skips. The owner froze `EXPECTED_TESTS=1374`; the explicit unset-count
+negative test still refuses to start pytest. Ruff check, format and diff checks
+passed. The focused 36-case suite covers fresh source-only namespaces, exact
+native source/root/ancestor guards, live supervisor PID and retained terminal
+invocation, complete 64-world archive reconstruction, hash-before-load refusal,
+zero-skip log totals and the duplicate-declaration regression.
+
+Frozen module SHA-256:
+`45245eecdbcd9c7085f189efd5213503f54f6a97d0dff3b025b41583bc95caa0`;
+focused test SHA-256:
+`0148ced2a0e5169b64bdbac9de9904aaa54c17f43b88d81273cf93329c864a5f`.
+Native execution is limited to the exact fork commit containing this freeze,
+using fresh `microduck-crb-archive-cpu-{sync,tests,run}-<source12>.service`
+names. A source/test pass is not a host pass; accept a host witness only after
+its independent reader succeeds, whole retained files are reauthenticated and
+its terminal-success invocation is recorded. The original CUDA rejection and
+all admission flags remain unchanged.

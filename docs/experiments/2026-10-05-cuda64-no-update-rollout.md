@@ -971,3 +971,107 @@ review found no remaining concrete bundle-mode blocker. These supersede the
 earlier source-only prerequisite counts without changing any frozen old reader.
 After the final count freeze, the 82 direct tests passed again in **7.88 s**;
 Ruff lint/format and whitespace checks passed.
+
+## Native full inertia-observed result at 65abe930caa1
+
+The exact fork tip `65abe930caa16476e4d8ece44f937492da47ce2e` was pushed and independently verified
+before bundle creation. The retained 44,425-byte source bundle SHA256 is
+`2d3d0b9a177e5bd8fd992c1815f3480d7dbd88aff8555a48fdc06e0ce061ea12`.
+Local bundle verification advertised only the exact feature head and required
+the retained `af47d912...` parent. Its hash/size matched after SSH transfer
+and file sync. Native bootstrap invocation
+`9a8b28e3d29f410a858e41be157081b4` completed successfully, PID 0/exit 0/zero
+restarts; the checkout became clean at the exact pushed tip. Both earlier
+failed sync units remain untouched. No network, package or driver configuration
+was changed.
+
+Native CUDA-hidden preflight succeeded in **8.37 s**,
+invocation `42b6630fccc84314aed96220ed1a8c5a`, receipt SHA256
+`e7462d68b7c0ae1ad3c8238105ddfc82ffc1f7b081eb4aa9e16fc21a241c8a87`. The complete native 37-file suite passed
+**1,094 tests in 73.22 s**, no skips; whole capped tests service elapsed
+**88.83 s**, invocation `6ba51e854d9146c9a7d06df1da3f7a49`. Its receipt SHA256 is
+`7f63894656c1c73ceeb593bb67e17a09c2c488b4b51f90bbb1d58584e5f573db`, pytest log SHA256
+`bde74fbe27eb6b7f80bb46dc8e7af72fc53600457a4f35f2300861abb65f116d`. Both services reached authoritative
+inactive/PID 0/exit 0/success/zero-restart terminals before the GPU run.
+
+The full user service `microduck-cuda64-inertia-run-65abe930caa1.service`,
+invocation `33241079aa88426b96368011eb248527`, completed both fresh serial
+CUDA children and retained all 28 calls / 280 integration substeps / populated
+stock storage and the complete 20-step nonzero pulse in each. It then failed
+the unchanged strict pair gate with
+**`ValueError: paired rollout semantic state exactness`**. Terminal evidence:
+PID 0, failed/exit-code, exit 1, zero restarts; elapsed **147.61 s** and reported
+cgroup memory peak **3.4 GiB**, within the 6-GiB cap. The failed unit was not
+restarted, and no success closeout or optimizer update was performed.
+
+The predeclared CUDA-hidden diagnosis service succeeded in **23.11 s**,
+invocation `d591051ef9d647be8e7b0d031ae7050e`. It independently rehashed all
+22 original inputs, reproduced the exact pair failure, validated each complete
+body/constructor/trace, and wrote the separately retained diagnosis. A fresh
+owner read-only SHA256 sweep matched all **23** final files, including that
+diagnosis. Original artifacts were never rewritten.
+
+Native root: `artifacts/evaluations/stance-cuda64-inertia-65abe930caa1`.
+
+| Retained anchor | Bytes | Whole-file SHA256 |
+| --- | ---: | --- |
+| launch.json | 139860 | `176f3e9fac9c5b54d4b3fbff3aa8513e84859cf149a06095df365c637db72539` |
+| checkpoint.pt | 256368 | `2d36df17b17ff5da7d75414254db5535b7aa699b197899ad45902f7e432800b5` |
+| capture.pt | 95188871 | `40332059c47d7fad02c6d6f6152198f77daa53c11b036269a1257551923dc8bd` |
+| replay.pt | 95190023 | `ec4a6bea504ebec19c22ce553beba018e2e77b0abeeffbbea3b7bb647076fd99` |
+| capture.early-trace.pt | 6193895 | `1d0a938ccc10968e589bcade4851b0cdb9686806378c1ae94b90b80bbba0fb67` |
+| replay.early-trace.pt | 6193895 | `e4c0f18e6c26fc803b722a7e6f846dd86afca04c19ef15783be7453bc5bdb222` |
+| report.json | 3187 | `9003b41f05e04abd00c2a8fbb962efca582f0fd6b01d3d326510e10e0e73bda5` |
+| independent-failure-diagnosis.json | 112787 | `b87629d6176e133188bbb735fa0125cf04163e0daadf1570941e504200a2c1b2` |
+
+Individual retained-record reductions (not independent motor or physics
+re-execution):
+
+| Metric | Capture | Replay |
+| --- | ---: | ---: |
+| Retained calls / final substeps per world | 28 / 280 | 28 / 280 |
+| Terminal / timeout rows | 0 / 0 | 0 / 0 |
+| Soft-limit row exposure | 0 | 0 |
+| Maximum tilt, rad | 0.0434330031 | 0.0434316322 |
+| Maximum planar speed, m/s | 0.0658043772 | 0.0658058971 |
+| Maximum absolute motor torque, Nm | 0.1181777045 | 0.1181776971 |
+| Maximum absolute joint power, W | 0.0423130020 | 0.0423131064 |
+
+This is only a **0.56-second** diagnostic. Zero terminal rows in this window do
+not establish recovery, endurance, hopping, football balance, physical motor
+feasibility or a learned improvement. Motor thermal modeling was not evaluated.
+All qualification, admission, learning-update and physical-motion flags remain
+false.
+
+### Narrowed first-forward difference, not a proven kernel cause
+
+The earliest differing event remains **event 0, scheduled-pre, step 0**. All
+incoming physical fields are exact, including qpos/qvel/time, warmstart,
+committed control, external force arrays and incoming qM. Contact geometry,
+kinematics and solver status match. Among the new persistent fields,
+`subtree_com`, `cinert`, `cdof`, `cdof_dot`, `cvel`, `qfrc_bias` and
+`qfrc_smooth` are whole-logical-byte exact. Only these differ:
+
+| Persistent field | Different elements | Worlds | Maximum absolute delta |
+| --- | ---: | --- | ---: |
+| crb | 2 | 53 only | 2.0372681319713593e-10 |
+| outgoing qM | 6 | 53 only | 2.0372681319713593e-10 |
+| qLD | 18 | 53 only | 2.3283064365386963e-10 |
+
+Event 1 already has downstream velocity-related differences in world 53;
+event 4 gains center-of-mass differences in worlds 10 and 53; event 5 has
+differences in many fields across all 64 worlds. This points the next bounded
+investigation toward composite-inertia assembly and its mass/factorization
+consumers. It does **not** prove a particular kernel, temporal order, atomic
+schedule, or equivalence to uninstrumented execution: the observer snapshots
+after a complete forward, and reporting order is explicitly not kernel order.
+No contact reordering, tolerance, signed-zero waiver, easier substitute or gate
+relaxation is introduced. Do not start training from this rejected pair.
+
+Owner post-diagnosis check: clean native source unchanged; no running Duck unit
+or GPU compute PID, 0% utilization, 666 MiB used / 23,496 MiB free, 31 C.
+FilmBrain/protected-service preservation remains part of each checked native
+context. A fresh owner service check again confirmed FilmBrain active at
+PIDs 521 / 298048 with zero restarts; both protected user and system units
+remain inactive PID 0. The campaign stays active through 21:00; this result is a retained
+milestone, not campaign closeout.

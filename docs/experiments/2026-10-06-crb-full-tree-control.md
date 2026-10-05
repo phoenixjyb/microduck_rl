@@ -329,3 +329,13 @@ The next useful question is a separately predeclared process-local runtime
 schedule control covering the constructor's first forward as well as subsequent
 eager forwards. Do not edit installed libraries or reuse this isolated acceptance
 as original replay admission.
+
+After whole-evidence verification, only the five completed source-tagged units
+were stopped/cleared. The retained 4,292-byte
+`artifacts/tools/stance-crb-fulltree-clearance-d923275040b3.json`, SHA-256
+`0d495a521888a9a49e90eac31ea7ac2e6fd7696c5e40db691decf3e2945aaac4`,
+confirms each inactive/PID zero, all 20 artifact files unchanged, two idle
+GPU samples and unchanged FilmBrain/protected state. The lease and all journals
+and evidence remain. The Mac v2 result and its receiver source were also copied
+to `artifacts/tools/stance-crb-fulltree-mac-receiver-d923275040b3/` on 100.98;
+the Mac temporary copy is not the only retained copy.

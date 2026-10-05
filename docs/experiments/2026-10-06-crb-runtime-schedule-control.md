@@ -21,8 +21,10 @@ pair and its strict rejection remain immutable and rejected.
 Use 100.98 only via `gw98-direct`, native root
 `/home/yanbo/work/microduck_rl-stance-replication-20260930`, exact
 `feat/athletics-obstacle-curriculum`. Stop starting new work at **2026-10-06
-08:00 Asia/Shanghai (00:00 UTC)**. Native source still starts at
-`d923275040b3538f6ed48b867f1b1e6bc42304d3`; local declaration baseline is
+08:00 Asia/Shanghai (00:00 UTC)**. Native source initially started at
+`d923275040b3538f6ed48b867f1b1e6bc42304d3`; the follow-up sync starts only
+at retained failed-test source `dab4f3258e10e79fa3e44629161a76705b8b359d`.
+The local declaration baseline is
 `9d2162d71d4c869d6d9b2481b663b3cb07042dd9`. Permit only this new declaration,
 the new runtime-dispatch adapter, the new bounded supervisor and their two
 focused test files. All earlier source/test leaves remain byte-for-byte frozen;
@@ -158,7 +160,7 @@ clearance `0d495a521888a9a49e90eac31ea7ac2e6fd7696c5e40db691decf3e2945aaac4`.
 Do not admit native execution until the new positive complete CUDA-hidden test
 count is frozen after review, passes with zero skips, and all implementation
 contracts above are tested. Native source sync is a guarded clean fast-forward
-from D923 to the exact pushed source; all inputs/runtime/source are rechecked
+from the predeclared retained head to the exact pushed source; all inputs/runtime/source are rechecked
 before and after each mode.
 
 The frozen complete suite contains **1,579 tests in 53 files**. Source regressions
@@ -206,3 +208,40 @@ frozen 53-file suite passed 1,579 tests in 228.44 s with zero skips on Mac with
 CUDA hidden. The final focused adapter/supervisor suite passed 57 tests. Fresh native
 qualification and runtime numerical results remain pending. No runtime-control
 acceptance or training authorization is claimed.
+
+### Retained native test failure and bounded test correction
+
+The first native suite at `dab4f3258e10e79fa3e44629161a76705b8b359d`
+finished with **1 failed, 1,578 passed in 123.36 s**, zero skips. Its retained
+tests invocation is `8f9c04a96a3c47118a1dd4a89b7aa2c3`, terminal PID 0,
+exit status 1, zero restarts and peak resident memory 5,219,262,464 bytes.
+The failed report SHA is
+`9c7fe2de2aef50fb1cf11d033065b552bec48ec2f0e2c3b7ec33257043b9b88f`;
+the pytest log SHA is
+`c7ecd58ed72bbf2182d906baa5420486471847f298330ae6f658720a56b7cfa7`.
+Both remain immutable at `artifacts/tools/stance-crb-runtime-tests-dab4f3258e10/`.
+No preflight or CUDA child was started at that source.
+
+Read-only diagnosis found that the foreign-launch test replaced `warp.launch`
+before model/actuator construction. That suppresses unrelated library array
+initialization and makes friction validation depend on uninitialized memory:
+the native run raised `nonnegative matching-dtype friction fields` before the
+intended `unmodified Warp launch before CRB` guard. A Mac pass was not evidence
+that this fixture was correctly isolated. Correct only the fixture: construct
+and bind the normal CPU runtime first, then install the foreign launch and call
+the controlled CRB entry directly. Retain the foreign replacement and fault
+assertions, plus constructor coverage/counter checks. Do not change the adapter,
+production validation, numerical gates or dependencies. Re-run the unchanged
+1,579-test inventory under a fresh exact-source namespace before preflight.
+
+The concrete path is `WarpStanceRuntime` calling `expand_model_fields` for
+`dof_frictionloss` and `dof_damping` before creating `BamStateCommit`.
+Installed `mjlab/sim/randomization.py:28-49` allocates each expanded destination
+and fills it through `wp.launch(repeat_array_kernel, ...)`; the premature stub
+skips that fill. The installed file SHA matches on Mac and native WSL:
+`35d0bddcd6ef3b0317cb89987e0c42bbf1862fcd4beb795c1327ade814c2a64c`.
+
+The corrected adapter suite passed all 27 tests; the corrected complete 53-file
+CUDA-hidden Mac suite passed all 1,579 tests in 269.83 s with zero skips. Ruff
+check/format and `git diff --check` passed. Fresh native tests and preflight are
+still required; the adapter implementation is byte-for-byte unchanged.

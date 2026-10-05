@@ -231,6 +231,7 @@ def test_scope_enforces_forward_cap_and_preserves_changed_wp_launch(monkeypatch)
 
 def test_scope_refuses_and_preserves_foreign_warp_launch_replacement():
     original_launch = wp.launch
+    original_crb = pinned_smooth.crb
 
     def replacement(*_args, **_kwargs):
         return None
@@ -241,12 +242,21 @@ def test_scope_refuses_and_preserves_foreign_warp_launch_replacement():
             torch.manual_seed(977)
             with pytest.raises(ValueError, match="unmodified Warp launch"):
                 with scope:
-                    wp.launch = replacement
-                    ScheduledRecoveryRuntime(
+                    env = ScheduledRecoveryRuntime(
                         _declaration(), device="cpu", solved_field_check="packed"
                     )
+                    scope.bind_runtime(env)
+                    assert scope.receipt["constructor_forward_calls"] == 1
+                    assert scope.receipt["forward_calls"] == 1
+                    wp.launch = replacement
+                    pinned_smooth.crb(env.model, env.data)
         assert wp.launch is replacement
         assert scope.receipt["status"] == "faulted"
+        assert scope.receipt["constructor_forward_covered"] is True
+        assert scope.receipt["constructor_forward_calls"] == 1
+        assert scope.receipt["forward_calls"] == 1
+        assert scope.receipt["fault_type"] == "ValueError"
+        assert pinned_smooth.crb is original_crb
     finally:
         wp.launch = original_launch
 

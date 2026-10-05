@@ -41,8 +41,8 @@ base = prior.base
 MODULE = "mjlab_microduck.stance_crb_runtime_probe"
 PROTOCOL = "football-b1d-crb-runtime-schedule-control-20261006-v1"
 BASE_SOURCE = "9d2162d71d4c869d6d9b2481b663b3cb07042dd9"
-SYNC_FROM_SOURCE = "d923275040b3538f6ed48b867f1b1e6bc42304d3"
-HISTORIC_FULLTREE_SOURCE = SYNC_FROM_SOURCE
+SYNC_FROM_SOURCE = "dab4f3258e10e79fa3e44629161a76705b8b359d"
+HISTORIC_FULLTREE_SOURCE = "d923275040b3538f6ed48b867f1b1e6bc42304d3"
 FULLTREE_OWNER_SHA256 = (
     "718b61f3d08e61a2e27410fe8b8b62ae3be52a9a74dad0034e4998bc074ae707"
 )
@@ -194,7 +194,7 @@ def source_sync_unit(source):
 
 
 def source_sync_script(source, *, bundle_sha256):
-    """Retarget only the exact D923 head and owned sync-unit guards."""
+    """Retarget only the exact retained head and owned sync-unit guards."""
     script = fulltree.source_sync_script(source, bundle_sha256=bundle_sha256)
     old_head = f'test "$(git rev-parse HEAD)" = {fulltree.SYNC_FROM_SOURCE}\n'
     new_head = f'test "$(git rev-parse HEAD)" = {SYNC_FROM_SOURCE}\n'

@@ -21,9 +21,10 @@ from mjlab_microduck import stance_recovery_cuda_record_archive as archive
 from mjlab_microduck import stance_recovery_cuda_record_replay as record_replay
 from mjlab_microduck import stance_recovery_cuda_storage_evidence as storage_evidence
 from mjlab_microduck import stance_recovery_cuda_transition as transition
+from mjlab_microduck import stance_recovery_cuda_constructor_rng as constructor
 from mjlab_microduck.first_attempt_smoke import require
 
-PROTOCOL = "football-b1d-cuda64-rollout-body-v1"
+PROTOCOL = "football-b1d-cuda64-rollout-body-v2"
 ATTEMPTS = {"capture", "replay"}
 TENSOR_BUDGET = archive.TENSOR_BUDGET
 NODE_BUDGET = archive.NODE_BUDGET
@@ -35,6 +36,7 @@ BODY_KEYS = {
     "attempt",
     "initial_frame",
     "initial_control_state",
+    "constructor_receipt",
     "archive",
     "storage",
     "model_state_after",
@@ -361,6 +363,11 @@ def verify(
     _owned_tree(value, clone=False)
     _schema(value, launch, launch_sha, attempt)
     records = _check_prepared_boundary(value, prepared, launch)
+    constructor_score = constructor.check(
+        value["constructor_receipt"],
+        source=value["source"],
+        prepared_caller=prepared["caller_rng_states"],
+    )
     archive_score = archive.check(
         value["archive"], launch["schedule"], launch["compiled_plant"], seed=653
     )
@@ -388,6 +395,7 @@ def verify(
         "attempt": attempt,
         "prepared_payload_sha256": prepared_sha256,
         "prepared_state_sha256": prepared_score["state_sha256"],
+        "constructor": constructor_score,
         "archive": archive_score,
         "storage": storage_score,
         "record_replay": replay_score,
@@ -456,7 +464,13 @@ def paired(left, right):
         and {body["attempt"] for body in bodies} == ATTEMPTS,
         "paired attempts share source/seed/launch schema",
     )
-    excluded = {"attempt", "elapsed_seconds", "caller_rng_states"}
+    excluded = {
+        "attempt",
+        "elapsed_seconds",
+        "caller_rng_states",
+        "constructor_receipt.caller_states",
+        "constructor_receipt.state_sha256.caller_endpoints",
+    }
     compare_keys = {
         "initial_frame",
         "initial_control_state",
@@ -474,6 +488,27 @@ def paired(left, right):
         all(_equal(bodies[0][key], bodies[1][key]) for key in compare_keys),
         "paired rollout semantic state exactness",
     )
+    constructors = []
+    for body in bodies:
+        record = body["constructor_receipt"]
+        constructor.check(
+            record, source=body["source"], prepared_caller=body["caller_rng_states"]
+        )
+        constructors.append(
+            {
+                key: (
+                    {k: v for k, v in child.items() if k in constructor.PRIVATE_KEYS}
+                    if key == "state_sha256"
+                    else child
+                )
+                for key, child in record.items()
+                if key != "caller_states"
+            }
+        )
+    require(
+        _equal(*constructors),
+        "paired constructor private streams and physical fields exact",
+    )
     return {
         "protocol": PAIR_PROTOCOL,
         "source": bodies[0]["source"],
@@ -481,6 +516,7 @@ def paired(left, right):
         "seed": 653,
         "attempts": [bodies[0]["attempt"], bodies[1]["attempt"]],
         "semantic_fields_compared": sorted(compare_keys),
+        "constructor_semantics_exact": True,
         "only_ignored_fields": sorted(excluded),
         "paired_semantics_exact": True,
         "native_pair_replay_qualified": False,

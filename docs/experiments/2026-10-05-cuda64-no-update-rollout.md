@@ -180,3 +180,68 @@ Post-failure host check: no compute PID, 0% GPU, 665 MiB used, 23,497 MiB free,
 30 C. FilmBrain observatory PID 521 and video-playground PID 298048 remained
 active with zero restarts. Both user and system protected ReCoMo AI services
 remained inactive, PID 0. No physical motion or optimizer update occurred.
+
+## Separately declared v2 constructor-stream revision
+
+The v1 result and namespace above remain immutable failed evidence. This
+revision uses `football-b1d-cuda64-rollout-probe-20261005-v2` and
+`football-b1d-cuda64-rollout-body-v2`; v1 bodies are refused by the v2 reader.
+The exact tested source will be frozen by the next commit before host launch.
+All authority, host, deadline, schedule, parent, resource caps, lease, protected
+services and numerical gates above remain unchanged. No new training lesson or
+optimizer update is authorized.
+
+### Constructor accounting
+
+`stance_recovery_cuda_constructor_rng` owns precisely one actual CUDA64
+`ScheduledRecoveryRuntime` construction, not an arbitrary callback. It requires
+the inherited lease before any CUDA query, an isolated main Python thread,
+the exact clean source/profile/root, and one already initialized visible CUDA0.
+It refuses an active learner RNG scope and uses the same process-wide lock.
+
+Dedicated constructor generators use CPU seed **977** and CUDA seed **983**,
+separate from the seed-653 policy/private learner stream. Their starts are
+installed inside `torch.random.fork_rng(devices=[0])`; actual private endpoints
+are retained inside the scope and actual caller endpoints outside it. Exact
+caller preservation is mandatory, including on exceptions; no manual reseeding
+or repair hides a broken restoration. Reentry, reuse or a swallowed constructor
+fault latches failure. This explicitly accounts for fixed-range BAM startup
+draws without modifying BAM or the historical runtime.
+
+Retain all eight raw CPU/private/CUDA stream endpoints and hashes, actual
+constructor count, status/fault/error, and all five actual `[64,1]` nominal
+fields: voltage 7.5 V, sag gain 0.1, kp/kd/friction scales 1.0. All must remain
+exact constants. The learner generator must still equal its retained prepared
+start after construction. These checks do not prove unobserved random-consumer
+identity or independently re-execute CUDA randomness.
+
+### Evidence and checks
+
+Each child adds `constructor.pt` and `constructor.json`, written exclusively,
+bounded to 8 MiB/2 MiB and retained in `finally` even when construction faults.
+There are **17 run inputs**, **18 files including report**, and **19 including
+independent closeout**. Constructor bytes are authenticated before any CPU load,
+then bound exactly to the body receipt; unknown summary fields and boolean
+constructor counts are refused. The CPU reader checks the seed-bound CPU start,
+all state hashes/layouts, exact prepared caller preservation and nominal fields.
+Independent capture/replay pairing compares every private constructor endpoint,
+hash and physical field. Only individually verified caller-process snapshots
+and their corresponding hashes are excluded, alongside the existing attempt
+and elapsed-time diagnostics. All qualification/admission flags stay false.
+
+The revised declared suite contains **32 files, 922 tests**. The complete owner
+CUDA-hidden run passed **922 tests in 165.29 s**, zero skips; `EXPECTED_TESTS`
+is frozen to 922. Require that exact count on WSL before a fresh native
+namespace. Focused tests cover
+exception restoration, broken restoration refusal, lock/context/reentry guards,
+constructor artifact authentication before loading, immutable fault retention,
+and paired private endpoint mismatch refusal. Repeated actual two-world CPU
+construction checks caller preservation, repeatable private CPU consumption,
+constant physical fields and initial snapshots; synthetic CUDA tests are not
+native CUDA proof. A bounded read-only integration review found no additional
+constructor/API blocker, but native success remains unmeasured until the new
+preflight, full tests, capture/replay and independent closeout succeed.
+
+Ruff lint/format checks passed for the three changed modules and their three
+test files; the CLI import/help check passed with CUDA hidden. These remain
+source/CPU checks, not native simulation or skill acceptance.

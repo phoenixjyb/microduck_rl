@@ -1,6 +1,7 @@
 """CPU-only supervisor contracts; synthetic guards never admit a native rollout."""
 
 import hashlib
+import io
 from pathlib import Path
 import subprocess
 import sys
@@ -248,6 +249,11 @@ def test_whole_launch_hash_is_verified_before_json_parse(monkeypatch, tmp_path):
         cpu_parent_binding={},
         optimizer_steps=0,
         return_computation=False,
+        constructor_rng=dict(
+            protocol=probe.constructor.PROTOCOL,
+            cpu_seed=probe.constructor.CPU_SEED,
+            cuda_seed=probe.constructor.CUDA_SEED,
+        ),
         schedule=probe.declaration(SOURCE),
         service_seconds=probe.SECONDS,
         service_memory_bytes=probe.MEMORY,
@@ -355,7 +361,7 @@ def test_actual_cpu_runtime_snapshot_state_is_normalized_and_owned():
     declaration = probe.schedule.declaration(
         SOURCE, "dose", "training", ["zero-wrench"] * 2
     )
-    env = probe.ScheduledRecoveryRuntime(
+    env = probe.constructor.ScheduledRecoveryRuntime(
         declaration, device="cpu", solved_field_check="packed"
     )
     snapshot = env.snapshot()
@@ -494,6 +500,74 @@ def test_partial_inventory_marks_oversized_artifacts_unreadable(tmp_path, monkey
     monkeypatch.setattr(probe, "_limit", lambda _name: 4)
     result = probe._inventory(tmp_path)
     assert result["capture.pt"] == {"readable": False}
+
+
+def test_constructor_fault_receipt_is_retained_without_success_claim(tmp_path):
+    receipt = {
+        "status": "fault",
+        "constructor_calls": 1,
+        "faulted": True,
+        "error": "retained construction failure",
+        "private_end": torch.arange(8, dtype=torch.uint8),
+    }
+    probe._retain_constructor(tmp_path, SOURCE, "b" * 64, "capture", receipt)
+    raw = (tmp_path / "capture.constructor.pt").read_bytes()
+    summary = probe.base.parse_json(
+        (tmp_path / "capture.constructor.json").read_bytes()
+    )
+    loaded = torch.load(io.BytesIO(raw), map_location="cpu", weights_only=True)
+    assert len(raw) <= probe.base.RAW_LIMIT
+    assert probe.evidence._equal(loaded, receipt)
+    assert summary["status"] == "fault" and summary["faulted"] is True
+    assert summary["source"] == SOURCE and summary["attempt"] == "capture"
+    assert summary["payload_sha256"] == hashlib.sha256(raw).hexdigest()
+    assert summary["payload_bytes"] == len(raw)
+    assert all(summary[key] is False for key in probe.FLAGS)
+    with pytest.raises(FileExistsError):
+        probe._retain_constructor(tmp_path, SOURCE, "b" * 64, "capture", receipt)
+
+
+@pytest.mark.parametrize("damage", ["hash", "extra", "boolean_count"])
+def test_constructor_authentication_refuses_damage_before_cpu_load(
+    tmp_path, monkeypatch, damage
+):
+    raw = b"not a loadable constructor"
+    summary = dict(
+        protocol=probe.PROTOCOL + ":constructor",
+        source=SOURCE,
+        launch_sha256="b" * 64,
+        attempt="capture",
+        payload_sha256=hashlib.sha256(raw).hexdigest(),
+        payload_bytes=len(raw),
+        status="success",
+        constructor_calls=1,
+        faulted=False,
+        **probe.FLAGS,
+    )
+    if damage == "hash":
+        summary["payload_sha256"] = "c" * 64
+    elif damage == "extra":
+        summary["unreviewed"] = True
+    else:
+        summary["constructor_calls"] = True
+    files = {
+        "cpu-parent-receipt.json": canonical({}).encode(),
+        "capture.json": canonical({}).encode(),
+        "capture.pt": b"body",
+        "capture.prepared.pt": b"preparation",
+        "capture.prepared.json": canonical({}).encode(),
+        "capture.constructor.json": canonical(summary).encode(),
+        "capture.constructor.pt": raw,
+    }
+    monkeypatch.setattr(probe.base, "_read_file", lambda path, _limit: files[path.name])
+
+    def forbidden(*_args, **_kwargs):
+        pytest.fail("unauthenticated bytes must not reach a loader or scorer")
+
+    monkeypatch.setattr(probe.torch, "load", forbidden)
+    monkeypatch.setattr(probe.evidence, "verify", forbidden)
+    with pytest.raises(ValueError, match="whole successful constructor payload"):
+        probe._score(tmp_path, SOURCE, {}, "b" * 64)
 
 
 def _run(command, log, *, seconds, monkeypatch, log_limit=None):

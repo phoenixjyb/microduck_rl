@@ -14,6 +14,7 @@ from mjlab_microduck import stance_recovery_cuda_record_replay as record_replay
 from mjlab_microduck import stance_recovery_cuda_rollout_evidence as evidence
 from mjlab_microduck import stance_recovery_cuda_storage_evidence as storage_evidence
 from mjlab_microduck import stance_recovery_cuda_transition as transition
+from mjlab_microduck import stance_recovery_cuda_constructor_rng as constructor
 from test_stance_recovery_cuda_record_archive import (
     _control_state,
     _declaration,
@@ -72,8 +73,8 @@ def _prepared_and_body(*, count=1):
     }
     optimizer = {"state": {}, "param_groups": []}
     caller = {
-        "cpu_before": torch.tensor([1, 2], dtype=torch.uint8),
-        "cpu_after": torch.tensor([1, 2], dtype=torch.uint8),
+        "cpu_before": torch.random.get_rng_state().clone(),
+        "cpu_after": torch.random.get_rng_state().clone(),
         "cuda_before": torch.tensor([3, 4], dtype=torch.uint8),
         "cuda_after": torch.tensor([3, 4], dtype=torch.uint8),
     }
@@ -101,6 +102,7 @@ def _prepared_and_body(*, count=1):
         "attempt": "capture",
         "initial_frame": {"fixture": torch.tensor([5], dtype=torch.int64)},
         "initial_control_state": deepcopy(_control_state()),
+        "constructor_receipt": _constructor_receipt(caller),
         "archive": body_archive,
         "storage": {"fixture": torch.tensor([6], dtype=torch.int64)},
         "model_state_after": deepcopy(states),
@@ -124,6 +126,46 @@ def _prepared_and_body(*, count=1):
     }
     raw = evidence.encode(body)
     return body, raw, prepared, prep_raw, prep_hash, summary
+
+
+def _constructor_receipt(caller):
+    # CPU seed-bound fields; CUDA endpoints remain explicitly synthetic bytes.
+    private = {
+        "cpu_start": torch.Generator(device="cpu")
+        .manual_seed(constructor.CPU_SEED)
+        .get_state(),
+        "cpu_end": torch.Generator(device="cpu")
+        .manual_seed(constructor.CPU_SEED)
+        .get_state(),
+        "cuda_start": torch.tensor([7, 8], dtype=torch.uint8),
+        "cuda_end": torch.tensor([9, 10], dtype=torch.uint8),
+    }
+    return dict(
+        protocol=constructor.PROTOCOL,
+        source=SOURCE,
+        cpu_seed=constructor.CPU_SEED,
+        cuda_seed=constructor.CUDA_SEED,
+        worlds=64,
+        status="success",
+        constructor_calls=1,
+        faulted=False,
+        caller_states=deepcopy(caller),
+        private_states=private,
+        state_sha256={
+            key: constructor._digest(value)
+            for group in (caller, private)
+            for key, value in group.items()
+        },
+        nominal_parameters={
+            key: torch.full((64, 1), value)
+            for key, value in constructor.NOMINAL.items()
+        },
+        caller_cpu_preserved=True,
+        caller_cuda_preserved=True,
+        error_type=None,
+        error=None,
+        **constructor.FLAGS,
+    )
 
 
 def _install_synthetic_scoring(monkeypatch, *, archive_validator=None):
@@ -237,6 +279,11 @@ def test_both_whole_hashes_precede_any_weights_only_load(monkeypatch, bad):
 @pytest.mark.parametrize(
     "field,value,match",
     [
+        (
+            "protocol",
+            "football-b1d-cuda64-rollout-body-v1",
+            "source/launch/seed/attempt",
+        ),
         ("source", "f" * 40, "source/launch/seed/attempt"),
         ("launch_sha256", "e" * 64, "source/launch/seed/attempt"),
         ("seed", 659, "source/launch/seed/attempt"),
@@ -339,6 +386,12 @@ def test_model_optimizer_and_rng_boundary_damage_refused(monkeypatch, damage, ma
 
 
 def test_pair_ignores_only_per_process_rng_attempt_and_elapsed_after_scoring():
+    caller = dict(
+        cpu_before=torch.random.get_rng_state().clone(),
+        cpu_after=torch.random.get_rng_state().clone(),
+        cuda_before=torch.tensor([3, 4], dtype=torch.uint8),
+        cuda_after=torch.tensor([3, 4], dtype=torch.uint8),
+    )
     left_body = {
         "protocol": evidence.PROTOCOL,
         "source": SOURCE,
@@ -346,7 +399,8 @@ def test_pair_ignores_only_per_process_rng_attempt_and_elapsed_after_scoring():
         "seed": 653,
         "attempt": "capture",
         "elapsed_seconds": 4.0,
-        "caller_rng_states": {"cpu_before": torch.tensor([1], dtype=torch.uint8)},
+        "caller_rng_states": caller,
+        "constructor_receipt": _constructor_receipt(caller),
         "initial_frame": {"qpos": torch.zeros(1)},
         "initial_control_state": {"ctrl": torch.zeros(1)},
         "archive": {"steps": [0, 1]},
@@ -358,6 +412,10 @@ def test_pair_ignores_only_per_process_rng_attempt_and_elapsed_after_scoring():
     right_body = deepcopy(left_body)
     right_body.update(attempt="replay", elapsed_seconds=5.0)
     right_body["caller_rng_states"]["cpu_before"][0] = 9
+    right_body["caller_rng_states"]["cpu_after"][0] = 9
+    right_body["constructor_receipt"] = _constructor_receipt(
+        right_body["caller_rng_states"]
+    )
     left_body.update(evidence.FALSE_FLAGS)
     right_body.update(evidence.FALSE_FLAGS)
     result = evidence.paired(left_body, right_body)
@@ -366,6 +424,8 @@ def test_pair_ignores_only_per_process_rng_attempt_and_elapsed_after_scoring():
         "attempt",
         "caller_rng_states",
         "elapsed_seconds",
+        "constructor_receipt.caller_states",
+        "constructor_receipt.state_sha256.caller_endpoints",
     }
     right_body["initial_frame"]["qpos"] = torch.zeros(1, dtype=torch.float64)
     with pytest.raises(ValueError, match="paired rollout semantic"):
@@ -394,6 +454,19 @@ def test_pair_refuses_visible_cuda(monkeypatch):
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
     with pytest.raises(ValueError, match="CUDA-hidden rollout pair comparison"):
         evidence.paired(left, left)
+
+
+def test_pair_refuses_changed_constructor_private_endpoint_even_with_matching_hash():
+    left = _prepared_and_body()[0]
+    right = deepcopy(left)
+    right["attempt"] = "replay"
+    ctor = right["constructor_receipt"]
+    ctor["private_states"]["cuda_end"][0] ^= 1
+    ctor["state_sha256"]["cuda_end"] = constructor._digest(
+        ctor["private_states"]["cuda_end"]
+    )
+    with pytest.raises(ValueError, match="paired constructor private streams"):
+        evidence.paired(left, right)
 
 
 def test_encode_honors_archive_limit_during_serialization(monkeypatch):

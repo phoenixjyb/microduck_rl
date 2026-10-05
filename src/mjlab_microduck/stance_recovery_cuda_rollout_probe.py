@@ -9,6 +9,7 @@ import argparse
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import fields
+import io
 import math
 import os
 from pathlib import Path
@@ -28,12 +29,12 @@ from mjlab_microduck import stance_recovery_cuda_record_replay as physical
 from mjlab_microduck import stance_recovery_cuda_storage_evidence as storage
 from mjlab_microduck import stance_recovery_cuda_transition as transition
 from mjlab_microduck import stance_recovery_cuda_rollout_evidence as evidence
+from mjlab_microduck import stance_recovery_cuda_constructor_rng as constructor
 from mjlab_microduck import stance_recovery_schedule as schedule
-from mjlab_microduck.stance_recovery_schedule_runtime import ScheduledRecoveryRuntime
 from mjlab_microduck.stance_transition import PhysicsState
 from mjlab_microduck.first_attempt_smoke import canonical, require
 
-PROTOCOL = "football-b1d-cuda64-rollout-probe-20261005-v1"
+PROTOCOL = "football-b1d-cuda64-rollout-probe-20261005-v2"
 MODULE = "mjlab_microduck.stance_recovery_cuda_rollout_probe"
 START, CUTOFF = 1791176796, 1791205200  # October 5 13:06:36 / 21:00 Shanghai.
 SEED = 653
@@ -50,9 +51,10 @@ TEST_FILES = shadow.TEST_FILES + (
     "test_stance_recovery_cuda_record_replay.py",
     "test_stance_recovery_cuda_rollout_evidence.py",
     "test_stance_recovery_cuda_rollout_probe.py",
+    "test_stance_recovery_cuda_constructor_rng.py",
 )
-# Set from the owner-reviewed complete suite before freezing a native launch.
-EXPECTED_TESTS = 894  # Owner-reviewed 31-file suite: previous 838 plus 21+35.
+# Owner-reviewed complete CUDA-hidden 32-file suite, with no skips.
+EXPECTED_TESTS = 922
 OWN_FILES = (
     tuple(
         "src/mjlab_microduck/" + name + ".py"
@@ -63,15 +65,24 @@ OWN_FILES = (
             "stance_recovery_cuda_record_replay",
             "stance_recovery_cuda_rollout_evidence",
             "stance_recovery_cuda_rollout_probe",
+            "stance_recovery_cuda_constructor_rng",
         )
     )
-    + tuple("tests/" + name for name in TEST_FILES[-6:])
+    + tuple("tests/" + name for name in TEST_FILES[-7:])
     + ("docs/experiments/2026-10-05-cuda64-no-update-rollout.md",)
 )
 CHILD_FILES = {
     f"{a}.{suffix}"
     for a in ATTEMPTS
-    for suffix in ("prepared.pt", "prepared.json", "pt", "json", "log")
+    for suffix in (
+        "prepared.pt",
+        "prepared.json",
+        "constructor.pt",
+        "constructor.json",
+        "pt",
+        "json",
+        "log",
+    )
 }
 RUN_FILES = CHILD_FILES | {"launch.json", "checkpoint.pt", "cpu-parent-receipt.json"}
 COMPLETE_FILES = RUN_FILES | {"report.json"}
@@ -524,6 +535,7 @@ def _read_launch(source, sha):
             "cutoff_unix",
             "optimizer_steps",
             "return_computation",
+            "constructor_rng",
             *FLAGS,
         }
         and launch.get("protocol") == PROTOCOL
@@ -537,6 +549,12 @@ def _read_launch(source, sha):
         and type(launch.get("optimizer_steps")) is int
         and launch["optimizer_steps"] == 0
         and launch.get("return_computation") is False
+        and launch.get("constructor_rng")
+        == dict(
+            protocol=constructor.PROTOCOL,
+            cpu_seed=constructor.CPU_SEED,
+            cuda_seed=constructor.CUDA_SEED,
+        )
         and all(launch.get(k) is False for k in FLAGS),
         "exact new non-admitting launch",
     )
@@ -673,13 +691,22 @@ def child(source, sha, attempt, lease_fd):
         and torch.equal(before_cuda, prepared["caller_rng_states"]["cuda_after"]),
         "actual caller streams match preparation closeout",
     )
-    env = ScheduledRecoveryRuntime(
-        launch["schedule"], device="cuda:0", solved_field_check="packed"
-    )
+    ctor = constructor.CudaConstructorRng(source, lease_fd=lease_fd)
+    try:
+        env = ctor.construct(launch["schedule"])
+    finally:
+        _retain_constructor(root, source, sha, attempt, ctor.receipt)
     require(
         torch.equal(before_cpu, torch.random.get_rng_state())
         and torch.equal(before_cuda, torch.cuda.get_rng_state(0).cpu()),
         "runtime construction preserves caller CPU and CUDA RNG",
+    )
+    require(
+        torch.equal(
+            prepared["private_cuda_generator"].get_state().cpu(),
+            prepared["private_cuda_rng_state"],
+        ),
+        "constructor does not advance the learner private stream",
     )
     require(
         env.binding == launch["compiled_plant"], "actual CUDA runtime selected plant"
@@ -715,6 +742,7 @@ def child(source, sha, attempt, lease_fd):
         seed=SEED,
         attempt=attempt,
         initial_frame=initial,
+        constructor_receipt=ctor.receipt,
         archive=archived,
         initial_control_state=initial_controls,
         storage=storage.capture(prepared["storage"], lease_fd=lease_fd),
@@ -757,6 +785,28 @@ def child(source, sha, attempt, lease_fd):
     return summary
 
 
+def _retain_constructor(root, source, sha, attempt, receipt):
+    raw = evidence.encode(receipt)
+    digest = base._write_exclusive(
+        root / (attempt + ".constructor.pt"), raw, base.RAW_LIMIT
+    )
+    base.write_json(
+        root / (attempt + ".constructor.json"),
+        dict(
+            protocol=PROTOCOL + ":constructor",
+            source=source,
+            launch_sha256=sha,
+            attempt=attempt,
+            payload_sha256=digest,
+            payload_bytes=len(raw),
+            status=receipt["status"],
+            constructor_calls=receipt["constructor_calls"],
+            faulted=receipt["faulted"],
+            **FLAGS,
+        ),
+    )
+
+
 def _score(root, source, launch, sha):
     cpu = base.parse_json(
         base._read_file(root / "cpu-parent-receipt.json", base.JSON_LIMIT)
@@ -770,6 +820,38 @@ def _score(root, source, launch, sha):
         prep_raw = base._read_file(root / (attempt + ".prepared.pt"), base.RAW_LIMIT)
         prepared_summary = base.parse_json(
             base._read_file(root / (attempt + ".prepared.json"), base.JSON_LIMIT)
+        )
+        ctor_summary = base.parse_json(
+            base._read_file(root / (attempt + ".constructor.json"), base.JSON_LIMIT)
+        )
+        ctor_raw = base._read_file(root / (attempt + ".constructor.pt"), base.RAW_LIMIT)
+        require(
+            type(ctor_summary) is dict
+            and set(ctor_summary)
+            == {
+                "protocol",
+                "source",
+                "launch_sha256",
+                "attempt",
+                "payload_sha256",
+                "payload_bytes",
+                "status",
+                "constructor_calls",
+                "faulted",
+                *FLAGS,
+            }
+            and ctor_summary.get("protocol") == PROTOCOL + ":constructor"
+            and ctor_summary.get("source") == source
+            and ctor_summary.get("launch_sha256") == sha
+            and ctor_summary.get("attempt") == attempt
+            and ctor_summary.get("status") == "success"
+            and ctor_summary.get("constructor_calls") == 1
+            and type(ctor_summary.get("constructor_calls")) is int
+            and ctor_summary.get("faulted") is False
+            and ctor_summary.get("payload_bytes") == len(ctor_raw)
+            and ctor_summary.get("payload_sha256") == base.digest(ctor_raw)
+            and all(ctor_summary.get(k) is False for k in FLAGS),
+            "whole successful constructor payload before CPU load",
         )
         require(
             summary.get("protocol") == PROTOCOL + ":child"
@@ -793,6 +875,14 @@ def _score(root, source, launch, sha):
             sha,
             cpu,
             attempt=attempt,
+        )
+        ctor_receipt = torch.load(
+            io.BytesIO(ctor_raw), map_location="cpu", weights_only=True
+        )
+        evidence._owned_tree(ctor_receipt, clone=False)
+        require(
+            evidence._equal(ctor_receipt, value["constructor_receipt"]),
+            "whole constructor file binds to scored body",
         )
         require(
             summary["records"] == len(value["archive"]["records"]),
@@ -908,6 +998,11 @@ def run(source):
                 cutoff_unix=CUTOFF,
                 optimizer_steps=0,
                 return_computation=False,
+                constructor_rng=dict(
+                    protocol=constructor.PROTOCOL,
+                    cpu_seed=constructor.CPU_SEED,
+                    cuda_seed=constructor.CUDA_SEED,
+                ),
                 **FLAGS,
             )
             base._write_exclusive(

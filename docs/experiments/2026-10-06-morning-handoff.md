@@ -99,6 +99,29 @@ Prepare and review a **CoM-only actual-entry diagnostic** before any launch:
    model or learner/storage/graph/integration construction, finite metrics,
    service/log/artifact/resource caps and full closeout/deadline margin.
 
+The audited source fixes the proposed output boundary after accumulation,
+**before `_subtree_div`**: these outputs would be mass-weighted sums, not the normalized
+post-forward `subtree_com` in the old trace. Capture the actual GPU initialization
+product rather than reconstructing it from CPU model fields or normalized CoM.
+The initializer uses per-world mass rows modulo `body_mass.shape[0]`; do not
+silently replace a runtime mass array with a broadcast CPU mass row.
+
+For this exact 64-world / 16-body / vec3 boundary, one input is 12,288 bytes and
+one 32-repeat output bank is 393,216 bytes. Two complete mode banks are 786,432
+bytes; that is only the raw data budget, not a sufficient total service/log
+budget or a launch authorization. The declared seven/nine accumulation groups
+would yield 224/288 accumulation launches, 512 total, plus separately accounted
+initialization, full-array resets and readbacks. Verify those counts in a new
+owner/child receipt rather than borrowing the old CRB receipt.
+
+Limit interception to the authenticated `com_pos` call boundary. Model expansion
+and unrelated Warp launches must remain untouched; the earlier failed fixture
+showed why installing a generic launch stub before expansion is unsafe. Test
+constructor coverage, normal restoration, exceptions, foreign reference
+replacement, stream/device/alias identity and unexpected call signatures before
+any native use. Do not adapt the CRB wrapper by merely renaming its kernel: CoM
+has initialization/division/downstream launches and different root-zero behavior.
+
 Do not blindly reuse the old runtime source-sync or five-path source fence:
 they bind a different execution revision and allowed-path set. Preserve every
 old source/test leaf and artifact; predeclare a new exact baseline and only its

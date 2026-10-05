@@ -705,3 +705,9 @@ velocity objective despite the evaluator's drift gate. Source-only H1-S swaps
 that dead gate for the same always-active Gaussian stillness shape without
 changing observations, mechanics, curricula, or acceptance gates. No H1-S GPU
 run is authorized by the source slice. See the H0/H1 experiment document.
+
+The October 5 continuation separately predeclares a capped CUDA64 **no-update**
+capture/replay and independent whole-byte CPU closeout. Its maximum 0.56-s window
+covers only the early training pulse, not the full recovery, hopping or rolling-
+football lesson. Source tests alone admit no new training or native claim. See
+[the rollout declaration](experiments/2026-10-05-cuda64-no-update-rollout.md).

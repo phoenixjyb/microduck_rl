@@ -1075,3 +1075,63 @@ context. A fresh owner service check again confirmed FilmBrain active at
 PIDs 521 / 298048 with zero restarts; both protected user and system units
 remain inactive PID 0. The campaign stays active through 21:00; this result is a retained
 milestone, not campaign closeout.
+
+### Fresh CPU-only compiled component map predeclaration
+
+The immutable full inertia pair at source
+`65abe930caa16476e4d8ece44f937492da47ce2e` remains rejected. The next bounded
+tool does not repeat GPU execution, edit the observer, change installed physics
+code, canonicalize contacts, or waive any exactness check. It identifies the
+compiled bodies and DOFs of the earliest persistent-field disagreement. Body
+and joint labels come from a fresh CPU compile of the same full plant, bound
+exactly to the retained launch's compiled-plant descriptor. Components of
+ten-element inertia vectors remain numeric indices, without guessed axis labels.
+
+New source scope is limited to `stance_inertia_component_map.py`,
+`stance_inertia_component_probe.py`, their two new tests, and this document.
+The diff base is `ddd25a43d2714fb52404ecb40a285f819bbb3e46`; all previous owned
+source/test leaves are frozen at the immutable full inertia source above.
+The existing 37-file suite plus the two new files must pass with the owner-frozen
+exact count of 1,182 tests and zero skips before native artifact analysis.
+
+Before any tensor deserialization, the fresh reader requires the exact original
+23-file inventory, diagnosis SHA256
+`b87629d6176e133188bbb735fa0125cf04163e0daadf1570941e504200a2c1b2`,
+all 22 original whole-file hashes, and failed original invocation
+`33241079aa88426b96368011eb248527`. It reruns the immutable whole-body and
+trace readers, reproduces the exact original pair rejection, and rehashes all
+original evidence after the new comparison. Original files are never rewritten.
+
+The new comparison preserves the unchanged full six-event trace comparison.
+Only the earliest persistent-field differing event receives coordinate labels;
+each differing field retains the full element/world count and maximum absolute
+delta, with at most 32 coordinate samples and an explicit truncation flag.
+Equality is raw float32 bit equality including signed zero. This bounded map is
+not a substitute rollout and its presentation order is not kernel execution
+order. All previous qualification flags plus component-map qualification and
+reduction-order causal proof remain false.
+
+Native source transfer uses one new, separate CPU bootstrap unit, 120 seconds,
+256 MiB, CPU quota 100%, Nice 10 and control-group termination. The reviewed
+bundle template keeps its root/origin/branch/clean-tree/whole-hash/regular-file/
+2-MiB/single-exact-ref/fast-forward guards; exactly two tested guard replacements
+require current native HEAD at `65abe930caa16476e4d8ece44f937492da47ce2e` and
+the new bootstrap's sole running Duck unit. No earlier failed unit is restarted.
+
+Fresh tests and map units are sequential, CPU-hidden, capped at 300 seconds,
+4 GiB, CPU quota 200%, Nice 10, KillMode control-group; pytest itself is capped
+at 255 seconds, logs at 1 MiB, JSON receipts at 2 MiB. Source/host binding,
+original failed invocation, exact terminal test receipt, the shared GPU lease,
+two-sample GPU-idle gate, and unchanged FilmBrain/protected-service context are
+required. Tests reserve 660 seconds and analysis 360 seconds before the existing
+21:00 Shanghai cutoff. No optimizer, training, video, raw perception or physical
+motion is authorized by this diagnostic.
+
+Owner source validation before commit: the complete declared CUDA-hidden,
+OMP-single-thread 39-file suite passed **1,182 tests in 128.76 seconds**, with
+zero skips. The two new focused suites contribute 33 mapper tests and 55
+supervisor tests; Ruff lint/format and `git diff --check` passed. Independent
+source review found no remaining concrete blocker after the protected-service
+receipt was added. This is local source evidence, not native map or physics
+qualification; the original rejection and all original source/test bytes remain
+unchanged.

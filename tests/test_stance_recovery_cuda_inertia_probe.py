@@ -1025,3 +1025,213 @@ def test_streaming_process_timeout_reaps_only_owned_child(tmp_path, monkeypatch)
         seconds=0.1,
         monkeypatch=monkeypatch,
     )
+
+
+def _source_sync_run(
+    tmp_path,
+    *,
+    units,
+    head=None,
+    branch="feat/athletics-obstacle-curriculum",
+    dirty="",
+    remote=None,
+    root=None,
+    origin=None,
+):
+    """Run only the returned bootstrap Bash against local Git/systemctl stubs."""
+    source = "f" * 40
+    stub_bin = tmp_path / "bin"
+    state = tmp_path / "state"
+    stub_bin.mkdir()
+    state.mkdir()
+    current_head = probe.SYNC_FROM_SOURCE if head is None else head
+    incoming_head = source if remote is None else remote
+    (state / "head").write_text(current_head + "\n")
+    (state / "incoming").write_text(incoming_head + "\n")
+    (state / "branch").write_text(branch + "\n")
+    (state / "dirty").write_text(dirty)
+    (state / "units").write_text(units)
+    (state / "root").write_text((probe.SYNC_ROOT if root is None else root) + "\n")
+    (state / "origin").write_text(
+        (probe.SYNC_ORIGIN if origin is None else origin) + "\n"
+    )
+    git_script = """#!/usr/bin/env bash
+set -euo pipefail
+printf 'git %s\\n' "$*" >> "$SYNC_LOG"
+case "$1" in
+  status)
+    cat "$SYNC_STATE/dirty"
+    ;;
+  rev-parse)
+    case "$2" in
+      --show-toplevel) cat "$SYNC_STATE/root" ;;
+      HEAD) cat "$SYNC_STATE/head" ;;
+      refs/remotes/origin/feat/athletics-obstacle-curriculum)
+        test -f "$SYNC_STATE/tracked-ref" || exit 93
+        cat "$SYNC_STATE/tracked-ref"
+        ;;
+      *) exit 91 ;;
+    esac
+    ;;
+  remote)
+    test "$2" = get-url && test "$3" = origin
+    cat "$SYNC_STATE/origin"
+    ;;
+  branch) cat "$SYNC_STATE/branch" ;;
+  fetch)
+    test "$2" = origin
+    test "$3" = refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum
+    cat "$SYNC_STATE/incoming" > "$SYNC_STATE/tracked-ref"
+    touch "$SYNC_STATE/fetched"
+    ;;
+  merge)
+    touch "$SYNC_STATE/merged"
+    test "$2" = --ff-only
+    printf '%s\\n' "$3" > "$SYNC_STATE/head"
+    ;;
+  *) exit 92 ;;
+esac
+"""
+    systemctl_script = """#!/usr/bin/env bash
+set -euo pipefail
+printf 'systemctl %s\\n' "$*" >> "$SYNC_LOG"
+cat "$SYNC_STATE/units"
+"""
+    git_path = stub_bin / "git"
+    service_path = stub_bin / "systemctl"
+    git_path.write_text(git_script)
+    service_path.write_text(systemctl_script)
+    git_path.chmod(0o755)
+    service_path.chmod(0o755)
+    env = {
+        "PATH": f"{stub_bin}:/usr/bin:/bin",
+        "SYNC_LOG": str(tmp_path / "calls.log"),
+        "SYNC_STATE": str(state),
+    }
+    process = subprocess.run(
+        ["bash", "-c", probe.source_sync_script(source)],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=5,
+        check=False,
+    )
+    log_path = tmp_path / "calls.log"
+    log = log_path.read_text() if log_path.exists() else ""
+    return process, log, state, source
+
+
+def _own_sync_unit(source):
+    return probe.source_sync_unit(source) + " loaded active running\n"
+
+
+def test_source_sync_bootstrap_unit_is_exact_hex_bound_and_cpu_capped():
+    source = "f" * 40
+    assert probe.SYNC_FROM_SOURCE == "af47d912501a3df7db7f9a9ab7af6c09ba63a215"
+    assert probe.SYNC_SECONDS == 120
+    assert probe.SYNC_MEMORY == 256 * 1024**2
+    assert probe.SYNC_CPU_QUOTA == 100
+    assert (
+        probe.SYNC_ROOT == "/home/yanbo/work/microduck_rl-stance-replication-20260930"
+    )
+    assert probe.SYNC_ORIGIN == "https://github.com/phoenixjyb/microduck_rl.git"
+    assert probe.source_sync_unit(source) == (
+        "microduck-cuda64-inertia-sync-" + source[:12] + ".service"
+    )
+    assert "set -euo pipefail" in probe.source_sync_script(source)
+    for invalid in ("bad", "F" * 40, "f" * 39, "f" * 41):
+        with pytest.raises(ValueError):
+            probe.source_sync_unit(invalid)
+        with pytest.raises(ValueError):
+            probe.source_sync_script(invalid)
+
+
+def test_source_sync_bootstrap_accepts_only_its_own_running_unit(tmp_path):
+    source = "f" * 40
+    process, log, state, _ = _source_sync_run(
+        tmp_path, units=_own_sync_unit(source), remote=source
+    )
+    assert process.returncode == 0, process.stderr
+    assert process.stdout.strip() == source
+    assert (state / "fetched").exists() and (state / "merged").exists()
+    assert (
+        "git fetch origin refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum\n"
+        in log
+    )
+    assert ("git merge --ff-only " + source + "\n") in log
+    assert (state / "tracked-ref").read_text().strip() == source
+
+
+@pytest.mark.parametrize(
+    "units",
+    [
+        "",
+        "microduck-cuda64-rollout-run-deadbeef.service loaded active running\n",
+        _own_sync_unit("f" * 40)
+        + "microduck-cuda64-rollout-run-deadbeef.service loaded active running\n",
+        _own_sync_unit("f" * 40)
+        + "microduck-cuda64-other-run-deadbeef.service loaded active running\n",
+    ],
+)
+def test_source_sync_service_inventory_blocks_before_fetch_or_merge(tmp_path, units):
+    process, log, state, _ = _source_sync_run(tmp_path, units=units)
+    assert process.returncode != 0
+    assert "source-sync must be the sole running Duck service" in process.stderr
+    assert "git fetch" not in log and "git merge" not in log
+    assert not (state / "fetched").exists() and not (state / "merged").exists()
+
+
+@pytest.mark.parametrize(
+    "head,branch,dirty",
+    [
+        ("e" * 40, "feat/athletics-obstacle-curriculum", ""),
+        (probe.SYNC_FROM_SOURCE, "other-branch", ""),
+        (probe.SYNC_FROM_SOURCE, "feat/athletics-obstacle-curriculum", " M file\n"),
+    ],
+)
+def test_source_sync_wrong_head_branch_or_dirty_tree_stops_before_fetch(
+    tmp_path, head, branch, dirty
+):
+    source = "f" * 40
+    process, log, state, _ = _source_sync_run(
+        tmp_path, units=_own_sync_unit(source), head=head, branch=branch, dirty=dirty
+    )
+    assert process.returncode != 0
+    assert "git fetch" not in log and "git merge" not in log
+    assert not (state / "fetched").exists() and not (state / "merged").exists()
+
+
+@pytest.mark.parametrize(
+    "root,origin",
+    [
+        ("/wrong/checkout", probe.SYNC_ORIGIN),
+        (probe.SYNC_ROOT, "https://example.invalid/microduck_rl.git"),
+    ],
+)
+def test_source_sync_wrong_root_or_origin_stops_before_fetch(tmp_path, root, origin):
+    source = "f" * 40
+    process, log, state, _ = _source_sync_run(
+        tmp_path,
+        units=_own_sync_unit(source),
+        root=root,
+        origin=origin,
+    )
+    assert process.returncode != 0
+    assert "git fetch" not in log and "git merge" not in log
+    assert not (state / "fetched").exists() and not (state / "merged").exists()
+
+
+def test_source_sync_remote_head_mismatch_fetches_but_never_merges(tmp_path):
+    source = "f" * 40
+    process, log, state, _ = _source_sync_run(
+        tmp_path, units=_own_sync_unit(source), remote="e" * 40
+    )
+    assert process.returncode != 0
+    assert (
+        "git fetch origin refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum\n"
+        in log
+    )
+    assert "git merge" not in log
+    assert (state / "fetched").exists() and not (state / "merged").exists()
+    assert (state / "head").read_text().strip() == probe.SYNC_FROM_SOURCE

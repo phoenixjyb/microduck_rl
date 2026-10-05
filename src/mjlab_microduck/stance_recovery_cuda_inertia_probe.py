@@ -52,7 +52,11 @@ TEST_FILES = identity.TEST_FILES + (
     "test_stance_recovery_early_inertia_trace.py",
     "test_stance_recovery_cuda_inertia_probe.py",
 )
-EXPECTED_TESTS = 1072  # Owner-reviewed complete 37-file suite, no skips.
+EXPECTED_TESTS = 1084  # Owner-reviewed complete 37-file suite, no skips.
+SYNC_FROM_SOURCE = "af47d912501a3df7db7f9a9ab7af6c09ba63a215"
+SYNC_ROOT = "/home/yanbo/work/microduck_rl-stance-replication-20260930"
+SYNC_ORIGIN = "https://github.com/phoenixjyb/microduck_rl.git"
+SYNC_SECONDS, SYNC_MEMORY, SYNC_CPU_QUOTA = 120, 256 * 1024**2, 100
 ALLOWED = (
     "src/mjlab_microduck/stance_recovery_cuda_inertia_probe.py",
     "tests/test_stance_recovery_cuda_inertia_probe.py",
@@ -145,6 +149,41 @@ def unit(source, mode):
     output_path(source)
     require(mode in SECONDS, "declared rollout service mode")
     return f"microduck-cuda64-inertia-{mode}-{source[:12]}.service"
+
+
+def source_sync_unit(source):
+    """Separate CPU bootstrap namespace, never an old failed-unit restart."""
+    base._hex(source, 40, "bootstrap exact new source")
+    return f"microduck-cuda64-inertia-sync-{source[:12]}.service"
+
+
+def source_sync_script(source):
+    """Pure reviewed Bash declaration; host/caps/authority checked by launcher.
+
+    The service is already running while it checks the unit inventory. Refuse
+    every foreign Duck unit, but require this exact self rather than emptiness.
+    Nothing executes in this function; no environment, Git or service changes.
+    """
+    name = source_sync_unit(source)
+    return f"""set -euo pipefail
+trap 'printf "source-sync command failed on line %s (exit %s)\\n" "$LINENO" "$?" >&2' ERR
+test "$(git rev-parse --show-toplevel)" = {SYNC_ROOT}
+test "$(git remote get-url origin)" = {SYNC_ORIGIN}
+test -z "$(git status --porcelain)"
+test "$(git rev-parse HEAD)" = {SYNC_FROM_SOURCE}
+test "$(git branch --show-current)" = feat/athletics-obstacle-curriculum
+duck_sync_running="$(systemctl --user list-units --state=running --no-legend --plain 'microduck*' | awk '{{print $1}}')"
+if test "$duck_sync_running" != {name}; then
+    printf '%s\\n' 'source-sync must be the sole running Duck service' >&2
+    exit 1
+fi
+git fetch origin refs/heads/feat/athletics-obstacle-curriculum:refs/remotes/origin/feat/athletics-obstacle-curriculum
+test "$(git rev-parse refs/remotes/origin/feat/athletics-obstacle-curriculum)" = {source}
+git merge --ff-only {source}
+test "$(git rev-parse HEAD)" = {source}
+test -z "$(git status --porcelain)"
+git rev-parse HEAD
+"""
 
 
 def _recorded_properties(value, mode):

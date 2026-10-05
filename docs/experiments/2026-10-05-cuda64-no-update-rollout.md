@@ -871,3 +871,58 @@ Ruff lint/format and `git diff --check` passed. Native prerequisite receipts,
 CPU rescore and CUDA observations remain pending, not implied by this local result.
 After the count freeze and final formatting, all 60 direct supervisor tests
 passed again in **7.01 s** with CUDA hidden.
+
+### Source-sync bootstrap failure and bounded repair
+
+The separate CPU-only checkout bootstrap at source
+`6a7fcc587b4cf6ef2171ab0fd1c8d143c1305daf` failed before fetch or merge.
+Retained unit `microduck-cuda64-inertia-sync-6a7fcc587b4c.service`, invocation
+`f0d6f55e410849d487b76e26f6dd4db0`, exited 1 with PID 0 and zero restarts.
+Its initial empty-running-Duck check included the bootstrap service itself.
+Read-only inspection of its exact ExecStart, journal and unchanged Git reflog
+identified this wrapper defect, not a CUDA or physics failure. The full unit
+JSON journal stream SHA256 was
+`b86453e55c8ed0ce66c09c16c0a8f98a9f7d93e56a3586a752c119c0e0cec48f`.
+Native HEAD remained clean at
+`af47d912501a3df7db7f9a9ab7af6c09ba63a215`; no GPU job ran and no original
+artifact was changed. Follow-up telemetry: no running Duck unit or compute PID,
+0% utilization, 665 MiB used / 23,497 MiB free, 30 C.
+
+The repair is a pure, source-reviewed Bash generator in the new supervisor.
+It requires the exact source-tagged bootstrap to be the **sole** running Duck
+unit, refuses dirty/wrong-branch/wrong-HEAD state before fetch, binds the fetched
+fork tip before fast-forward, and verifies the resulting clean exact HEAD.
+Command failures emit a line/exit diagnostic. The previously failed unit is
+retained; only a new source-tagged bootstrap may run. Bootstrap caps remain
+120 s, 256 MiB, CPUQuota=100%, Nice=10, KillMode=control-group and the exact
+native WorkingDirectory. No GPU, package, driver or protected-service mutation
+is part of this bootstrap. Ten additional tests execute the returned Bash only
+against temporary local Git/systemctl stubs: self-only admission, empty and
+foreign unit rejection, dirty/wrong checkout rejection, malformed source, and
+fetched-tip mismatch before merge. All 70 direct supervisor tests passed in
+6.37 s with CUDA hidden; the complete 37-file count is remeasured before the
+repair commit and any native prerequisite or simulation launch.
+
+Owner full-suite remeasurement after the bootstrap repair passed **1,082 tests
+in 110.15 s**, zero skips, across the same 37 declared files. The repaired
+supervisor freezes 1,082 as its own prerequisite count; no older supervisor or
+reader count is changed. Ruff formatting and whitespace checks passed. This
+intermediate measurement is superseded by the following hardening pass before
+commit or native launch.
+
+Peer review additionally required the shell itself to pin the exact native
+checkout top-level and fork origin URL, not merely rely on WorkingDirectory.
+Both are now checked before fetch. Fetch uses the explicit source-to-tracking
+refspec, so acceptance does not depend on a configured remote fetch mapping.
+The local stub starts with no tracked ref and materializes it only on that exact
+fetch command. Two more cases reject wrong root or origin before fetch; the
+direct file now passes **72 tests in 7.31 s**. The final complete suite and
+frozen prerequisite count below supersede the intermediate 1,082 count.
+
+Final owner CUDA-hidden regression passed **1,084 tests in 106.96 s**, no
+skips, across all 37 files. The new supervisor freezes exactly 1,084. Independent
+review found the checkout/fork/refspec findings addressed, with no remaining
+concrete bootstrap blocker. All 22 frozen observer/reader leaves match their
+immutable base bytes. Native receipts and the full CUDA pair remain pending.
+After count freeze and final formatting, all 72 direct tests passed again in
+**7.46 s**; Ruff lint/format and `git diff --check` passed.

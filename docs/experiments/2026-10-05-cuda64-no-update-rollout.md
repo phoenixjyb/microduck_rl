@@ -613,3 +613,93 @@ found no concrete comparator/authentication/cap/context blocker; owner reviewed
 the files and checks. The suite count is frozen only after the complete pass.
 Actual two-world CPU trace tests and synthetic protocol seams remain distinct
 from native CUDA equivalence or any accepted learned policy.
+
+## Retained post-hoc identity outcome
+
+Exact tested tool source **`af47d912501a3df7db7f9a9ab7af6c09ba63a215`**, clean WSL branch.
+The native CUDA-hidden 35-file suite passed **988 tests in 64.68 s**, zero skips;
+whole capped test service **69.659427 s**, report SHA256
+`9ae02e442b162987828acdd919edf1ccb84e582bacf6785a969712b686735947`. Post-hoc CPU run finished successfully in
+**19.431195 s**, original inputs unchanged. All original individual readers
+passed again and the same strict pair failure was reproduced before comparison.
+Owner independently rehashed all 23 original files after this run: identical
+bytes/hashes to the retained v3 inventory. Original failed invocation remains
+failed PID 0 / exit 1 / zero restarts; it was not restarted or rewritten.
+
+Outputs are in
+`artifacts/evaluations/stance-constraint-identity-run-af47d912501a`.
+The **1,544,016-byte** comparison is within its 2-MiB cap. The passing report
+proves this CPU diagnostic completed, **not** native replay or policy acceptance;
+all identity/waiver/training/physical/trace qualification flags remain false.
+
+| Event | Phase / step | Worlds with raw friction order change | Worlds with changed aligned friction force | Changed unique force rows | Max force delta |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 0 | scheduled-pre / 0 | 9 | 0 | 0 | 0 |
+| 1 | unforced-post / 0 | 11 | 1 | 14 | 8.242917459710952e-10 |
+| 2 | scheduled-pre / 1 | 7 | 1 | 14 | 1.4425305394638599e-9 |
+| 3 | unforced-post / 1 | 10 | 64 | 382 | 2.584420144557953e-8 |
+| 4 | scheduled-pre / 2 | 13 | 64 | 540 | 3.050081431865692e-8 |
+| 5 | unforced-post / 2 | 10 | 64 | 580 | 2.2118911147117615e-8 |
+
+At **event 0**, all active rows in all 64 worlds are complete/unique by
+`(type,id)`, and J/D/aref/force/state are exactly equal after identity alignment.
+Nine worlds differ only in positional constraint-row order. This establishes
+a representation-only difference for those rows at this event, **not** complete
+forward equivalence: the independently observed two-element qM difference
+remains numerical and unwaived.
+
+At **event 1**, aligned friction force differs in **one world / 14 rows**, max
+**8.242917459710952e-10**. J/D/aref/state remain exactly equal by identity.
+Solved qacc differs by **3.783070496865548e-7**, qacc_smooth by
+**6.31750936008757e-7**, qfrc_bias by **1.862645149230957e-9**, and
+qfrc_constraint by **8.242917459710952e-10**; qfrc_actuator remains exact.
+The v3 trace independently bound equal physical/control/warmstart inputs at
+this phase. At event 2, force differs in one world / 14 rows by
+**1.4425305394638599e-9**. Thus positional relabeling cannot eliminate all
+observed numeric differences.
+
+All-row comparisons at events 3–5 are explicitly incomplete/ambiguous in all
+64 worlds due to repeated identities; they are **not** reported exact.
+The separately selected 14 DOF-friction rows remain unique/complete in every
+world at all six phases. Their J/D/state stay exact; aref begins differing in
+one world at event 3, and force differs in all worlds from that event onward.
+Repeated contact rows are not arbitrarily occurrence-matched.
+
+Pinned local source review: `mujoco_warp/_src/forward.py:675-695,1230-1258`
+computes velocity-dependent bias and smooth acceleration before `solver.solve`.
+`smooth.py:1214-1274` computes internal inertial force and atomically
+accumulates child `cfrc_int` into parents before forming qfrc_bias. Together
+with upstream composite-inertia atomics, this supplies a candidate mechanism,
+not a proven kernel cause. Reordering reported constraint rows alone does not
+resolve a bias-force difference computed upstream of the solve. A separately
+tested observation of inertia/velocity intermediates is the next bounded
+diagnostic; no package/runtime patch or optimizer job is admitted by this result.
+
+| Retained file | Bytes | SHA256 |
+| --- | ---: | --- |
+| tests/pytest.log | 1151 | `56f4532ed21014ab2474171ef08e8e38c9e0602bba83de1aaa8e52c530511e9a` |
+| tests/report.json | 10591 | `9ae02e442b162987828acdd919edf1ccb84e582bacf6785a969712b686735947` |
+| run/comparison.json | 1544016 | `b5faf3b178d0d2a469961e6d03677c38a632af204257511ecc076edbc5d88b99` |
+| run/report.json | 13252 | `be5b48655c1a29f2b162e525403e2edcd2b7d56722748914c6cc0291f5228a43` |
+
+Whole original invocation JSON-journal hashes (not an independent external
+service attestation):
+
+| Mode | Invocation | Journal bytes | SHA256 |
+| --- | --- | ---: | --- |
+| sync | `c01a1abafd29426f81a304ae251adbd1` | 19837 | `7dc7e2dcd1918f3836bc7bcf940c9686ae36bc55cc3ca7a12e0958d252940f4d` |
+| tests | `ebf09f9246e74ec4bd18e760ac38910b` | 92342 | `f513c49c6bfb149456c5692d40761693b53557aec7abadc302d275226ef93457` |
+| run | `7f1b075d99d6430fa88a625ca89e011d` | 91977 | `f1faf158f3ad6b3294ea516f9227bd66cfda122778448c9b2320c0d7c32688d2` |
+
+Post-run owner state check: both new CPU services terminal success PID 0 / exit 0 /
+zero restarts. WSL clean at the exact tool source. GPU no compute PID, 0%,
+666 MiB used, 23,496 MiB free, 30 C. FilmBrain remains active at PIDs
+521 / 298048 with zero restarts; protected user/system ReCoMo AI services
+remain inactive PID 0. No unrelated workload, original artifact, solver, driver,
+package or physical robot was changed.
+
+Owner documentation checks matched all four new file hashes, all three journal
+hashes and all six phase metric rows to freshly read metadata; old 33-file /
+960-test and new 35-file / 988-test declarations remain unchanged. `git diff
+--check` passed. This evidence-only commit leaves the exact native tool source
+and its retained output bytes unchanged on WSL.

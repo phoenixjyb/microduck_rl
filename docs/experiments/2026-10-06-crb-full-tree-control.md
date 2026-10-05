@@ -88,3 +88,162 @@ bounded implementation from independent review and owner integration.
 No whole-tree native control, fresh compilation, array-alias witness, replay
 qualification or training result is claimed by these checks. The native source
 and completed serial artifacts remain unchanged at C970.
+
+## Separately predeclared full-tree fixture/control
+
+Freeze the next source slice at planner commit
+`a3b149d4fef78c1bf1a23a1b44699fabdb599a1a`. Permit only this declaration plus
+the new pure full-tree fixture/checker and supervisor, and their two focused
+test files. The planner and all earlier implementation/test leaves remain frozen.
+Native source sync starts only from clean C970 and uses the exact reviewed
+source bundle; native tests must qualify the new source before a fixture or run.
+
+### Fifty predecessor files and CPU-only fixture
+
+Authenticate the unchanged 38 predecessor files from the earlier control, plus
+all seven serial-run files, three serial-test files, the serial owner packet and
+its separate CPU closeout terminal: **50 predecessor files**. Bind both packet
+hashes before JSON decoding:
+
+- Serial owner: `186dea37ef643c510bf3285a5c2a9785dd91c1152a64587fc95fec085db9af02`.
+- CPU closeout terminal: `f431fc6f3677fcba16ba530351b2fd970f4d8cf276e2ed76f42978a3cbf7062d`.
+
+Historical terminal invocations and source leaves remain historical evidence;
+their already cleared services are neither restarted nor required live. The
+serial document in F98 is an evidence-only successor, not the C970 execution
+document. Verify historical leaves against the exact historical commit, and
+new leaves against the new committed source separately.
+
+The new fixture mode is CUDA-hidden CPU-only. After whole-byte authentication,
+reuse the frozen original body/preparation/constructor/early-trace validators
+and weights-only CPU loading. Reproduce exactly the original strict rejection
+`paired rollout semantic state exactness`; do not weaken it or replace original
+trajectory binding with a trace-only projection. Recompile the topology on CPU
+without a physics step and bind its seven-field launch-topology hash.
+
+Extract event zero, `scheduled-pre`, step zero, from both authenticated original
+traces. Require every complete `persistent.cinert` snapshot to be finite CPU
+float32 `[64,16,10]`, exactly **40,960 bytes**; require the two whole byte streams
+identical, including signed zero. Retain both complete `persistent.crb` snapshots.
+Label the shared baseline **derived-completed-forward-full-cinert**: this is
+not a newly captured actual kernel-entry array. If the paired baseline differs,
+stop; never silently choose one or treat two inputs as identical.
+
+Predict the complete CRB matrix from a full baseline clone using the nine fixed
+groups. Each nonzero-parent addition uses the evolving child composite, not the
+original child baseline, with float32 rounding after every addition. Retain both
+parent-zero no-ops. Require all **9,600 non-root scalars** (15 bodies, including
+world body zero) exactly match both original completed CRB observations; report
+the **640 root scalars** separately, without choosing an observed root as the
+prediction. Retain full baseline, both observed CRBs, full prediction, metadata
+and whole-byte hashes before any CUDA child.
+
+Reauthenticate predecessor inputs after extraction and check caller CPU RNG,
+Torch CUDA state, current source/runtime/host, service ownership, FilmBrain,
+protected services and idle GPU. The pure codec does not authenticate the
+original trace files; the supervisor supplies that provenance before calling it.
+
+### Fixed paired GPU batch and numerical interpretation
+
+Only after successful retained new CPU tests and fixture terminal evidence:
+run one separately capped isolated child, original seven levels for 32 repeats
+**then** the fixed nine groups for 32 repeats. No adaptive order, repeated search
+or favorable-output retry. All **512** installed `_crb_accumulate` calls use the
+same full working array as input/output and the same Warp stream. Reset the
+complete baseline once per repeat; snapshot only after all that repeat's levels.
+Keep both no-op levels. Do not synchronize, observe intermediate stages or read
+back between repeats/schedules. One end-of-batch synchronization precedes all
+64 complete output readbacks.
+
+Retain two separate **1,310,720-byte** output streams and equal before/after
+caller CPU RNG states. No model, actor, optimizer, rollout storage or random
+kernel is constructed/launched; Warp alone owns CUDA in the numerical child.
+Torch CUDA remains uninitialized. Source/runtime/installed-kernel identity,
+actual owner/child PID and parent/invocation, aliasing, stream, dimensions,
+reset/snapshot/readback order and call counts are mandatory receipt/mock binds.
+
+The CPU checker validates its own fixture/prediction first. Require every output
+non-root scalar to match the full CPU prediction, not the unaccumulated baseline.
+Compare all serial output scalars against the one fixed prediction by uint32 bits.
+Serial acceptance is `stable-exact-candidate` only for this isolated control.
+Concurrent root variation or a constant alternative to the fixed candidate is
+retained numerical evidence, not discarded. Retain per-repeat hashes and exact
+mismatch counts, bounded first mismatches, differing root cells, and maximum
+pairwise same-cell repeat delta. Nonfinite or unexpected non-root data is a real
+protocol failure requiring read-only diagnosis.
+
+This paired batch changes schedule and timing. It cannot prove actual atomic
+order or original trajectory cause, qualify joint-space mass matrices/other
+forward kernels, waive the original full-window gate, or authorize training.
+All inherited and new qualification/physical flags stay false.
+
+### Resource and completion gates
+
+Use only fresh source-tagged `microduck-crb-fulltree-{tests,fixture,run,sync}`
+units and output directories. Tests/fixture: **300 s** each; supervised run:
+**600 s**; GPU child: **240 s**. Tests/fixture/run: **6 GiB cgroup memory**,
+CPUQuota 200%, Nice 10, KillMode control-group, RemainAfterExit yes. Sync:
+**120 s / 256 MiB / CPUQuota 100%**. Do not use RLIMIT_AS as a resident-memory
+substitute. Reserve a 300-s independent closeout and 60-s margin plus every
+remaining declared mode's full cap before the 08:00 cutoff.
+
+The owner must freeze the actual positive count of the **51-file** CUDA-hidden
+suite after review. Require zero skips and exact log/receipt/report counts and
+digests; no placeholder count permits native admission. Acquire/inherit the
+unchanged cooperative FilmBrain GPU lease. Require no overlapping Duck service,
+idle GPU before/after, no foreign compute PID during the child, temperature
+below 75 C, used VRAM at most 5 GiB and free at least 6 GiB. Preserve FilmBrain
+PIDs/restart counts and both protected-service namespaces inactive; do not alter
+unrelated workloads or old jobs.
+
+Each log is capped at 1 MiB, JSON at 2 MiB, each full-output binary at 2 MiB and
+new declared inventories at 12 MiB. Retain partial outputs on any failure. Before
+clearing only completed owned units, independently authenticate whole inputs,
+source/runtime, predictions, outputs, RNG and terminal caps/PID zero/success/
+zero restarts/exact invocations; preserve all artifacts and logs. At 08:00,
+start no new work and audit the durable final state without protected restores.
+
+This second phase is predeclared, not yet native-qualified or executed.
+
+### Independent original-trace forecast before native admission
+
+The owner authenticated both 6,193,895-byte original early traces by their
+already retained whole SHA-256 values before inspecting their first-event
+tensors. CPU-only, weights-only loads and an independent NumPy implementation
+with literal parent IDs/groups produced these fixed full-tree anchors:
+
+- Shared full-cinert baseline: `eec453717d592814c0b15d4b44acd4a8836d5acb941699ac5e5ed27b96805368`.
+- Capture complete CRB: `0b7702eb8afaa3fc316467aac167f4a802f29a6ea5299a25651d6e3fd815c056`.
+- Replay complete CRB: `ddf1f87364a696af9c40eb041d1efae8407e3e2f7a5a04f3351ed272838c7cfe`.
+- Fixed nine-group complete prediction: `5a5cac252692294113c560b0139ec72670cf9dd15143acf349ebe46818e4a1f4`.
+- Fixed 32-repeat complete-output prediction: `a638d20a4485a0e0e30343f652a16e9ef0ddd4139d648671ecbcc1bc5f2fc8ad`.
+
+Both originals match all 9,600 predicted non-root scalars exactly. Against the
+fixed prediction, capture differs at seven root scalars and replay at five;
+each maximum absolute root delta is `9.313225746154785e-10`. Caller CPU RNG
+is unchanged and Torch CUDA is uninitialized. This independently checks the
+first full matrices only, not the original full trajectory or native execution.
+The native CPU fixture must still reproduce the unchanged strict rejection
+and all source/body/constructor/trace binding before any GPU child.
+
+The full-cinert baseline is intentionally different from the earlier sparse
+root-control baseline (`554aa8...`); those fixtures must not be interchanged.
+Freeze the new baseline and complete-prediction hashes above in the new control.
+The owner arithmetic implementation also passed a separate hand-built `1/1024`
+coefficient check plus root-only tolerance/non-root rejection checks, without
+importing the new repository predictor.
+
+After review hardening, the exact 51-file suite collects **1,522 tests**. This
+positive count is frozen in the new supervisor; require all 1,522 passes and
+zero skips for new native tests. The focused new planner/fixture/supervisor
+slice passed 86 tests before the full final regression. Reader schemas reject
+nonpositive/nonfinite/bool elapsed times and incomplete WSL monitor records.
+The report distinguishes whether a monitor poll actually observed the child
+GPU PID; an idle poll is not represented as observed GPU ownership.
+
+Final owner regression: **1,522 passed in 232.45 s**, CUDA hidden with pinned
+single-thread CPU/ATEN/MKL settings. Ruff lint, format check and whitespace
+checks pass. Independent review cleared the arithmetic, predecessor-binding,
+input/launch/alias/stream and hardened reporting paths; the owner also validated
+the actual 12-file historical serial packet against its pinned hashes and C970
+source leaves. These are source/CPU checks only; native admission remains open.

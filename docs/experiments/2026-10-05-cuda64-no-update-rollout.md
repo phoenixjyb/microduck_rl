@@ -357,3 +357,75 @@ Post-failure host check: no compute PID, 0% GPU, 666 MiB used, 23,496 MiB free,
 31 C. FilmBrain observatory/video remain active at PIDs 521/298048 with zero
 restarts; both user protected ReCoMo AI services remain inactive, PID 0. No
 unrelated workload, package/driver, physical motion or optimizer was changed.
+
+## Separately declared v3 earliest-forward diagnostic
+
+Do not retry the failed v2 namespace. The next exact tested commit uses
+`football-b1d-cuda64-rollout-probe-20261005-v3`, keeping the body-v2 and private
+constructor-v1 contracts, parent, seeds, 64 worlds, 28-call limit, early pulse,
+strict replay gates, October 5 21:00 cutoff and protected-service boundaries.
+No package, driver, historical runtime, solver, contact reduction or optimizer
+is changed. This is an observational diagnostic, not a new curriculum lesson.
+
+`stance_recovery_early_forward_trace.EarlyForwardTrace` installs hooks on one
+exact runtime instance only after constructor completion. It runs each exact
+inherited scheduled/unforced forward method **once**, with original arguments
+and returned result. It observes only the first **three** physics substeps:
+six ordered `scheduled-pre` / `unforced-post` phases, covering the earliest
+observed drift before any force pulse. Hooks are restored on completion or
+fault; reused lifetimes, preexisting/replaced hooks and graph forwarding are
+refused. No class/global library monkeypatch or extra forward/integration call
+is performed.
+
+Each event retains complete integration/control/applied-force inputs, before
+and after dense per-world mass matrices, actual solved dynamics/counters,
+active constraint rows, and the complete ordered contact table with per-contact
+force and constraint addresses. These are owned CPU copies. Forward integration
+and control inputs must remain exactly unchanged; readers bind qpos/qvel and
+actual global-to-actuator control order to the independently validated first
+trajectory record, and the exact float32 phase clock to the declared 2-ms step.
+Additional synchronization/reads **can affect native
+execution ordering**: traced replay is not proof that the uninstrumented v2
+schedule is deterministic, nor proof of a particular native kernel cause.
+
+Each child adds exclusive `early-trace.pt` / `early-trace.json` files, capped at
+8 MiB / 2 MiB and retained in `finally`, with truthful complete/incomplete/fault
+status. The fresh run has **21 inputs**, **22 files including report**, and
+**23 including either success closeout or independent failure diagnosis**.
+Whole trace bytes and exact summary fields are authenticated before weights-only
+CPU loads. Strict success requires exact original body semantics **and exact
+whole early trace semantics**; no proximity tolerance or contact-order waiver
+is introduced.
+
+The new CUDA-hidden `diagnose` mode is capped at **300 s / 4 GiB**, with the same
+CPUQuota=200%, Nice=10 and KillMode=control-group. It requires a complete retained
+pair failure, the exact still-failed original invocation (PID 0, exit 1, zero
+restarts), all 22 file hashes unchanged, fresh leased idle GPU/context and the
+preflight/full tests receipts. It independently reproduces both individual
+scores and the exact strict pair error before writing
+`independent-failure-diagnosis.json`. A successful or differently failing pair
+is refused. It cannot write a success closeout or training acceptance.
+
+The diagnostic comparison reports ordered phase/input/dynamics/solver/contact
+differences, bounded first leaf differences and the earliest differing phase.
+An explicitly labeled unordered contact multiset excluding only `efc_address`
+is also reported to distinguish a candidate contact-slot permutation; it does
+**not** replace the strict ordered contact or constraint gate. All native cause,
+trace/replay qualification, curriculum, training and physical flags stay false.
+
+CPU preflight/tests now reserve **2,760 s** (all five mode caps plus margin).
+Run still reserves **1,860 s**; either post-run mode fits inside the retained
+600-s closeout reserve. Never extend the cutoff to admit work. Native launch
+requires the frozen revised full **33-file / 960-test** suite, completed focused
+checks and integration review, and exact committed/pushed source cleanly
+fast-forwarded on WSL.
+
+Local CUDA-hidden / OMP=1 source validation on October 5: **77 focused tests
+passed in 19.41 s**; the final 33-file suite **960 passed in 128.08 s**, with
+zero skips. Ruff lint/format and `git diff --check` passed. Actual two-world CPU
+runtime tests cover the six ordered phases, restoration/fault lifecycle,
+absolute clock and committed control binding, unchanged observed-versus-unobserved
+trajectory, and ordered-contact versus explicitly non-admitting multiset
+diagnostics. Envelope/orchestration fixtures additionally verify refusal before
+unauthenticated trace deserialization and distinct failed-pair diagnosis without
+success closeout. These are source/CPU checks, not native CUDA qualification.

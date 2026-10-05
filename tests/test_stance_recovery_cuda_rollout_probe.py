@@ -3,6 +3,7 @@
 import hashlib
 import io
 from pathlib import Path
+from contextlib import contextmanager
 import subprocess
 import sys
 
@@ -85,6 +86,7 @@ def test_protocol_declares_capped_no_update_services_and_isolated_child():
         "tests": 300,
         "run": 1200,
         "closeout": 600,
+        "diagnose": 300,
     }
     assert probe.CHILD_SECONDS == 480
     assert probe.MEMORY == {
@@ -92,6 +94,7 @@ def test_protocol_declares_capped_no_update_services_and_isolated_child():
         "tests": 4 * 1024**3,
         "run": 6 * 1024**3,
         "closeout": 4 * 1024**3,
+        "diagnose": 4 * 1024**3,
     }
     assert properties("run")["CPUQuotaPerSecUSec"] == "2s"
     assert properties("run")["Nice"] == "10"
@@ -253,6 +256,9 @@ def test_whole_launch_hash_is_verified_before_json_parse(monkeypatch, tmp_path):
             protocol=probe.constructor.PROTOCOL,
             cpu_seed=probe.constructor.CPU_SEED,
             cuda_seed=probe.constructor.CUDA_SEED,
+        ),
+        early_forward_trace=dict(
+            protocol=probe.early_trace.PROTOCOL, steps=probe.early_trace.STEPS
         ),
         schedule=probe.declaration(SOURCE),
         service_seconds=probe.SECONDS,
@@ -568,6 +574,221 @@ def test_constructor_authentication_refuses_damage_before_cpu_load(
     monkeypatch.setattr(probe.evidence, "verify", forbidden)
     with pytest.raises(ValueError, match="whole successful constructor payload"):
         probe._score(tmp_path, SOURCE, {}, "b" * 64)
+
+
+def test_faulted_trace_is_exclusively_retained_with_truthful_status(tmp_path):
+    receipt = dict(status="faulted", events=[{"qM": torch.zeros(2, 20, 20)}])
+    probe._retain_trace(tmp_path, SOURCE, "b" * 64, "capture", receipt)
+    raw = (tmp_path / "capture.early-trace.pt").read_bytes()
+    summary = probe.base.parse_json(
+        (tmp_path / "capture.early-trace.json").read_bytes()
+    )
+    assert summary["payload_sha256"] == hashlib.sha256(raw).hexdigest()
+    assert summary["status"] == "faulted" and summary["events"] == 1
+    assert len(raw) <= probe.base.RAW_LIMIT
+    assert probe.evidence._equal(
+        torch.load(io.BytesIO(raw), map_location="cpu", weights_only=True), receipt
+    )
+    assert all(summary[k] is False for k in probe.FLAGS)
+    with pytest.raises(FileExistsError):
+        probe._retain_trace(tmp_path, SOURCE, "b" * 64, "capture", receipt)
+
+
+@pytest.mark.parametrize("damage", ["hash", "extra", "boolean_count"])
+def test_early_trace_authentication_refuses_damage_before_trace_load(
+    tmp_path, monkeypatch, damage
+):
+    """Synthetic envelope seam; no native or body acceptance claim."""
+    constructor = {"retained": True}
+    ctor_raw = probe.evidence.encode(constructor)
+    body_raw, prep_raw, trace_raw = b"body", b"prep", b"not loadable trace"
+    sha = "b" * 64
+    child = dict(
+        protocol=probe.PROTOCOL + ":child",
+        source=SOURCE,
+        launch_sha256=sha,
+        seed=probe.SEED,
+        attempt="capture",
+        payload_bytes=len(body_raw),
+        preparation_bytes=len(prep_raw),
+        optimizer_steps=0,
+        records=1,
+        payload_sha256=hashlib.sha256(body_raw).hexdigest(),
+        preparation_sha256=hashlib.sha256(prep_raw).hexdigest(),
+        **probe.FLAGS,
+    )
+    ctor = dict(
+        protocol=probe.PROTOCOL + ":constructor",
+        source=SOURCE,
+        launch_sha256=sha,
+        attempt="capture",
+        status="success",
+        constructor_calls=1,
+        faulted=False,
+        payload_sha256=hashlib.sha256(ctor_raw).hexdigest(),
+        payload_bytes=len(ctor_raw),
+        **probe.FLAGS,
+    )
+    summary = dict(
+        protocol=probe.PROTOCOL + ":early-trace",
+        source=SOURCE,
+        launch_sha256=sha,
+        attempt="capture",
+        status="complete",
+        events=6,
+        payload_sha256=hashlib.sha256(trace_raw).hexdigest(),
+        payload_bytes=len(trace_raw),
+        **probe.FLAGS,
+    )
+    if damage == "hash":
+        summary["payload_sha256"] = "c" * 64
+    elif damage == "extra":
+        summary["unreviewed"] = True
+    else:
+        summary["events"] = True
+    files = {
+        "cpu-parent-receipt.json": b"{}",
+        "capture.json": canonical(child).encode(),
+        "capture.pt": body_raw,
+        "capture.prepared.pt": prep_raw,
+        "capture.prepared.json": b"{}",
+        "capture.constructor.json": canonical(ctor).encode(),
+        "capture.constructor.pt": ctor_raw,
+        "capture.early-trace.pt": trace_raw,
+        "capture.early-trace.json": canonical(summary).encode(),
+    }
+    monkeypatch.setattr(probe.base, "_read_file", lambda path, _limit: files[path.name])
+    value = {"constructor_receipt": constructor, "archive": {"records": [{}]}}
+    monkeypatch.setattr(probe.evidence, "verify", lambda *_args, **_kwargs: (value, {}))
+    loads = []
+
+    def load(stream, **kwargs):
+        actual = stream.getvalue()
+        assert actual == ctor_raw, "unauthenticated trace reached torch.load"
+        assert kwargs == {"map_location": "cpu", "weights_only": True}
+        loads.append(actual)
+        return constructor
+
+    monkeypatch.setattr(probe.torch, "load", load)
+    with pytest.raises(ValueError, match="whole complete early trace before CPU load"):
+        probe._score_inputs(tmp_path, SOURCE, {}, sha)
+    assert loads == [ctor_raw]
+
+
+@pytest.mark.parametrize("damage", [None, "pid", "restart", "invocation", "success"])
+def test_original_failed_terminal_requires_exact_retained_invocation(
+    monkeypatch, damage
+):
+    invocation = "d" * 32
+    fields = dict(
+        MainPID="0",
+        ActiveState="failed",
+        NRestarts="0",
+        ExecMainStatus="1",
+        Result="exit-code",
+        InvocationID=invocation,
+    )
+    if damage == "pid":
+        fields["MainPID"] = "123"
+    elif damage == "restart":
+        fields["NRestarts"] = "1"
+    elif damage == "invocation":
+        fields["InvocationID"] = ""
+    elif damage == "success":
+        fields.update(ActiveState="inactive", ExecMainStatus="0", Result="success")
+    monkeypatch.setattr(probe.base.host, "read", lambda *args: fields[args[-2]])
+    if damage is None:
+        assert probe._failed_terminal(SOURCE, invocation) == fields
+    else:
+        with pytest.raises(ValueError, match="exact terminal original failed run"):
+            probe._failed_terminal(SOURCE, invocation)
+
+
+def test_strict_pair_never_ignores_early_trace_divergence(monkeypatch):
+    monkeypatch.setattr(
+        probe.evidence, "paired", lambda *_: {"paired_semantics_exact": True}
+    )
+    with pytest.raises(ValueError, match="paired early trace exactness"):
+        probe._strict_pair([{}, {}], [{"qM": torch.zeros(1)}, {"qM": torch.ones(1)}])
+    assert probe._strict_pair([{}, {}], [{}, {}])["early_trace_exact"] is True
+
+
+@pytest.mark.parametrize("recomputed", ["same", "different", "success"])
+def test_failure_diagnosis_is_distinct_from_success_and_preserves_original_files(
+    tmp_path, monkeypatch, recomputed
+):
+    """Synthetic orchestration seam, not independent native acceptance."""
+    error = "paired rollout semantic state exactness"
+    inventory = {
+        name: {"bytes": 2, "sha256": "e" * 64} for name in probe.COMPLETE_FILES
+    }
+    report = dict(
+        protocol=probe.PROTOCOL,
+        source=SOURCE,
+        status="failed-retained",
+        error_type="ValueError",
+        error=error,
+        partial_inventory={k: v for k, v in inventory.items() if k != "report.json"},
+        **probe.FLAGS,
+    )
+    raw = canonical(report).encode()
+    (tmp_path / "report.json").write_bytes(raw)
+    (tmp_path / "launch.json").write_bytes(b"{}")
+    prior = {"launch_binding": {}}
+    launch = dict(
+        service_properties=properties("run"),
+        closed_preparation={},
+        source_binding={},
+        schedule={},
+    )
+    monkeypatch.setattr(probe, "_hidden", lambda: None)
+    monkeypatch.setattr(probe, "check_window", lambda **_: None)
+    monkeypatch.setattr(probe, "output_path", lambda _source: tmp_path)
+    monkeypatch.setattr(probe, "_properties", lambda _source, mode: properties(mode))
+    monkeypatch.setattr(probe.base, "_exact_inventory", lambda *_: None)
+    monkeypatch.setattr(probe, "_inventory", lambda *_: inventory)
+    monkeypatch.setattr(probe, "_read_launch", lambda *_: launch)
+    monkeypatch.setattr(probe, "source_binding", lambda *_: {})
+    monkeypatch.setattr(probe, "_failed_terminal", lambda *_: {"original": True})
+    monkeypatch.setattr(probe.closed, "checked", lambda *_, **__: prior)
+    modes = []
+    monkeypatch.setattr(probe, "_read_tool", lambda _, mode, _prior: modes.append(mode))
+    monkeypatch.setattr(probe.base.gpu_idle_gate, "wait_idle", lambda: {"idle": True})
+
+    @contextmanager
+    def leased():
+        yield 42
+
+    monkeypatch.setattr(probe.base.gap.base.files, "gpu_lease", leased)
+    inputs = [{"archive": {"records": [{}]}}, {"archive": {"records": [{}]}}]
+    monkeypatch.setattr(probe, "_score_inputs", lambda *_: (inputs, [{}, {}], [{}, {}]))
+
+    def pair(*_):
+        if recomputed == "success":
+            return {}
+        raise ValueError(
+            error if recomputed == "same" else "paired early trace exactness"
+        )
+
+    monkeypatch.setattr(probe, "_strict_pair", pair)
+    monkeypatch.setattr(probe.early_trace, "compare", lambda *_: {"exact": False})
+    target = tmp_path / "independent-failure-diagnosis.json"
+    if recomputed == "same":
+        result = probe.diagnose(SOURCE)
+        assert target.exists()
+        assert result["pair_accepted"] is False and result["pair_error"] == error
+        assert result["status"] == "failed-pair-independently-diagnosed"
+        assert all(result[k] is False for k in probe.FLAGS)
+    else:
+        with pytest.raises(
+            ValueError, match="independently reproduced exact strict pair failure"
+        ):
+            probe.diagnose(SOURCE)
+        assert not target.exists()
+    assert modes == ["preflight", "tests"]
+    assert (tmp_path / "report.json").read_bytes() == raw
+    assert (tmp_path / "launch.json").read_bytes() == b"{}"
+    assert not (tmp_path / "independent-closeout.json").exists()
 
 
 def _run(command, log, *, seconds, monkeypatch, log_limit=None):

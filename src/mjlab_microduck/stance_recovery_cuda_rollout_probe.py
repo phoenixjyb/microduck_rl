@@ -30,16 +30,17 @@ from mjlab_microduck import stance_recovery_cuda_storage_evidence as storage
 from mjlab_microduck import stance_recovery_cuda_transition as transition
 from mjlab_microduck import stance_recovery_cuda_rollout_evidence as evidence
 from mjlab_microduck import stance_recovery_cuda_constructor_rng as constructor
+from mjlab_microduck import stance_recovery_early_forward_trace as early_trace
 from mjlab_microduck import stance_recovery_schedule as schedule
 from mjlab_microduck.stance_transition import PhysicsState
 from mjlab_microduck.first_attempt_smoke import canonical, require
 
-PROTOCOL = "football-b1d-cuda64-rollout-probe-20261005-v2"
+PROTOCOL = "football-b1d-cuda64-rollout-probe-20261005-v3"
 MODULE = "mjlab_microduck.stance_recovery_cuda_rollout_probe"
 START, CUTOFF = 1791176796, 1791205200  # October 5 13:06:36 / 21:00 Shanghai.
 SEED = 653
 ATTEMPTS = ("capture", "replay")
-SECONDS = dict(preflight=300, tests=300, run=1200, closeout=600)
+SECONDS = dict(preflight=300, tests=300, run=1200, closeout=600, diagnose=300)
 MEMORY = {mode: (6 if mode == "run" else 4) * 1024**3 for mode in SECONDS}
 CHILD_SECONDS = 480
 MARGIN = 60
@@ -52,9 +53,10 @@ TEST_FILES = shadow.TEST_FILES + (
     "test_stance_recovery_cuda_rollout_evidence.py",
     "test_stance_recovery_cuda_rollout_probe.py",
     "test_stance_recovery_cuda_constructor_rng.py",
+    "test_stance_recovery_early_forward_trace.py",
 )
-# Owner-reviewed complete CUDA-hidden 32-file suite, with no skips.
-EXPECTED_TESTS = 922
+# Owner-reviewed complete CUDA-hidden 33-file suite, with no skips.
+EXPECTED_TESTS = 960
 OWN_FILES = (
     tuple(
         "src/mjlab_microduck/" + name + ".py"
@@ -66,9 +68,10 @@ OWN_FILES = (
             "stance_recovery_cuda_rollout_evidence",
             "stance_recovery_cuda_rollout_probe",
             "stance_recovery_cuda_constructor_rng",
+            "stance_recovery_early_forward_trace",
         )
     )
-    + tuple("tests/" + name for name in TEST_FILES[-7:])
+    + tuple("tests/" + name for name in TEST_FILES[-8:])
     + ("docs/experiments/2026-10-05-cuda64-no-update-rollout.md",)
 )
 CHILD_FILES = {
@@ -79,6 +82,8 @@ CHILD_FILES = {
         "prepared.json",
         "constructor.pt",
         "constructor.json",
+        "early-trace.pt",
+        "early-trace.json",
         "pt",
         "json",
         "log",
@@ -536,6 +541,7 @@ def _read_launch(source, sha):
             "optimizer_steps",
             "return_computation",
             "constructor_rng",
+            "early_forward_trace",
             *FLAGS,
         }
         and launch.get("protocol") == PROTOCOL
@@ -555,6 +561,8 @@ def _read_launch(source, sha):
             cpu_seed=constructor.CPU_SEED,
             cuda_seed=constructor.CUDA_SEED,
         )
+        and launch.get("early_forward_trace")
+        == dict(protocol=early_trace.PROTOCOL, steps=early_trace.STEPS)
         and all(launch.get(k) is False for k in FLAGS),
         "exact new non-admitting launch",
     )
@@ -716,17 +724,24 @@ def child(source, sha, attempt, lease_fd):
     collector = transition.CudaTransitionCollector(prepared, env, lease_fd=lease_fd)
     started = time.monotonic()
     records = []
-    # Stop at the first observed terminal, even if selective reset made rows live.
-    for _ in range(28):
-        require(
-            time.monotonic() - started < CHILD_SECONDS - 60,
-            "collection serialization reserve",
-        )
-        record = collector.collect_one(capture_control=True)
-        retained = archive.retain_record_cpu(_producer_tree(record), lease_fd=lease_fd)
-        records.append(retained)
-        if _terminal_observed(retained):
-            break
+    observer = early_trace.EarlyForwardTrace(env)
+    try:
+        with observer:
+            # Stop at first terminal; no collection beyond automatic reset.
+            for _ in range(28):
+                require(
+                    time.monotonic() - started < CHILD_SECONDS - 60,
+                    "collection serialization reserve",
+                )
+                record = collector.collect_one(capture_control=True)
+                retained = archive.retain_record_cpu(
+                    _producer_tree(record), lease_fd=lease_fd
+                )
+                records.append(retained)
+                if _terminal_observed(retained):
+                    break
+    finally:
+        _retain_trace(root, source, sha, attempt, observer.capture())
     archived = dict(
         protocol=archive.PROTOCOL,
         declaration=deepcopy(launch["schedule"]),
@@ -807,11 +822,32 @@ def _retain_constructor(root, source, sha, attempt, receipt):
     )
 
 
-def _score(root, source, launch, sha):
+def _retain_trace(root, source, sha, attempt, receipt):
+    raw = evidence.encode(receipt)
+    digest = base._write_exclusive(
+        root / (attempt + ".early-trace.pt"), raw, base.RAW_LIMIT
+    )
+    base.write_json(
+        root / (attempt + ".early-trace.json"),
+        dict(
+            protocol=PROTOCOL + ":early-trace",
+            source=source,
+            launch_sha256=sha,
+            attempt=attempt,
+            payload_sha256=digest,
+            payload_bytes=len(raw),
+            status=receipt["status"],
+            events=len(receipt["events"]),
+            **FLAGS,
+        ),
+    )
+
+
+def _score_inputs(root, source, launch, sha):
     cpu = base.parse_json(
         base._read_file(root / "cpu-parent-receipt.json", base.JSON_LIMIT)
     )
-    inputs, scores = [], []
+    inputs, scores, traces = [], [], []
     for attempt in ATTEMPTS:
         summary = base.parse_json(
             base._read_file(root / (attempt + ".json"), base.JSON_LIMIT)
@@ -888,9 +924,61 @@ def _score(root, source, launch, sha):
             summary["records"] == len(value["archive"]["records"]),
             "whole actual record count",
         )
+        trace_summary = base.parse_json(
+            base._read_file(root / (attempt + ".early-trace.json"), base.JSON_LIMIT)
+        )
+        trace_raw = base._read_file(
+            root / (attempt + ".early-trace.pt"), base.RAW_LIMIT
+        )
+        require(
+            type(trace_summary) is dict
+            and set(trace_summary)
+            == {
+                "protocol",
+                "source",
+                "launch_sha256",
+                "attempt",
+                "payload_sha256",
+                "payload_bytes",
+                "status",
+                "events",
+                *FLAGS,
+            }
+            and trace_summary["protocol"] == PROTOCOL + ":early-trace"
+            and trace_summary["source"] == source
+            and trace_summary["launch_sha256"] == sha
+            and trace_summary["attempt"] == attempt
+            and trace_summary["payload_sha256"] == base.digest(trace_raw)
+            and trace_summary["payload_bytes"] == len(trace_raw)
+            and trace_summary["status"] == "complete"
+            and type(trace_summary["events"]) is int
+            and trace_summary["events"] == 2 * early_trace.STEPS
+            and all(trace_summary[k] is False for k in FLAGS),
+            "whole complete early trace before CPU load",
+        )
+        traced = torch.load(
+            io.BytesIO(trace_raw), map_location="cpu", weights_only=True
+        )
+        trace_score = early_trace.check(
+            traced, launch["schedule"], value["archive"]["records"][0]
+        )
         inputs.append(value)
-        scores.append({**score, "diagnostics": _diagnostics(value)})
+        traces.append(traced)
+        scores.append(
+            {**score, "early_trace": trace_score, "diagnostics": _diagnostics(value)}
+        )
+    return inputs, scores, traces
+
+
+def _strict_pair(inputs, traces):
     pair = evidence.paired(*inputs)
+    require(evidence._equal(*traces), "paired early trace exactness")
+    return {**pair, "early_trace_exact": True}
+
+
+def _score(root, source, launch, sha):
+    inputs, scores, traces = _score_inputs(root, source, launch, sha)
+    pair = _strict_pair(inputs, traces)
     return scores, pair
 
 
@@ -1002,6 +1090,9 @@ def run(source):
                     protocol=constructor.PROTOCOL,
                     cpu_seed=constructor.CPU_SEED,
                     cuda_seed=constructor.CUDA_SEED,
+                ),
+                early_forward_trace=dict(
+                    protocol=early_trace.PROTOCOL, steps=early_trace.STEPS
                 ),
                 **FLAGS,
             )
@@ -1139,6 +1230,127 @@ def closeout(source):
     return result
 
 
+def _failed_terminal(source, invocation):
+    base._hex(invocation, 32, "original failed run invocation")
+    value = {
+        k: base.host.read(
+            "systemctl", "--user", "show", unit(source, "run"), "-p", k, "--value"
+        )
+        for k in (
+            "MainPID",
+            "ActiveState",
+            "NRestarts",
+            "ExecMainStatus",
+            "Result",
+            "InvocationID",
+        )
+    }
+    require(
+        value
+        == dict(
+            MainPID="0",
+            ActiveState="failed",
+            NRestarts="0",
+            ExecMainStatus="1",
+            Result="exit-code",
+            InvocationID=invocation,
+        ),
+        "exact terminal original failed run, never restarted",
+    )
+    return value
+
+
+def diagnose(source):
+    """Independently close a complete failed pair, never a success closeout."""
+    _hidden()
+    check_window(reserve_seconds=SECONDS["diagnose"] + MARGIN)
+    service = _properties(source, "diagnose")
+    root = output_path(source)
+    base._exact_inventory(root, COMPLETE_FILES)
+    started = time.monotonic()
+    report_raw = base._read_file(root / "report.json", base.JSON_LIMIT)
+    report = base.parse_json(report_raw)
+    errors = {
+        "paired rollout semantic state exactness",
+        "paired constructor private streams and physical fields exact",
+        "paired early trace exactness",
+    }
+    require(
+        report.get("protocol") == PROTOCOL
+        and report.get("source") == source
+        and report.get("status") == "failed-retained"
+        and report.get("error_type") == "ValueError"
+        and report.get("error") in errors
+        and all(report.get(k) is False for k in FLAGS),
+        "retained complete numerical pair failure only",
+    )
+    inventory = _inventory(root, COMPLETE_FILES)
+    require(
+        {k: v for k, v in inventory.items() if k != "report.json"}
+        == report["partial_inventory"],
+        "independently rehashed unchanged failed inputs",
+    )
+    with base.gap.base.files.gpu_lease() as fd:
+        idle = base.gpu_idle_gate.wait_idle()
+        raw_launch = base._read_file(root / "launch.json", base.JSON_LIMIT)
+        sha = base.digest(raw_launch)
+        launch = _read_launch(source, sha)
+        _recorded_properties(launch["service_properties"], "run")
+        invocation = launch["service_properties"]["InvocationID"]
+        terminal = _failed_terminal(source, invocation)
+        prior = closed.checked(source, lease_fd=fd)
+        require(
+            prior["launch_binding"] == launch["closed_preparation"]
+            and source_binding(source) == launch["source_binding"],
+            "fresh exact failed-run source and preparation",
+        )
+        _read_tool(source, "preflight", prior)
+        _read_tool(source, "tests", prior)
+        inputs, scores, traces = _score_inputs(root, source, launch, sha)
+        pair_error = None
+        try:
+            _strict_pair(inputs, traces)
+        except ValueError as error:
+            pair_error = str(error)
+        require(
+            pair_error == report["error"],
+            "independently reproduced exact strict pair failure",
+        )
+        comparison = early_trace.compare(
+            *traces, launch["schedule"], [x["archive"]["records"][0] for x in inputs]
+        )
+        require(
+            _inventory(root, COMPLETE_FILES) == inventory
+            and _failed_terminal(source, invocation) == terminal
+            and source_binding(source) == launch["source_binding"]
+            and closed.checked(source, lease_fd=fd)["launch_binding"]
+            == prior["launch_binding"]
+            and _properties(source, "diagnose") == service
+            and time.monotonic() - started < SECONDS["diagnose"],
+            "unchanged independently diagnosed source, inputs and services",
+        )
+        result = dict(
+            protocol=PROTOCOL + ":failure-diagnosis",
+            source=source,
+            status="failed-pair-independently-diagnosed",
+            report_sha256=base.digest(report_raw),
+            launch_sha256=sha,
+            files_rehashed=inventory,
+            scores=scores,
+            pair_error=pair_error,
+            pair_accepted=False,
+            early_trace_comparison=comparison,
+            elapsed_seconds=float(time.monotonic() - started),
+            service_properties=service,
+            failed_run_terminal=terminal,
+            idle_before=idle,
+            idle_after=base.gpu_idle_gate.wait_idle(),
+            **FLAGS,
+        )
+        base.write_json(root / "independent-failure-diagnosis.json", result)
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", choices=(*SECONDS, "child"))
@@ -1155,6 +1367,7 @@ def main():
             "tests": tests,
             "run": run,
             "closeout": closeout,
+            "diagnose": diagnose,
         }[args.mode](args.source)
     print(canonical(result))
 

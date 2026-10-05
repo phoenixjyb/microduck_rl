@@ -703,3 +703,83 @@ hashes and all six phase metric rows to freshly read metadata; old 33-file /
 960-test and new 35-file / 988-test declarations remain unchanged. `git diff
 --check` passed. This evidence-only commit leaves the exact native tool source
 and its retained output bytes unchanged on WSL.
+
+## Persistent inertia observation: source-only preparation
+
+Starting from reviewed evidence tip `e705c0a6ea26488321f02cd593c805fee09b81ec`,
+the next diagnostic is a separate observer-only extension,
+`stance_recovery_early_inertia_trace.EarlyInertiaTrace`, protocol
+**`football-b1d-early-inertia-trace-v1`**. It does not edit the original v3
+supervisor, runtime, solver, constraint-identity reader, or their frozen test
+counts. The original native pair remains rejected; no optimizer admission,
+kernel-cause proof or new Duck skill is inferred from this preparation.
+
+The observer subclasses the existing observer, **not** the physics runtime.
+It calls the inherited event implementation once, then reads additional owned
+CPU copies after each of the same six scheduled-pre/unforced-post solves at
+steps 0–2. Calls after that prefix remain the original unobserved calls.
+The new protocol records the boundary as
+`after-complete-forward-including-acceleration-sensors`. Extra synchronization
+can affect native ordering; this is not uninstrumented replay equivalence.
+
+| Persistent field | Exact float32 layout |
+| --- | --- |
+| subtree_com | `[worlds,16,3]` |
+| cinert / crb | `[worlds,16,10]` |
+| cdof / cdof_dot | `[worlds,20,6]` |
+| qM / qLD | `[worlds,20,20]` |
+| cvel | `[worlds,16,6]` |
+| qfrc_bias / qfrc_smooth | `[worlds,20]` |
+
+The runtime guard binds the actual compiled dense plant to
+`nbody=16,nq=21,nv=20,nu=14`, eager forward and acceleration-sensor RNE,
+and rejects replaced view/synchronization methods. The CPU reader first
+requires CUDA hidden, then bounded CPU ownership/finiteness and exact schemas;
+only then does it project declared extension fields into the unchanged early
+reader. All six original trajectory, phase-clock, committed-control and order
+checks still apply. Applied-force arrays must also have the exact 16-body shape.
+Duplicate qM and bias fields bind to the original event outputs by raw bytes,
+including signed zero. New persistent comparison counts changed float32 bit
+patterns and separately reports numerical max deltas and bounded world details.
+The frozen reader's existing equality semantics are unchanged.
+
+`cacc`, `cfrc_int`, and `cfrc_ext` are explicitly excluded: this robot's
+`imu_accel` sensor enables postconstraint RNE, which overwrites them after
+`solver.solve`. Thus end-of-forward values cannot be presented as the earlier
+RNE intermediates that generated qfrc_bias. Persistent snapshots can narrow
+where differences are visible, but their reporting order is **not** a temporal
+kernel order or a causal proof. Every qualification/training/physical flag
+remains false.
+
+Source review uses the actually installed pinned MuJoCo-Warp 3.8.1:
+`_src/smooth.py:464-575,807-912` shows atomic subtree-COM and CRB accumulation
+followed by dense mass assembly; `_src/forward.py:674-695,1234-1257` orders
+velocity/bias work before acceleration, solver and acceleration sensors;
+`_src/sensor.py:2609-2610` invokes postconstraint RNE, whose outputs are
+declared in `_src/smooth.py:1501-1581`. No installed-library file was modified.
+
+This section predeclares the **observation contract only**. Native execution
+still requires a fresh source-bound capped supervisor, authenticated original
+input/action provenance, full retained phase records, independent CPU reading,
+GPU/service/lease guards and cutoff reserve. It must use a new namespace and
+must not restart or rewrite any original failed job. Passing helper tests alone
+does not authorize an optimizer or turn the old pair into an accepted result.
+
+Local CUDA-hidden validation: the existing 35-file suite plus the new observer
+file passed **1,012 tests in 112.20 s**, zero skips. After final extension-schema
+hardening and formatting, the focused observer suite passed **24 tests in
+10.11 s**. Actual two-world CPU runs preserved caller RNG, full trajectory and
+committed controls, restored both inherited hooks, and counted exactly 20
+original forward calls in both observed and reference ticks (10 integration
+substeps, six observed phases). Owned-copy tests restore all deliberately
+mutated live buffers. Corruption tests cover unknown schemas, bad layouts,
+nonfinite values, true qualification flags, duplicate field and signed-zero
+damage, and foreign view/sync/graph paths. Ruff lint/format and `git diff
+--check` passed. These are local CPU/source results, not a native launch receipt.
+
+Owner live read-only check on 100.98: WSL remains clean at the retained CPU-tool
+source `af47d912501a3df7db7f9a9ab7af6c09ba63a215`, no running Duck service or
+GPU compute PID; GPU 0%, 666 MiB used / 23,496 MiB free, 30 C. FilmBrain remains
+active at PIDs 521 / 298048 with zero restarts; protected user/system ReCoMo AI
+units remain inactive PID 0. No native job, worktree update, package/driver
+change or protected-service action was made for this helper preparation.

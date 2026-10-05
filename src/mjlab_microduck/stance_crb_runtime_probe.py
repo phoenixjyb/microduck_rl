@@ -29,6 +29,7 @@ from mjlab_microduck import stance_crb_full_tree_probe as fulltree
 from mjlab_microduck import stance_crb_runtime_control as runtime_control
 from mjlab_microduck import stance_crb_serial_control_probe as serial
 from mjlab_microduck import stance_cuda_probe as cuda_probe
+from mjlab_microduck import stance_inertia_order_probe as order
 from mjlab_microduck import stance_recovery_cuda_constructor_rng as constructor
 from mjlab_microduck import stance_recovery_cuda_inertia_probe as prior
 from mjlab_microduck import stance_recovery_early_inertia_trace as inertia_trace
@@ -41,7 +42,7 @@ base = prior.base
 MODULE = "mjlab_microduck.stance_crb_runtime_probe"
 PROTOCOL = "football-b1d-crb-runtime-schedule-control-20261006-v1"
 BASE_SOURCE = "9d2162d71d4c869d6d9b2481b663b3cb07042dd9"
-SYNC_FROM_SOURCE = "dab4f3258e10e79fa3e44629161a76705b8b359d"
+SYNC_FROM_SOURCE = "5cbd18ce3cff0c51461b0061ac885ef4b8f024d7"
 HISTORIC_FULLTREE_SOURCE = "d923275040b3538f6ed48b867f1b1e6bc42304d3"
 FULLTREE_OWNER_SHA256 = (
     "718b61f3d08e61a2e27410fe8b8b62ae3be52a9a74dad0034e4998bc074ae707"
@@ -101,7 +102,7 @@ TEST_RESERVE = (
     + SECONDS["closeout"]
     + MARGIN
 )
-EXPECTED_TESTS = 1579  # Exact reviewed 53-file CUDA-hidden suite; zero skips.
+EXPECTED_TESTS = 1581  # Exact reviewed 53-file CUDA-hidden suite; zero skips.
 TEST_FILES = (
     *fulltree.TEST_FILES,
     "test_stance_crb_runtime_control.py",
@@ -2503,7 +2504,7 @@ def _authenticate_all_predecessors():
         "inherited 50 predecessor files authenticated",
     )
     original = legacy["original"]
-    original_inputs = prior.order.authenticate_inputs()
+    original_inputs = order.authenticate_inputs()
     original_root, _original_launch, original_launch_sha = original_inputs[:3]
     original_anchors = original_inputs[4]
     require(
@@ -2530,7 +2531,6 @@ def _authenticate_all_predecessors():
 
 
 def _score_original_pair():
-    order = prior.order
     order_inputs = order.authenticate_inputs()
     root, launch, sha = order_inputs[0], order_inputs[1], order_inputs[2]
     rng_before = torch.random.get_rng_state().clone()

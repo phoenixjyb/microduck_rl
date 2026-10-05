@@ -23,7 +23,7 @@ Use 100.98 only via `gw98-direct`, native root
 `feat/athletics-obstacle-curriculum`. Stop starting new work at **2026-10-06
 08:00 Asia/Shanghai (00:00 UTC)**. Native source initially started at
 `d923275040b3538f6ed48b867f1b1e6bc42304d3`; the follow-up sync starts only
-at retained failed-test source `dab4f3258e10e79fa3e44629161a76705b8b359d`.
+at retained failed-preflight source `5cbd18ce3cff0c51461b0061ac885ef4b8f024d7`.
 The local declaration baseline is
 `9d2162d71d4c869d6d9b2481b663b3cb07042dd9`. Permit only this new declaration,
 the new runtime-dispatch adapter, the new bounded supervisor and their two
@@ -163,7 +163,7 @@ contracts above are tested. Native source sync is a guarded clean fast-forward
 from the predeclared retained head to the exact pushed source; all inputs/runtime/source are rechecked
 before and after each mode.
 
-The frozen complete suite contains **1,579 tests in 53 files**. Source regressions
+The frozen follow-up suite contains **1,581 tests in 53 files**. Source regressions
 include the real writer/reader owner-PID bridge, at-least-once observation of the
 actual child GPU PID, the 180-second child-monitor bound, and content validation
 before the single exclusive final report publication. A failure of late content
@@ -245,3 +245,56 @@ The corrected adapter suite passed all 27 tests; the corrected complete 53-file
 CUDA-hidden Mac suite passed all 1,579 tests in 269.83 s with zero skips. Ruff
 check/format and `git diff --check` passed. Fresh native tests and preflight are
 still required; the adapter implementation is byte-for-byte unchanged.
+
+### Retained CPU preflight failure and module-routing correction
+
+At `5cbd18ce3cff0c51461b0061ac885ef4b8f024d7`, the fresh native suite
+passed all 1,579 tests in 126.48 s with zero skips. Its report SHA is
+`f148c9f54902be4f301f0b5737f8a41bdd37a1a427c1c3cac3fd7d7eb5c5ee83`.
+The next CPU preflight failed with
+`AttributeError: module 'mjlab_microduck.stance_recovery_cuda_inertia_probe' has no attribute 'order'`.
+The retained preflight report SHA is
+`7f6eec85a1989417d85c88ed2f2e2d6dcf5f5ab2a6b106c6d554655f78ef8b88`,
+invocation `bff43f70a93545679437a70a39884d93`, terminal PID 0, exit status 1,
+zero restarts and peak memory 560,226,304 bytes. No CUDA child was started.
+
+Read-only inspection found two calls routing through nonexistent `prior.order`.
+The actual authenticated reader is the existing `stance_inertia_order_probe`,
+also imported by the frozen full-tree supervisor. Import that module explicitly
+in the new supervisor; keep its source/byte authentication and the unchanged
+`prior._score_inputs` / `prior._strict_pair` numerical checks. Add two wrapper
+regressions that exercise the real routing with mocked byte I/O rather than
+mocking the wrappers themselves. The resulting complete suite has 1,581 tests;
+it must pass with zero skips under a new exact-source namespace. Preserve the
+successful native tests and failed preflight at the old namespace, and do not
+reuse their passed status as qualification of the correction.
+
+The corrected complete 53-file CUDA-hidden Mac suite passed **1,581 tests in
+448.78 s**, zero skips; the focused adapter/supervisor suite passed 59 tests.
+Ruff check/format and `git diff --check` passed. The native test cap remains
+300 s, based on the measured native suite; the longer Mac duration is not a
+native runtime qualification. Fresh native tests and CPU preflight are pending.
+
+### Independent receiver schema correction
+
+Owner review found that the private receiver and its synthetic fixture had both
+represented `metadata.schedule` as a body-level list, whereas the real producer
+uses the complete source-bound recovery schedule dictionary. Preserve those
+original tools unchanged; they were not used to qualify native payloads. The
+separate `receiver-1581` tools now validate the literal 64-row dictionary against
+the preflight declaration, metadata reference and all four child payloads.
+An independent read-only review cleared this delta. A CPU-only check confirmed
+canonical equality with the actual frozen `prior.declaration(source)` schedule.
+
+The corrected 21-artifact synthetic test passes all 28 comparisons / 476 field
+pairs, retains the finite CRB negative case, and rejects bad hashes, missing
+anchors, incorrect counts/pair labels and absent/list/wrong-source schedules.
+Synthetic evidence is not native evidence. Whole private tool hashes are:
+
+- receiver `d633491a0016ecebe51146f19bd35ac13bef66ba33121f609407c0375dd273f9`;
+- synthetic builder `c84f02dd9bc86fbe2a722490cb5f805a92414c71e5dd20c7aa8d0a1f165db5a4`;
+- independent math `f64b373cc0eb9b016ff12dc7e29b09a9cd01145b8f3f287cb879f902b741c944`;
+- owner terminal recorder `ca01fbd6de63adcee8fb171aa82cc2a8e59a2cf396a1cec97d5c40e6e59bede2`.
+
+The receiver remains CUDA-hidden, authenticates all bytes before decoding, and
+cannot admit training or overturn the original full-rollout rejection.

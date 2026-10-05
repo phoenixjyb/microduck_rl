@@ -11,6 +11,129 @@ import torch
 from mjlab_microduck import stance_crb_runtime_probe as probe
 
 
+def _mock_order_input_bytes(monkeypatch, tmp_path):
+    root = tmp_path / "authenticated-original-inputs"
+    launch = {"schedule": {"worlds": 64}}
+    launch_sha = "a" * 64
+    inventory = {"original-input": {"bytes": 17, "sha256": "b" * 64}}
+    anchors = {
+        "comparison_sha256": probe.order.MAP_COMPARISON_SHA,
+        "report_sha256": probe.order.MAP_REPORT_SHA,
+        "smooth_sha256": probe.order.SMOOTH_SHA,
+        "compiled_topology_sha256": probe.order.MAP_TOPOLOGY_SHA,
+    }
+    calls = {"hidden": 0, "inputs": 0, "anchors": 0}
+
+    def authenticate_inputs():
+        calls["inputs"] += 1
+        return root, launch, launch_sha, inventory
+
+    def authenticate_map():
+        calls["anchors"] += 1
+        return anchors
+
+    def hidden():
+        calls["hidden"] += 1
+
+    monkeypatch.setattr(probe.order.oracle, "_hidden", hidden)
+    monkeypatch.setattr(
+        probe.order.frozen_component, "authenticate_inputs", authenticate_inputs
+    )
+    monkeypatch.setattr(probe.order, "authenticate_map", authenticate_map)
+    return root, launch, launch_sha, inventory, anchors, calls
+
+
+def test_predecessor_wrapper_routes_through_frozen_order_authenticator(
+    monkeypatch, tmp_path
+):
+    root, launch, launch_sha, inventory, anchors, calls = _mock_order_input_bytes(
+        monkeypatch, tmp_path
+    )
+    original_files = {
+        "rollout": [None] * 22,
+        "diagnosis": [None],
+        "component_map": [None] * 2,
+        "order_oracle": [None] * 2,
+    }
+    original = {
+        "root": str(root),
+        "launch_sha256": launch_sha,
+        "original_files": original_files,
+        "anchors": anchors,
+        "comparison_sha256": probe.fulltree.frozen.ORDER_COMPARISON_SHA,
+        "report_sha256": probe.fulltree.frozen.ORDER_REPORT_SHA,
+    }
+    legacy = {"predecessors_authenticated": True, "original": original}
+    previous = {"prior_fulltree": "authenticated"}
+    monkeypatch.setattr(probe, "_authenticate_previous_fulltree", lambda: previous)
+    monkeypatch.setattr(probe.fulltree, "_authenticate_predecessors", lambda: legacy)
+
+    result = probe._authenticate_all_predecessors()
+
+    assert probe.order is probe.fulltree.order is probe.fulltree.frozen.order
+    assert result == {
+        "fulltree": previous,
+        "legacy": legacy,
+        "predecessors_authenticated": True,
+    }
+    assert calls == {"hidden": 1, "inputs": 1, "anchors": 1}
+    assert launch["schedule"]["worlds"] == 64
+    assert result["legacy"]["original"]["launch_sha256"] == launch_sha
+    assert result["legacy"]["original"]["anchors"] == anchors
+    assert {key: len(value) for key, value in original_files.items()} == {
+        "rollout": 22,
+        "diagnosis": 1,
+        "component_map": 2,
+        "order_oracle": 2,
+    }
+
+
+def test_original_score_wrapper_uses_order_parent_and_preserves_rng_on_exact_rejection(
+    monkeypatch, tmp_path
+):
+    root, launch, launch_sha, inventory, anchors, calls = _mock_order_input_bytes(
+        monkeypatch, tmp_path
+    )
+    old_constructor = {"old": "authenticated constructor receipt"}
+    inputs = [{"constructor_receipt": old_constructor}, {"attempt": 1}]
+    traces = [{"trace": 0}, {"trace": 1}]
+    score_calls = {}
+    strict_calls = {}
+
+    def score_inputs(actual_root, parent, actual_launch, actual_sha):
+        score_calls.update(
+            root=actual_root,
+            parent=parent,
+            launch=actual_launch,
+            launch_sha=actual_sha,
+        )
+        return inputs, ["scores"], traces
+
+    def strict_pair(actual_inputs, actual_traces):
+        strict_calls.update(inputs=actual_inputs, traces=actual_traces)
+        raise ValueError("paired rollout semantic state exactness")
+
+    monkeypatch.setattr(probe.prior, "_score_inputs", score_inputs)
+    monkeypatch.setattr(probe.prior, "_strict_pair", strict_pair)
+    rng_before = torch.random.get_rng_state().clone()
+
+    result = probe._score_original_pair()
+
+    assert probe.order is probe.fulltree.order is probe.fulltree.frozen.order
+    assert calls == {"hidden": 1, "inputs": 1, "anchors": 1}
+    assert score_calls == {
+        "root": root,
+        "parent": probe.order.PARENT,
+        "launch": launch,
+        "launch_sha": launch_sha,
+    }
+    assert strict_calls == {"inputs": inputs, "traces": traces}
+    assert result["order_inputs"] == (root, launch, launch_sha, inventory, anchors)
+    assert result["failure"] == "paired rollout semantic state exactness"
+    assert result["old_constructor_receipt"] is old_constructor
+    assert torch.equal(rng_before, torch.random.get_rng_state())
+
+
 def _scope_receipt(mode):
     return {
         "protocol": probe.runtime_control.PROTOCOL,

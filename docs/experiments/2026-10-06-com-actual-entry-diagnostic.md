@@ -311,3 +311,73 @@ diagnostic only, with signed zeros kept distinct; never use it as a tolerance.
 The 14 new hypothesis controls plus retained capture/probe/receiver controls
 passed **156 focused tests in 7.79 s**; Ruff format/lint and whitespace checks
 passed. No original receiver result, raw artifact or numerical gate was changed.
+
+### Retained CPU hypothesis result, 10:24 Shanghai
+
+Analysis source `7978e6c64b83b525e092771a3691b588e1f15a8b` passed the full
+native **1,879-test** regression in **129.33 s**, zero skips/failures/errors.
+Invocation `b6d6e1f3aa7247f3a0b08d3a02d295e6`, observed owner PID 3345335,
+ended MainPID 0 / status 0 / success. Whole receipt/JUnit/log hashes respectively:
+`1fd35c4c618933936df039fe8e389c9295f6f889cc276a741b25ccc8f90f4366`,
+`dc9018b74394f01dc5dd971dcf9438a5641812b7c6559202a6a80c1b078399c1`,
+`486255cdc664fb5e06751709fe8350146d75a519bdf1744672914d7c7887393e`.
+Committed receiver module SHA-256:
+`1a30efe7501e950b5c4f0ce1acaf9a6590b7781c41eaec39d7315d8c0968ab36`.
+
+The separate 6,070-byte hypothesis report has SHA-256
+`923298bf575a0b26bf146b5366ea4955d57e001e9186c9f1ec6f60efde176843`;
+the native evidence envelope has SHA-256
+`f04b36049117757d9208f0fe4d414697952cb11f8f5ea7a509e2eb8e9f6475fd`.
+Both are fsynced in `artifacts/tools/com-entry-hypotheses-7978e6c64b83`.
+Independent CUDA-hidden Mac and native NumPy computations returned identical
+canonical report bytes; native NumPy is 2.4.1. The original receiver hash and
+decision remain unchanged; no new GPU job was launched for this analysis.
+
+All 98,304 scalar values in each bank are compatible with at least one of the
+six sibling-sum hypotheses; **zero unexplained scalars**. However, none of the
+32 concurrent full snapshots is compatible with a *single uniform ordering*
+over every world and component. All serial snapshots match order 2/7/11.
+For each affected x scalar the maximum ordered bit distance is four; for z it
+is one. Root 0 duplicates body 1. The report includes all eight negative
+coordinates, every variant/count and all six candidate bits. Do not infer
+arrival order, driver fault, historical cause or acceptable physical error
+from cellwise arithmetic compatibility. All admission flags stay false.
+
+### Remaining causal gate: coupled forward design, not a launch
+
+The existing retained runtime experiment already compares its complete
+`FRAME_FIELDS` set and checks constructor RNG, prepared state and zero physics
+steps. Its serialized **CRB** result does not qualify CoM, RNE bias or the whole
+forward. The next design must change one factor at a time, rather than replacing
+the simulator or modifying package sources:
+
+1. Keep the already retained CRB setting fixed, along with model/topology,
+   initial state, RNG, eager stream, compiled descriptor and exact package tree.
+   Predeclare a separate original-CoM versus sibling-split-CoM paired control.
+2. Apply any CoM grouping control *inside the actual `smooth.com_pos` call*,
+   preserving the aliased `data.subtree_com`, original init/divide/cinert/cdof
+   kernels and all non-CoM forward work. Forward runs must continue past the
+   weighted-sum boundary. A detached scratch result is not a replacement for
+   the coupled simulator's own arrays.
+3. Compare complete authenticated `FRAME_FIELDS` bytes at declared identical
+   constructor/prepared/forward boundaries, prioritizing normalized CoM,
+   `cinert` and `cdof`, then mass matrix, bias forces, solver and accelerations.
+   Keep world 0/root cells, non-dynamic state and signed zeros in the gate.
+   Preserve both CPU/CUDA caller RNG and prohibit integration, policy models,
+   graph creation, optimizer/storage and raw perception.
+4. If CoM becomes exact but a later field remains negative, retain that negative;
+   do not canonicalize solver rows or introduce a numerical tolerance. Capture
+   the next reduction's *actual* initialized input in a distinct experiment.
+   RNE backward uses body != 0, so body 1 writes root 0, unlike CRB's parent != 0
+   rule. A CoM hypothesis cannot stand in for this six-component RNE input.
+5. Only a fully tested, separately predeclared source/service/lease/receiver
+   contract with all paired state exactness gates satisfied can qualify its
+   fresh coupled control. Historical cause, full storage replay, training and
+   physical acceptance remain separate later gates.
+
+This is a follow-up design, **not a tested coupled control or authorization to
+launch it**. Do not reuse an expired runtime wrapper, rewrite old receipts,
+claim the original historical entry was captured, or run repeated probes until
+a favorable bank appears. The present window's single GPU diagnostic is closed;
+source documentation, bounded CPU checks and quiet preservation monitoring may
+continue through 13:00 Shanghai. Protected services must not be restored.

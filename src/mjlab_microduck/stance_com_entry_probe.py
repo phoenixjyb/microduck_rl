@@ -42,7 +42,7 @@ VERSIONS = {
 CUTOFF = datetime(2026, 10, 6, 5, 0, tzinfo=timezone.utc).timestamp()
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 300, 240, 300, 60
 MEMORY = 6 * 1024**3
-EXPECTED_TESTS = 1855
+EXPECTED_TESTS = 1856
 OWN = {
     f"src/mjlab_microduck/stance_com_entry_{name}.py"
     for name in ("capture", "probe", "receiver")
@@ -228,7 +228,9 @@ def packages():
     ):
         root = Path(distribution(name).locate_file(package))
         files = {
-            str(path.relative_to(root)): sha256(bounded(path, 1024**2)).hexdigest()
+            str(path.relative_to(root)): sha256(
+                bounded(path, 1024**2, allow_empty=True)
+            ).hexdigest()
             for path in sorted(root.rglob("*.py"))
         }
         need(5 < len(files) < 10000, "bounded installed Python tree")

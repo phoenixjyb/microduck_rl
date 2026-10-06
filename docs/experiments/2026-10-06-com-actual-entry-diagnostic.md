@@ -63,7 +63,7 @@ CPU descriptor must match retained native selected-field hash
 `6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
 Do not attach the mismatching Mac CPU model to native state.
 
-The new CPU prerequisite is exactly **1,855 tests in 59 files**, with no skip,
+The new CPU prerequisite is exactly **1,856 tests in 59 files**, with no skip,
 failure or error; the previous 53-file receipt cannot substitute for it. Test
 all six source/fixture changes plus the retained replay/control suites and the
 three earlier forward-entry helpers. The isolated new tests use two CPU worlds
@@ -143,3 +143,15 @@ is a source-validation repair, not a numerical or original-replay gate waiver.
 The repaired three-module focused suite passed **132 tests in 9.33 s**;
 Ruff and whitespace checks passed. The exact 1,855-test native prerequisite
 still must pass before the single GPU diagnostic can start.
+
+The next read-only preflight at source
+`93d8d827cc2d59254705f76b80f1f2900c29bfac` passed committed-source binding,
+then found the same non-empty assumption in installed Python tree hashing.
+An independent metadata/file scan located exactly eight zero-byte mjlab package
+markers; no over-cap or nonregular Python file was found. Hash empty installed
+Python leaves as full bytes too, without changing packages or artifact rules.
+Add a synthetic installed-tree test proving empty markers contribute to the
+digest and their later mutation changes it. New native prerequisite: 1,856 tests.
+No native user service or GPU child started during either preflight negative.
+The final repaired focused suite passed **133 tests in 10.06 s**, with Ruff
+format/lint and whitespace checks passing. The native 1,856-test gate is pending.

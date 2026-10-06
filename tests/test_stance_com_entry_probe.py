@@ -60,7 +60,7 @@ def test_exact_unit_paths_and_new_fence():
     assert p.OLD_ROOT != p.ROOT
     assert p.SERVICE_SECONDS == 300 and p.CHILD_SECONDS == 240
     assert p.CUTOFF == 1791262800
-    assert p.EXPECTED_TESTS == 1855
+    assert p.EXPECTED_TESTS == 1856
     assert len(p.test_files()) == len(set(p.test_files())) == 59
 
 
@@ -89,6 +89,39 @@ def test_empty_committed_source_leaf_remains_whole_hashed(tmp_path):
     )
     with pytest.raises(ValueError, match="bounded regular file"):
         p.bounded(path, 4 * 1024**2)
+
+
+def test_installed_python_tree_hashes_include_empty_markers(tmp_path, monkeypatch):
+    packages = {
+        "mjlab": "mjlab",
+        "mujoco-warp": "mujoco_warp",
+        "better-actuator-models": "bam",
+    }
+    for package in packages.values():
+        root = tmp_path / package
+        root.mkdir()
+        (root / "__init__.py").touch()
+        for index in range(6):
+            (root / f"leaf{index}.py").write_bytes(b"# source fixture\n")
+
+    class Distribution:
+        def locate_file(self, package):
+            return tmp_path / package
+
+    monkeypatch.setattr(p, "distribution", lambda name: Distribution())
+    monkeypatch.setattr(p, "version", lambda name: p.VERSIONS[name])
+    monkeypatch.setattr(p.platform, "python_version", lambda: "3.12.13")
+    monkeypatch.setattr(p.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(p.sys, "prefix", str(p.OLD_ROOT / ".venv"))
+    before = p.packages()
+    assert all(row["files"] == 7 for row in before["python_trees"].values())
+    (tmp_path / "mjlab/__init__.py").write_bytes(b"# changed marker\n")
+    after = p.packages()
+    assert (
+        after["python_trees"]["mjlab"]["sha256"]
+        != before["python_trees"]["mjlab"]["sha256"]
+    )
+    assert after["python_trees"]["mujoco-warp"] == before["python_trees"]["mujoco-warp"]
 
 
 def test_existing_inherited_lock_not_created_or_unlinked(tmp_path, monkeypatch):

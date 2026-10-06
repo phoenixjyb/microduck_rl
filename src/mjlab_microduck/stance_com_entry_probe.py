@@ -42,7 +42,7 @@ VERSIONS = {
 CUTOFF = datetime(2026, 10, 6, 5, 0, tzinfo=timezone.utc).timestamp()
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 300, 240, 300, 60
 MEMORY = 6 * 1024**3
-EXPECTED_TESTS = 1859
+EXPECTED_TESTS = 1865
 TEST_SERVICE_CAPS = {**SERVICE_CAPS, "LimitFSIZE": str(64 * 1024**2)}
 TEST_ENV = {
     "CUDA_VISIBLE_DEVICES": "",
@@ -266,6 +266,33 @@ def packages():
     }
 
 
+def process_row(raw):
+    need(type(raw) is str and 0 < len(raw) <= 128, "bounded compute process row")
+    parts = [value.strip() for value in raw.split(",")]
+    need(
+        len(parts) == 2 and re.fullmatch(r"[1-9][0-9]*", parts[0]),
+        "actual positive compute PID",
+    )
+    pid, memory = int(parts[0]), parts[1]
+    if memory in ("N/A", "[N/A]"):
+        return {
+            "pid": pid,
+            "memory_mib": None,
+            "memory_status": "unavailable-wddm",
+            "raw_memory": memory,
+        }
+    need(
+        re.fullmatch(r"[0-9]+", memory) and 0 < int(memory) <= 24162,
+        "reported bounded per-process memory or explicit WDDM unavailable",
+    )
+    return {
+        "pid": pid,
+        "memory_mib": int(memory),
+        "memory_status": "reported",
+        "raw_memory": memory,
+    }
+
+
 def host():
     need(
         sys.platform == "linux"
@@ -277,12 +304,15 @@ def host():
         value.strip()
         for value in read(
             SMI,
-            "--query-gpu=uuid,driver_version,temperature.gpu,memory.used,memory.free",
+            "--query-gpu=uuid,driver_version,temperature.gpu,memory.used,memory.free,driver_model.current",
             "--format=csv,noheader,nounits",
         ).split(",")
     ]
     need(
-        len(gpu) == 5 and gpu[:2] == [GPU, "595.95"] and int(gpu[2]) < 75,
+        len(gpu) == 6
+        and gpu[:2] == [GPU, "595.95"]
+        and int(gpu[2]) < 75
+        and gpu[5] == "WDDM",
         "GPU identity/driver/temperature",
     )
     for namespace in ((), ("--user",)):
@@ -325,12 +355,12 @@ def host():
         SMI, "--query-compute-apps=pid,used_memory", "--format=csv,noheader,nounits"
     )
     for row in text.splitlines():
-        pid, memory = row.split(",")
-        pids.append({"pid": int(pid), "memory_mib": int(memory)})
+        pids.append(process_row(row))
     return {
         "machine": MACHINE,
         "gpu": GPU,
         "driver": "595.95",
+        "driver_model": "WDDM",
         "temperature_c": int(gpu[2]),
         "used_mib": int(gpu[3]),
         "free_mib": int(gpu[4]),

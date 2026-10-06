@@ -76,6 +76,7 @@ def fixture(tmp_path, *, input_negative=False):
             "machine": r.MACHINE,
             "gpu": r.GPU,
             "driver": "595.95",
+            "driver_model": "WDDM",
             "temperature_c": 30,
             "used_mib": 666,
             "free_mib": 23496,
@@ -194,7 +195,14 @@ def fixture(tmp_path, *, input_negative=False):
                 "child_pid": 456,
                 "host": {
                     **declaration["host"],
-                    "processes": [{"pid": 456, "memory_mib": 1024}],
+                    "processes": [
+                        {
+                            "pid": 456,
+                            "memory_mib": 1024,
+                            "memory_status": "reported",
+                            "raw_memory": "1024",
+                        }
+                    ],
                 },
             }
         ],
@@ -256,6 +264,17 @@ def test_complete_banks_independent_reference_and_no_admission(tmp_path):
     assert all(value is False for value in result["flags"].values())
     assert all(row["scalars_compared"] == 98304 for row in result["analyses"].values())
     assert all(row["mismatched_scalars"] == 0 for row in result["analyses"].values())
+    report = json.loads(files["report.json"])
+    process = report["monitor"][0]["host"]["processes"][0]
+    process.update(
+        memory_mib=None, memory_status="unavailable-wddm", raw_memory="[N/A]"
+    )
+    resign(tmp_path, files, report=report)
+    assert verify(tmp_path, files, terminal)["decision"] == result["decision"]
+    process["memory_mib"] = 0
+    resign(tmp_path, files, report=report)
+    with pytest.raises(ValueError):
+        verify(tmp_path, files, terminal)
 
 
 def test_input_negative_never_accepts_output_banks(tmp_path):

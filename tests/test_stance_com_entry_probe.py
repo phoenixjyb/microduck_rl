@@ -60,7 +60,7 @@ def test_exact_unit_paths_and_new_fence():
     assert p.OLD_ROOT != p.ROOT
     assert p.SERVICE_SECONDS == 300 and p.CHILD_SECONDS == 240
     assert p.CUTOFF == 1791262800
-    assert p.EXPECTED_TESTS == 1859
+    assert p.EXPECTED_TESTS == 1865
     assert len(p.test_files()) == len(set(p.test_files())) == 59
 
 
@@ -249,6 +249,25 @@ def test_retained_fixture_binding_authenticates_all_whole_bytes(tmp_path, monkey
     path.write_bytes(b"y")
     with pytest.raises(ValueError, match="whole pinned"):
         p.test_fixture_binding(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "raw,memory,status",
+    [("123, 1024", 1024, "reported"), ("123, [N/A]", None, "unavailable-wddm")],
+)
+def test_compute_memory_unavailable_is_not_zero(raw, memory, status):
+    row = p.process_row(raw)
+    assert (
+        row["pid"] == 123
+        and row["memory_mib"] == memory
+        and row["memory_status"] == status
+    )
+
+
+@pytest.mark.parametrize("raw", ["0, 1", "123, unknown", "123, -1", "123, 25000"])
+def test_compute_memory_malformed_or_over_cap_is_refused(raw):
+    with pytest.raises(ValueError):
+        p.process_row(raw)
 
 
 def test_existing_source_leaf_byte_hash_is_whole(tmp_path):

@@ -90,6 +90,7 @@ def valid_host(value, child_pid, *, idle=False):
         and value["driver"] == "595.95",
         "native monitor identity",
     )
+    need(value["driver_model"] == "WDDM", "exact native driver model")
     for key in ("temperature_c", "used_mib", "free_mib"):
         need(type(value[key]) is int and value[key] >= 0, "typed GPU monitor values")
     need(value["temperature_c"] < 75, "bounded GPU temperature")
@@ -99,8 +100,21 @@ def valid_host(value, child_pid, *, idle=False):
         need(
             type(row) is dict
             and exact_int(row["pid"], child_pid)
-            and type(row["memory_mib"]) is int
-            and 0 < row["memory_mib"] <= 24162,
+            and (
+                (
+                    row["memory_status"] == "reported"
+                    and type(row["memory_mib"]) is int
+                    and 0 < row["memory_mib"] <= 24162
+                    and type(row["raw_memory"]) is str
+                    and re.fullmatch(r"[0-9]+", row["raw_memory"])
+                    and int(row["raw_memory"]) == row["memory_mib"]
+                )
+                or (
+                    row["memory_status"] == "unavailable-wddm"
+                    and row["memory_mib"] is None
+                    and row["raw_memory"] in ("N/A", "[N/A]")
+                )
+            ),
             "actual GPU child monitor row",
         )
     if idle:

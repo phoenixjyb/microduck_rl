@@ -63,7 +63,7 @@ CPU descriptor must match retained native selected-field hash
 `6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
 Do not attach the mismatching Mac CPU model to native state.
 
-The new CPU prerequisite is exactly **1,859 tests in 59 files**, with no skip,
+The new CPU prerequisite is exactly **1,865 tests in 59 files**, with no skip,
 failure or error; the previous 53-file receipt cannot substitute for it. Test
 all six source/fixture changes plus the retained replay/control suites and the
 three earlier forward-entry helpers. The isolated new tests use two CPU worlds
@@ -204,3 +204,28 @@ The corrected Mac source regression passed **1,859 tests in 306.85 s**, zero
 skips/failures/errors; the final three-module focused suite passed **136 tests
 in 18.61 s**. Ruff format/lint and whitespace checks passed. Native prerequisite
 and numerical execution remain unqualified pending the new exact-source service.
+
+### Native CPU prerequisite and WDDM monitoring correction, 10:06 Shanghai
+
+At source `3868949b2e8e88a1701aeddb34b5d07ed8cb0aa1`, the retained native
+CPU service passed **1,859 tests in 129.48 s**, with zero skips/failures/errors.
+Invocation `6aefbf7d418447e89a5e4cffb1ad35ba`, observed owner PID 3323648,
+terminated MainPID 0 / status 0 / result success. Its source-addressed directory
+`artifacts/tools/com-entry-tests-3868949b2e8e` retains:
+
+- Receipt SHA-256 `1ffd13e1deca1d9a6a7585706cc9ffac789fe59c94a7eb803b1096f1a4981c4c`.
+- JUnit SHA-256 `26ff53ad0c94fd47b1bcfa2aaebfcc3b0e8cbe4bb41a8b709a8e9f35e28d6741`.
+- Log SHA-256 `d479b9ea74f3ad02f64f96ddb5ea36b876d7ce9195bffffcf6ad0ca9440fefed`.
+
+Before any CUDA launch, an installed `nvidia-smi --help-query-compute-apps`
+read explained that per-process `used_gpu_memory` is unavailable under Windows
+WDDM because Windows KMD manages the memory. The live driver-model query returned
+`WDDM`. Correct the monitor representation of `N/A` / `[N/A]` to explicit null
+with an unavailable-WDDM status and retained raw field; never substitute zero
+or claim measured per-process VRAM. Actual child PID, global GPU memory and
+temperature gates remain enforced. Add six parser cases and independently test
+the receiver accepting unavailable/null but rejecting an impersonated zero.
+No CUDA child has started. The corrected source must pass its new exact
+**1,865-test** native CPU prerequisite before the single diagnostic run.
+The corrected focused suite passed **142 tests in 16.39 s**; Ruff formatting,
+lint and whitespace checks passed. This is source validation, not CUDA admission.

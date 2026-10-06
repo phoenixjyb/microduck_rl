@@ -42,7 +42,7 @@ VERSIONS = {
 CUTOFF = datetime(2026, 10, 6, 5, 0, tzinfo=timezone.utc).timestamp()
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 300, 240, 300, 60
 MEMORY = 6 * 1024**3
-EXPECTED_TESTS = 1854
+EXPECTED_TESTS = 1855
 OWN = {
     f"src/mjlab_microduck/stance_com_entry_{name}.py"
     for name in ("capture", "probe", "receiver")
@@ -173,7 +173,7 @@ def source_binding(source):
     for path in read(
         "git", "ls-files", "src", "tests", "pyproject.toml", "uv.lock", *sorted(OWN)
     ).splitlines():
-        raw = bounded(ROOT / path, 4 * 1024**2)
+        raw = bounded(ROOT / path, 4 * 1024**2, allow_empty=True)
         expected = subprocess.check_output(
             ["git", "show", f"{source}:{path}"], timeout=15
         )

@@ -60,7 +60,7 @@ def test_exact_unit_paths_and_new_fence():
     assert p.OLD_ROOT != p.ROOT
     assert p.SERVICE_SECONDS == 300 and p.CHILD_SECONDS == 240
     assert p.CUTOFF == 1791262800
-    assert p.EXPECTED_TESTS == 1854
+    assert p.EXPECTED_TESTS == 1855
     assert len(p.test_files()) == len(set(p.test_files())) == 59
 
 
@@ -79,6 +79,16 @@ def test_exclusive_synced_output_and_caps(tmp_path):
     link.symlink_to(path)
     with pytest.raises(OSError):
         p.bounded(link, 3)
+
+
+def test_empty_committed_source_leaf_remains_whole_hashed(tmp_path):
+    path = tmp_path / "__init__.py"
+    path.touch()
+    assert sha256(p.bounded(path, 4 * 1024**2, allow_empty=True)).hexdigest() == (
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    )
+    with pytest.raises(ValueError, match="bounded regular file"):
+        p.bounded(path, 4 * 1024**2)
 
 
 def test_existing_inherited_lock_not_created_or_unlinked(tmp_path, monkeypatch):

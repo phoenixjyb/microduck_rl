@@ -63,7 +63,7 @@ CPU descriptor must match retained native selected-field hash
 `6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
 Do not attach the mismatching Mac CPU model to native state.
 
-The new CPU prerequisite is exactly **1,854 tests in 59 files**, with no skip,
+The new CPU prerequisite is exactly **1,855 tests in 59 files**, with no skip,
 failure or error; the previous 53-file receipt cannot substitute for it. Test
 all six source/fixture changes plus the retained replay/control suites and the
 three earlier forward-entry helpers. The isolated new tests use two CPU worlds
@@ -124,3 +124,22 @@ supervisor and independent-receiver tests. A separate final probe/receiver check
 passed 113 tests in 22.39 s; Ruff formatting/lint and whitespace checks passed.
 These establish source/CPU consistency only. Native prerequisite and execution
 remain pending; no CUDA, original replay, learner or physical acceptance follows.
+
+### Retained preflight negative, 09:36 Shanghai
+
+Source `67db6e8e89663deb0f4a950cba71c2fc69f26f50` was pushed and transported
+with a whole-authenticated 77 KiB incremental bundle into the new lean shared
+checkout. The first CPU-hidden, read-only source preflight rejected
+`bounded regular file`: the only rejected leaves were the legitimate zero-byte
+`src/mjlab_microduck/__init__.py` and `robot/__init__.py`. No user service or
+CUDA child had started. The old checkout stayed clean at 2ECE and its artifacts
+and failed units were unchanged.
+
+Correct only the committed-source reader to permit zero-byte leaves, still
+requiring a regular stable file and equality with the full exact Git blob.
+Critical diagnostic input/JSON/bank artifacts remain non-empty. Add the empty
+leaf negative control and update the exact prerequisite count to 1,855; this
+is a source-validation repair, not a numerical or original-replay gate waiver.
+The repaired three-module focused suite passed **132 tests in 9.33 s**;
+Ruff and whitespace checks passed. The exact 1,855-test native prerequisite
+still must pass before the single GPU diagnostic can start.

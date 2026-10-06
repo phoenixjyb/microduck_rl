@@ -60,7 +60,7 @@ def test_exact_unit_paths_and_new_fence():
     assert p.OLD_ROOT != p.ROOT
     assert p.SERVICE_SECONDS == 300 and p.CHILD_SECONDS == 240
     assert p.CUTOFF == 1791262800
-    assert p.EXPECTED_TESTS == 1856
+    assert p.EXPECTED_TESTS == 1859
     assert len(p.test_files()) == len(set(p.test_files())) == 59
 
 
@@ -202,6 +202,53 @@ def test_wrong_active_service_owner_refused(monkeypatch):
     )
     with pytest.raises(ValueError, match="actual running"):
         p.service("a" * 40, "run", live_pid=123)
+
+
+def test_cpu_test_file_cap_does_not_widen_gpu_cap(monkeypatch):
+    values = {
+        **p.TEST_SERVICE_CAPS,
+        "MainPID": "123",
+        "ActiveState": "active",
+        "SubState": "running",
+        "InvocationID": "b" * 32,
+    }
+    monkeypatch.setattr(
+        p, "read", lambda *args: "\n".join(f"{k}={v}" for k, v in values.items())
+    )
+    assert p.service("a" * 40, "tests", live_pid=123)["LimitFSIZE"] == "67108864"
+    with pytest.raises(ValueError, match="actual retained"):
+        p.service("a" * 40, "run", live_pid=123)
+    assert p.SERVICE_CAPS["LimitFSIZE"] == "1048576"
+
+
+def test_cpu_test_environment_is_explicit_not_a_late_profile_alias(monkeypatch):
+    for key, value in p.TEST_ENV.items():
+        monkeypatch.setenv(key, value)
+    assert p.test_environment() == p.TEST_ENV
+    monkeypatch.setenv("MICRODUCK_STANCE_PROFILE", "linux-100100")
+    with pytest.raises(ValueError, match="explicit native CPU test"):
+        p.test_environment()
+
+
+def test_retained_fixture_binding_authenticates_all_whole_bytes(tmp_path, monkeypatch):
+    monkeypatch.setattr(p, "ROOT", tmp_path)
+    rows = {}
+    for directory in p.TEST_FIXTURE_DIRS:
+        root = tmp_path / directory
+        root.mkdir(parents=True)
+        for index in range(3):
+            path = root / f"fixture{index}.bin"
+            path.write_bytes(b"x")
+            rows[str(path.relative_to(tmp_path))] = {
+                "bytes": 1,
+                "sha256": sha256(b"x").hexdigest(),
+            }
+    monkeypatch.setattr(p, "TEST_FIXTURE_BYTES", 12)
+    monkeypatch.setattr(p, "TEST_FIXTURE_SHA256", sha256(p.canonical(rows)).hexdigest())
+    assert p.test_fixture_binding(tmp_path)["files"] == 12
+    path.write_bytes(b"y")
+    with pytest.raises(ValueError, match="whole pinned"):
+        p.test_fixture_binding(tmp_path)
 
 
 def test_existing_source_leaf_byte_hash_is_whole(tmp_path):

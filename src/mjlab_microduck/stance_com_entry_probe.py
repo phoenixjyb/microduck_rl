@@ -42,7 +42,26 @@ VERSIONS = {
 CUTOFF = datetime(2026, 10, 6, 5, 0, tzinfo=timezone.utc).timestamp()
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 300, 240, 300, 60
 MEMORY = 6 * 1024**3
-EXPECTED_TESTS = 1856
+EXPECTED_TESTS = 1859
+TEST_SERVICE_CAPS = {**SERVICE_CAPS, "LimitFSIZE": str(64 * 1024**2)}
+TEST_ENV = {
+    "CUDA_VISIBLE_DEVICES": "",
+    "MICRODUCK_STANCE_PROFILE": "wsl-10098-20260930",
+    "ATEN_CPU_CAPABILITY": "default",
+    "MKL_CBWR": "COMPATIBLE",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "PYTHONUNBUFFERED": "1",
+}
+TEST_FIXTURE_DIRS = (
+    "artifacts/tools/stochastic-ppo-closeout-failure-b1878b8715ef",
+    "artifacts/tools/terminal-reset-qpos-failure-9ad48b96abf6",
+    "artifacts/evaluations/stance-wsl-cpu-stochastic-first-terminal-9ad48b96abf6",
+    "artifacts/evaluations/stance-wsl-cpu-ppo-receipt-repair-75ed100d2b84",
+)
+TEST_FIXTURE_SHA256 = "8ac6c0cfa167e0e9248ac3c37beeb1d3b2bd92010347d75f93cd128f3eb09797"
+TEST_FIXTURE_BYTES = 50377522
 OWN = {
     f"src/mjlab_microduck/stance_com_entry_{name}.py"
     for name in ("capture", "probe", "receiver")
@@ -191,8 +210,9 @@ def source_binding(source):
 def service(source, mode, *, live_pid):
     text = read("systemctl", "--user", "show", unit(source, mode))
     values = dict(row.split("=", 1) for row in text.splitlines() if "=" in row)
+    caps = TEST_SERVICE_CAPS if mode == "tests" else SERVICE_CAPS
     need(
-        all(values.get(key) == value for key, value in SERVICE_CAPS.items()),
+        all(values.get(key) == value for key, value in caps.items()),
         "actual retained service caps",
     )
     need(
@@ -203,7 +223,7 @@ def service(source, mode, *, live_pid):
         "actual running retained user service",
     )
     return {
-        **{key: values[key] for key in SERVICE_CAPS},
+        **{key: values[key] for key in caps},
         **{
             key: values[key]
             for key in ("MainPID", "InvocationID", "ActiveState", "SubState")
@@ -369,6 +389,40 @@ def test_files():
         "tests/test_stance_com_entry_probe.py",
         "tests/test_stance_com_entry_receiver.py",
     ]
+
+
+def test_environment():
+    need(
+        all(os.environ.get(key) == value for key, value in TEST_ENV.items()),
+        "explicit native CPU test environment",
+    )
+    return dict(TEST_ENV)
+
+
+def test_fixture_binding(root):
+    need(root in (ROOT, OLD_ROOT), "only new or retained native fixture root")
+    rows = {}
+    for relative in TEST_FIXTURE_DIRS:
+        directory = root / relative
+        need(
+            directory.is_dir() and not directory.is_symlink(),
+            "no runtime fixture alias",
+        )
+        for path in sorted(directory.iterdir()):
+            need(len(rows) < 12, "exact bounded retained test fixture inventory")
+            raw = bounded(path, 64 * 1024**2)
+            rows[str(path.relative_to(root))] = {
+                "bytes": len(raw),
+                "sha256": sha256(raw).hexdigest(),
+            }
+    digest = sha256(canonical(rows)).hexdigest()
+    need(
+        len(rows) == 12
+        and sum(row["bytes"] for row in rows.values()) == TEST_FIXTURE_BYTES
+        and digest == TEST_FIXTURE_SHA256,
+        "whole pinned retained test fixtures",
+    )
+    return {"files": 12, "bytes": TEST_FIXTURE_BYTES, "sha256": digest}
 
 
 def child(source, lease_fd, owner_pid, declaration_sha):
@@ -551,6 +605,11 @@ def child(source, lease_fd, owner_pid, declaration_sha):
 
 def run_tests(source, directory, binding, live, runtime):
     need(os.environ.get("CUDA_VISIBLE_DEVICES") == "", "CPU-only test service")
+    environment = test_environment()
+    fixtures = test_fixture_binding(ROOT)
+    need(
+        fixtures == test_fixture_binding(OLD_ROOT), "exact copied immutable test inputs"
+    )
     test_paths = test_files()
     log = directory / "pytest.log"
     with log.open("xb") as stream:
@@ -596,6 +655,8 @@ def run_tests(source, directory, binding, live, runtime):
         "source_binding": binding,
         "tests": sum(int(s.get("tests", 0)) for s in suites),
         "test_files": test_paths,
+        "test_environment": environment,
+        "retained_test_fixtures": fixtures,
         "service_properties": live,
         "packages": runtime,
         "junit_sha256": sha256(xml).hexdigest(),
@@ -603,6 +664,10 @@ def run_tests(source, directory, binding, live, runtime):
         "flags": dict(FLAGS),
     }
     need(source_binding(source) == binding, "clean test source at closure")
+    need(
+        test_fixture_binding(ROOT) == fixtures == test_fixture_binding(OLD_ROOT),
+        "new and old retained test inputs unchanged",
+    )
     write(directory / "receipt.json", canonical(receipt), 128 * 1024)
 
 
@@ -617,8 +682,26 @@ def run(source, directory, binding, live, runtime):
         and test["tests"] == EXPECTED_TESTS
         and test["test_files"] == test_files()
         and test["source"] == source
+        and test["test_environment"] == TEST_ENV
+        and test["retained_test_fixtures"]
+        == {"files": 12, "bytes": TEST_FIXTURE_BYTES, "sha256": TEST_FIXTURE_SHA256}
         and test["protocol"] == PROTOCOL + ":tests",
         "new source-addressed CPU tests",
+    )
+    text = read("systemctl", "--user", "show", unit(source, "tests"))
+    terminal = dict(row.split("=", 1) for row in text.splitlines() if "=" in row)
+    expected = {
+        **TEST_SERVICE_CAPS,
+        "MainPID": "0",
+        "Result": "success",
+        "ExecMainStatus": "0",
+        "ActiveState": "active",
+        "SubState": "exited",
+        "InvocationID": test["service_properties"]["InvocationID"],
+    }
+    need(
+        all(terminal.get(key) == value for key, value in expected.items()),
+        "same successfully completed CPU test invocation and caps",
     )
     before = os.lstat(LOCK)
     need(
@@ -649,6 +732,7 @@ def run(source, directory, binding, live, runtime):
             "service_properties": live,
             "predecessors": predecessors(),
             "tests_receipt_sha256": sha256(test_raw).hexdigest(),
+            "tests_terminal_properties": expected,
             "flags": dict(FLAGS),
         }
         declaration_raw = canonical(declaration)

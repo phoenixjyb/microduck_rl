@@ -379,6 +379,25 @@ def verify(root, source, anchors, terminal_raw, terminal_sha256):
         "exact terminal source and unit",
     )
     live, end = declaration["service_properties"], terminal["service_properties"]
+    test_end = declaration["tests_terminal_properties"]
+    test_caps = {
+        **SERVICE_CAPS,
+        "LimitFSIZE": "67108864",
+        "MainPID": "0",
+        "Result": "success",
+        "ExecMainStatus": "0",
+        "ActiveState": "active",
+        "SubState": "exited",
+    }
+    need(
+        all(test_end.get(key) == value for key, value in test_caps.items())
+        and type(test_end["InvocationID"]) is str
+        and re.fullmatch(r"[0-9a-f]{32}", test_end["InvocationID"])
+        and test_end["InvocationID"] != live["InvocationID"]
+        and type(declaration["tests_receipt_sha256"]) is str
+        and re.fullmatch(r"[0-9a-f]{64}", declaration["tests_receipt_sha256"]),
+        "separate completed CPU prerequisite and whole receipt anchor",
+    )
     need(
         all(live.get(k) == v and end.get(k) == v for k, v in SERVICE_CAPS.items()),
         "actual live/terminal caps",

@@ -63,7 +63,7 @@ CPU descriptor must match retained native selected-field hash
 `6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
 Do not attach the mismatching Mac CPU model to native state.
 
-The new CPU prerequisite is exactly **1,856 tests in 59 files**, with no skip,
+The new CPU prerequisite is exactly **1,859 tests in 59 files**, with no skip,
 failure or error; the previous 53-file receipt cannot substitute for it. Test
 all six source/fixture changes plus the retained replay/control suites and the
 three earlier forward-entry helpers. The isolated new tests use two CPU worlds
@@ -84,7 +84,8 @@ The one retained run service is `microduck-com-entry-run-<source12>.service`;
 one CPU-only test service precedes it. Run caps: RuntimeMaxSec 300, child timeout
 240, MemoryMax 6 GiB, CPUQuota 200%, Nice 10, Restart no, KillMode control-group,
 RemainAfterExit yes, TimeoutStopSec 10, LimitFSIZE 1 MiB. Test service: 300 s,
-6 GiB, same remaining settings. Reserve at least 300 s run + 300 s independent
+6 GiB, same remaining settings except the corrected CPU-only LimitFSIZE of
+64 MiB and explicit test environment detailed below. Reserve at least 300 s run + 300 s independent
 closeout + 60 s margin; no run starts after 12:49 Shanghai. The supervisor holds
 FilmBrain's existing `wan-gpu.lock` exclusively and passes only that inherited
 FD to one CUDA child. Never create/unlink the lock or overlap a GPU workload.
@@ -155,3 +156,51 @@ digest and their later mutation changes it. New native prerequisite: 1,856 tests
 No native user service or GPU child started during either preflight negative.
 The final repaired focused suite passed **133 tests in 10.06 s**, with Ruff
 format/lint and whitespace checks passing. The native 1,856-test gate is pending.
+
+### Retained native CPU test negative and corrected prerequisite
+
+The first test service, source `76be1b4173046f282cca3b6a342e6c2201f12ada`,
+invocation `bbdcca5f974f445c94eb5eb2bf19e488`, observed owner PID 3313996,
+ended with MainPID 0 / exit 1 / result exit-code. Keep it failed and untouched.
+JUnit and log retained in `artifacts/tools/com-entry-tests-76be1b417304`:
+
+- JUnit SHA-256 `b4526d385c8b7250950343a4c700f6ff73acf64e6f5ff4abf98e685817a78afc`.
+- Log SHA-256 `80fa41782420c970ce76ef56d1dd06af9bb3306676d8885ea8c9797e075074e4`.
+- **10 failed, 1,719 passed, 127 skipped in 128.66 s**; no success receipt.
+- Failures were `[Errno 27] File too large` during intended oversized-fixture
+  construction, before the validators could reject those inputs. The test-only
+  1 MiB service limit was inappropriate; the older test service had no file cap.
+- Skips came from the missing explicit WSL test profile and fresh-checkout
+  retained fixtures, not a successful regression or missing GPU qualification.
+- Raw terminal MemoryPeak 4,558,872,576 bytes and CPUUsageNSec 139,254,802,000
+  are retained accounting fields, not independently sampled peak RSS.
+
+Correct only the **CPU test service** file cap to **64 MiB**; all run/GPU caps
+stay 1 MiB, and every published test log/JSON/JUnit reader stays bounded at its
+declared cap. CPU tests must launch with explicit initial environment: CUDA
+hidden, `MICRODUCK_STANCE_PROFILE=wsl-10098-20260930`,
+`ATEN_CPU_CAPABILITY=default`, `MKL_CBWR=COMPATIBLE`, OMP/MKL/OpenBLAS threads 1,
+and unbuffered output. This selects existing retained inputs, not a runtime alias
+or a different current GPU source.
+
+Copy only these four genuine closed-input directories into the new checkout:
+`artifacts/tools/stochastic-ppo-closeout-failure-b1878b8715ef`,
+`artifacts/tools/terminal-reset-qpos-failure-9ad48b96abf6`,
+`artifacts/evaluations/stance-wsl-cpu-stochastic-first-terminal-9ad48b96abf6`,
+and `artifacts/evaluations/stance-wsl-cpu-ppo-receipt-repair-75ed100d2b84`.
+They contain exactly **12 files / 50,377,522 bytes**, largest file 49,950,070
+bytes; the canonical whole inventory SHA-256 is
+`8ac6c0cfa167e0e9248ac3c37beeb1d3b2bd92010347d75f93cd128f3eb09797`.
+Authenticate both old and new complete inventories before and after tests.
+Do not link the complete 27 GiB artifact tree, rewrite old evidence, copy it to
+the Mac, suppress skips, change validators or raise GPU limits. Preserve the
+failed test source/unit, test the three new prerequisite controls, commit/push
+and rerun the full exactly **1,859-test** source-addressed CPU gate before CUDA.
+The GPU supervisor must also independently re-read that same completed CPU
+test invocation, exit status and CPU-only caps before acquiring the lease. Its
+declaration retains the selected terminal properties and whole receipt hash;
+the receiver checks this prerequisite is separate from the live GPU invocation.
+The corrected Mac source regression passed **1,859 tests in 306.85 s**, zero
+skips/failures/errors; the final three-module focused suite passed **136 tests
+in 18.61 s**. Ruff format/lint and whitespace checks passed. Native prerequisite
+and numerical execution remain unqualified pending the new exact-source service.

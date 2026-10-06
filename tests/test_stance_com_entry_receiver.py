@@ -52,6 +52,17 @@ def fixture(tmp_path, *, input_negative=False):
         "source": SOURCE,
         "source_binding": binding,
         "service_properties": live,
+        "tests_receipt_sha256": "e" * 64,
+        "tests_terminal_properties": {
+            **r.SERVICE_CAPS,
+            "LimitFSIZE": "67108864",
+            "MainPID": "0",
+            "Result": "success",
+            "ExecMainStatus": "0",
+            "ActiveState": "active",
+            "SubState": "exited",
+            "InvocationID": "b" * 32,
+        },
         "packages": {
             "versions": r.VERSIONS,
             "python": "3.12.13",

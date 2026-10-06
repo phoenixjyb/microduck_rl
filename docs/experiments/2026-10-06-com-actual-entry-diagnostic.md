@@ -63,7 +63,7 @@ CPU descriptor must match retained native selected-field hash
 `6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
 Do not attach the mismatching Mac CPU model to native state.
 
-The new CPU prerequisite is exactly **1,865 tests in 59 files**, with no skip,
+The current source CPU prerequisite is exactly **1,879 tests in 59 files**, with no skip,
 failure or error; the previous 53-file receipt cannot substitute for it. Test
 all six source/fixture changes plus the retained replay/control suites and the
 three earlier forward-entry helpers. The isolated new tests use two CPU worlds
@@ -305,3 +305,9 @@ receiver decision and whole result; publish a separate non-admitting report.
 Test cancellation, constant-wrong cells, root inclusion, signed zero, finite
 intermediates, and whole-input authentication before report generation. Keep
 changes inside the existing seven-path source fence and preserve all run artifacts.
+Also test explicitly that cellwise candidate compatibility need not imply one
+uniform order across worlds or vector components. Ordered bit distance is
+diagnostic only, with signed zeros kept distinct; never use it as a tolerance.
+The 14 new hypothesis controls plus retained capture/probe/receiver controls
+passed **156 focused tests in 7.79 s**; Ruff format/lint and whitespace checks
+passed. No original receiver result, raw artifact or numerical gate was changed.

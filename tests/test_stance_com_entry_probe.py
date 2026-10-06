@@ -60,7 +60,7 @@ def test_exact_unit_paths_and_new_fence():
     assert p.OLD_ROOT != p.ROOT
     assert p.SERVICE_SECONDS == 300 and p.CHILD_SECONDS == 240
     assert p.CUTOFF == 1791262800
-    assert p.EXPECTED_TESTS == 1865
+    assert p.EXPECTED_TESTS == 1879
     assert len(p.test_files()) == len(set(p.test_files())) == 59
 
 

@@ -15,6 +15,14 @@ DATA_PROTOCOL = "microduck-com-actual-entry-probe-v1"
 INPUT_BYTES, BANK_BYTES = 12288, 393216
 PARENTS = (0, 0, 1, 2, 3, 4, 5, 1, 7, 8, 9, 1, 11, 12, 13, 14)
 GROUPS = ((6, 15), (5, 10, 14), (4, 9, 13), (3, 8, 12), (2,), (7,), (11,), (1,), (0,))
+SIBLING_ORDERS = (
+    (2, 7, 11),
+    (2, 11, 7),
+    (7, 2, 11),
+    (7, 11, 2),
+    (11, 2, 7),
+    (11, 7, 2),
+)
 CORE_FILES = {
     "declaration.json",
     "report.json",
@@ -577,3 +585,127 @@ def verify(root, source, anchors, terminal_raw, terminal_sha256):
         "instrumentation_changes_timing": True,
         "flags": dict(FLAGS),
     }
+
+
+def analyze_order_hypotheses(entry, bank):
+    """All-cell bit hypotheses, not an observation of atomic arrival order."""
+    need(
+        type(entry) is bytes
+        and len(entry) == INPUT_BYTES
+        and type(bank) is bytes
+        and len(bank) == BANK_BYTES,
+        "complete hypothesis input and bank dimensions",
+    )
+    initial = np.frombuffer(entry, dtype="<f4").reshape(64, 16, 3)
+    outputs = np.frombuffer(bank, dtype="<f4").reshape(32, 64, 16, 3)
+    need(
+        np.isfinite(initial).all() and np.isfinite(outputs).all(),
+        "finite complete hypothesis input and bank",
+    )
+    candidates = []
+    with np.errstate(over="ignore", invalid="ignore"):
+        for order in SIBLING_ORDERS:
+            expected = initial.copy()
+            # Four unchanged groups, then only the three sibling writers vary.
+            groups = GROUPS[:4] + tuple((body,) for body in order) + ((1,), (0,))
+            for group in groups:
+                for body in group:
+                    if body:
+                        parent = PARENTS[body]
+                        expected[:, parent] = np.float32(
+                            expected[:, parent] + expected[:, body]
+                        )
+                        need(
+                            np.isfinite(expected[:, parent]).all(),
+                            "finite intermediate hypothesis recurrence",
+                        )
+            candidates.append(expected)
+    predicted = np.stack(candidates).view("<u4")
+    bits = outputs.view("<u4")
+    matches = bits[None] == predicted[:, None]
+    reference = predicted[0]
+    affected = np.any(bits != reference[None], axis=0)
+    rows = []
+    for world, body, axis in np.argwhere(affected):
+        actual = bits[:, world, body, axis]
+        values, counts = np.unique(actual, return_counts=True)
+        wanted = int(reference[world, body, axis])
+
+        def ordered(value):
+            value = int(value)
+            return (~value & 0xFFFFFFFF) if value & 0x80000000 else value ^ 0x80000000
+
+        rows.append(
+            {
+                "world": int(world),
+                "body": int(body),
+                "axis": int(axis),
+                "initial_bits": f"{int(initial.view('<u4')[world, body, axis]):08x}",
+                "reference_bits": f"{wanted:08x}",
+                "candidate_bits": [
+                    f"{int(value):08x}" for value in predicted[:, world, body, axis]
+                ],
+                "variants": [
+                    {
+                        "bits": f"{int(value):08x}",
+                        "count": int(count),
+                        "compatible_candidate_indices": [
+                            int(index)
+                            for index in np.flatnonzero(
+                                predicted[:, world, body, axis] == value
+                            )
+                        ],
+                    }
+                    for value, count in zip(values, counts)
+                ],
+                "mismatched_repeats": int(np.sum(actual != wanted)),
+                "varying": len(values) > 1,
+                "max_ordered_bit_distance": max(
+                    abs(ordered(value) - ordered(wanted)) for value in values
+                ),
+            }
+        )
+    return {
+        "scalars_compared": int(bits.size),
+        "cells_compared": int(reference.size),
+        "candidate_orders": [list(order) for order in SIBLING_ORDERS],
+        "candidate_snapshot_sha256": [
+            sha256(value.tobytes()).hexdigest() for value in candidates
+        ],
+        "repeat_compatible_uniform_orders": [
+            [
+                int(index)
+                for index in np.flatnonzero(matches[:, repeat].all(axis=(1, 2, 3)))
+            ]
+            for repeat in range(32)
+        ],
+        "unexplained_scalars": int(np.sum(~matches.any(axis=0))),
+        "affected_cells": rows,
+        "atomic_order_observed": False,
+        "compatible_bits_are_causal_or_training_admission": False,
+    }
+
+
+def explain_order_hypotheses(root, source, anchors, terminal_raw, terminal_sha256):
+    """Authenticate the complete retained run before separate CPU hypotheses."""
+    retained = verify(root, source, anchors, terminal_raw, terminal_sha256)
+    need(retained["input_mismatched_scalars"] == 0, "same complete actual-entry inputs")
+    raw = read_inventory(root, anchors)
+    result = {
+        "protocol": PROTOCOL + ":order-hypotheses",
+        "source": source,
+        "retained_receiver_sha256": sha256(canonical(retained)).hexdigest(),
+        "retained_receiver_decision": retained["decision"],
+        "terminal_sha256": terminal_sha256,
+        "external_anchors": anchors,
+        "interpretation": "Compatible float32 hypotheses, not observed atomic order.",
+        "analyses": {
+            mode: analyze_order_hypotheses(raw["entry0.bin"], raw[mode + ".bin"])
+            for mode in ("concurrent", "serial")
+        },
+        "flags": dict(FLAGS),
+    }
+    need(
+        len(canonical(result)) <= 16 * 1024**2, "bounded complete CPU hypothesis report"
+    )
+    return result

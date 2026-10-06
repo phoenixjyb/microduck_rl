@@ -229,3 +229,79 @@ No CUDA child has started. The corrected source must pass its new exact
 **1,865-test** native CPU prerequisite before the single diagnostic run.
 The corrected focused suite passed **142 tests in 16.39 s**; Ruff formatting,
 lint and whitespace checks passed. This is source validation, not CUDA admission.
+
+### Retained native result, 10:13 Shanghai
+
+Exact run source `cbcc4d88ca3fbe50522800fa1f8b3599ae0ce7ef` passed the native
+**1,865-test** CPU prerequisite in **126.46 s**, zero skips/failures/errors.
+Test invocation `a5e2befd80d744998a697eb3fd97f051`, owner PID 3331762,
+ended MainPID 0 / status 0 / success. Whole receipt/JUnit/log hashes respectively:
+`c8a83068c0625d8bf07c18bd837456ed83e43a34668da1095d046559e3514756`,
+`38e656faf8701f295850ef1e125380d7b8a5fea1a0ef6cc070c7957710133c0a`,
+`5809df82fe19bc6a1ead533984ff010c5d07080e81bc9018647b4ee3f28d208b`.
+
+The one GPU run invocation `0f78e7177d61457f93b59eac82c45a19` completed
+successfully with owner/child PIDs **3338420 / 3339162**, actual child PPID
+3338420, terminal MainPID 0 / status 0. Fourteen retained monitor rows observed
+only that child; peak sampled global GPU memory **973 MiB**, temperature **32 C**.
+Per-process memory is explicitly unavailable under WDDM, not measured zero.
+GPU returned idle at 30 C / 666 MiB. Protected services remained inactive and
+FilmBrain PIDs/restart counts unchanged. The old checkout and three predecessor
+whole hashes were independently rechecked unchanged.
+
+All eight whole files were authenticated before independent CUDA-hidden Mac
+JSON/array decode. Inputs match bit-for-bit, SHA-256
+`ff082939230a939f0941009b46be22841b03c87dd233609001513547ed156d29`.
+Across **98,304 scalar comparisons per bank**, concurrent accumulation has
+**142 mismatches, 32 mismatched repeats, three unique full snapshots and four
+varying cells**. Serial accumulation has **zero mismatches, one unique full
+snapshot and zero varying cells**. Both use the complete fixed input reset on
+every repeat and include root body 0. The independent serial reference hash is
+`7feb8111d3e11614808c1dc332766a02a2aeaf5088daf4c0515d72fdde498a4c`.
+
+| Retained file | Bytes | SHA-256 |
+| --- | ---: | --- |
+| entry0.bin and entry1.bin, each | 12,288 | ff082939230a939f0941009b46be22841b03c87dd233609001513547ed156d29 |
+| concurrent.bin | 393,216 | a0bded037ce0b52d41f2506248781060f8e506200f63f92a1871bc1e3dd0da5e |
+| serial.bin | 393,216 | 315554fe5690ad08efb2466995a7e33fb019b0a29d248b1396ba072ac8290152 |
+| child.json | 9,948 | 56370eb3546f19a395a89cf864fc83e25d0690413b6bfbcee459b54b151941b9 |
+| child.log | 7,050 | 35039dbabf771a2f2ef2763ca3e5a52b989c57a23931fe8b090e7a133f8afd14 |
+| declaration.json | 2,716 | 69a72ab5492dc2153a0eedd403b9006e769b4f67b1f0758ef3c867852c8fbdf5 |
+| report.json | 4,963 | c6c7f89c676dbf94d46a49e53a8b9ee3c55b8f63c93d1b25ae43b1b5845d6117 |
+
+Raw files remain under `artifacts/evaluations/com-entry-run-cbcc4d88ca3f`.
+Independent receiver, terminal and external anchors are fsynced in the new native
+`artifacts/tools/com-entry-receiver-cbcc4d88ca3f`; whole hashes respectively
+`06ccc0614a379d441c7b7690773e6e746fb6a2cd256aff398988f4bd62426158`,
+`d1a41ce313f19ac0b4e3d4f739d4dc70b29d6dd0bc1e4594ce86ac78df730fb7`,
+`8f44bf8b57f8a7a05a4f47858ada55781bc4db4340ea083e1b7103ddb283a74f`.
+A separate native CUDA-hidden replay of the CPU receiver returned the same
+canonical result bytes. Decision: **isolated-serial-reference-exact**.
+
+Read-only all-cell localization finds eight distinct mismatching coordinates:
+worlds 21 and 53, bodies 0 and 1, axes x and z. World 21 differs in all 32
+repeats: x actual/reference `39d8c2ac / 39d8c2a8`, z `3dd1eb54 / 3dd1eb55`.
+World 53 x is reference in 29 repeats and alternate in three; z is reference
+in 28 and alternate in four. Root 0 duplicates each body-1 difference; all
+other bodies match. Maximum absolute difference is 7.450580596923828e-09.
+These fresh worlds must not be substituted for the historical rollout's worlds
+10/53 or force-field mismatch. Small magnitude is not an acceptance tolerance.
+
+The capture perturbs timing. No atomic arrival order was observed, no historical
+entry was captured, and no full-forward pair, original rollout or learner was
+qualified. All seven admission flags remain literal false. Do not repeat GPU
+runs to select a favorable outcome or enable training from this isolated result.
+
+### Next bounded CPU analysis, predeclared after the retained result
+
+Reuse only the authenticated eight-file bank; launch no new CUDA child. Add an
+independent CPU report enumerating all six permutations of the three sibling
+roots 2/7/11 at the body-1 accumulation boundary, with unchanged complete
+initialization, other groups and parent topology. Compare every scalar including
+body 0. Report exact bit variants, repeat counts and compatible candidate orders
+at each negative coordinate; compatibility is a mathematical hypothesis, never
+observed dispatch/atomic order or original runtime cause. Preserve the original
+receiver decision and whole result; publish a separate non-admitting report.
+Test cancellation, constant-wrong cells, root inclusion, signed zero, finite
+intermediates, and whole-input authentication before report generation. Keep
+changes inside the existing seven-path source fence and preserve all run artifacts.

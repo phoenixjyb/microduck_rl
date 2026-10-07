@@ -225,3 +225,121 @@ or test execution. The owner reran all four focused modules: **133 passed in
 6.89 s**. The pre-fix full 63-file regression passed **2,019 in 164.76 s**;
 post-fix full regression passed **2,019 in 159.90 s**, with zero skipped tests.
 Ruff lint/format and whitespace checks pass. Review is not native qualification.
+
+### Native paired gate retained, 08:41 Shanghai
+
+Qualification source `6cd03291581684680e6ab3875a96f88cf8dd83ca` was pushed to the
+fork and transported in an incremental bundle with SHA-256
+`cc666887d196406dc534ca670b41de4bc27fa23f3c2d67fc34233bfbb8164ef0`.
+The lean native worktree fast-forwarded cleanly; all 640 committed leaves bind
+tree `6234cbcf6137e81f798bcafd72df8f5dc1435b2f` and inventory SHA-256
+`fd2ee5e1570eb787be65920ff14b8a06a774bfc5eacdd40aa449be32c36e7d2b`.
+The old 2ECE checkout, frozen package trees, predecessors, fixtures, FilmBrain
+PIDs/restarts and protected service state remained unchanged.
+
+The current-source CPU service completed **2,019 tests in 128.95 s**, no skips,
+errors or failures. Invocation `9bae54511d8b4ddd905a43ae5b5e5042`, observed
+owner 3567617, terminal MainPID 0, active/exited, Result success, status 0,
+NRestarts 0, all declared caps matched. Service-reported start/end were
+08:33:04/08:35:48 CST; peak memory 5,104,852,992 bytes, below 6 GiB. The Mac
+independently authenticated all six copied files and reparsed the exact JUnit.
+
+| CPU artifact | Bytes | Whole SHA-256 |
+| --- | ---: | --- |
+| receipt.json | 5,157 | `faf54380672cbf04d562793a257d70eecd03236c7bc20167da455a3be2f7e67f` |
+| pytest.log | 2,353 | `057632379c6374ed2b1af1166957239935c70649ed21f0a3321d672622355198` |
+| junit.xml | 388,071 | `1be056977c15ca05cae9aa03d7c7e4bf21cfb5b6e086c3b7c27a580c7661d67b` |
+| inventory.json | 317 | `038f95c39b6f4f667b35c35d252b4e59031d60705ddbed87d1e863741fad5ea9` |
+| terminal.json | 391 | `db4b380039cecb71a310a8b672e293ea4a21a0164eb9c8b04c6631957f7426c6` |
+| verification.json | 1,166 | `703d78858785220e549c8eae08c38cd96d0eedd99c32e9ad60ec7d9d0fd493f8` |
+
+These live in `artifacts/tools/com-coupled-tests-6cd032915816` (first three)
+and `artifacts/tools/com-coupled-tests-closeout-6cd032915816` (last three), native
+and Mac. This proof was closed before the GPU launch.
+
+One retained GPU service then completed successfully under the inherited shared
+lease: `microduck-com-coupled-run-6cd032915816.service`, invocation
+`d76fa08babae4ba49b00d93a04c96296`, owner 3574689 and actual CUDA child 3575388,
+observed PPID 3574689. Service-reported start/end were 08:37:39/08:38:01 CST;
+terminal MainPID 0, Result success, status 0, no restarts, all caps matched.
+Eighteen real monitor samples observed only that child, maximum 32 C / 971 MiB
+whole-GPU used, minimum 23,191 MiB free; WDDM per-PID memory remained honestly
+unavailable. Peak CPU memory was 3,938,476,032 bytes. Closure GPU was idle at
+31 C / 600 MiB used. No physics integration, graph, learner, storage or video.
+
+The independent native and Mac whole-byte receiver computations are **identical**:
+65,150 bytes, SHA-256
+`51ec8165d49ed398c2704bbe2ce65ce0b9f3e0778dfcd6056c7375d139e113d0`, decision
+`fresh-coupled-control-exact`. All eight actual initialized entries match; both
+serial weighted outputs at both boundaries equal the literal float32 recurrence
+including root 0. Serial0/serial1 match all 17 fields at **each corresponding
+boundary**, including normalized CoM, cinert, cdof, CRB, qM/qLD and bias forces.
+All fixed inputs and complete RNG packets match. All 204 field comparisons remain
+retained, including the original0/original1 negatives in eight solved fields at
+both boundaries. Nothing was waived or filtered to obtain the paired decision.
+
+The exact 22-file native/Mac run inventory is
+`artifacts/evaluations/com-coupled-run-6cd032915816`; complete external anchors
+are retained in the closeout inventory. Raw child/report/declaration hashes:
+`f29c6dda1261203b7402782e3880ae30bd924b460f6f24ed1c18789b86a1fc35`,
+`15ffc1b60fb4e83eaf237fbe06af61949c82fbddb04b73fcdeafb4efad228de0`,
+`595f6841410057cbf0c4587bb67f5e5a8530feb3bdf862dddf364f3069c3d36d`.
+Run-closeout artifacts are in `artifacts/tools/com-coupled-run-closeout-6cd032915816`:
+
+| Artifact | Bytes | Whole SHA-256 |
+| --- | ---: | --- |
+| inventory.json | 2,477 | `1048cd38bd8c68c34bba18ea2af65a499d91e07c92ce60fc090593a313036809` |
+| terminal.json | 390 | `d1cd1c224625fb6171b0da71b24eeec2ec9396ebbb2c51223783e6837efa993f` |
+| receiver.json | 65,150 | `51ec8165d49ed398c2704bbe2ce65ce0b9f3e0778dfcd6056c7375d139e113d0` |
+| verification.json | 1,045 | `26fb4c888200d4b465e97d2905e223aeb5dbd621081ed1ddaa21f145924e50d8` |
+
+The independent Mac computation is saved separately as `mac-receiver.json`,
+with the same 65,150-byte hash. The original four native closeout files and all
+run artifacts are not rewritten.
+
+### Separate temporal gate: still negative, not waived by the paired pass
+
+Post-run read-only analysis also compared each case's constructor frame with its
+own subsequent eager-forward frame. This was **not** the predeclared paired
+receiver decision, and that positive receiver remains immutable. Despite exact
+physical inputs and exact serial weighted CoM, both serial cases change only
+`qfrc_bias` and its negation `qfrc_smooth`, at **world 53, DOF 4**:
+
+| Field | Constructor | Subsequent eager forward | Raw bit distance |
+| --- | --- | --- | ---: |
+| qfrc_bias | `-0.004055817145854235` (`0xbb84e6a9`) | `-0.004055818542838097` (`0xbb84e6ac`) | 3 |
+| qfrc_smooth | `0.004055817145854235` (`0x3b84e6a9`) | `0.004055818542838097` (`0x3b84e6ac`) | 3 |
+
+Maximum absolute delta is `1.3969838619232178e-9`; the other 15 complete serial
+fields, including every fixed input, are exact across that boundary. Original
+cases have additional CoM/downstream temporal negatives. These fresh bits are
+not retroactively paired with historical artifacts just because values recur.
+
+The paired CoM result is useful but **does not establish temporal idempotence,
+full storage replay, historical cause, training admission or learned skill**.
+All seven admission flags remain false. The next bounded causal study must
+observe the RNE backward reduction's *actual initialized six-component array*
+and its aliased output. Preserve the body!=0 rule and body1-to-root0 contribution;
+do not borrow CRB's parent!=0 rule, transplant a scratch sum, waive this negative,
+alter the original receiver or launch a learner. A distinct tested/predeclared
+supervisor, current-source CPU prerequisite, lease and cutoff reserve are still
+required for any next GPU observation.
+
+The separate pure CPU helper `stance_com_coupled_idempotence.analyze`
+authenticates all four entire packets before NumPy decoding and retains all
+68 temporal field rows, all 64-world counts and every negative coordinate. It
+refuses more than 1,024 coordinates before allocating coordinate rows, rather
+than truncating negatives. Eight focused synthetic tests pass (0.22 s), including
+the signed native three-step values, signed zero, input mutation, whole-byte
+authentication before decode, nonfinite input and oversized output refusal;
+Ruff lint/format and whitespace checks pass. Synthetic tests are not CUDA proof.
+
+The independently authenticated Mac post-analysis is retained separately in
+`artifacts/tools/com-coupled-temporal-6cd032915816/mac-analysis.json`, 53,898 bytes,
+SHA-256 `2a871d75faff2d1da3d78ca644fb24332c92cf1ca5830301d5bd77659c4c3e08`.
+It reports `temporal-serial-negative`, 100 complete negative coordinates across
+all four cases; precisely four are the serial bias/smooth coordinates listed
+above. Fixed physical inputs are exact, and all seven admission flags are false.
+The native recomputation remains a separate pending closeout, not inferred from
+the Mac computation. Neither original positive receiver nor its artifacts were
+rewritten.

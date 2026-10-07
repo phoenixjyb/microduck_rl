@@ -104,3 +104,66 @@ as the final source. The complete prior81-file CPU scope plus this final test
 file is being validated again. Exact-source native CPU checks and the final
 fork revision will be recorded below. This document grants no native
 qualification or new GPU execution.
+
+## Completed source/CPU closeout
+
+Source commit `9f7f803a8376dd17da6a5f08950e556fdeabe52b` was pushed to the exact
+fork feature branch through the owner's existing authenticated SSH route.
+The HTTPS push first failed because an invalid `GH_TOKEN` overrides the saved
+account. Read-only authentication checks identified that conflict and proved
+the existing SSH key authenticates as `phoenixjyb`; no token, account, remote
+configuration or credential was changed. `git ls-remote` independently confirmed
+the published source SHA.
+
+The final component is12943 bytes / SHA256
+`8d605178b026d58ff071da2838bea8ecc43eb0564969dcc0721e0e8e0f1e10f3`;
+tests are10745 bytes /
+`f29735b3ec6b21fe0ee9379576045dbc4cdf1d7b30610569888be90bac99ebab`.
+The full final82-file Mac CPU regression passed **2509 tests in174.07s**, zero
+errors/failures/skips. Source/test bytes were checked unchanged before/after
+and match the committed files. This run began before the source commit was
+created; it is not a whole-tree invocation-provenance claim. Ruff and relative
+documentation-target checks passed.
+
+Mac reports are fsynced at `artifacts/tools/cuda-artifact-guard-release-mac-oct7`:
+JUnit459308 bytes / `93eb65eaeee115e9d3036abd228f743f4cb1189f11fbfd96c2025e9e7e7db7e9`,
+log2833 bytes / `c8abb9ea4aa62c29f4ca6b3b643348357d4306c83f257caad8f2f3dbb8322f46`,
+source bindings4190 bytes / `015b5290c3b998300e5dee30c1dc8237a34fbdfaced6e584e6337b056c1434da`,
+verification527 bytes / `a8ec3a9e91a4c3ca807b59bf73c0b2189d57f32b346391031e8db71b2d084e5f`.
+Earlier54/55-test drafts and both broader draft reports were preserved.
+
+The clean lean100.98 worktree fast-forwarded from the base using a verified
+bundle (SHA256 `16d956ea75d0608717aca0e0454002bdd37bca8b27badaaea78292a1efc20864`).
+Unit `microduck-cuda-artifact-cpu-9f7f803a.service`, invocation
+`8bb61003144e45b5a551372507042448`, passed **56 focused tests in0.32s** at
+22:49:36–22:49:37 Shanghai with empty CUDA visibility. It retained success/exit0,
+MainPID0, no restarts, exited state and a deallocated cgroup. Actual caps were
+45s overall/30s subprocess,1GiB memory,100% CPU,32 tasks, Nice10 and8MiB file
+limit. Reported peak memory9175040 bytes is the unit's accounting counter, not
+independent memory instrumentation. The waiting local `systemd-run --wait` SSH
+client was terminated **after** the unit completed because `RemainAfterExit=yes`
+retains active/exited state; the unit itself was not stopped or reset.
+
+Native raw evidence is retained on both hosts at
+`artifacts/tools/cuda-artifact-guard-native-9f7f803a`: JUnit8074 bytes /
+`f21fcf71a6bbe894ca2dccaa2a8773c8411e921bfba5078cfee85c2b20c2e87e`, receipt780
+bytes / `1f06ce2c596e16f42a84b980bd4ee0d490210bf79cde5df7397c301761df3ca9`.
+The separately attempted journal log is empty: stdout was observed through
+`--pipe`, not retained by journald. Do not treat the empty file as a pytest
+stdout log. Full JUnit and terminal unit state establish the bounded CPU test
+result; no broader native regression was run in this slice.
+
+Mac authenticated the whole native artifacts before XML/JSON decoding, checked
+56/zero omissions and matched both complete source/test files to the final Mac
+bindings. Independent proof659 bytes /
+`bf52468b9bf4b1a4390e72f4b36afcf25bfa7d5290b3f9f3ef038a86fc06af9d`
+is retained separately at
+`artifacts/tools/cuda-artifact-guard-independent-9f7f803a/verification.json`.
+Frozen package versions and Warp context source stayed unchanged. No running
+Duck GPU process was observed; FilmBrain PIDs521/298048 and inactive protected
+services stayed unchanged. The existing WAN lease remains a regular empty file
+at inode35886 and was neither acquired nor replaced by these CPU tests.
+
+**Remaining delivery gate:** build/test/predeclare the actual bounded CUDA
+producer and independent receiver before any of its30 synthetic launches.
+Neither a loaded CUDA artifact nor a learned Duck capability was obtained here.

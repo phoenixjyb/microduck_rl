@@ -565,6 +565,15 @@ def test_hypotheses_require_whole_fixed_dimensions():
         r.analyze_order_hypotheses(entry, b"x")
 
 
+def test_cpu_control_protocol_cannot_impersonate_native_observation(tmp_path):
+    files, terminal = fixture(tmp_path)
+    child = json.loads(files["child.json"])
+    child["capture_receipt"]["protocol"] += ":cpu-serial-control"
+    resign(tmp_path, files, child=child)
+    with pytest.raises(ValueError, match="two complete original CoM"):
+        verify(tmp_path, files, terminal)
+
+
 def test_terminal_whole_hash_precedes_json_decode(tmp_path, monkeypatch):
     files, terminal = fixture(tmp_path)
     anchors = {

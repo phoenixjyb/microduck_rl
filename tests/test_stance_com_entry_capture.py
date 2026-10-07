@@ -220,3 +220,269 @@ def test_third_call_and_same_shape_array_replacement_refused(observed):
     finally:
         env.data.subtree_com = original
     assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+def cpu_frame(env):
+    from mjlab_microduck.stance_crb_runtime_probe import FRAME_FIELDS
+
+    assert len(FRAME_FIELDS) == 17
+    result = {}
+    for name, suffix in FRAME_FIELDS.items():
+        value = getattr(env.data, name).numpy()
+        assert value.dtype == np.dtype(np.float32)
+        assert value.shape == (2, *suffix)
+        assert np.isfinite(value).all()
+        result[name] = value.astype("<f4", copy=False).tobytes()
+    return result
+
+
+@pytest.fixture(scope="module")
+def coupled_cpu_pair():
+    from mjlab_microduck import stance_warp_integrator as integrator
+
+    assert not torch.cuda.is_initialized()
+    original = integrator.EulerCandidateCommit.integrate
+    calls = []
+
+    def forbidden(*args, **kwargs):
+        calls.append(True)
+        raise AssertionError("CPU coupled prototype must not integrate")
+
+    pairs = []
+    rng = torch.random.get_rng_state().clone()
+    integrator.EulerCandidateCommit.integrate = forbidden
+    try:
+        with torch.random.fork_rng(devices=[]), wp.ScopedDevice("cpu"):
+            for control in (capture.ComEntryCapture, capture.CpuSerialComControl):
+                torch.manual_seed(991)
+                scope = control()
+                with scope:
+                    env = WarpStanceRuntime(
+                        nworld=2, device="cpu", solved_field_check="packed"
+                    )
+                    first, cpu_rng = (
+                        cpu_frame(env),
+                        torch.random.get_rng_state().clone(),
+                    )
+                    env._forward()
+                    second = cpu_frame(env)
+                    assert torch.equal(cpu_rng, torch.random.get_rng_state())
+                assert (env.steps == 0).all() and env.forward_graph is None
+                pairs.append((env, scope, first, second, cpu_rng))
+    finally:
+        if integrator.EulerCandidateCommit.integrate is forbidden:
+            integrator.EulerCandidateCommit.integrate = original
+    assert calls == [] and torch.equal(rng, torch.random.get_rng_state())
+    assert not torch.cuda.is_initialized()
+    return pairs
+
+
+def test_cpu_coupled_constructor_and_later_complete_frame_equality(coupled_cpu_pair):
+    (_, original, a0, a1, arng), (_, controlled, b0, b1, brng) = coupled_cpu_pair
+    assert a0 == b0 and a1 == b1
+    assert torch.equal(arng, brng)
+    for name in ("qpos", "qvel", "time", "ctrl", "qfrc_applied", "xfrc_applied"):
+        assert a0[name] == a1[name] == b0[name] == b1[name]
+    assert original.entries == controlled.entries
+    receipt = controlled.receipt
+    assert receipt["protocol"] == capture.PROTOCOL + ":cpu-serial-control"
+    assert receipt["cpu_only_prototype"] is True
+    assert receipt["complete_kernel_count_matches"] is True
+    assert receipt["dispatched_original_kernel_counts"] == [13, 13]
+    assert all(row["original_launches"] == 11 for row in receipt["calls"])
+    assert all(value is False for value in receipt["flags"].values())
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+def test_cpu_control_exact_original_kernel_dispatches(observed, monkeypatch):
+    env, _ = observed
+    launches = []
+    real = capture._LAUNCH
+
+    def record(kernel, *args, **kwargs):
+        if kernel in capture._KERNELS:
+            group = (
+                tuple(int(v) for v in kwargs["inputs"][2].numpy())
+                if kernel is capture._KERNELS[1]
+                else None
+            )
+            launches.append((kernel, kwargs["dim"], group))
+        return real(kernel, *args, **kwargs)
+
+    with monkeypatch.context() as context:
+        context.setattr(capture, "_LAUNCH", record)
+        context.setattr(wp, "launch", record)
+        scope = capture.CpuSerialComControl()
+        with scope, wp.ScopedDevice(env.wp_device):
+            smooth.com_pos(env.model, env.data)
+            smooth.com_pos(env.model, env.data)
+    assert len(launches) == 26
+    expected_groups = [
+        (6, 15),
+        (5, 10, 14),
+        (4, 9, 13),
+        (3, 8, 12),
+        (2,),
+        (7,),
+        (11,),
+        (1,),
+        (0,),
+    ]
+    for block in (launches[:13], launches[13:]):
+        assert [row[2] for row in block[1:10]] == expected_groups
+        assert [row[0] for row in block] == [capture._KERNELS[0]] + [
+            capture._KERNELS[1]
+        ] * 9 + list(capture._KERNELS[2:])
+        assert all(row[1] == (2, len(row[2])) for row in block[1:10])
+    assert scope.receipt["dispatched_original_kernel_counts"] == [13, 13]
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+@pytest.mark.parametrize("domain", ["cuda", "worlds", "boolean"])
+def test_cpu_control_refuses_other_domains_before_kernel(observed, monkeypatch, domain):
+    env, _ = observed
+    scope = capture.CpuSerialComControl()
+    original_nworld = env.data.nworld
+    device = "cuda:0" if domain == "cuda" else env.wp_device
+    with monkeypatch.context() as context:
+        context.setattr(capture, "_layout", lambda *_: device)
+        context.setattr(
+            scope, "_dispatch", lambda *_: pytest.fail("refused domain launched")
+        )
+        try:
+            if domain != "cuda":
+                env.data.nworld = 64 if domain == "worlds" else True
+            with pytest.raises(ValueError, match="two-world CPU-only"):
+                with scope, wp.ScopedDevice(env.wp_device):
+                    smooth.com_pos(env.model, env.data)
+        finally:
+            env.data.nworld = original_nworld
+    assert scope.receipt["status"] == "faulted"
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+@pytest.mark.parametrize("mutation", ["storage", "ids"])
+def test_cpu_control_split_rows_cannot_change_between_calls(observed, mutation):
+    env, _ = observed
+    scope = capture.CpuSerialComControl()
+    with pytest.raises(ValueError, match="CPU sibling-control"):
+        with scope, wp.ScopedDevice(env.wp_device):
+            smooth.com_pos(env.model, env.data)
+            if mutation == "storage":
+                scope._split_rows = (
+                    wp.array([2], dtype=wp.int32, device="cpu"),
+                    *scope._split_rows[1:],
+                )
+            else:
+                scope._split_rows[0].assign(np.array([3], dtype=np.int32))
+            smooth.com_pos(env.model, env.data)
+    assert scope.receipt["status"] == "faulted"
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+@pytest.mark.parametrize("failure", ["incomplete", "exception", "foreign", "third"])
+def test_cpu_control_faults_restore_only_owned_hooks(observed, monkeypatch, failure):
+    env, _ = observed
+    scope = capture.CpuSerialComControl()
+
+    def foreign(*args, **kwargs):
+        return None
+
+    with monkeypatch.context() as context:
+        context.setattr(smooth, "com_pos", capture._ENTRY)
+        with pytest.raises((ValueError, RuntimeError)):
+            with scope, wp.ScopedDevice(env.wp_device):
+                if failure == "exception":
+                    raise RuntimeError("synthetic CPU control exception")
+                if failure == "foreign":
+                    context.setattr(smooth, "com_pos", foreign)
+                if failure == "third":
+                    for _ in range(3):
+                        smooth.com_pos(env.model, env.data)
+        assert smooth.com_pos is (foreign if failure == "foreign" else capture._ENTRY)
+    assert scope.receipt["status"] == "faulted"
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+def test_cpu_control_subclass_cannot_change_dispatch_domain(observed, monkeypatch):
+    env, _ = observed
+
+    class ForeignControl(capture.CpuSerialComControl):
+        pass
+
+    scope = ForeignControl()
+    monkeypatch.setattr(scope, "_dispatch", lambda *_: pytest.fail("subclass launched"))
+    with pytest.raises(ValueError, match="two-world CPU-only"):
+        with scope, wp.ScopedDevice(env.wp_device):
+            smooth.com_pos(env.model, env.data)
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+def test_cpu_control_wrong_kernel_count_faults_at_return(observed, monkeypatch):
+    env, _ = observed
+    scope = capture.CpuSerialComControl()
+    original = scope._dispatch
+
+    def corrupted(index, args, kwargs):
+        result = original(index, args, kwargs)
+        if index == 10:
+            scope._kernel_counts[-1] -= 1
+        return result
+
+    monkeypatch.setattr(scope, "_dispatch", corrupted)
+    with pytest.raises(ValueError, match="thirteen-call"):
+        with scope, wp.ScopedDevice(env.wp_device):
+            smooth.com_pos(env.model, env.data)
+    assert scope.receipt["status"] == "faulted"
+    assert scope.receipt["complete_kernel_count_matches"] is False
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+def test_original_observer_subclass_cannot_report_altered_dispatch():
+    class ForeignObserver(capture.ComEntryCapture):
+        def _dispatch(self, *_):
+            pytest.fail("foreign observer dispatch reached")
+
+    scope = ForeignObserver()
+    with pytest.raises(ValueError, match="exact observation"):
+        with scope:
+            pytest.fail("foreign observer entered")
+    assert scope.receipt["status"] == "faulted"
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+@pytest.mark.parametrize("name", ["_before_call", "_dispatch", "_after_call"])
+def test_original_observer_instance_hooks_cannot_change_dispatch(monkeypatch, name):
+    scope = capture.ComEntryCapture()
+    monkeypatch.setattr(scope, name, lambda *_: pytest.fail("foreign hook reached"))
+    with pytest.raises(ValueError, match="bound original observer"):
+        with scope:
+            pytest.fail("altered observer entered")
+    assert scope.receipt["status"] == "faulted"
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+@pytest.mark.parametrize("timing", ["before-enter", "during-scope"])
+def test_original_observer_class_hook_is_pinned_before_dispatch(
+    observed, monkeypatch, timing
+):
+    env, _ = observed
+    scope = capture.ComEntryCapture()
+    with monkeypatch.context() as context:
+        if timing == "before-enter":
+            context.setattr(
+                capture.ComEntryCapture,
+                "_dispatch",
+                lambda *_: pytest.fail("altered class dispatched"),
+            )
+        with pytest.raises(ValueError, match="bound original observer"):
+            with scope, wp.ScopedDevice(env.wp_device):
+                if timing == "during-scope":
+                    context.setattr(
+                        capture.ComEntryCapture,
+                        "_dispatch",
+                        lambda *_: pytest.fail("altered class dispatched"),
+                    )
+                smooth.com_pos(env.model, env.data)
+    assert scope.receipt["status"] == "faulted"
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH

@@ -174,6 +174,7 @@ class ComEntryCapture:
         _need(_LOCK.acquire(blocking=False), "exclusive process-local CoM scope")
         self._owns_lock = True
         try:
+            _OBSERVER_CHECK(self)
             _sources()
             _need(
                 smooth.com_pos is _ENTRY and wp.launch is _LAUNCH,
@@ -215,6 +216,7 @@ class ComEntryCapture:
 
     def _call(self, model, data):
         try:
+            _OBSERVER_CHECK(self)
             _need(
                 current_thread() is main_thread()
                 and not self._inside
@@ -229,6 +231,7 @@ class ComEntryCapture:
             )
             _sources()
             device = _layout(model, data)
+            self._before_call(model, data, device)
             arrays = [
                 model.body_parentid,
                 *model.body_tree,
@@ -349,7 +352,7 @@ class ComEntryCapture:
                     tuple(_fingerprint(a) for a in arrays) == binding[3],
                     "CoM arrays unchanged during call",
                 )
-                result = _LAUNCH(*args, **kwargs)
+                result = self._dispatch(index, args, kwargs)
                 if index == 0:
                     wp.synchronize_device(device)
                     values = data.subtree_com.numpy()
@@ -375,6 +378,7 @@ class ComEntryCapture:
                     wp.launch is launch and smooth.com_pos is self._entry_wrapper,
                     "CoM scope references unchanged at return",
                 )
+                self._after_call(model, data, device)
                 _sources()
             finally:
                 if wp.launch is launch:
@@ -412,6 +416,30 @@ class ComEntryCapture:
             self._fault = self._fault or type(error).__name__
             raise
 
+    def _check_observer_methods(self):
+        _need(
+            type(self) in (ComEntryCapture, CpuSerialComControl)
+            and getattr(self._call, "__func__", None) is _OBSERVER_CALL,
+            "exact observation or two-world CPU-only coupled scope",
+        )
+        if type(self) is ComEntryCapture:
+            _need(
+                all(
+                    getattr(getattr(self, name), "__func__", None) is method
+                    for name, method in _OBSERVER_METHODS
+                ),
+                "bound original observer methods",
+            )
+
+    def _before_call(self, model, data, device):
+        """Default observation changes no dispatch or array."""
+
+    def _dispatch(self, index, args, kwargs):
+        return _LAUNCH(*args, **kwargs)
+
+    def _after_call(self, model, data, device):
+        """Default observation requires no additional dispatch."""
+
     @property
     def entries(self):
         return tuple(self._entries)
@@ -431,6 +459,107 @@ class ComEntryCapture:
                 "flags": dict(_FLAGS),
             }
         )
+
+
+class CpuSerialComControl(ComEntryCapture):
+    """Two-world CPU prototype only; not accepted by the native receiver."""
+
+    def __init__(self):
+        super().__init__()
+        self._split_rows = None
+        self._split_binding = None
+        self._kernel_counts = []
+
+    def __enter__(self):
+        _need(str(wp.get_device()) == "cpu", "CPU-only coupled CoM prototype")
+        return super().__enter__()
+
+    def _before_call(self, model, data, device):
+        _need(
+            type(self) is CpuSerialComControl
+            and str(device) == "cpu"
+            and type(data.nworld) is int
+            and data.nworld == 2,
+            "exact two-world CPU-only coupled CoM prototype before kernels",
+        )
+        if self._split_rows is None:
+            self._split_rows = tuple(
+                wp.array([body], dtype=wp.int32, device=device) for body in (2, 7, 11)
+            )
+            self._split_binding = tuple(_fingerprint(row) for row in self._split_rows)
+        self._check_rows(device)
+        self._kernel_counts.append(0)
+
+    def _check_rows(self, device):
+        _need(
+            type(self._split_rows) is tuple
+            and len(self._split_rows) == 3
+            and tuple(_fingerprint(row) for row in self._split_rows)
+            == self._split_binding,
+            "unchanged CPU sibling-control storage",
+        )
+        _need(
+            tuple(
+                source_checks._warp_int_ids(row, 1, device, "CPU control singleton")
+                for row in self._split_rows
+            )
+            == ((2,), (7,), (11,)),
+            "exact CPU sibling-control IDs",
+        )
+
+    def _dispatch(self, index, args, kwargs):
+        _need(
+            type(self) is CpuSerialComControl
+            and str(kwargs["outputs"][0].device) == "cpu"
+            and self._kernel_counts,
+            "owned CPU-only control dispatch",
+        )
+        if index == 5:
+            self._check_rows(kwargs["outputs"][0].device)
+            _need(
+                args[0] is _KERNELS[1]
+                and kwargs["dim"] == (2, 3)
+                and kwargs["inputs"][1] is kwargs["outputs"][0],
+                "one bound original aliased CPU sibling group",
+            )
+            for row in self._split_rows:
+                _LAUNCH(
+                    args[0],
+                    dim=(2, 1),
+                    inputs=[*kwargs["inputs"][:2], row],
+                    outputs=kwargs["outputs"],
+                )
+                self._kernel_counts[-1] += 1
+            return None
+        result = _LAUNCH(*args, **kwargs)
+        self._kernel_counts[-1] += 1
+        return result
+
+    def _after_call(self, model, data, device):
+        self._check_rows(device)
+        _need(self._kernel_counts[-1] == 13, "complete thirteen-call CPU CoM dispatch")
+
+    @property
+    def receipt(self):
+        result = super().receipt
+        result.update(
+            protocol=PROTOCOL + ":cpu-serial-control",
+            cpu_only_prototype=True,
+            dispatch_transformation="split-siblings-2-7-11-only",
+            dispatched_original_kernel_counts=list(self._kernel_counts),
+            complete_kernel_count_matches=(
+                result["status"] == "complete" and self._kernel_counts == [13, 13]
+            ),
+        )
+        return result
+
+
+_OBSERVER_CALL = ComEntryCapture._call
+_OBSERVER_CHECK = ComEntryCapture._check_observer_methods
+_OBSERVER_METHODS = tuple(
+    (name, getattr(ComEntryCapture, name))
+    for name in ("_before_call", "_dispatch", "_after_call")
+)
 
 
 def repeat_entry(model, data, raw, digest, mode):

@@ -63,7 +63,7 @@ CPU descriptor must match retained native selected-field hash
 `6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
 Do not attach the mismatching Mac CPU model to native state.
 
-The current source CPU prerequisite is exactly **1,879 tests in 59 files**, with no skip,
+The final executed source CPU prerequisite was exactly **1,879 tests in 59 files**, with no skip,
 failure or error; the previous 53-file receipt cannot substitute for it. Test
 all six source/fixture changes plus the retained replay/control suites and the
 three earlier forward-entry helpers. The isolated new tests use two CPU worlds
@@ -381,3 +381,79 @@ claim the original historical entry was captured, or run repeated probes until
 a favorable bank appears. The present window's single GPU diagnostic is closed;
 source documentation, bounded CPU checks and quiet preservation monitoring may
 continue through 13:00 Shanghai. Protected services must not be restored.
+
+### Bounded CPU coupled-control prototype
+
+Within the same seven-path fence, prepare a distinct CPU-only prototype receipt,
+not a new native probe mode. Reuse the existing two-call hook/lifetime, exact
+original-source, array-binding and topology guards. The default observation
+scope remains unchanged. The prototype must refuse CUDA and every world count
+except two before any CoM kernel, split only the original sibling group 2/7/11,
+forward all other original launches unchanged, and use the simulator's own
+aliased array through divide/cinert/cdof and the rest of eager forward.
+
+Count eleven original caller launch requests versus thirteen dispatched original
+kernel calls, with no substituted kernel or copied solved result. Use a distinct
+CPU-only protocol so the native receiver refuses to interpret it as original
+observation evidence. Test exact complete CPU frame equality at both constructor
+and later-forward boundaries, unchanged RNG/state/zero steps, refusal before
+dispatch, full counts/group IDs, repeated-call/array/source/foreign-hook faults
+and restoration. A CPU positive establishes wrapper behavior only, not native
+descriptor equivalence, CUDA order, full-window replay or training admission.
+No native execution or new GPU job is authorized for this prototype.
+
+The prototype's first focused check exposed two test-fixture mistakes: a
+keyword-only device argument passed positionally, and a foreign-hook undo
+context initialized after the hook, so it restored a dead bound callback.
+Correct the fixtures, not the hook's preserve-foreign-reference behavior.
+The corrected capture/receiver check passed **124 tests in 10.09 s**. The 14 new
+CPU controls raise the exact current 59-file regression to **1,893 tests**.
+Only a new CUDA-hidden source-addressed CPU service may run for this code;
+the native GPU probe and its eight immutable artifacts stay closed and unchanged.
+
+October 7 review found that dynamically overridden observer hooks could otherwise
+retain the original observer protocol. The follow-up restricts exact scope
+classes and binds the original observer methods; foreign subclasses and instance
+hook replacements are refused before dispatch. Pin the original method references
+rather than comparing with mutable class attributes; two class-hook mutation
+cases also refuse before dispatch. Six new refusal cases bring the CPU-prototype
+regression to 1,899 tests across the existing 59 files. The expired
+October 6 runner keeps its historical count and cutoff unchanged. A separate
+October 7 contract must bind the current tests and source before native CPU use.
+
+### Source-based packed-launch annotation, not an observed schedule
+
+The installed Warp 1.12.0 `native/builtin.h` whole SHA-256 is
+`1a9f56467382132f8c82064244cb605308e05e066c51d3f9389074f65b2bd61c`.
+A fresh download of the official [v1.12.0 header](https://raw.githubusercontent.com/NVIDIA/warp/v1.12.0/warp/native/builtin.h)
+returned the same whole hash. Its `launch_coord` / two-dimensional `tid` mapping
+unravels the last dimension first. The installed `codegen.py` CUDA mapping
+passes its linear `_idx` to that function; context.py's ordinary launch default
+is 256 threads per block. These are **post-run source inspections**, not
+retroactive authentication of an observed compiled binary or scheduling trace.
+
+For the retained logical `(64, 3)` sibling group, the packed indices are
+`world * 3 + sibling_index`. Using CUDA's documented 32-thread grouping as an
+annotation gives the following four boundary-straddling worlds. CUDA hardware
+scheduling is not inferred from this arithmetic. See the official
+[CUDA warps and SIMT model](https://docs.nvidia.com/cuda/cuda-programming-guide/01-introduction/programming-model.html#warps-and-simt).
+
+| World | Three packed indices | Logical modulo-32 lanes | Fresh bank affected? |
+| ---: | --- | --- | --- |
+| 10 | 30, 31, 32 | 30, 31, 0 | No |
+| 21 | 63, 64, 65 | 31, 0, 1 | Yes |
+| 42 | 126, 127, 128 | 30, 31, 0 | No |
+| 53 | 159, 160, 161 | 31, 0, 1 | Yes |
+
+This coincidence is a **source-based hypothesis** for why some worlds may be
+order-sensitive, not measured atomic arrival order or proof that a driver is
+faulty. Retain every world in the exact comparison; do not filter to these four.
+Historical worlds 10/53 belong to a different retained experiment and cannot
+be paired with this fresh bank as if they shared input bytes or timing.
+
+Current upstream [Warp determinism documentation](https://github.com/NVIDIA/warp/blob/main/docs/user_guide/execution_and_performance/deterministic_execution.rst)
+explains unordered floating-point atomics and newer deterministic lowering
+options. It is evolving upstream documentation, **not the installed 1.12.0
+contract**. Do not enable a new module/config option, upgrade Warp, clear caches
+or replace kernels in this campaign. Any future version/lowering study requires
+its own matched source/package/binary/alias/resource and paired numerical gates.

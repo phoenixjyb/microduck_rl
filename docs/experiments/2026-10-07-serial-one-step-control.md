@@ -141,3 +141,100 @@ false. Focused tests:90 passed in9.47s. The complete73-file source/CPU suite:
 staged whitespace checks passed; the referenced prior experiment exists.
 These are source/CPU checks, not a native CUDA result. Native qualification and
 whole-byte independent receivers must still close on the exact pushed revision.
+
+## Closed native result: arithmetic exact, moving repeat negative
+
+Execution source`26e2ee8244b7bd05fb3290d655113e538bd1a989`, tree
+`e3f919145e145281b49168d352b964523a3297bb`,663-leaf whole SHA256
+`a0677ebf4facdc92cebb255faed309c1b6101b651dd95ace9306e8244d14bd50`.
+The clean native worktree was fast-forwarded through the pushed fork tip using
+a verified bundle; the old2ECE worktree and all prior evidence remained untouched.
+Frozen six-package/version and three installed-source-tree bindings were
+unchanged before and after execution; no driver/environment update was made.
+
+Fresh CPU qualification: `microduck-serial-step-tests-26e2ee8244b7.service`,
+invocation`e13b99f253a74e68928cb2fdfe114600`, actually observed owner3633063,
+10:20:41–10:23:33CST. **2250 passed in136.28s**, no skipped/error/failed tests;
+same successful terminal invocation,PID0, no restart, full declared caps.
+Peak cgroup memory5700673536 bytes, below the6GiB cap. Raw receipt/JUnit/log
+are durable at `artifacts/tools/serial-step-tests-26e2ee8244b7/` on both hosts.
+Independent whole-byte closeout is
+`artifacts/tools/serial-step-tests-closeout-26e2ee8244b7/`:
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| inventory.json | 317 | `86956ed41f194cdff76b4fa79095f5651e63495d5a53678ed344fe21a1c083fc` |
+| terminal.json | 391 | `bcf3d3e1603aa37ce7b07476dbae3dffa9f4d143d7aad620e1570f7c9454a56e` |
+| verification.json | 1881 | `193d4fdb402e3083f4e7fa2975e3e9a083a82b1f8ae2c884b863f859ec9ec268` |
+| mac-verification.json | 1418 | `eceb855b147a63e2902ea77a78f69b901a8b49983f3e7e21c3733585a260e65b` |
+
+GPU execution: `microduck-serial-step-run-26e2ee8244b7.service`, invocation
+`c0aed85c5c19437185f1fed6e6f23cca`, observed owner3641571, actual child3642418
+with PPID3641571,10:25:59–10:26:39CST. Service/child completed successfully
+without restart; terminalPID0, full caps, peak cgroup memory3170848768 bytes.
+The26 real monitor rows observed only the owned GPU child, maximum33C,
+maximum1134MiB used/minimum23028MiB free. WDDM per-process memory unavailability
+was retained honestly. Closure GPU idle at30–31C/661MiB, no compute PID.
+FilmBrain remained active at521 and298048 with zero restarts; both protected
+AI-mission services remained inactive in user/system namespaces. Lease inode35886
+remained the existing zero-byte regular file.
+
+All22 raw files are durable on both hosts at
+`artifacts/evaluations/serial-step-run-26e2ee8244b7/`.
+Both native and Mac independent receivers authenticated every whole file before
+decode and emitted the same61159 bytes. Closeout
+`artifacts/tools/serial-step-run-closeout-26e2ee8244b7/` is durable on both:
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| inventory.json | 2500 | `60138c8381f91fb2c31541c51fc8e5dcfe2eaa1a6a3b46c8b59715403c3dce2c` |
+| terminal.json | 390 | `232b94280d51a431c4027db38b97d911d303f7d0d9bea117a1182f0af094c721` |
+| receiver.json and mac-receiver.json | 61159 each | `d8c38bf63780f40aaa0fc40492bd5a43b7e40c3290195ec59555b781727eee71` |
+| verification.json | 1801 | `046293cc74747690f041da7f9aac5912a83c1a8127bf90cc67ca969384e14c7e` |
+
+The three separate decisions are:
+
+- Arithmetic: `moving-reductions-reference-exact`. All21 actual CoM recurrences
+  and21 actual bias-RNE recurrences in each case match independent float32 math.
+- Execution: `one-nominal-tick-consistent`. Both cases integrate10 accepted
+  2-ms substeps in all64 worlds, remain live, and retain identical complete
+  masks and RNG packets. Peak torque is0.01356003899127245Nm in both cases.
+  No force, terminal, reset after construction, graph, actor, storage or optimizer.
+- Paired repeat: **`one-tick-paired-negative`**. Constructor17 fields are exact;
+ 12 of17 final fields differ. Overall`fresh-one-step-serial-repeat-negative`.
+  CoM weighted banks match, but CoM initialized/RNE input/RNE output/motor/frame
+  packets differ. The complete dense-term ledger differs even though both
+  reward minima/maxima equal0.08811777830123901.
+
+| Final field | Different float32 cells | Maximum absolute delta |
+| --- | ---: | ---: |
+| cinert | 165 | 4.092726157978177e-12 |
+| cdof | 1199 | 3.4924596548080444e-10 |
+| qM | 1778 | 2.9103830456733704e-11 |
+| qLD | 1183 | 2.3283064365386963e-10 |
+| cvel | 4905 | 7.450580596923828e-08 |
+| cdof_dot | 5118 | 3.725290298461914e-08 |
+| qfrc_bias | 430 | 4.656612873077393e-10 |
+| qfrc_smooth | 669 | 5.587935447692871e-09 |
+| qpos | 629 | 1.280568540096283e-09 |
+| qvel | 1079 | 8.940696716308594e-08 |
+| qacc_warmstart | 1221 | 1.0967254638671875e-05 |
+| ctrl | 716 | 3.725290298461914e-09 |
+
+Full world counts, raw hashes, ordered-bit distances and finite deltas remain
+in the receiver; near-zero ordered-bit distances are not physical magnitudes.
+Tiny finite differences do not establish a physical hazard or a learned-policy
+failure, but they **do not pass the predeclared bitwise gate**. No tolerance,
+normalization, source-addressed rerun or RNG repair is used to turn this negative
+positive. Historical failures remain unchanged and every admission/cause flag
+stays false. There is no new learned skill, thermal acceptance or motor hardware
+characterization in this result.
+
+Next: a bounded read-only first-observed-divergence analysis over all retained
+21 reduction records and10 complete motor proposals, before changing simulation
+or launching another native job. Current17-field frames do not contain solved
+`qacc`, constraint forces, complete contact/constraint state or solver intermediates;
+the first observed difference cannot establish the first runtime cause. A new
+solver-boundary capture would need a distinct tested/predeclared protocol and
+fresh source qualification. Longer capture/replay and training admission remain
+closed, even though the captured reduction arithmetic is exact.

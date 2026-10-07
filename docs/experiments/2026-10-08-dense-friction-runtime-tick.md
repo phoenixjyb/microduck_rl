@@ -307,3 +307,66 @@ Next: independently retain a bit-addressed first-divergence diagnosis before
 predeclaring any new native experiment. Do not relax exactness, sort or repair
 recorded banks, select favorable retries, extend the rollout, or launch a
 learner to work around this negative.
+
+### Independent retained first-divergence diagnosis
+
+New source-only helper `stance_raw_carrier_delta.compare_carriers` authenticates
+both complete immutable carrier bytes and exact shape/dtype before decoding.
+It reports exact differing32-bit words and coordinates, including signed zero;
+it never applies tolerance, repairs bytes, or supplies owner admission. Its25
+focused cases and the combined101-test numerical/receiver check passed. Source
+`ae6814d77c5e4b8672b2fa4a57ad2849e33df7c4` then passed all2847 tests in the
+separately declared91-file CPU scope on Mac (190.05s) and WSL (180.57s), zero
+omissions. This two-path helper source fence is separate from the earlier
+eleven-path native experiment and does not expand its admission.
+
+CPU inventories319 bytes each: Mac SHA256
+`332c76ee4886f1411aaea8fb26e6f60aecc74bef8bc18a41c006d58e39610a7c`;
+WSL SHA256
+`297b4452451392000e139fb9d58f4ea0ff2d8949b7aeada39b33cedd0f46d30d`.
+WSL CPU invocation `179dcc0af8ba4391ab78e225ea97634c` completed with PID0,
+SubStateexited, Resultsuccess and exit0. Independent whole-leaf authentication
+on Mac matched both committed source closures, frozen package pins and ordered
+test scopes; scope SHA256 is
+`66ff2eac57904dc5a156818d618ed34308997974939d357236362dde48b150e0`.
+Proof directories are `artifacts/tools/raw-carrier-delta-full-tests-ae6814d77c5e-mac`
+and the same suffix`-wsl`; native private CPU caches remain auxiliary and intact.
+
+The clean helper execution wholly authenticated the414 original leaves before
+decoding them, retained per-carrier deltas and cross-checked the independently
+replayed negative. Derived `mac-first-delta.json` is32437 bytes, SHA256
+`58d9fe994557b1cafc13e488577dcde1d9d7a4407ff5609723356e47be213dff`,
+retained in the original closeout directory on both hosts. It records helper
+source/hash, original execution source, external raw inventory anchor and all
+five false qualification flags. All sample indices below are zero-based;
+word hex is the literal four-byte **little-endian byte sequence**, not decimal
+rounding or a normalized bank.
+
+| First differing retained carrier | Coordinate | Candidate0 bytes | Candidate1 bytes |
+| --- | --- | --- | --- |
+| load.qfrc_constraint | substep2/world0/DOF0 | `4b180cbf` | `4e180cbf` |
+| load.efc_force | substep2/world0/row0 | `e06927bb` | `e96927bb` |
+| load.efc_id | substep2/world0/row14 | `3b010000` (315) | `f2000000` (242) |
+| load.budget_output | substep2/world0/actuator0 | `3bb71b3c` | `3ab71b3c` |
+| target frictionloss input | forward5/world0/DOF6 | `3bb71b3c` | `3ab71b3c` |
+| target qvel input | forward6/world0/DOF1 | `ca5c2235` | `775d2235` |
+
+RNE and CoM entries first differ at forward6, after the earlier load/friction
+boundary; weighted CoM bytes remain exact. The load snapshot at substep2 is
+from the prior solved state after forward4 (poststep1); its BAM proposal
+precedes forward5 (prestep2). This chronology follows the unchanged
+`stance_warp_runtime.step` and is independently consistent with the retained
+motor and target input bytes. It narrows the boundary without proving a cause:
+contact IDs are addresses into the contact pool, not unique physical-contact
+identity. Different IDs alone do not demonstrate incorrect contacts or prove
+an atomic-allocation cause. There is no longer rollout or new training result.
+
+Smallest next question: passively retain the actual frozen contact-init ABI
+inputs/outputs and complete constraint-construction banks for forwards0–6 in
+a new, independently predeclared fresh one-tick diagnostic. Keep complete
+inactive bytes and row/contact order. Label completion **before solver** and
+prior/stale force/state/Ma/Jqvel accordingly. Do not restore a partial
+mid-step state: unretained collision/solver/motor caches would make that a
+different, larger protocol. A new source fence, focused tests, complete exact
+Mac/WSL CPU prerequisites, private compilation evidence, idle-GPU lease and
+deadline reserve remain necessary before native execution.

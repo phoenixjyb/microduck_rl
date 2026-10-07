@@ -26,7 +26,7 @@ BRANCH = "feat/athletics-obstacle-curriculum"
 CUTOFF = 1791415800  # Newly declared Oct8 07:30 Asia/Shanghai owner cutoff.
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 600, 540, 240, 60
 CPU_SERVICE_SECONDS, CPU_TEST_SECONDS = 660, 600
-EXPECTED_TESTS = 2982  # Exact reviewed 94-file collection; receipts still required.
+EXPECTED_TESTS = 2998  # Exact reviewed 94-file collection; receipts still required.
 CPU_TEST_THREADS = {
     "OMP_NUM_THREADS": "1",
     "MKL_NUM_THREADS": "1",

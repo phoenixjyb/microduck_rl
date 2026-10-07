@@ -13,6 +13,76 @@ from mjlab_microduck import stance_contact_boundary_receiver as receiver
 from mjlab_microduck import stance_contact_boundary_probe as producer
 from test_stance_contact_boundary_control import _environment, _run
 from test_stance_friction_prefix_cuda_receiver import compiled_fixture, device
+from test_stance_friction_runtime_numerical import _entry, WORLDS, CAPACITY
+
+
+def _enriched_numerical_entries():
+    return {
+        arm: [
+            {**_entry(), "layouts": {}, "identities": {}, "stream": 123}
+            for _ in range(21)
+        ]
+        for arm in receiver.ARMS
+    }
+
+
+def test_numerical_projection_preserves_metadata_and_raw_carrier_identity():
+    entries = _enriched_numerical_entries()
+    before = deepcopy(entries)
+    projected = receiver.numerical_entry_projection(entries)
+    assert entries == before
+    for arm in receiver.ARMS:
+        for original, numeric in zip(entries[arm], projected[arm], strict=True):
+            assert set(numeric) == receiver.numerical.ENTRY_FIELDS
+            assert set(original) - set(numeric) == {"layouts", "identities", "stream"}
+            for key in receiver.numerical.ENTRY_FIELDS:
+                assert numeric[key] is original[key]
+            assert numeric["inputs"]["qvel"]["raw"] is original["inputs"]["qvel"]["raw"]
+    report = receiver.numerical.audit_entries(
+        projected, worlds=WORLDS, capacity=CAPACITY, forwards=21
+    )
+    assert entries == before
+    assert report["component_exact_without_overflow"] is True
+    assert all(value is False for value in report["flags"].values())
+    with pytest.raises(ValueError, match="exact entry fields"):
+        receiver.numerical.audit_entries(
+            entries, worlds=WORLDS, capacity=CAPACITY, forwards=21
+        )
+
+
+@pytest.mark.parametrize(
+    "damage",
+    ("extra-arm", "missing-arm", "row-count", "row-type", "extra-field")
+    + tuple("missing-" + key for key in sorted(receiver.numerical.ENTRY_FIELDS))
+    + ("missing-layouts", "missing-identities", "missing-stream"),
+)
+def test_numerical_projection_refuses_unknown_missing_or_malformed_schema(damage):
+    entries = _enriched_numerical_entries()
+    row = entries["original"][0]
+    if damage == "extra-arm":
+        entries["extra"] = []
+    elif damage == "missing-arm":
+        del entries["candidate1"]
+    elif damage == "row-count":
+        entries["original"].pop()
+    elif damage == "row-type":
+        entries["original"][0] = None
+    elif damage == "extra-field":
+        row["extra"] = None
+    else:
+        del row[damage.removeprefix("missing-")]
+    with pytest.raises(ValueError, match="exact (observer|enriched observer)"):
+        receiver.numerical_entry_projection(entries)
+
+
+def test_projection_does_not_relax_numerical_carrier_validation():
+    entries = _enriched_numerical_entries()
+    entries["original"][0]["inputs"]["qvel"]["raw"] = b"bad"
+    projected = receiver.numerical_entry_projection(entries)
+    with pytest.raises(ValueError):
+        receiver.numerical.audit_entries(
+            projected, worlds=WORLDS, capacity=CAPACITY, forwards=21
+        )
 
 
 def test_cpu_receipt_binds_exact_child_thread_settings():

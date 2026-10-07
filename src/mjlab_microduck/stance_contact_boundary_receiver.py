@@ -424,6 +424,29 @@ def layout(value, carrier, device):
     return pointer, pointer + span
 
 
+def numerical_entry_projection(entries):
+    """Project already ownership-checked rows without changing numeric carriers.
+
+    Contact metadata stays in the original rows. The historical numerical
+    component still receives and validates its exact unchanged six-field ABI.
+    This adapter grants no ownership or qualification on its own.
+    """
+    need(type(entries) is dict and set(entries) == set(ARMS), "exact observer arms")
+    enriched_fields = numerical.ENTRY_FIELDS | {"layouts", "identities", "stream"}
+    projected = {}
+    for arm in ARMS:
+        rows = entries[arm]
+        need(type(rows) is list and len(rows) == 21, "exact observer forward count")
+        projected[arm] = []
+        for index, row in enumerate(rows):
+            need(
+                type(row) is dict and set(row) == enriched_fields,
+                f"exact enriched observer fields {arm}.forward{index}",
+            )
+            projected[arm].append({key: row[key] for key in numerical.ENTRY_FIELDS})
+    return projected
+
+
 def observer(record, raw, arm, device, compiled, recipe):
     need(
         type(record) is dict
@@ -2276,7 +2299,7 @@ def verify_run(
         "bounded aggregate passive contact capture across three arms",
     )
     boundary_comparison = compare_contact_boundaries(boundary_reports)
-    report = numerical.audit_entries(entries)
+    report = numerical.audit_entries(numerical_entry_projection(entries))
     repeat = {
         name: packets["candidate0"][name] == packets["candidate1"][name]
         for name in recipe_checks.CASE_CAPS

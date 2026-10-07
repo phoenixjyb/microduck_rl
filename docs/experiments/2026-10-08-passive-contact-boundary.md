@@ -326,3 +326,52 @@ The revised focused suite passes135 tests; the unchanged94-file collection is
 2982, frozen in the producer. Both full same-source CPU suites must pass again
 before any bounded native retry. All qualification flags remain false, and no
 learner or longer rollout is admitted by this layout repair.
+
+## Completed CUDA child, refused numerical adapter
+
+At0450bca9b0d735ddf1696d42f8dc50948253e055, both2982-test suites passed,
+zero omissions: WSL179.54s and Mac215.92s. Their319-byte inventory SHA256s
+are `00d1022419c9d1e81d02e881bf65eb76c2c43fdc8aa313e04eecb926ea6e93d7`
+and `fc0cd15f0e18fb0bf07baad265ee78cf5b2d1984b8d96f925e58f21e4f326e4d`.
+Native CPU invocation902e139470ef493e96f27a0a9f352a1a is PID0/exited/success0.
+
+CUDA invocation2ba95b9e1e26455792deed94780f1898 completed all three arms
+and all40 phases (owner4033711, child4033779, child exit0). The owner then
+refused `ValueError: exact entry fields original.forward0` in the unchanged
+six-field numerical auditor; owner exit1/service failed/PID0. This is not a
+successful service or accepted receiver result. The contact observer supplies
+six numerical fields plus layouts/identities/stream for ownership cross-binding;
+passing those enriched rows directly to the strict numerical component was an
+adapter error. No numerical/physics failure is inferred from that schema error.
+
+Retain478 raw leaves/657303161 bytes and the failed closeout
+`artifacts/tools/contact-boundary-gpu-failure-0450bca9b0d7`:551-byte inventory
+SHA256 `cf3be7422ee39d83b91e0a332e962172eff6b3125e24a4c3abb61f56906a1e47`,
+69450-byte raw-inventory SHA256
+`1cb31c236b89836c84a946bdaf7fabf6faf9e3985a6b3a486945cc69b2a7061f`.
+All phase maps remain at1, maximum recorded phase threads4. Seventeen owner
+samples cover34.347s, maximum32C, with only the owned child. GPU idle afterward;
+FilmBrain identities unchanged and protected services inactive. All five flags
+remain false. Keep this failed run immutable rather than retroactively calling
+it a successful run under a newer receiver.
+
+## Strict numerical-view adapter predeclaration
+
+Change only the new receiver adapter after all three contact-boundary ownership
+checks, aggregate cap and boundary comparison. Require exactly three arms,
+21 rows per arm and the exact nine enriched fields; unknown/missing fields
+refuse. Build new row dictionaries referencing only the unchanged numerical
+component's six fields. Keep original metadata and all carrier/byte objects
+unmodified for contact cross-binding; perform no normalization or decoding in
+the adapter. Do not modify the historical numerical module or any old schema,
+admission, source fence, cutoff or protocol.
+
+Actual small numerical fixtures exercise all21 rows through the unchanged
+auditor, metadata retention, raw-object identity, pre/post-audit immutability,
+exact-schema refusal and malformed-carrier rejection. The focused suite passes
+151 tests; the unchanged94-file scope collects2998, frozen in the producer.
+Both same-source full CPU prerequisites are required again before a fresh
+bounded GPU trial. Preserve the same recipe, private seeds, thread maps, lease,
+capture windows and resource caps. A successful capture would still require
+independent whole-byte Mac replay and would not admit a learner, longer rollout,
+video or physical motion.

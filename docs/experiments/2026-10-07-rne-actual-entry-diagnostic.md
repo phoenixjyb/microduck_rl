@@ -71,6 +71,24 @@ it is not the future 67-file native prerequisite. Independent read-only review
 found no concrete blocker in the capture after the shared-call-site repair,
 and executed neither tests nor device/service/native operations.
 
+Capture source `09d191e3866a590fba73e2bbd63979fcb389be95` was pushed to the fork.
+An incremental two-commit bundle from the native paired source was authenticated
+as `c805da570ae602029cddbaa5de6e47d99a2ec02d124153198174619d0f0237a9` before
+the clean native worktree fast-forwarded; the old evidence checkout stayed at
+`2ecee471f7b999822ed19defd7e2d1c7ad09df07`. An initial SHA-only bundle command
+was refused as empty (no bundle created); inspection confirmed two commits and
+the successful named-HEAD bundle above. No environment/service was changed.
+
+At that exact native source, CUDA-hidden independent temporal analysis completed
+and is retained as `artifacts/tools/com-coupled-temporal-6cd032915816/native-analysis.json`.
+Its entire 53,898 bytes are identical to the independently computed Mac report,
+SHA-256 `2a871d75faff2d1da3d78ca644fb24332c92cf1ca5830301d5bd77659c4c3e08`.
+Both retain the same `temporal-serial-negative` decision and all 100 coordinates.
+Native and Mac copies are durable. This closes the previously pending temporal
+post-analysis copy/recomputation, not the temporal numerical gate. GPU stayed idle
+at 600 MiB used; FilmBrain retained PIDs 521/298048 with no restarts, and protected
+services remained inactive. This was pure post-analysis, not an RNE GPU run.
+
 ## Next native protocol: not launched or qualified by this document
 
 Before any native GPU work, finish and review a **distinct** source-addressed
@@ -97,3 +115,64 @@ Whole-GPU temperature below 75 C, used at most 12,288 MiB, free at least 10,240 
 WDDM unavailable per-PID memory must remain explicitly unavailable. Never overlap
 a second GPU workload or modify an existing workload. This prospective design
 is **not yet native qualification, runtime cause, storage or training admission**.
+
+### Finalized source and numerical declaration, before native services
+
+The distinct supervisor is `mjlab_microduck.stance_rne_entry_probe`, with retained
+units `microduck-rne-entry-tests-<source12>.service` and
+`microduck-rne-entry-run-<source12>.service`. Its seven changed-path fence starts
+at `98e3b7c1fe26dca8095a3a209961f649daf796d3`, and inventory includes all 649
+committed leaves plus the preceding coupled declaration paths. The exact ordered
+**67-file / 2,093-test** collection binds test-list SHA-256
+`f9fe7748097ff455764b04d50b34b984b4c8b5c706910ecd38d7a1d28ec41e17`.
+Do not modify the older 1,879 / 2,019 constants or reuse their proof.
+
+The native run retains exactly 14 whole-authenticated files: both full RNE
+snapshots in `entries.bin`/`outputs.bin` (49,152 bytes each), full 32-repeat banks
+`concurrent.bin`/`serial.bin` (786,432 each), complete two-frame `frames.bin`
+(888,832), actual RNG packet `rng.bin`, actual CoM initialized/weighted packets
+`com.entries.bin`/`com.weighted.bin` (24,576 each), raw current CPU proof
+`tests.receipt.json`/`tests.terminal.json`, plus declaration, child, monitor report
+and log. All file bounds, entire external SHA-256s and terminal SHA must pass
+before JSON or NumPy decoding. Independently supplied source tree and entire
+leaf-inventory SHA are mandatory, not merely syntax-checked strings.
+
+The receiver authenticates the exact frozen packages/descriptor, Phase A,
+historical rejected predecessors, retained paired CoM pass and its **separate
+temporal negative**. Current CPU proof must match exact test list/count, environment,
+fixture inventory, completed distinct invocation and caps. Native owner/child/PID
+chain, actual bounded telemetry, WDDM unknown per-PID memory and fresh idle
+post-child host are required. CoM/CRB controls, actual two bias-RNE and two original
+sensory calls, initialized/accumulated arrays and unchanged-live scratch receipts
+are all checked.
+
+The narrow decision `fresh-rne-serial-reference-exact` requires both actual RNE
+initialized snapshots exact, both CoM initialized snapshots exact, both serial
+CoM weighted snapshots equal their literal recurrence, and **every scalar of all
+32 serial detached RNE reductions** equal its independent float32 recurrence.
+Otherwise retain `fresh-rne-negative`. Both concurrent and serial full banks,
+32-repeat rows, all 64 worlds, body0/body1/other-body totals, signed raw-bit
+distances and complete compact negative coordinates are retained; more than
+16,384 coordinates is refused before coordinate allocation, never truncated.
+Complete receiver output is capped at 4 MiB outside the GPU run's per-file cap.
+The actual original RNE output arithmetic and all 17 constructor-to-forward frame
+rows remain **separate facts**, not implied positive by detached arithmetic.
+All seven training/storage/historical/hardware admission flags remain false.
+
+Independent read-only review found no additional supervisor-level launch blocker
+and performed no tests/device/native/service actions. Integration review caught
+a native layout assumption copied by its synthetic fixture: spatial-vector
+array row stride was incorrectly declared 1,536 bytes. A real CPU allocation
+verified the correct `(64,16)` strides **(384,24)**. The owner corrected the
+receiver and fixture, added that real-allocation check and explicit rejection of
+the old assumed stride, and enforced the complete retained CPU fixture binding.
+The two focused supervisor/receiver modules passed **44 in 5.57 s** after these
+changes; Ruff lint/format pass. Full regression, tested source commit/push and
+fresh native CPU prerequisite are still pending before GPU launch.
+
+Final local full regression passed **2,093 in 173.22 s**, zero skips, after the
+layout/fixture repairs and finalized constants. Owner checks confirmed the
+candidate committed-leaf inventory is exactly 649 and the ordered 67-file hash
+matches the predeclaration. The native host is still idle, protected services
+inactive and FilmBrain unchanged. This closes local source testing only; the
+fresh native CPU receipt and independent completed closeout remain prerequisites.

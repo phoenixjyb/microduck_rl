@@ -185,3 +185,64 @@ the private cache path. No installed config or shared cache is edited. Two new
 mocked configuration checks and one receiver PCH-mutation check bring the final
 predeclared count to2652 tests. Source checks also reject symlink parents and
 nonregular tracked-file substitutions.
+
+## Exact-source prerequisite and missing-fixture diagnosis
+
+Execution preparation was committed/pushed as
+`e6bd1f971641301ee4aa1b9207f1b5b8da664447`. Its full Mac85-file regression passed
+**2652 tests in252.03s**, zero skips/errors/failures, with complete committed
+source leaves unchanged before/after. Retain
+`artifacts/tools/friction-prefix-cuda-release-mac-e6bd1f971641`.
+
+The same-source WSL unit
+`microduck-friction-prefix-cuda-tests-e6bd1f971641.service`, invocation
+`ee2a20a8e03a4a37b1dce385d802f2ae`, completed pytest with2533 passes and119 skips
+in175.77s. The unchanged zero-skip gate rejected it with exit1/MainPID0; **no
+CUDA probe started**. Preserve the failed unit and its partial root, not a pass:
+`artifacts/tools/friction-prefix-cuda-tests-e6bd1f971641`. Before XML decoding,
+independently authenticate JUnit516390B /
+`17c4192fd1610228de6aa14a325e5f89a875426704104591a1804be1cf38261a`
+and full log3006B /
+`47e0cd990f718c26694df760f7f26f640595bf1c35ce810c5b40fe808437e813`.
+Exact skipped cases/reasons are retained in
+`artifacts/tools/friction-prefix-cuda-prerequisite-diagnosis-e6bd1f971641/diagnosis.json`.
+
+Read-only diagnosis found missing optional historical **reader** fixtures in the
+lean WSL checkout, not a package/driver mismatch or a failed assertion. The
+reasons group as62 missing preparation tensor samples,34 missing retained CUDA64
+bytes,14 missing parent/plant metadata,4 missing saved-launch failure records,
+2 missing verifier records, and one each missing saved update, closed audit and
+preflight-failure record. These portable mirrors already exist on Mac and were
+used by the successful strict regression. Never manufacture replacements,
+weaken the gate, edit old test/protocol allowlists, or reinterpret them as a new
+native capture.
+
+The next prerequisite preparation is an additive, whole-authenticated mirror
+copy into six previously absent WSL paths,133 original files/29267043B. The
+external fixture inventory is29243B /
+`49b4a5938458a27cdba56c3c6ab5a64a5128793ef29263c3908bd8cbdb0731bb`;
+transport tar29391360B /
+`062acd1f252e0a23b8b8d6618928b1dc8ede0b902fa06164d8778654af2c8bcf`.
+Authenticate both complete files before parsing/extraction, reject unsafe or
+nonregular archive members, require the exact manifest leaves and all file
+hashes, and exclusively create only absent mirror files. Preserve every
+existing artifact, historical checkout and failed service. Independently verify
+the whole copied133-file inventory before rerunning tests. The copy is old
+test-data availability, **not current simulation, optimizer, CUDA or training
+qualification**. CPU/runtime/numerical/cutoff gates and code remain unchanged.
+
+Use a fresh unit/output name derived from this subsequent documentation-only
+revision; do not restart or overwrite the failed e6bd1f97 unit. Require the same
+full85-file/2652-test zero-omission regression at that clean exact revision on
+both hosts before any fresh CUDA child. Retain actual copy verification and the
+new successful prerequisite evidence separately.
+
+The additive copy completed and all133 file bytes matched before/after native
+write/fsync. Retain native
+`artifacts/tools/friction-prefix-cuda-fixtures-oct8/verification.json`,499B /
+`173f85fa548999f2988df11f14545bccc89b8e4ed59b44489390ad28cc7b5b2d`.
+The initial verification call preceded transport completion and failed read-only
+on the absent manifest; it created no mirror files. After transport closed,
+the complete externally anchored archive/manifest were authenticated, all
+six paths were confirmed absent, and only then were file bytes created and
+independently rehashed. The failed test unit was not restarted or changed.

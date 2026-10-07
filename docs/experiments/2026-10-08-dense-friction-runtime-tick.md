@@ -29,6 +29,13 @@ forward plus exactly one zero-action nominal ten-substep tick. Each arm has
 21 friction entries and ten accepted BAM proposals; total63 entries and30
 proposals. There is no second tick, reset, terminal, graph, actor, optimizer,
 learning storage, perception input, video, or physical robot.
+Before these private recipe forks, initialize the fresh caller CPU stream to
+seed673 and CUDA0 stream to seed677 exactly once, matching the unchanged
+low-level recipe's caller contract. Retain actual whole caller-state lengths
+and hashes immediately after setup and require every arm's before/after
+caller packets to match them. Refuse early Torch CUDA initialization, multiple
+devices, wrong CPU state or any changed caller stream; never reseed between
+arms to repair a mismatch.
 
 Borrow only the unchanged low-level `_case` recipe from
 `stance_bam_load_probe`, `SerialStepControl`, and `BamLoadObserver`. These
@@ -78,7 +85,7 @@ substitute the new source closure for its historical execution source.
 
 Before GPU admission, the new exact source must pass the retained85-file
 regression plus five new test files on Mac and WSL, with a declared exact
-collected test count of **2811**, no skips/errors/failures, complete committed-source
+collected test count of **2822**, no skips/errors/failures, complete committed-source
 before/after closure and frozen package/environment witnesses. Source tests
 alone never admit runtime equivalence. Pin the existing lean `.venv` alias,
 canonical Warp library/header bytes, packages, host/GPU/driver identity and
@@ -192,3 +199,47 @@ empty after failure; FilmBrain remained PID521/PID298048 with zero restarts,
 and protected services remained inactive. A fresh corrected-source execution
 requires the full2811-test Mac/WSL prerequisites again, not a restart or reuse
 of the failed unit or its CPU receipts.
+
+### Retained caller-RNG setup refusal
+
+Corrected execution source `2ca1dc934c1e0b5451d2de34b6314676722ac09d` passed
+all2811 tests on Mac (197.69s) and WSL (180.86s), zero omissions. Mac CPU
+inventory319 bytes SHA256
+`3f8d29e2713a25686bb9ef0b4b35ec451064ce697511fc51955fed02969b36b2`;
+WSL CPU inventory319 bytes SHA256
+`dffebfd87b15e265e57425c112be1ae6aad30ee6a278623633b08e0c81584ca3`.
+CPU invocation `192c3d232cc34b2eb5d344eaa69e859f` exited successfully.
+
+Run invocation `a8061f37fa0e4b479867d6d655f57ba2`, ownerPID3947764,
+childPID3947828, failed exit1 at the unchanged recipe's final
+`checked_rng`: `ValueError: literal caller/private CPU seed state`. The raw
+original arm contains84 target binary packets (21 complete friction entries);
+no completed arm receipt, candidate arm or successful three-arm decision
+exists. Fifteen samples retained30–32C and only the owned child; afterward
+GPU compute PIDs were empty and protected/FilmBrain states were unchanged.
+
+Read-only source diagnosis showed the old wrapper's caller initialization:
+`torch.manual_seed(673)`, CUDA0 selection, then `torch.cuda.manual_seed(677)`.
+The low-level `_case` preserves these callers around its private977/983 fork.
+The new wrapper had omitted caller initialization. A CPU-only generator with
+seed673 on the frozen Mac returned5056 bytes and the exact required whole
+hash `ba8adae6f1ee70135e097a78de4f08bb885703e3eca406e93e9acf7aafaba8fa`.
+The reviewed fix explicitly declares and observes that fresh setup, retains
+whole CPU/CUDA caller-state anchors, and independently ties every arm's caller
+before/after packets to them. It does not modify the old recipe or RNG gate,
+reuse old owner admission, repair packets, or select successful retries.
+
+The182-file failed raw run (182719557 bytes) remains on both hosts at
+`artifacts/evaluations/friction-runtime-tick-run-2ca1dc934c1e`; closeout root
+`artifacts/tools/friction-runtime-tick-failure-2ca1dc934c1e` has inventory30613
+bytes SHA256
+`c1da3e3f2f379085522b35e7cbb9e230250fbcfb319592391f3be77faf8b8cdb`.
+Independent Mac authentication matched every whole leaf before interpreting
+packets. Terminal106 bytes SHA256
+`bdc7b9690882491f1b59c9c0456600ee689d8918570fa372c858fbfbf0883358`;
+host-after177882 bytes SHA256
+`7fd2a31b7e14aa61607f5e39ccfca77c26791c69dbe1cd6d82470429d725e608`.
+Both failed units and all raw/private caches remain unchanged. Eleven new
+setup/receipt refusal cases bring the frozen90-file scope to2822 tests.
+Fresh exact-source Mac/WSL suites and the original bounded caps/lease gates
+are required before another separately sourced execution.

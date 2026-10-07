@@ -11,6 +11,57 @@ from mjlab_microduck import stance_friction_runtime_probe as probe
 
 
 @pytest.mark.parametrize(
+    "mutation", [None, "initialized", "count", "device", "cpu-state"]
+)
+def test_caller_rng_setup_is_fresh_seeded_and_single_device(mutation):
+    import torch
+
+    calls = []
+    generator = torch.Generator(device="cpu")
+
+    class FakeCuda:
+        def is_initialized(self):
+            return mutation == "initialized"
+
+        def set_device(self, device):
+            calls.append(("device", device))
+
+        def manual_seed(self, seed):
+            calls.append(("cuda", seed))
+
+        def device_count(self):
+            return 2 if mutation == "count" else 1
+
+        def current_device(self):
+            return 1 if mutation == "device" else 0
+
+        def get_rng_state(self, device):
+            assert device == 0
+            return torch.zeros(
+                16, dtype=torch.uint8
+            )  # Source-only fake, not a CUDA seed proof.
+
+    def manual_seed(seed):
+        calls.append(("cpu", seed))
+        generator.manual_seed(seed + (1 if mutation == "cpu-state" else 0))
+
+    fake = SimpleNamespace(
+        cuda=FakeCuda(), manual_seed=manual_seed, get_rng_state=generator.get_state
+    )
+    if mutation is not None:
+        with pytest.raises(ValueError):
+            probe.initialize_caller_rng(fake)
+    else:
+        value = probe.initialize_caller_rng(fake)
+        assert value["seeds"] == {"cpu": 673, "cuda": 677}
+        assert value["states"]["cpu"] == {
+            "bytes": 5056,
+            "sha256": "ba8adae6f1ee70135e097a78de4f08bb885703e3eca406e93e9acf7aafaba8fa",
+        }
+        assert calls == [("cpu", 673), ("device", 0), ("cuda", 677)]
+
+
+@pytest.mark.parametrize(
     "mutation",
     [
         None,

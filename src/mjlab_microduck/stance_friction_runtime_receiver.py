@@ -739,6 +739,33 @@ def owner_window(declaration, owner, child_pid):
         previous = elapsed
 
 
+def caller_rng_receipt(value):
+    need(
+        type(value) is dict
+        and set(value) == {"seeds", "states"}
+        and type(value["seeds"]) is dict
+        and value["seeds"] == {"cpu": 673, "cuda": 677}
+        and all(type(seed) is int for seed in value["seeds"].values())
+        and type(value["states"]) is dict
+        and set(value["states"]) == {"cpu", "cuda"},
+        "explicit fresh caller RNG setup",
+    )
+    for name, state in value["states"].items():
+        need(
+            type(state) is dict and set(state) == {"bytes", "sha256"},
+            "whole caller RNG anchor",
+        )
+        plain(state["bytes"], 1, 16384)
+        sha(state["sha256"])
+        if name == "cpu":
+            need(
+                state["bytes"] == 5056
+                and state["sha256"] == rng_checks.CPU_SEED_HASHES["caller_cpu_before"],
+                "literal seeded CPU caller anchor",
+            )
+    return value["states"]
+
+
 def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
     raw = authenticate(directory, inventory)
     need(
@@ -774,6 +801,7 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
                 "mac_tests_inventory_sha256",
                 "dependency",
                 "case_order",
+                "caller_rng_seeds",
                 "started_utc_ns",
                 "cutoff_utc",
                 "child_timeout_seconds",
@@ -792,6 +820,7 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
                 "compiler_config",
                 "compiled",
                 "arms",
+                "caller_rng",
             },
         ),
         (
@@ -867,7 +896,10 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
         component.host(sample, child=child_pid)
     need(
         declaration["case_order"] == list(ARMS)
-        and declaration["cutoff_utc"] == "2026-10-07T23:30:00Z",
+        and declaration["cutoff_utc"] == "2026-10-07T23:30:00Z"
+        and type(declaration["caller_rng_seeds"]) is dict
+        and declaration["caller_rng_seeds"] == {"cpu": 673, "cuda": 677}
+        and all(type(seed) is int for seed in declaration["caller_rng_seeds"].values()),
         "three sequential arms and absolute cutoff",
     )
     dependency = declaration["dependency"]
@@ -899,6 +931,7 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
     )
     component.compiled(child["compiled"], raw, inventory, native_directory, device)
     arms = child["arms"]
+    caller_states = caller_rng_receipt(child["caller_rng"])
     need(type(arms) is dict and set(arms) == set(ARMS), "exact fresh three-arm records")
     entries, packets = {}, {}
     for arm in ARMS:
@@ -908,6 +941,15 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
             "complete arm schema",
         )
         packets[arm] = recipe(arms[arm]["recipe"], arms[arm]["packets"], raw, arm)
+        need(
+            all(
+                arms[arm]["recipe"]["rng_metadata"][f"caller_{dev}_{phase}"]
+                == caller_states[dev]
+                for dev in ("cpu", "cuda")
+                for phase in ("before", "after")
+            ),
+            "actual seeded caller streams preserved across each fresh arm",
+        )
         entries[arm] = observer(
             arms[arm]["observer"],
             raw,

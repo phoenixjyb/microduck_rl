@@ -14,6 +14,37 @@ def _anchor(raw):
     return {"bytes": len(raw), "sha256": sha256(raw).hexdigest()}
 
 
+@pytest.mark.parametrize(
+    "mutation", [None, "seeds", "cpu-hash", "cuda-zero", "cuda-hash", "schema"]
+)
+def test_caller_rng_receipt_binds_literal_seeds_and_complete_state_anchors(mutation):
+    value = {
+        "seeds": {"cpu": 673, "cuda": 677},
+        "states": {
+            "cpu": {
+                "bytes": 5056,
+                "sha256": "ba8adae6f1ee70135e097a78de4f08bb885703e3eca406e93e9acf7aafaba8fa",
+            },
+            "cuda": {"bytes": 16, "sha256": "a" * 64},
+        },
+    }
+    if mutation is None:
+        assert receiver.caller_rng_receipt(value) == value["states"]
+        return
+    if mutation == "seeds":
+        value["seeds"]["cpu"] = 673.0
+    elif mutation == "cpu-hash":
+        value["states"]["cpu"]["sha256"] = "0" * 64
+    elif mutation == "cuda-zero":
+        value["states"]["cuda"]["bytes"] = 0
+    elif mutation == "cuda-hash":
+        value["states"]["cuda"]["sha256"] = "not-a-hash"
+    else:
+        value["extra"] = True
+    with pytest.raises(ValueError):
+        receiver.caller_rng_receipt(value)
+
+
 def _owner_window():
     start = int((producer.CUTOFF - 1000) * 10**9)
     declaration = {

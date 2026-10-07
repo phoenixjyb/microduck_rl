@@ -25,11 +25,12 @@ BRANCH = "feat/athletics-obstacle-curriculum"
 CUTOFF = prefix.CUTOFF
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 600, 540, 240, 60
 CPU_SERVICE_SECONDS, CPU_TEST_SECONDS = 660, 600
-EXPECTED_TESTS = 2811
+EXPECTED_TESTS = 2822
 TEST_FILES_SHA256 = "813982eba674deb8947e4686ea8203313660bedeffaa8dbdf76cd934656262fb"
 LOCK = prefix.LOCK
 FLAGS = prefix.FLAGS
 ARMS = ("original", "candidate0", "candidate1")
+CALLER_RNG_SEEDS = {"cpu": 673, "cuda": 677}
 OWN = {
     "src/mjlab_microduck/stance_friction_runtime_kernel.py",
     "src/mjlab_microduck/stance_friction_runtime_numerical.py",
@@ -607,6 +608,36 @@ def frozen_dispatch_entries(constraint, fixture):
     )
 
 
+def initialize_caller_rng(torch):
+    """Set the declared fresh caller streams once; recipe forks preserve them."""
+    need(not torch.cuda.is_initialized(), "fresh Torch CUDA before caller RNG setup")
+    torch.manual_seed(CALLER_RNG_SEEDS["cpu"])
+    torch.cuda.set_device(0)
+    torch.cuda.manual_seed(CALLER_RNG_SEEDS["cuda"])
+    need(
+        torch.cuda.device_count() == 1 and torch.cuda.current_device() == 0,
+        "single declared Torch CUDA device for caller streams",
+    )
+    raw = {
+        "cpu": torch.get_rng_state().cpu().numpy().tobytes(),
+        "cuda": torch.cuda.get_rng_state(0).cpu().numpy().tobytes(),
+    }
+    need(
+        len(raw["cpu"]) == 5056
+        and sha256(raw["cpu"]).hexdigest()
+        == "ba8adae6f1ee70135e097a78de4f08bb885703e3eca406e93e9acf7aafaba8fa"
+        and 0 < len(raw["cuda"]) <= 16384,
+        "actual bounded seeded caller streams",
+    )
+    return {
+        "seeds": dict(CALLER_RNG_SEEDS),
+        "states": {
+            name: {"bytes": len(value), "sha256": sha256(value).hexdigest()}
+            for name, value in raw.items()
+        },
+    }
+
+
 def child(source, lease_fd, owner_pid, declaration_sha):
     check_window(CHILD_SECONDS + CLOSEOUT_SECONDS + MARGIN)
     need(
@@ -632,7 +663,8 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         and declaration["libraries"] == libraries
         and declaration["warp_sources"] == warp_sources
         and declaration["owner_pid"] == owner_pid
-        and declaration["lease"] == lease,
+        and declaration["lease"] == lease
+        and declaration["caller_rng_seeds"] == CALLER_RNG_SEEDS,
         "same exact source, package, alias, library, compiler-source and lease declaration",
     )
     cache = directory / "private-warp-cache"
@@ -642,6 +674,8 @@ def child(source, lease_fd, owner_pid, declaration_sha):
     )
 
     import torch
+
+    caller_rng = initialize_caller_rng(torch)
     import warp as wp
     from warp._src import context as ctx
     from mujoco_warp._src import constraint
@@ -849,6 +883,7 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         "device": device_record,
         "compiler_config": compiler_config,
         "compiled": compiled,
+        "caller_rng": caller_rng,
         "arms": {
             name: {
                 "recipe": recipe_arms[name]["record"],
@@ -1023,6 +1058,7 @@ def run(source, tests_inventory_sha, mac_tests_inventory_sha):
             "mac_tests_inventory_sha256": mac_tests_inventory_sha,
             "dependency": historical,
             "case_order": list(ARMS),
+            "caller_rng_seeds": dict(CALLER_RNG_SEEDS),
             "started_utc_ns": time.time_ns(),
             "cutoff_utc": "2026-10-07T23:30:00Z",
             "child_timeout_seconds": CHILD_SECONDS,

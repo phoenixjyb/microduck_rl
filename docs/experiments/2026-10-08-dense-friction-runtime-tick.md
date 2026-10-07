@@ -60,7 +60,9 @@ Compile and explicitly load the original constraint and candidate modules
 fresh into a unique retained directory at native sm120, process-local PCH
 disabled, no shared-cache changes. Bind actual executable/hooks, complete
 generated source/CUBIN/metadata, module options/hash and loaded Warp paths;
-check these bindings before/after each dispatch. Other recipe kernels use
+check these bindings before/after each dispatch. Pin the actual `_efc_row`
+helper, function and code to the unchanged fixture-captured objects before
+compilation and during dispatch, alongside the original kernel. Other recipe kernels use
 the same process-private cache, whose complete leaves are retained.
 
 ## Admission and retained ownership
@@ -72,7 +74,7 @@ substitute the new source closure for its historical execution source.
 
 Before GPU admission, the new exact source must pass the retained85-file
 regression plus five new test files on Mac and WSL, with a declared exact
-collected test count of **2800**, no skips/errors/failures, complete committed-source
+collected test count of **2807**, no skips/errors/failures, complete committed-source
 before/after closure and frozen package/environment witnesses. Source tests
 alone never admit runtime equivalence. Pin the existing lean `.venv` alias,
 canonical Warp library/header bytes, packages, host/GPU/driver identity and
@@ -134,5 +136,11 @@ literal false. Any longer window requires a separate predeclaration.
 
 Predeclared before native execution. The113 new focused CPU tests passed
 (2.60s), and the full90-file scope collected exactly2800 tests (10.63s).
-Ruff checks passed. Full committed-source Mac/WSL CPU prerequisites and native
-execution are still pending; no new runtime or training result exists yet.
+Ruff checks passed. Initial source `955e78bdc80a8366a6a4cefd51f7ba2964a81cab`
+passed the complete2800-test suite on Mac (193.32s) and WSL (175.81s), zero
+omissions. Read-only review then identified a missing in-memory shared-row
+helper guard; its correction adds seven replacement-rejection tests. The
+revised90-file scope collects2807 tests (9.54s). Full revised-source CPU
+prerequisites and native execution remain pending; no new runtime or training
+result exists yet. Earlier proofs remain retained, not substituted for the
+revised execution source.

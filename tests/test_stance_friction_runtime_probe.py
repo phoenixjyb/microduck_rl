@@ -3,10 +3,62 @@
 import ast
 from hashlib import sha1, sha256
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from mjlab_microduck import stance_friction_runtime_probe as probe
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        None,
+        "kernel-object",
+        "kernel-func",
+        "kernel-code",
+        "row-object",
+        "row-func",
+        "row-code",
+    ],
+)
+def test_dispatch_entries_pin_shared_helper_and_kernel_code(monkeypatch, mutation):
+    def kernel_func():
+        return 1
+
+    def row_func():
+        return 2
+
+    def foreign():
+        return 3
+
+    kernel, row = SimpleNamespace(func=kernel_func), SimpleNamespace(func=row_func)
+    constraint = SimpleNamespace(_friction_dof=kernel, _efc_row=row)
+    fixture = SimpleNamespace(
+        _ORIGINAL_KERNEL=kernel,
+        _ORIGINAL_KERNEL_FUNC=kernel_func,
+        _ORIGINAL_KERNEL_CODE=kernel_func.__code__,
+        _ORIGINAL_EFC_ROW=row,
+        _ORIGINAL_EFC_FUNC=row_func,
+        _ORIGINAL_EFC_CODE=row_func.__code__,
+    )
+    if mutation is None:
+        probe.frozen_dispatch_entries(constraint, fixture)
+        return
+    kind, slot = mutation.split("-")
+    name, function, wrapped = (
+        ("_friction_dof", kernel_func, kernel)
+        if kind == "kernel"
+        else ("_efc_row", row_func, row)
+    )
+    if slot == "object":
+        setattr(constraint, name, SimpleNamespace(func=function))
+    elif slot == "func":
+        wrapped.func = foreign
+    else:
+        monkeypatch.setattr(function, "__code__", foreign.__code__)
+    with pytest.raises(ValueError, match="shared row helper identity/code"):
+        probe.frozen_dispatch_entries(constraint, fixture)
 
 
 def _git_tree_entry(name, raw):

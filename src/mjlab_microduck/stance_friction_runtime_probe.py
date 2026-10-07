@@ -25,7 +25,7 @@ BRANCH = "feat/athletics-obstacle-curriculum"
 CUTOFF = prefix.CUTOFF
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 600, 540, 240, 60
 CPU_SERVICE_SECONDS, CPU_TEST_SECONDS = 660, 600
-EXPECTED_TESTS = 2800
+EXPECTED_TESTS = 2807
 TEST_FILES_SHA256 = "813982eba674deb8947e4686ea8203313660bedeffaa8dbdf76cd934656262fb"
 LOCK = prefix.LOCK
 FLAGS = prefix.FLAGS
@@ -594,6 +594,19 @@ def _compile_modules(wp, ctx, artifacts, device, directory):
     return records, bindings, roles
 
 
+def frozen_dispatch_entries(constraint, fixture):
+    """Pin the executable kernel and shared row helper to captured frozen code."""
+    need(
+        constraint._friction_dof is fixture._ORIGINAL_KERNEL
+        and constraint._friction_dof.func is fixture._ORIGINAL_KERNEL_FUNC
+        and fixture._ORIGINAL_KERNEL_FUNC.__code__ is fixture._ORIGINAL_KERNEL_CODE
+        and constraint._efc_row is fixture._ORIGINAL_EFC_ROW
+        and constraint._efc_row.func is fixture._ORIGINAL_EFC_FUNC
+        and fixture._ORIGINAL_EFC_FUNC.__code__ is fixture._ORIGINAL_EFC_CODE,
+        "frozen friction kernel and shared row helper identity/code",
+    )
+
+
 def child(source, lease_fd, owner_pid, declaration_sha):
     check_window(CHILD_SECONDS + CLOSEOUT_SECONDS + MARGIN)
     need(
@@ -688,10 +701,12 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         "synchronize": (wp.synchronize_stream, wp.synchronize_stream.__code__),
     }
     recipe_case, recipe_case_code = bam._case, bam._case.__code__
+    frozen_dispatch_entries(constraint, base)
     compiled, bound, _roles = _compile_modules(wp, ctx, artifacts, device, directory)
     active_observer = None
 
     def guard():
+        frozen_dispatch_entries(constraint, base)
         need(
             environment_binding() == alias, "frozen environment alias through dispatch"
         )

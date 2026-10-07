@@ -156,6 +156,7 @@ CONSTRUCTION_ROW_FIELDS = (
     "efc.Jqvel",
 )
 POST_FORWARD_LOAD_PAIRS = ((0, 0), (2, 1), (4, 2), (6, 3))
+MAX_ROW_VIEW_SAMPLES = 128
 SOLVED_LOAD_CARRIERS = {
     "data.nefc": ((64,), "<i4"),
     "efc.id": ((64, 512), "<i4"),
@@ -1530,6 +1531,180 @@ def compare_linked_contact_construction(
             "and local row ordinal, at separately retained original offsets; "
             "not complete contact equality, fresh allocation, physical identity, "
             "solver equivalence, cause or qualification; no compared words means null exact"
+        ),
+    }
+
+
+def compare_all_observed_construction(
+    left_after, left_complete, right_after, right_complete
+):
+    """Partition active storage rows, not physical constraints or solver inputs.
+
+    Contact rows use unique captured payload links; non-contact rows can only
+    match identical type/id markers at the same original world/row. Never search
+    for or normalize moved markers. Full coverage means an explicit row-set
+    partition for these captured fields, not full solver equivalence.
+    """
+    contact = compare_linked_contact_construction(
+        left_after, left_complete, right_after, right_complete
+    )
+    counts = [
+        list(_int_words(bank["data.nefc"])) for bank in (left_complete, right_complete)
+    ]
+    need(
+        counts[0] == counts[1], "same bounded per-world extents for full row side view"
+    )
+    active = {
+        (world, row) for world, count in enumerate(counts[0]) for row in range(count)
+    }
+    covered = [set(), set()]
+    for link in contact["compared_payload_links"]:
+        for arm, key in enumerate(("left_rows", "right_rows")):
+            for row in link[key]:
+                point = (link["world"], row)
+                need(
+                    point in active and point not in covered[arm],
+                    "unique active contact row coverage",
+                )
+                covered[arm].add(point)
+    types = [_int_words(bank["efc.type"]) for bank in (left_complete, right_complete)]
+    totals = {
+        name: {
+            "compared_words": 0,
+            "differing_words": 0,
+            "exact": None,
+            "first_difference": None,
+        }
+        for name in CONSTRUCTION_ROW_FIELDS
+    }
+    matches, unpaired = [], []
+    noncontact = set()
+    for world, count in enumerate(counts[0]):
+        for row in range(count):
+            index = world * CONTACT_NJMAX + row
+            a, b = types[0][index], types[1][index]
+            if a in (5, 6) and b in (5, 6):
+                continue
+            if not (a in range(5) and b in range(5)) or any(
+                left_complete[name]["raw"][index * 4 : (index + 1) * 4]
+                != right_complete[name]["raw"][index * 4 : (index + 1) * 4]
+                for name in ("efc.id", "efc.type")
+            ):
+                unpaired.append(
+                    {
+                        "world": world,
+                        "row": row,
+                        "left_type": a,
+                        "right_type": b,
+                        "left_id_word_le_hex": left_complete["efc.id"]["raw"][
+                            index * 4 : (index + 1) * 4
+                        ].hex(),
+                        "right_id_word_le_hex": right_complete["efc.id"]["raw"][
+                            index * 4 : (index + 1) * 4
+                        ].hex(),
+                        "status": "same-offset-markers-unpaired-or-unsupported",
+                    }
+                )
+                continue
+            point = (world, row)
+            need(
+                all(point not in bank for bank in covered),
+                "noncontact/contact coverage disjoint",
+            )
+            noncontact.add(point)
+            matches.append({"world": world, "row": row, "type": a})
+            for name in CONSTRUCTION_ROW_FIELDS:
+                words = prod(left_complete[name]["shape"][2:])
+                start, end = index * words * 4, (index + 1) * words * 4
+                x, y = (
+                    left_complete[name]["raw"][start:end],
+                    right_complete[name]["raw"][start:end],
+                )
+                total = totals[name]
+                total["compared_words"] += words
+                total["differing_words"] += sum(
+                    x[i : i + 4] != y[i : i + 4] for i in range(0, len(x), 4)
+                )
+                if x != y and total["first_difference"] is None:
+                    word = _first_raw_word(x, y)
+                    total["first_difference"] = {
+                        "world": world,
+                        "row": row,
+                        "component": word["word_index"],
+                        "byte_offset": start + word["word_index"] * 4,
+                        "left_word_le_hex": word["left_word_le_hex"],
+                        "right_word_le_hex": word["right_word_le_hex"],
+                    }
+    for total in totals.values():
+        if total["compared_words"]:
+            total["exact"] = total["differing_words"] == 0
+    combined = [bank | noncontact for bank in covered]
+    partition = all(bank == active for bank in combined)
+    payload_complete = not any(
+        contact[name]
+        for name in (
+            "unobserved_payload_links",
+            "ambiguous_payload_groups",
+            "unmatched_payload_groups",
+        )
+    )
+    uncovered = {
+        label: [
+            [world, row]
+            for world, count in enumerate(counts[0])
+            for row in range(count)
+            if (world, row) not in bank
+        ]
+        for label, bank in zip(("left", "right"), combined)
+    }
+    return {
+        "protocol": "microduck-active-construction-row-partition-oct8-v1",
+        "phase_source_sha256": DENSE_CONSTRUCTION_SOURCE_SHA256,
+        "active_row_count_per_arm": len(active),
+        "contact_rows_covered_per_arm": [len(bank) for bank in covered],
+        "same_offset_noncontact_rows_covered": len(noncontact),
+        "row_partition_complete": partition,
+        "captured_payload_links_complete": payload_complete,
+        "full_active_row_coverage": (partition and payload_complete)
+        if active
+        else None,
+        "coverage_status": "no-active-rows"
+        if not active
+        else "complete-captured-subset"
+        if partition and payload_complete
+        else "partial-inconclusive",
+        "payload_link_exclusion_counts": {
+            name: len(contact[name])
+            for name in (
+                "unobserved_payload_links",
+                "ambiguous_payload_groups",
+                "unmatched_payload_groups",
+            )
+        },
+        "uncovered_active_row_counts": {
+            label: len(rows) for label, rows in uncovered.items()
+        },
+        "uncovered_active_rows": {
+            label: rows[:MAX_ROW_VIEW_SAMPLES] for label, rows in uncovered.items()
+        },
+        "same_offset_noncontact_matches": matches[:MAX_ROW_VIEW_SAMPLES],
+        "unpaired_noncontact_offset_count": len(unpaired),
+        "unpaired_noncontact_offsets": unpaired[:MAX_ROW_VIEW_SAMPLES],
+        "sample_limit": MAX_ROW_VIEW_SAMPLES,
+        "samples_truncated": any(
+            len(rows) > MAX_ROW_VIEW_SAMPLES
+            for rows in (*uncovered.values(), matches, unpaired)
+        ),
+        "noncontact_field_comparisons": totals,
+        "contact_field_comparisons": contact["field_comparisons"],
+        "uncaptured_contact_parameters": contact["uncaptured_contact_parameters"],
+        "raw_packets_unchanged": True,
+        "flags": dict(FLAGS),
+        "interpretation": (
+            "explicit active storage row-set partition for the captured eight-field subset; "
+            "noncontact markers matched only at identical offsets; partial coverage is "
+            "inconclusive; complete equality is consistency, not physical identity, "
+            "all-driver equality, solver equivalence, causal proof or qualification"
         ),
     }
 

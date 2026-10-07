@@ -1021,6 +1021,169 @@ def test_load_view_one_sided_observed_rows_are_not_compared(all_contacts):
     assert result["snapshot_provenance_established_by_helper"] is False
 
 
+def _partition_pair():
+    after = _payload_bank(2)
+    complete = _complete_view_bank(world=0, count=10)
+    after["data.nefc"] = deepcopy(complete["data.nefc"])
+    for index in range(2):
+        _change_raw_word(after, "contact.dim", index, struct.pack("<i", 3))
+        _change_raw_word(after, "contact.type", index, struct.pack("<i", 1))
+        for ordinal in range(4):
+            row = 2 + index * 4 + ordinal
+            _change_raw_word(
+                after,
+                "contact.efc_address",
+                index * 4 + ordinal,
+                struct.pack("<i", row),
+            )
+            _change_raw_word(complete, "efc.id", row, struct.pack("<i", index))
+            _change_raw_word(complete, "efc.type", row, struct.pack("<i", 6))
+    right_after, right_complete = deepcopy((after, complete))
+    raw = right_after["contact.dist"]["raw"]
+    right_after["contact.dist"]["raw"] = raw[4:8] + raw[:4] + raw[8:]
+    return after, complete, right_after, right_complete
+
+
+def test_partition_proves_row_sets_with_separate_original_contact_offsets():
+    banks = _partition_pair()
+    before = deepcopy(banks)
+    result = receiver.compare_all_observed_construction(*banks)
+    assert banks == before
+    assert result["active_row_count_per_arm"] == 10
+    assert result["contact_rows_covered_per_arm"] == [8, 8]
+    assert result["same_offset_noncontact_rows_covered"] == 2
+    assert result["row_partition_complete"] is True
+    assert result["full_active_row_coverage"] is True
+    assert result["uncovered_active_rows"] == {"left": [], "right": []}
+    assert result["noncontact_field_comparisons"]["efc.J"]["compared_words"] == 40
+    assert all(
+        value["exact"] is True
+        for value in result["noncontact_field_comparisons"].values()
+    )
+    assert not any(result["flags"].values())
+
+
+@pytest.mark.parametrize("name", receiver.CONSTRUCTION_ROW_FIELDS)
+def test_partition_reports_noncontact_field_delta_at_unchanged_storage_offset(name):
+    banks = _partition_pair()
+    width = receiver.prod(banks[3][name]["shape"][2:])
+    component = 7 if width > 1 else 0
+    _change_raw_word(banks[3], name, width + component)
+    result = receiver.compare_all_observed_construction(*banks)
+    assert result["full_active_row_coverage"] is True
+    field = result["noncontact_field_comparisons"][name]
+    assert field["exact"] is False and field["differing_words"] == 1
+    assert field["first_difference"]["world"] == 0
+    assert field["first_difference"]["row"] == 1
+    assert field["first_difference"]["component"] == component
+    assert field["first_difference"]["byte_offset"] == (width + component) * 4
+
+
+@pytest.mark.parametrize("damage", ("marker", "unknown_type", "ambiguous", "unmatched"))
+def test_partition_partial_or_ambiguous_coverage_stays_inconclusive(damage):
+    banks = _partition_pair()
+    if damage == "marker":
+        _change_raw_word(banks[3], "efc.id", 0, struct.pack("<i", 999))
+    elif damage == "unknown_type":
+        for bank in (banks[1], banks[3]):
+            _change_raw_word(bank, "efc.type", 0, struct.pack("<i", 7))
+    elif damage == "ambiguous":
+        for bank in (banks[0], banks[2]):
+            _change_raw_word(bank, "contact.dist", 1, bank["contact.dist"]["raw"][:4])
+    else:
+        _change_raw_word(banks[2], "contact.dist", 0, struct.pack("<I", 123))
+    result = receiver.compare_all_observed_construction(*banks)
+    assert result["full_active_row_coverage"] is False
+    assert (
+        result["uncovered_active_rows"]["left"]
+        or result["uncovered_active_rows"]["right"]
+    )
+    assert not any(result["flags"].values())
+    if damage == "marker":
+        assert (
+            result["unpaired_noncontact_offsets"][0]["left_id_word_le_hex"]
+            == "00000000"
+        )
+        assert (
+            result["unpaired_noncontact_offsets"][0]["right_id_word_le_hex"]
+            == struct.pack("<i", 999).hex()
+        )
+    elif damage == "ambiguous":
+        assert result["payload_link_exclusion_counts"]["ambiguous_payload_groups"] > 0
+
+
+def test_partition_empty_row_comparisons_are_null_not_admission():
+    after, complete = _payload_bank(0), _complete_view_bank(count=0)
+    result = receiver.compare_all_observed_construction(
+        after, complete, deepcopy(after), deepcopy(complete)
+    )
+    assert result["row_partition_complete"] is True
+    assert result["full_active_row_coverage"] is None
+    assert result["coverage_status"] == "no-active-rows"
+    assert all(
+        value["exact"] is None
+        for value in result["noncontact_field_comparisons"].values()
+    )
+    assert not any(result["flags"].values())
+
+
+def test_partition_refuses_unequal_active_extents_before_noncontact_comparison():
+    banks = _partition_pair()
+    for bank in (banks[2], banks[3]):
+        _change_raw_word(bank, "data.nefc", 0, struct.pack("<i", 11))
+    with pytest.raises(ValueError, match="same bounded per-world extents"):
+        receiver.compare_all_observed_construction(*banks)
+
+
+def test_partition_retains_prior_solver_and_inactive_bits_without_comparing_them():
+    banks = _partition_pair()
+    _change_raw_word(banks[3], "efc.force", 0)
+    _change_raw_word(banks[3], "efc.Jqvel", 500)
+    before = deepcopy(banks)
+    result = receiver.compare_all_observed_construction(*banks)
+    assert banks == before
+    assert all(
+        value["exact"] is True
+        for value in result["noncontact_field_comparisons"].values()
+    )
+    assert "efc.force" not in result["noncontact_field_comparisons"]
+
+
+@pytest.mark.parametrize("unpaired", (False, True))
+def test_partition_caps_samples_at_full_fixed_row_capacity_without_skipping_counts(
+    unpaired,
+):
+    after, complete = _payload_bank(0), _complete_view_bank(count=0)
+    for bank in (after, complete):
+        bank["data.nefc"]["raw"] = struct.pack("<64i", *([512] * 64))
+    right_after, right_complete = deepcopy((after, complete))
+    if unpaired:
+        right_complete["efc.id"]["raw"] = struct.pack("<i", 1) * (64 * 512)
+    report = receiver.compare_all_observed_construction(
+        after, complete, right_after, right_complete
+    )
+    assert report["active_row_count_per_arm"] == 32768
+    assert report["samples_truncated"] is True
+    assert report["sample_limit"] == 128
+    assert report["full_active_row_coverage"] is (not unpaired)
+    if unpaired:
+        assert report["unpaired_noncontact_offset_count"] == 32768
+        assert report["uncovered_active_row_counts"] == {"left": 32768, "right": 32768}
+        assert (
+            len(report["unpaired_noncontact_offsets"])
+            == len(report["uncovered_active_rows"]["left"])
+            == 128
+        )
+    else:
+        assert report["same_offset_noncontact_rows_covered"] == 32768
+        assert len(report["same_offset_noncontact_matches"]) == 128
+        assert (
+            report["noncontact_field_comparisons"]["efc.J"]["compared_words"]
+            == 32768 * 20
+        )
+    assert len(json.dumps(report)) < 128 * 1024
+
+
 @pytest.mark.parametrize(
     "damage",
     (

@@ -630,3 +630,68 @@ malformed carriers, signed-zero/NaN words and one-sided/unpaired/empty cases.
 The unchanged94-file scope collects3125, frozen in the producer. Require new
 exact-source full CPU proofs on both hosts and separately rooted authenticated
 retention; no new CUDA trial/learner/rollout/video/physical motion follows.
+
+### Completed load retention atdf5067e4774c
+
+Both3125-test suites passed with zero omissions: Mac304.52s, WSL184.39s.
+Their319-byte inventory SHA256s are respectively
+`f5de9768d8868c36d817724f4b615853d70a3ff75c3771386d7d2a75587e1221`
+and `beee09068123bb8b86bd4d6023e120695658fa8d2b17a6eb9129757cc965b0d7`.
+Both entire proof/source/count/thread closures were authenticated on both
+hosts. Native CPU invocationa0b6a0c14b8a43b18b22047b08e23943 closed PID0/success0,
+reported service MemoryPeak3828178944 bytes, within6GiB.
+
+Independent source-only reports at
+`artifacts/tools/contact-boundary-payload-view-df5067e4774c` are literal-byte
+identical on both hosts:1177726-byte diagnosis SHA256
+`8ebed116e38d6f467434fdb6201173d5b1a046956e4ded7cf799d9f18af17a92`,
+113-byte inventory SHA256
+`f0aace3dc2432f148fe96687967a777ba88d7ed34d821b7851a56e9559009b50`.
+External whole anchors were checked before JSON decode/byte comparison. The
+10426-byte driver matches both hosts, SHA256
+`405d19348c644c6a1adb510e562f73ee23b86bcd6c015015be5cc0f1bd8481be`.
+
+All four declared same-arm stage joins pass exact active id/type/count
+continuity. At0/0 and2/1, no contact-force words are compared (null exact),
+and all1280 aggregate qfrc_constraint words match. At4/2,1986 of2048 linked
+contact-force words differ; first retained left-order payload is world1,
+left index0/right18, local row0, row30 on both sides, b39b933d versusd09b933d.
+The aggregate differs at1062/1280 words, first world0 DOF0,
+54180cbf versus4c180cbf. At6/3,1850/2048 force words and1032/1280 aggregate
+words differ. These are literal observations, not physical error bounds or
+contact-isolated force inference. The earlier complete construction snapshot's
+force buffer was not used. No numerical gate or native qualification changed.
+
+## Full active construction-row subset predeclaration
+
+Account for remaining non-contact rows before claiming complete captured-row
+coverage. Require whole fixed banks, exact captured model metadata and equal
+bounded per-world nefc. Contact rows retain singleton payload/local-ordinal
+associations. Non-contact rows pair only literal types0–4 and equal raw id/type
+words at the exact same world/row offset; do not search for moved markers.
+Unknown types, mismatches and contact/noncontact transitions remain unpaired.
+Compare only the same eight captured construction fields; force/state/Ma and
+sparse metadata stay outside the view.
+
+Prove coverage by explicit disjoint row sets for each arm, not merely summed
+counts: unique linked contact rows plus same-offset non-contact rows must equal
+the complete active row set. Also require no ambiguous/unmatched/unobserved
+payload links for the stronger full-coverage label. Emit uncovered original
+offsets; partial coverage is inconclusive. Even complete equality only supports
+consistency of the narrow captured-subset row-order explanation, not a cause,
+physical identity, all-driver equality or solver equivalence. A differing
+aligned captured field would falsify that narrow explanation at that boundary.
+Neither result admits training; the independently replayed repeat-negative and
+all five false flags remain unchanged.
+
+Focused tests cover row-set partitions with separately permuted contact blocks,
+all eight non-contact field deltas, moved/unsupported markers, duplicate and
+unmatched payloads, empty null comparisons, unequal extents, inactive bits and
+prior-force exclusion. Empty sets explicitly report no-active-rows/null coverage,
+and payload exclusion counts plus raw unpaired ID words remain auditable.
+Report at most128 original-offset samples per category, retaining full counts,
+all field comparisons and a truncation flag; full64-world/512-row tests cover
+both matched and unpaired capacity without oversized output.
+The unchanged94-file scope collects3143, frozen in the
+producer. Require fresh exact-source full CPU proofs on both hosts and new
+separately rooted authenticated retention. No new CUDA run follows this revision.

@@ -318,3 +318,59 @@ alias tests plus eight independent receiver checks bring the next exact-source
 prerequisite to2687 tests. Require both host passes before a fresh source-derived
 bounded unit; never restart the failed7c676add unit or infer a GPU pass from the
 CPU tests or alias correction. All numerical and qualification gates stay fixed.
+
+## Closed synthetic CUDA result
+
+Execution source is `5973184031ba9537e88dd066bd14faf8e5a9b4a4`. The final
+85-file regression passed **2687 tests without omissions** on both hosts:
+Mac329.55s, WSL175.96s. Complete inventory SHA256 anchors are Mac
+`6e5a002b3fe32f34c9ddd949934c581073f6b051ce9f967cbe81ee473ccae6b8`
+and WSL `4f1f4e1a7adc38a792a9bd914f5b7e32fb768db92b1419ecdee5b3ecfea3496c`.
+WSL prerequisite invocation is `9d247e854c9a4e33a578111b11fc2c4e`.
+Both whole inventories/leaves and complete source closure were independently
+authenticated before the new bounded CUDA owner was admitted.
+
+`microduck-friction-prefix-cuda-run-5973184031ba.service`, invocation
+`49c5ab1fdcce40b1b23e5d58daf4b949`, completed with
+MainPID0/SubStateexited/Resultsuccess/exit0. Actual CUDA Toolkit12.9/Driver13.2
+on sm120 used one nonzero dedicated stream and30 launches over the ten literal
+cases. Owner duration was6.854759201s, with three monitoring samples and maximum
+sampled32°C. GPU returned idle; FilmBrain PIDs521/298048 remained active without
+restarts, both namespaces' protected services stayed inactive, and the existing
+GPU lease and environment alias were unchanged. No physical robot or learner
+was constructed. The loader's printed `(cached)` label describes explicit
+loading of the freshly compiled retained binary; it is not a shared-cache reuse
+claim. Actual frozen compiler calls, generated source, ELF CUBIN and metadata
+are bound by the retained records.
+
+Raw root: `artifacts/evaluations/friction-prefix-cuda-run-5973184031ba`.
+All10 files/3993388B were copied and independently whole-authenticated on Mac
+before any packet interpretation. External complete inventory1353B /
+`2db2959673fc3719f7e3b0a050f6003e96d973efc60cb3a2def281768ce23fff`
+is at `artifacts/tools/friction-prefix-cuda-closeout-5973184031ba`.
+The independent Mac receiver recomputed every numerical decision from raw bits,
+verified the actual load/launch/buffer/source/prerequisite/lease witnesses, and
+produced **byte-identical**89489B receiver output /
+`2601315fa33c5366fd6df716ee657bdd51f201fab1b81e56a3e3795ca9bf2c17`.
+Mac replay proof586B /
+`acb87ac697792a832de4ff214c5570ffffe278b7ebba1ec27d3573f04c9bf578`
+and terminal observation178B /
+`9ba0f4372ed687b84009b5e3ee36ebbc0858c1b95d1ad5136cc81d18563cf124`
+are retained separately in that closeout root.
+
+| Retained compiled input | Bytes | Whole SHA256 |
+| --- | ---: | --- |
+| original CUBIN | 463240 | `40629b04a709a4e0660e71d60abc719c7dd9f93bd5a9bdb9a706fe8d9e6b74f6` |
+| candidate CUBIN | 49216 | `87545dfedc27f4882929a7f93b0865e23597cc35bcbc9717de8a140a5fb8cc6a` |
+| original generated CUDA source | 357934 | `07ea621dc73bd2969ea05b5cb948cbd0bacf8ad56dbe71f6cf3fe53ab95386f8` |
+| candidate generated CUDA source | 46781 | `fc2955d169982fb6d8044f39f1aafc1e0debdb1123a5d42ecac6db7b18dfcf6c` |
+
+Decision: **`synthetic-cuda-component-eight-exact-two-overflow-negative`**.
+Positive cases are all-dofs, append-exact-fill, broadcast, direct-solref, empty,
+mixed-broadcast, per-world and signed-zero. Maximum and overflow remain negative
+while all their structural/preservation/replay fields pass. No bit tolerance or
+gate was relaxed. All cause/native/full-window/training/physical flags remain
+false. This accepts only the synthetic component; the old real simulator paired
+negative is unchanged. Any subsequent real-model comparison requires its own
+source-reviewed predeclaration, prerequisites, retained supervisor and independent
+receiver, without modifying expired historical controls or admission protocols.

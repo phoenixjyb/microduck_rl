@@ -799,3 +799,43 @@ construction; their presence is source evidence, not a demonstrated cause.
 Observation copies and synchronization can alter timing, so this would be a
 new diagnostic capture, not exact reproduction of the older uninstrumented run.
 Keep historical negatives immutable and all five flags false in every outcome.
+
+### Implementation checks required for the next separate probe
+
+Retain raw tolerance/ls_tolerance and stat.meaninertia arrays rather than
+round-tripping them through decimal JSON; the line-search and solve_done paths
+read them (solver.py1354–1389,3284–3297). Pin literal ls_iterations, ls_parallel,
+ls_parallel_min_step, graph_conditional and relevant tiled launch block
+dimensions as well as the kernel/source specialization. This is a signature
+check, not an assertion that every passed argument is used by the pyramidal
+branch. Exact values/carrier sizes must be frozen before executable admission.
+
+Focused synthetic tests must demonstrate the following before any full CPU
+prerequisite or native allocation. They are requirements, not tests already run:
+
+- The original init_context executes exactly once; the snapshot occurs only
+  after successful return and before search/iteration. Original exceptions,
+  a missing callback, duplicate/reentrant dispatch, grad=False, inverse context,
+  foreign model/data/context, unexpected call order or phase all refuse without
+  rewriting external hooks or publishing a successful receipt.
+- Literal world/dimension/dtype/layout/byte-span signatures and option bytes
+  are checked before reading. Boolean dimensions, changed strides/aliases,
+  unsupported/null nonempty carriers, overlapping storage, out-of-range counts,
+  changed source/function identity and capture/stream mismatches refuse.
+- Row correspondence, active-prefix counts and marker continuity are checked
+  independently for both arms. Empty or partial coverage remains null or
+  inconclusive. Signed-zero/NaN words and inactive/padded bytes remain literal
+  raw evidence, not normalized values or newly accepted finite physics.
+- Capture/receiver extraction must not mutate already-produced checkpoint
+  bytes; the original init_context intentionally writes its outputs before
+  this checkpoint. Comparison output is
+  bounded independently of full field/count processing. Each published snapshot
+  carries the arm/forward4/phase/context binding and whole-packet hash. Receiver
+  and independent replay reject a substituted arm, forward, phase, packet,
+  missing/extra leaf or externally mismatched manifest before decode.
+
+The future probe must use a new reviewed protocol and source fence, fresh
+artifacts/private caches and a newly authorized time window. Do not extend the
+Oct8 cutoff or relabel a historical failed or repeat-negative owner as accepted.
+Passing these tests would establish observer/receiver behavior only, not CUDA
+execution, exact repeat, learner admission, policy capability or physical safety.

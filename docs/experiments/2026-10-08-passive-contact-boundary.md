@@ -73,9 +73,12 @@ indices alone cannot identify a physical contact when a geom pair has several.
 After frozen make_constraint returns, synchronize the same stream and capture
 all16 EFC fields, constraint counters and physical qpos/qvel/qacc/
 qacc_warmstart/ctrl. Label this boundary **constraint construction complete,
-before solver**. Force, state, Ma and Jqvel are prior/stale solver storage at
-this boundary, not newly solved outputs. Keep the unchanged later BAM load
-snapshot and complete recipe packets to distinguish that phase.
+before solver**. Force, state and Ma are prior/stale solver storage at this
+boundary, not newly solved outputs. The original predeclaration also labelled
+Jqvel as stale; that classification was wrong. The source-verified prospective
+phase correction below identifies Jqvel as recomputed construction data,
+without rewriting historical raw artifacts or receiver labels. Keep the
+unchanged later BAM load snapshot and recipe packets to distinguish that phase.
 
 All snapshots preserve inactive bytes and exact row/contact order. Empty
 dense scratch may have actual null pointers; retain those literally only

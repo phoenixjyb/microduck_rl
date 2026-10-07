@@ -2,6 +2,7 @@
 
 from hashlib import sha1, sha256
 import os
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -205,7 +206,8 @@ def test_write_preserves_exact_bytes_payload(tmp_path):
 
 
 def test_library_binding_hashes_exact_runtime_library_bytes(tmp_path, monkeypatch):
-    library_root = tmp_path / "warp/bin"
+    root, target, _ = _pinned_environment(tmp_path, monkeypatch)
+    library_root = target / "lib/python3.12/site-packages/warp/bin"
     library_root.mkdir(parents=True)
     payloads = {"libprobe-a.so": b"runtime-a", "libprobe-b.so": b"runtime-b"}
     pins = {}
@@ -216,7 +218,11 @@ def test_library_binding_hashes_exact_runtime_library_bytes(tmp_path, monkeypatc
     monkeypatch.setattr(
         probe.importlib.metadata,
         "distribution",
-        lambda name: SimpleNamespace(locate_file=lambda relative: tmp_path / relative),
+        lambda name: SimpleNamespace(
+            locate_file=lambda relative: (
+                root / ".venv" / "lib/python3.12/site-packages" / relative
+            )
+        ),
     )
     binding = probe.library_binding()
     assert set(binding) == set(pins)
@@ -226,7 +232,8 @@ def test_library_binding_hashes_exact_runtime_library_bytes(tmp_path, monkeypatc
 
 
 def test_library_binding_rejects_a_runtime_library_byte_change(tmp_path, monkeypatch):
-    library_root = tmp_path / "warp/bin"
+    root, target, _ = _pinned_environment(tmp_path, monkeypatch)
+    library_root = target / "lib/python3.12/site-packages/warp/bin"
     library_root.mkdir(parents=True)
     path = library_root / "libprobe.so"
     path.write_bytes(b"verified")
@@ -236,15 +243,20 @@ def test_library_binding_rejects_a_runtime_library_byte_change(tmp_path, monkeyp
     monkeypatch.setattr(
         probe.importlib.metadata,
         "distribution",
-        lambda name: SimpleNamespace(locate_file=lambda relative: tmp_path / relative),
+        lambda name: SimpleNamespace(
+            locate_file=lambda relative: (
+                root / ".venv" / "lib/python3.12/site-packages" / relative
+            )
+        ),
     )
     path.write_bytes(b"changed!")
-    with pytest.raises(ValueError, match="library bytes"):
+    with pytest.raises(ValueError, match="library|bytes"):
         probe.library_binding()
 
 
 def test_library_binding_rejects_symlinked_runtime_library(tmp_path, monkeypatch):
-    library_root = tmp_path / "warp/bin"
+    root, target, _ = _pinned_environment(tmp_path, monkeypatch)
+    library_root = target / "lib/python3.12/site-packages/warp/bin"
     library_root.mkdir(parents=True)
     payload = b"runtime"
     target = tmp_path / "runtime-copy"
@@ -256,10 +268,141 @@ def test_library_binding_rejects_symlinked_runtime_library(tmp_path, monkeypatch
     monkeypatch.setattr(
         probe.importlib.metadata,
         "distribution",
-        lambda name: SimpleNamespace(locate_file=lambda relative: tmp_path / relative),
+        lambda name: SimpleNamespace(
+            locate_file=lambda relative: (
+                root / ".venv" / "lib/python3.12/site-packages" / relative
+            )
+        ),
     )
-    with pytest.raises(ValueError, match="path"):
+    with pytest.raises(ValueError, match="path|Warp"):
         probe.library_binding()
+
+
+def _pinned_environment(tmp_path, monkeypatch, *, target_is_symlink=False):
+    root = tmp_path / "worktree"
+    root.mkdir()
+    actual_target = tmp_path / "frozen-venv"
+    actual_target.mkdir()
+    if target_is_symlink:
+        declared_target = tmp_path / "venv-alias"
+        declared_target.symlink_to(actual_target, target_is_directory=True)
+    else:
+        declared_target = actual_target
+    link = root / ".venv"
+    link.symlink_to(declared_target, target_is_directory=True)
+    monkeypatch.setattr(probe, "ROOT", root)
+    monkeypatch.setattr(probe, "VENV_TARGET", declared_target)
+    monkeypatch.setattr(probe, "VENV_INODE", link.lstat().st_ino)
+    return root, declared_target, link
+
+
+def test_environment_binding_accepts_the_exact_pinned_virtualenv_alias(
+    tmp_path, monkeypatch
+):
+    _, target, link = _pinned_environment(tmp_path, monkeypatch)
+
+    binding = probe.environment_binding()
+    link_stat = link.lstat()
+    assert set(binding) == {
+        "path",
+        "target",
+        "device",
+        "inode",
+        "bytes",
+        "mtime_ns",
+        "ctime_ns",
+    }
+    assert binding == {
+        "path": str(link),
+        "target": os.readlink(link),
+        "device": link_stat.st_dev,
+        "inode": link_stat.st_ino,
+        "bytes": len(os.fsencode(os.readlink(link))),
+        "mtime_ns": link_stat.st_mtime_ns,
+        "ctime_ns": link_stat.st_ctime_ns,
+    }
+    assert Path(binding["target"]) == target
+
+
+def test_environment_binding_rejects_an_ordinary_venv_directory(tmp_path, monkeypatch):
+    root = tmp_path / "worktree"
+    root.mkdir()
+    (root / ".venv").mkdir()
+    monkeypatch.setattr(probe, "ROOT", root)
+    monkeypatch.setattr(probe, "VENV_TARGET", root / ".venv")
+    monkeypatch.setattr(probe, "VENV_INODE", (root / ".venv").stat().st_ino)
+
+    with pytest.raises(ValueError):
+        probe.environment_binding()
+
+
+def test_environment_binding_rejects_an_unpinned_alias_inode(tmp_path, monkeypatch):
+    _, _, link = _pinned_environment(tmp_path, monkeypatch)
+    monkeypatch.setattr(probe, "VENV_INODE", link.lstat().st_ino + 1)
+
+    with pytest.raises(ValueError):
+        probe.environment_binding()
+
+
+def test_environment_binding_rejects_wrong_link_text_even_when_resolution_matches(
+    tmp_path, monkeypatch
+):
+    _, target, link = _pinned_environment(tmp_path, monkeypatch)
+    alternate_parent = tmp_path / "parent-alias"
+    alternate_parent.symlink_to(tmp_path, target_is_directory=True)
+    alternate_text = alternate_parent / target.name
+    link.unlink()
+    link.symlink_to(alternate_text, target_is_directory=True)
+    monkeypatch.setattr(probe, "VENV_INODE", link.lstat().st_ino)
+    assert link.resolve(strict=True) == target.resolve(strict=True)
+    assert os.readlink(link) != str(target)
+
+    with pytest.raises(ValueError):
+        probe.environment_binding()
+
+
+def test_environment_binding_rejects_a_symlink_as_the_pinned_target(
+    tmp_path, monkeypatch
+):
+    _, _, _ = _pinned_environment(tmp_path, monkeypatch, target_is_symlink=True)
+
+    with pytest.raises(ValueError):
+        probe.environment_binding()
+
+
+def test_environment_binding_rejects_retargeted_alias(tmp_path, monkeypatch):
+    _, _, link = _pinned_environment(tmp_path, monkeypatch)
+    other_target = tmp_path / "other-venv"
+    other_target.mkdir()
+    link.unlink()
+    link.symlink_to(other_target, target_is_directory=True)
+
+    with pytest.raises(ValueError):
+        probe.environment_binding()
+
+
+def test_environment_binding_rejects_same_text_alias_inode_substitution(
+    tmp_path, monkeypatch
+):
+    _, target, link = _pinned_environment(tmp_path, monkeypatch)
+    pinned_inode = link.lstat().st_ino
+    replacement = tmp_path / "replacement-link"
+    replacement.symlink_to(target, target_is_directory=True)
+    assert replacement.lstat().st_ino != pinned_inode
+    link.unlink()
+    replacement.rename(link)
+    assert os.readlink(link) == str(target)
+
+    with pytest.raises(ValueError):
+        probe.environment_binding()
+
+
+def test_environment_binding_is_stable_across_repeated_reads(tmp_path, monkeypatch):
+    _pinned_environment(tmp_path, monkeypatch)
+
+    first = probe.environment_binding()
+    second = probe.environment_binding()
+    assert second == first
 
 
 def test_packages_pins_versions_python_architecture_and_loader_source(

@@ -78,7 +78,8 @@ LIBRARIES = {
         "f8e0f74720067ee5606f189463d55142928087bc45b59d0e3e5c2b2385425a3a",
     ),
 }
-EXPECTED_TESTS = 2671
+EXPECTED_TESTS = 2687
+VENV_TARGET = "/home/yanbo/work/microduck_rl-stance-replication-20260930/.venv"
 STRUCTURAL_KEYS = (
     "all_prefix_rows_preserved",
     "all_inactive_suffix_preserved",
@@ -134,6 +135,25 @@ def matrix_matches(cases):
         ):
             return False
     return True
+
+
+def environment(record):
+    """Authenticate only the pre-existing exact lean environment alias witness."""
+    need(
+        type(record) is dict
+        and set(record)
+        == {"path", "target", "device", "inode", "bytes", "mtime_ns", "ctime_ns"}
+        and record["path"] == ROOT + "/.venv"
+        and record["target"] == VENV_TARGET
+        and type(record["inode"]) is int
+        and record["inode"] == 1794097
+        and type(record["bytes"]) is int
+        and record["bytes"] == len(VENV_TARGET.encode()),
+        "exact retained existing environment alias",
+    )
+    for key in ("device", "mtime_ns", "ctime_ns"):
+        plain(record[key], 1)
+    return record
 
 
 def need(ok, message):
@@ -655,6 +675,13 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
             "exact new CUDA-only packet protocol",
         )
         flags(record["flags"])
+        environment(record["environment_alias"])
+    need(
+        declaration["environment_alias"]
+        == owner["environment_alias"]
+        == child["environment_alias"],
+        "same unchanged declared environment alias through owner and child",
+    )
     for binding in (
         declaration["source_binding"],
         owner["source_binding"],
@@ -689,7 +716,7 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
         need(
             child["libraries"][name]
             == {
-                "path": ROOT + "/.venv/lib/python3.12/site-packages/warp/bin/" + name,
+                "path": VENV_TARGET + "/lib/python3.12/site-packages/warp/bin/" + name,
                 "bytes": size,
                 "sha256": digest,
             },
@@ -698,7 +725,7 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
     warp_sources = child["warp_sources"]
     need(
         declaration["warp_sources"] == warp_sources
-        and warp_sources["root"] == ROOT + "/.venv/lib/python3.12/site-packages/warp"
+        and warp_sources["root"] == VENV_TARGET + "/lib/python3.12/site-packages/warp"
         and warp_sources["sha256"]
         == "4aa3c865b7e523e1c0bef175f80ed51b00543569246d524914e78c333cdf9e6c",
         "same complete frozen compiler source/header binding",
@@ -754,6 +781,10 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
         "externally anchored same-source CPU prerequisite",
     )
     tests = declaration["tests"]
+    need(
+        environment(tests["environment_alias"]) == declaration["environment_alias"],
+        "same pinned environment alias through prerequisite and execution",
+    )
     source(tests["source_binding"], expected_source)
     flags(tests["flags"])
     need(

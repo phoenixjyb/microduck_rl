@@ -40,7 +40,12 @@ its exclusive nonblocking flock and inherit that same descriptor into one child.
 Never create/unlink/replace the lease or change drivers/packages/shared caches.
 
 Frozen WSL Python3.12.13/x86_64 packages remain torch2.9.1, Warp1.12.0,
-MuJoCo3.10.0, MuJoCo Warp3.8.1, mjlab1.3.0 and BAM1.0.1. Authenticate the actual
+MuJoCo3.10.0, MuJoCo Warp3.8.1, mjlab1.3.0 and BAM1.0.1. The lean checkout reuses
+the existing `.venv` symlink (inode1794097) to the canonical environment at
+`/home/yanbo/work/microduck_rl-stance-replication-20260930/.venv`. Authenticate
+its literal absolute target, inode, complete lstat identity and canonical target
+before/after prerequisite, compilation and launches; neither link nor target
+may change. Only this one exact alias is allowed. Authenticate the actual
 Warp loader source, two installed compiler/runtime libraries, and complete460-file
 Warp Python/native-header inventory before/after compilation. These source/file
 pins and the CUBIN input do **not** expose driver-JIT or loaded machine-code bytes.
@@ -114,7 +119,7 @@ pass.
 
 Before GPU work, run the retained82-file CPU regression scope plus the three new
 test files on both Mac and WSL with empty CUDA visibility, using only each
-existing`.venv/bin/python`. The final predeclared collected total is2671 tests.
+existing`.venv/bin/python`. The final predeclared collected total is2687 tests.
 Require all85 files, zero skips/errors/failures, no external pytest
 selection/plugin injection, and unchanged complete source bytes. Authenticate
 the retained old scope manifest (4190B,
@@ -275,3 +280,41 @@ overflow case, incorrect classification, and truthy non-boolean substitution.
 The resulting new execution source must pass the same85-file regression with
 **2671 tests**, zero omissions, on both hosts before GPU admission. Use fresh
 source-derived units/output roots; retain all earlier completed/failed evidence.
+
+## Pre-child owner refusal: preserved environment alias
+
+At exact source `7c676add00c8a3791788ae4adad1afeb5e889211`, both85-file CPU
+prerequisites passed2671 tests without omissions: Mac261.04s; WSL175.89s.
+The externally authenticated complete inventory hashes are Mac
+`27895c40aa235a90061dcd59eaef5e804a9f4a33f6428051771f3a9f2877d194`
+and WSL `66109fe53daf1ae915c9c718c483b3c7243207324e055f1a76b78196f5ef4c88`.
+WSL tests invocation is `37bb75131edd4809a13f758828908748`, terminal
+MainPID0/SubStateexited/Resultsuccess/exit0. Retain source-derived prerequisite
+roots and independent Mac authentication separately.
+
+The fresh bounded run unit `microduck-friction-prefix-cuda-run-7c676add00c8.service`,
+invocation `618ad738728a418f9ad00453f95d69c5`, failed with
+`ValueError: plain frozen runtime library path` at `library_binding`, before
+creating a run directory or a CUDA child. Preserve the failed unit/journal as
+negative owner-admission evidence. No compile/launch/numerical result exists.
+Whole raw unit/journal/environment/GPU observations are retained in
+`artifacts/tools/friction-prefix-cuda-owner-failure-7c676add00c8`; inventory415B /
+`75d46184563b85dc2f9fc0df14f13fd72cd315feb0d6d7b00b7635f6094e4847`.
+
+Read-only diagnosis found the deliberately reused environment alias described
+above. Both complete Warp libraries still match their declared lengths/hashes.
+Frozen `context.py` constructs `warp_home` with `os.path.realpath`, so its actual
+loaded-library names must match the canonical historical environment paths,
+not an invented lean path. Do not copy/reinstall the environment or alter the
+link, package, driver, shared cache, historical worktree, or failed service.
+
+The reviewed source correction binds only that pre-existing exact absolute alias
+and inode, records its full lstat identity in prerequisite/owner/child evidence,
+and checks it unchanged throughout. Library and compiler-header reads require
+exact canonical resolved paths under the declared target, with no additional
+symlink substitutions; all whole-byte pins remain unchanged. The independent
+receiver requires the same alias witness and canonical paths. Eight producer
+alias tests plus eight independent receiver checks bring the next exact-source
+prerequisite to2687 tests. Require both host passes before a fresh source-derived
+bounded unit; never restart the failed7c676add unit or infer a GPU pass from the
+CPU tests or alias correction. All numerical and qualification gates stay fixed.

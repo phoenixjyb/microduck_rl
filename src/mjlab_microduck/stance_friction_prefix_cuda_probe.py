@@ -21,6 +21,8 @@ import time
 
 PROTOCOL = "microduck-friction-prefix-cuda-probe-oct8-v1"
 ROOT = Path("/home/yanbo/work/microduck_rl-com-entry-20261006")
+VENV_TARGET = Path("/home/yanbo/work/microduck_rl-stance-replication-20260930/.venv")
+VENV_INODE = 1794097
 BRANCH = "feat/athletics-obstacle-curriculum"
 BASE = "4452976d981c90d61568fe57d0b43510a610c32a"
 CUTOFF = datetime(2026, 10, 7, 23, 30, tzinfo=timezone.utc).timestamp()
@@ -45,7 +47,7 @@ LIBRARIES = {
     ),
 }
 # Filled with the exact collected source-test total before source declaration.
-EXPECTED_TESTS = 2671
+EXPECTED_TESTS = 2687
 COMPILER_CONFIG = {
     "mode": "release",
     "optimization_level": None,
@@ -194,13 +196,56 @@ def digest_file(path, cap=16 * 1024**2):
     return {"bytes": len(raw), "sha256": sha256(raw).hexdigest()}
 
 
+def environment_binding():
+    """Pin the existing lean-checkout alias; never create or modify its target."""
+    need(ROOT.resolve(strict=True) == ROOT, "canonical lean environment owner")
+    alias = ROOT / ".venv"
+    info = alias.lstat()
+    need(
+        stat.S_ISLNK(info.st_mode)
+        and info.st_ino == VENV_INODE
+        and info.st_size == len(str(VENV_TARGET).encode())
+        and os.readlink(alias) == str(VENV_TARGET)
+        and alias.resolve(strict=True) == VENV_TARGET
+        and VENV_TARGET.resolve(strict=True) == VENV_TARGET
+        and VENV_TARGET.is_dir(),
+        "exact pre-existing frozen environment alias and canonical target",
+    )
+    return {
+        "path": str(alias),
+        "target": str(VENV_TARGET),
+        "device": info.st_dev,
+        "inode": info.st_ino,
+        "bytes": info.st_size,
+        "mtime_ns": info.st_mtime_ns,
+        "ctime_ns": info.st_ctime_ns,
+    }
+
+
+def frozen_warp_path(relative):
+    """Only the one declared alias may resolve; all target leaves remain plain."""
+    before = environment_binding()
+    requested = Path(
+        importlib.metadata.distribution("warp-lang").locate_file("warp/" + relative)
+    ).absolute()
+    tail = Path("lib/python3.12/site-packages/warp") / relative
+    expected = VENV_TARGET / tail
+    need(
+        requested == ROOT / ".venv" / tail
+        and requested.resolve(strict=True) == expected
+        and expected.resolve(strict=True) == expected
+        and environment_binding() == before,
+        "exact alias-backed frozen Warp path, no additional substitutions",
+    )
+    return expected
+
+
 def library_binding():
     """Authenticate frozen compiler/runtime libraries without importing Warp."""
-    dist = importlib.metadata.distribution("warp-lang")
+    alias = environment_binding()
     result = {}
     for name, (size, expected) in LIBRARIES.items():
-        path = Path(dist.locate_file("warp/bin/" + name)).absolute()
-        need(path.resolve(strict=True) == path, "plain frozen runtime library path")
+        path = frozen_warp_path("bin/" + name)
         before = path.stat(follow_symlinks=False)
         need(
             stat.S_ISREG(before.st_mode) and before.st_size == size,
@@ -218,13 +263,13 @@ def library_binding():
             "unchanged complete frozen native library bytes",
         )
         result[name] = {"path": str(path), "bytes": size, "sha256": expected}
+    need(environment_binding() == alias, "same environment alias through library reads")
     return result
 
 
 def toolchain_source():
-    root = Path(
-        importlib.metadata.distribution("warp-lang").locate_file("warp")
-    ).absolute()
+    alias = environment_binding()
+    root = frozen_warp_path("")
     paths = sorted(
         set(root.rglob("*.py"))
         | {path for path in (root / "native").rglob("*") if path.is_file()}
@@ -236,6 +281,7 @@ def toolchain_source():
         and sha256(canonical(leaves)).hexdigest() == WARP_SOURCES_SHA,
         "complete frozen Warp Python/compiler-header source tree",
     )
+    need(environment_binding() == alias, "same environment alias through source reads")
     return {"root": str(root), "leaves": leaves, "sha256": WARP_SOURCES_SHA}
 
 
@@ -514,6 +560,7 @@ def tests(source):
         "no external test selection or plugin injection",
     )
     before, versions = source_binding(source), packages()
+    environment = environment_binding()
     props = service_properties(source, "tests")
     host_before = host()
     directory = output(source, "tests")
@@ -554,10 +601,15 @@ def tests(source):
     )
     after = source_binding(source)
     need(before == after, "all committed source bytes unchanged through tests")
+    need(
+        environment_binding() == environment,
+        "environment alias unchanged through tests",
+    )
     record = {
         "protocol": PROTOCOL + ":tests",
         "source_binding": before,
         "packages": versions,
+        "environment_alias": environment,
         "unit": props,
         "files": files,
         "tests": int(suites[0].attrib["tests"]),
@@ -615,6 +667,7 @@ def child(source, lease_fd, owner_pid, declaration_sha):
     )
     before = source_binding(source)
     versions = packages()
+    environment = environment_binding()
     libraries = library_binding()
     warp_sources = toolchain_source()
     lease_before = lease_identity(lease_fd)
@@ -633,6 +686,10 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         and declaration["libraries"] == libraries
         and declaration["warp_sources"] == warp_sources,
         "same declared source, owner, compiler sources, libraries and lease",
+    )
+    need(
+        declaration["environment_alias"] == environment,
+        "same pinned child environment alias",
     )
     private_cache = directory / "private-warp-cache"
     need(
@@ -716,6 +773,10 @@ def child(source, lease_fd, owner_pid, declaration_sha):
     row_function_code = (row_function, row_function.func, row_function.func.__code__)
 
     def guards():
+        need(
+            environment_binding() == environment,
+            "same environment alias before/after launches",
+        )
         need(
             canonical({key: getattr(wp.config, key) for key in COMPILER_CONFIG})
             == canonical(compiler_config)
@@ -1065,6 +1126,7 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         "source_binding_before": before,
         "source_binding_after": after,
         "packages": versions,
+        "environment_alias": environment,
         "libraries": libraries,
         "warp_sources": warp_sources,
         "owner_pid": owner_pid,
@@ -1100,6 +1162,7 @@ def run(source, tests_inventory_sha):
         packages(),
         service_properties(source, "run"),
     )
+    environment = environment_binding()
     need(os.environ.get("CUDA_VISIBLE_DEVICES") == "", "owner has CUDA hidden")
     prerequisite = output(source, "tests")
     need(
@@ -1117,6 +1180,7 @@ def run(source, tests_inventory_sha):
     need(
         test_record["source_binding"] == before
         and test_record["packages"] == versions
+        and test_record["environment_alias"] == environment
         and test_record["files"] == prior_test_files()
         and test_record["flags"] == FLAGS,
         "retained same-source CPU prerequisite",
@@ -1181,6 +1245,7 @@ def run(source, tests_inventory_sha):
             "protocol": PROTOCOL + ":declaration",
             "source_binding": before,
             "packages": versions,
+            "environment_alias": environment,
             "libraries": libraries,
             "warp_sources": warp_sources,
             "unit": props,
@@ -1255,11 +1320,16 @@ def run(source, tests_inventory_sha):
             and warp_sources == toolchain_source(),
             "owner source, compiler headers, native libraries and lease closure",
         )
+        need(
+            environment_binding() == environment,
+            "owner environment alias closed unchanged",
+        )
         write(
             directory / "owner.json",
             {
                 "protocol": PROTOCOL + ":owner",
                 "source_binding": before,
+                "environment_alias": environment,
                 "owner_pid": os.getpid(),
                 "child_pid": process.pid,
                 "child_exit": process.returncode,

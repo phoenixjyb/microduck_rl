@@ -371,3 +371,30 @@ def test_mock_component_matrix_requires_literal_boolean_structural_flags():
     cases = mock_component_matrix()
     cases["all-dofs"][r.STRUCTURAL_KEYS[0]] = 1
     assert r.matrix_matches(cases) is False
+
+
+def mock_environment_alias():
+    return {
+        "path": r.ROOT + "/.venv",
+        "target": r.VENV_TARGET,
+        "device": 1,
+        "inode": 1794097,
+        "bytes": len(r.VENV_TARGET.encode()),
+        "mtime_ns": 2,
+        "ctime_ns": 3,
+    }
+
+
+def test_receiver_accepts_only_declared_existing_environment_alias():
+    record = mock_environment_alias()
+    assert r.environment(record) is record
+
+
+@pytest.mark.parametrize(
+    "field", ["path", "target", "device", "inode", "bytes", "mtime_ns", "ctime_ns"]
+)
+def test_receiver_rejects_environment_alias_substitution(field):
+    record = mock_environment_alias()
+    record[field] = "other" if field in ("path", "target") else True
+    with pytest.raises(ValueError):
+        r.environment(record)

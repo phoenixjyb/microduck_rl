@@ -138,6 +138,13 @@ COMPLETE_ORDER = (
     "local.efc_nnz",
 )
 STALE_PRIOR_FIELDS = ("efc.force", "efc.state", "efc.Ma", "efc.Jqvel")
+# Keep the historical capture declaration above immutable. Dense construction
+# clears/recomputes Jqvel before the current solver; prospective side views must
+# not repeat the old phase-label mistake.
+SIDE_VIEW_PRIOR_SOLVER_FIELDS = ("efc.force", "efc.state", "efc.Ma")
+DENSE_CONSTRUCTION_SOURCE_SHA256 = (
+    "b69f15e5c7206b30bfe1af12b5ca6c0bdf3e37398116846643df73a2e8f8ef53"
+)
 CONTACT_CARRIERS = {
     "model.body_weldid": ((16,), "<i4"),
     "model.body_dofnum": ((16,), "<i4"),
@@ -1160,7 +1167,7 @@ def describe_first_active_difference(left, right, stage):
             "right_count": right_nefc[world],
         }
     return {
-        "protocol": "microduck-boundary-raw-coordinate-view-oct8-v1",
+        "protocol": "microduck-boundary-raw-coordinate-view-oct8-v2",
         "stage": stage,
         "delta": dict(difference),
         "shape": list(shape),
@@ -1168,11 +1175,16 @@ def describe_first_active_difference(left, right, stage):
         "byte_offset": difference["word_index"] * 4,
         "active_extent": extent,
         "stale_prior_solver_storage": stage == "complete"
+        and name in SIDE_VIEW_PRIOR_SOLVER_FIELDS,
+        "historical_capture_stale_label": stage == "complete"
         and name in STALE_PRIOR_FIELDS,
+        "recomputed_during_dense_construction": stage == "complete"
+        and name == "efc.Jqvel",
+        "phase_source_sha256": DENSE_CONSTRUCTION_SOURCE_SHA256,
         "raw_packets_unchanged": True,
         "flags": dict(FLAGS),
         "interpretation": (
-            "raw storage coordinate and declared stale-field label only; "
+            "raw storage coordinate and source-corrected phase label only; "
             "not physical-contact identity, newly solved force, cause or qualification"
         ),
     }
@@ -1259,6 +1271,121 @@ def compare_active_contact_payloads(left, right):
             "active raw input/context payloads only; unique byte payload links "
             "are not physical-contact identity, constraint/solver equivalence, "
             "causal proof or qualification; duplicate payloads remain unpaired"
+        ),
+    }
+
+
+def describe_contact_constraint_rows(contact_after, complete):
+    """Describe captured addresses and row backlinks, not allocation or cause.
+
+    Caller must authenticate same-forward, same-arm packets and the pinned dense
+    pyramidal source. Start at completed contact-typed rows, then check addresses
+    and backlinks. No host float predicate replaces GPU eligibility. Addresses
+    of contacts without observed complete rows are not read or classified;
+    unused slots can retain arbitrary prior bytes.
+    """
+    _checked_boundary_view(contact_after, "contact_after")
+    _checked_boundary_view(complete, "complete")
+    count = _int_words(contact_after["contact.nacon"])[0]
+    need(0 <= count <= CONTACT_CAPACITY, "bounded row-view contact count")
+    nefc = _int_words(complete["data.nefc"])
+    need(
+        nefc == _int_words(contact_after["data.nefc"])
+        and all(0 <= value <= CONTACT_NJMAX for value in nefc),
+        "same bounded captured contact-after and complete row extents",
+    )
+    worlds = _int_words(contact_after["contact.worldid"])
+    dims = _int_words(contact_after["contact.dim"])
+    kinds = _int_words(contact_after["contact.type"])
+    addresses = _int_words(contact_after["contact.efc_address"])
+    ids, types = _int_words(complete["efc.id"]), _int_words(complete["efc.type"])
+    observed = {}
+    for world, extent in enumerate(nefc):
+        for row in range(extent):
+            index = world * CONTACT_NJMAX + row
+            if types[index] not in (5, 6):
+                continue
+            contact_index = ids[index]
+            need(
+                0 <= contact_index < count,
+                "complete contact row id in active contact prefix",
+            )
+            need(
+                worlds[contact_index] == world and kinds[contact_index] & 1,
+                "complete contact row belongs to captured constraint contact world",
+            )
+            observed.setdefault(contact_index, []).append((world, row))
+    rows, occupied = [], set()
+    for contact_index in range(count):
+        world = worlds[contact_index]
+        need(0 <= world < 64, "bounded contact world for row side view")
+        if contact_index not in observed:
+            rows.append(
+                {
+                    "contact_index": contact_index,
+                    "world": world,
+                    "status": "no-complete-contact-row-not-read",
+                }
+            )
+            continue
+        condim = dims[contact_index]
+        need(condim in (1, 3), "scoped condim fits four captured address slots")
+        width = 1 if condim == 1 else 4
+        block = list(addresses[contact_index * 4 : contact_index * 4 + width])
+        need(
+            all(0 <= row < nefc[world] for row in block),
+            "observed contact rows inside captured active EFC extent",
+        )
+        need(
+            block == list(range(block[0], block[0] + width)),
+            "observed contact address block contiguous in recorded order",
+        )
+        need(
+            observed[contact_index] == [(world, row) for row in block],
+            "exact completed contact-typed row block, no missing or extra backlink",
+        )
+        expected_type = 5 if condim == 1 else 6
+        for row in block:
+            need(
+                (world, row) not in occupied,
+                "unique observed contact-to-row storage association",
+            )
+            occupied.add((world, row))
+            index = world * CONTACT_NJMAX + row
+            need(
+                ids[index] == contact_index and types[index] == expected_type,
+                "complete captured EFC id/type backlink to recorded contact slot",
+            )
+        rows.append(
+            {
+                "contact_index": contact_index,
+                "world": world,
+                "condim": condim,
+                "status": "observed-address-backlink",
+                "row_indices": block,
+                "efc_type": expected_type,
+            }
+        )
+    return {
+        "protocol": "microduck-observed-contact-row-view-oct8-v1",
+        "phase_source_sha256": DENSE_CONSTRUCTION_SOURCE_SHA256,
+        "contact_count": count,
+        "per_world_nefc": list(nefc),
+        "contacts": rows,
+        "joined_row_count": len(occupied),
+        "gpu_eligibility_recomputed": False,
+        "uncaptured_contact_parameters": [
+            "friction",
+            "solref",
+            "solreffriction",
+            "solimp",
+        ],
+        "raw_packets_unchanged": True,
+        "flags": dict(FLAGS),
+        "interpretation": (
+            "observed storage addresses and captured id/type backlinks only; "
+            "not proof of fresh allocation, physical-contact identity, complete "
+            "contact-parameter equality, solver equivalence, cause or qualification"
         ),
     }
 

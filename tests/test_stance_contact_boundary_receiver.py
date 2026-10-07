@@ -502,6 +502,190 @@ def test_coordinate_view_identifies_active_world_row_and_stale_solver_storage(
     assert not any(result["flags"].values())
 
 
+def test_coordinate_view_corrects_dense_jqvel_phase_without_rewriting_history():
+    left, right = _complete_view_bank(), _complete_view_bank()
+    _change_raw_word(right, "efc.Jqvel", 2 * 512 + 3)
+    before = deepcopy((left, right))
+    result = receiver.describe_first_active_difference(left, right, "complete")
+    assert result["protocol"] == "microduck-boundary-raw-coordinate-view-oct8-v2"
+    assert result["historical_capture_stale_label"] is True
+    assert result["stale_prior_solver_storage"] is False
+    assert result["recomputed_during_dense_construction"] is True
+    assert result["phase_source_sha256"] == receiver.DENSE_CONSTRUCTION_SOURCE_SHA256
+    assert receiver.STALE_PRIOR_FIELDS == (
+        "efc.force",
+        "efc.state",
+        "efc.Ma",
+        "efc.Jqvel",
+    )
+    assert (left, right) == before
+    assert not any(result["flags"].values())
+
+
+def _row_view_banks():
+    contact = _payload_bank(3)
+    complete = _complete_view_bank(world=0, count=4)
+    counts = [4, 1] + [0] * 62
+    for bank in (contact, complete):
+        bank["data.nefc"]["raw"] = struct.pack("<64i", *counts)
+    contact["contact.efc_address"]["raw"] = struct.pack("<i", -1) * (8192 * 4)
+    for index, (world, dim, kind, block) in enumerate(
+        ((0, 3, 1, (0, 1, 2, 3)), (1, 1, 3, (0,)), (0, 3, 2, ()))
+    ):
+        for name, value in (("worldid", world), ("dim", dim), ("type", kind)):
+            _change_raw_word(
+                contact, "contact." + name, index, struct.pack("<i", value)
+            )
+        for offset, row in enumerate(block):
+            _change_raw_word(
+                contact,
+                "contact.efc_address",
+                index * 4 + offset,
+                struct.pack("<i", row),
+            )
+            _change_raw_word(
+                complete, "efc.id", world * 512 + row, struct.pack("<i", index)
+            )
+            _change_raw_word(
+                complete,
+                "efc.type",
+                world * 512 + row,
+                struct.pack("<i", 5 if dim == 1 else 6),
+            )
+    return contact, complete
+
+
+def test_row_view_joins_only_observed_addresses_and_preserves_all_bytes():
+    contact, complete = _row_view_banks()
+    # Inactive capacity and unused frictionless/non-constraint slots are opaque.
+    for index in (5, 6, 7, 8, 9, 10, 11, 12):
+        _change_raw_word(contact, "contact.efc_address", index, struct.pack("<i", -999))
+    before = deepcopy((contact, complete))
+    report = receiver.describe_contact_constraint_rows(contact, complete)
+    assert report["joined_row_count"] == 5
+    assert report["contacts"][0]["row_indices"] == [0, 1, 2, 3]
+    assert report["contacts"][1]["row_indices"] == [0]
+    assert report["contacts"][2]["status"] == "no-complete-contact-row-not-read"
+    assert report["gpu_eligibility_recomputed"] is False
+    assert report["uncaptured_contact_parameters"] == [
+        "friction",
+        "solref",
+        "solreffriction",
+        "solimp",
+    ]
+    assert (contact, complete) == before
+    assert not any(report["flags"].values())
+
+
+@pytest.mark.parametrize("unused", (-1, 0, 499, -999))
+def test_row_view_never_reads_addresses_without_observed_complete_rows(unused):
+    contact, complete = _row_view_banks()
+    for index in range(4):
+        _change_raw_word(
+            contact, "contact.efc_address", index, struct.pack("<i", unused)
+        )
+        _change_raw_word(complete, "efc.type", index, struct.pack("<i", 0))
+    report = receiver.describe_contact_constraint_rows(contact, complete)
+    assert report["contacts"][0]["status"] == "no-complete-contact-row-not-read"
+    assert "row_indices" not in report["contacts"][0]
+    assert report["joined_row_count"] == 1
+
+
+def test_row_view_handles_noncontact_prefix_without_reindexing_contact_rows():
+    contact, complete = _row_view_banks()
+    for bank in (contact, complete):
+        _change_raw_word(bank, "data.nefc", 0, struct.pack("<i", 6))
+    for row in range(6):
+        _change_raw_word(
+            complete, "efc.type", row, struct.pack("<i", 0 if row < 2 else 6)
+        )
+    for offset in range(4):
+        _change_raw_word(
+            contact, "contact.efc_address", offset, struct.pack("<i", offset + 2)
+        )
+    report = receiver.describe_contact_constraint_rows(contact, complete)
+    assert report["contacts"][0]["row_indices"] == [2, 3, 4, 5]
+    assert report["joined_row_count"] == 5
+
+
+@pytest.mark.parametrize(
+    "damage", ("orphan", "extra", "missing", "nonconstraint", "overflow", "capacity")
+)
+def test_row_view_refuses_contradictory_completed_contact_rows(damage):
+    contact, complete = _row_view_banks()
+    if damage == "orphan":
+        _change_raw_word(complete, "efc.id", 0, struct.pack("<i", 3))
+    elif damage == "extra":
+        for bank in (contact, complete):
+            _change_raw_word(bank, "data.nefc", 0, struct.pack("<i", 5))
+        _change_raw_word(complete, "efc.type", 4, struct.pack("<i", 6))
+    elif damage == "missing":
+        _change_raw_word(complete, "efc.type", 0, struct.pack("<i", 0))
+    elif damage == "nonconstraint":
+        _change_raw_word(contact, "contact.type", 0, struct.pack("<i", 2))
+    elif damage == "overflow":
+        for offset in range(4):
+            _change_raw_word(
+                contact, "contact.efc_address", offset, struct.pack("<i", -1)
+            )
+    else:
+        for bank in (contact, complete):
+            _change_raw_word(bank, "data.nefc", 0, struct.pack("<i", 513))
+    with pytest.raises(ValueError):
+        receiver.describe_contact_constraint_rows(contact, complete)
+
+
+@pytest.mark.parametrize(
+    "damage",
+    (
+        "count",
+        "world",
+        "condim",
+        "partial",
+        "negative",
+        "extent",
+        "order",
+        "id",
+        "type",
+        "duplicate",
+        "nefc",
+        "schema",
+    ),
+)
+def test_row_view_refuses_malformed_or_ambiguous_storage_association(damage):
+    contact, complete = _row_view_banks()
+    if damage == "count":
+        _change_raw_word(contact, "contact.nacon", 0, struct.pack("<i", 8193))
+    elif damage in ("world", "condim"):
+        _change_raw_word(
+            contact,
+            "contact." + ("worldid" if damage == "world" else "dim"),
+            0,
+            struct.pack("<i", 64 if damage == "world" else 6),
+        )
+    elif damage in ("partial", "negative", "extent", "order"):
+        _change_raw_word(
+            contact,
+            "contact.efc_address",
+            1,
+            struct.pack(
+                "<i", {"partial": -1, "negative": -2, "extent": 4, "order": 2}[damage]
+            ),
+        )
+    elif damage in ("id", "type"):
+        _change_raw_word(complete, "efc." + damage, 0, struct.pack("<i", 99))
+    elif damage == "duplicate":
+        _change_raw_word(contact, "contact.worldid", 1, struct.pack("<i", 0))
+    elif damage == "nefc":
+        _change_raw_word(complete, "data.nefc", 0, struct.pack("<i", 5))
+    else:
+        del contact["context.pos"]
+    before = deepcopy((contact, complete))
+    with pytest.raises(ValueError):
+        receiver.describe_contact_constraint_rows(contact, complete)
+    assert (contact, complete) == before
+
+
 @pytest.mark.parametrize("stage", ("contact_before", "contact_after", "complete"))
 def test_coordinate_view_does_not_promote_inactive_capacity_differences(stage):
     if stage == "complete":

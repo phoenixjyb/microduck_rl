@@ -437,10 +437,11 @@ explicitly unpaired, and report unmatched multiplicity and model-input equality
 separately. Never sort/rewrite packets, compare outputs as though they were
 inputs, replace contact identifiers, or promote the earlier negative.
 
-The coordinate helper uses the unchanged active comparator and adds host-shape
+The original coordinate helper used the unchanged active comparator and added host-shape
 row-major coordinates, contact/per-world counts and a declared stale-storage
-label. In particular force/state/Ma/Jqvel remain prior storage before the solver;
-no per-delta label may call them newly solved. Coordinates describe storage,
+label. Its historical force/state/Ma/Jqvel label is retained in the old artifact,
+but the Jqvel phase classification was wrong; see the correction below. No label
+may call these fields newly solved by the current solver. Coordinates describe storage,
 not identity. Caller whole-authentication and the retained independent replay
 are prerequisites; these pure helpers confer no provenance themselves.
 
@@ -450,3 +451,63 @@ EFC world/row/component coordinates, count mismatches and malformed banks.
 The unchanged94-file scope now collects3044; this exact count is frozen.
 Both full CPU suites and source-bound side-view retention are still required.
 This is a source-only diagnostic revision, not a fresh CUDA trial or admission.
+
+### Completed source-only retention at0696cb888d28
+
+Both3044-test suites passed with zero omissions: Mac214.12s and WSL180.74s.
+The319-byte inventory SHA256s are respectively
+`3fac796f356db20afeb4463e5ed2f4b5dafaea100f442e943eb31532eaeb67d4`
+and `d2d8799bbc2bc19875bef9976e85fd825b7b327f6cc9bf3c0949ba8a7fb7868e`.
+Every CPU proof leaf/source closure/thread map was authenticated on both hosts.
+Native invocation475d5c86f3c74cca989cab006a05e8d2 closed PID0/success0.
+
+Independent source-only retention on both hosts produced identical literal
+bytes at `artifacts/tools/contact-boundary-payload-view-0696cb888d28`:
+diagnosis251170 bytes SHA256
+`1e903a407f7a0dec692e1adf1e4ee8544c7af5ec70c36dbcbc7af97055391f1f`,
+inventory112 bytes SHA256
+`af92eeef8fe11920bcecc2e94a3c4f2bd5539134150cb4a10fdc2839be4ddba0`.
+The first differing slot7 is world3 versus world18; it is not a comparison of
+the same linked byte payload. Payload matching omits friction, solref,
+solreffriction and solimp because those contact parameters were not captured.
+Do not turn the captured subset equality into full contact-parameter or solver
+equivalence. Preserve this artifact and its old phase label unchanged.
+
+## Prospective phase correction and observed-row side view
+
+The frozen installed constraint.py is identical on both hosts, SHA256
+`b69f15e5c7206b30bfe1af12b5ca6c0bdf3e37398116846643df73a2e8f8ef53`.
+Its dense construction clears Jqvel at3059 and launches the dense Jacobian
+kernel with J/Jqvel outputs at3080–3096;2340–2343 computes and accumulates
+J*qvel. Jqvel is therefore recomputed construction data before the current
+solver, not stale prior-solver storage. Force/state/Ma keep their prior-storage
+classification. Do not rewrite STALE_PRIOR_FIELDS, old capture declarations,
+old reports or their decisions. New coordinate-view v2 retains the historical
+tag separately and corrects the prospective tag with the source SHA.
+
+Predeclare a pure output-observed contact-row subset, not a full eligibility
+classifier. Start with completed per-world active rows of frictionless/pyramidal
+type5/6 and require valid active contact IDs, matching world/CONSTRAINT bit,
+condim1/3, complete contiguous address blocks and exact id/type backlinks.
+Require matching bounded contact-after/complete nefc, no duplicate, missing,
+extra or out-of-prefix row links. Read no address slots for contacts without
+observed completed contact rows: an unused address can retain prior bytes,
+including positive numbers or minus one. Never substitute a host float margin
+predicate for GPU eligibility or label unobserved contacts inactive/overflow.
+Leave all unused/inactive bytes intact. Dense sparse-J metadata is not a row
+offset. Keep force/state/Ma out of construction-row comparisons.
+
+Source init1909–2030 allocates rows with per-world atomic addition and records
+contact offsets/IDs. The collision writer reserves global contact slots with
+an atomic addition (collision_core.py213), but this source observation does
+not prove which runtime invocation caused the observed order or numerical
+negative. Observed offsets are storage associations, not physical identity,
+fresh-allocation evidence, complete contact equality or solver equivalence.
+All five flags remain false. No CUDA trial, learner, longer rollout, video or
+physical motion is authorized by these helpers.
+
+Focused source tests cover the historical Jqvel correction, untouched raw banks,
+condim1/3 across worlds, preceding non-contact rows, arbitrary unused addresses,
+orphan/extra/missing/backlink/type/world/extent/overflow failures. The unchanged
+94-file scope now collects3069, frozen in the producer. New same-source CPU
+proofs and separately rooted source-only retention are required again.

@@ -418,7 +418,8 @@ class ComEntryCapture:
 
     def _check_observer_methods(self):
         _need(
-            type(self) in (ComEntryCapture, CpuSerialComControl)
+            type(self)
+            in (ComEntryCapture, CpuSerialComControl, NativeCoupledComControl)
             and getattr(self._call, "__func__", None) is _OBSERVER_CALL,
             "exact observation or two-world CPU-only coupled scope",
         )
@@ -429,6 +430,14 @@ class ComEntryCapture:
                     for name, method in _OBSERVER_METHODS
                 ),
                 "bound original observer methods",
+            )
+        elif type(self) is NativeCoupledComControl:
+            _need(
+                all(
+                    getattr(getattr(self, name), "__func__", None) is method
+                    for name, method in _NATIVE_CONTROL_METHODS
+                ),
+                "bound native coupled methods",
             )
 
     def _before_call(self, model, data, device):
@@ -554,11 +563,156 @@ class CpuSerialComControl(ComEntryCapture):
         return result
 
 
+class NativeCoupledComControl(ComEntryCapture):
+    """Fresh CUDA64 paired-control protocol; never old observation admission.
+
+    Both modes read the actual weighted array before division. Only serial mode
+    splits the original sibling launch. Resource/lease/source admission belongs
+    to the separate fresh supervisor, not this process-local hook.
+    """
+
+    def __init__(self, *, mode):
+        _need(
+            type(mode) is str and mode in ("original", "serial"),
+            "literal coupled CoM mode",
+        )
+        super().__init__()
+        self.mode = self._declared_mode = mode
+        self._split_rows = self._split_binding = None
+        self._kernel_counts = []
+        self._weighted_entries = []
+
+    def __enter__(self):
+        _need(str(wp.get_device()) == "cuda:0", "native coupled CoM requires CUDA0")
+        return super().__enter__()
+
+    def _before_call(self, model, data, device):
+        _need(
+            type(self) is NativeCoupledComControl
+            and type(self.mode) is str
+            and self.mode == self._declared_mode
+            and str(device) == "cuda:0"
+            and type(data.nworld) is int
+            and data.nworld == 64,
+            "exact fixed-mode CUDA64 coupled CoM before kernels",
+        )
+        if self._split_rows is None:
+            # Identical allocation/readback setup in both modes; only dispatch varies.
+            self._split_rows = tuple(
+                wp.array([body], dtype=wp.int32, device=device) for body in (2, 7, 11)
+            )
+            self._split_binding = tuple(_fingerprint(row) for row in self._split_rows)
+        self._check_rows(device)
+        self._kernel_counts.append(0)
+
+    def _check_rows(self, device):
+        _need(
+            type(self._split_rows) is tuple
+            and len(self._split_rows) == 3
+            and tuple(_fingerprint(row) for row in self._split_rows)
+            == self._split_binding,
+            "unchanged native sibling-control storage",
+        )
+        _need(
+            tuple(
+                source_checks._warp_int_ids(row, 1, device, "native singleton")
+                for row in self._split_rows
+            )
+            == ((2,), (7,), (11,)),
+            "exact native sibling-control IDs",
+        )
+
+    def _dispatch(self, index, args, kwargs):
+        device = kwargs["outputs"][0].device
+        _need(
+            type(self) is NativeCoupledComControl
+            and str(device) == "cuda:0"
+            and self.mode == self._declared_mode
+            and self._kernel_counts,
+            "owned fixed-mode native coupled dispatch",
+        )
+        if index == 8:
+            _need(
+                args[0] is _KERNELS[2]
+                and len(self._weighted_entries) == len(self._kernel_counts) - 1,
+                "once per-call actual weighted sum before original division",
+            )
+            wp.synchronize_device(device)
+            values = kwargs["outputs"][0].numpy()
+            _need(
+                values.shape == (64, 16, 3)
+                and values.dtype == np.dtype(np.float32)
+                and np.isfinite(values).all(),
+                "finite complete native weighted array",
+            )
+            self._weighted_entries.append(
+                values.astype("<f4", copy=False).tobytes(order="C")
+            )
+        if index == 5:
+            # Mirror the validation readbacks in both modes. Only the kernel
+            # dispatch order is the paired intervention at this boundary.
+            self._check_rows(device)
+        if index == 5 and self.mode == "serial":
+            _need(
+                args[0] is _KERNELS[1]
+                and kwargs["dim"] == (64, 3)
+                and kwargs["inputs"][1] is kwargs["outputs"][0],
+                "one bound original aliased native sibling group",
+            )
+            for row in self._split_rows:
+                _LAUNCH(
+                    args[0],
+                    dim=(64, 1),
+                    inputs=[*kwargs["inputs"][:2], row],
+                    outputs=kwargs["outputs"],
+                )
+                self._kernel_counts[-1] += 1
+            return None
+        result = _LAUNCH(*args, **kwargs)
+        self._kernel_counts[-1] += 1
+        return result
+
+    def _after_call(self, model, data, device):
+        self._check_rows(device)
+        expected = 13 if self.mode == "serial" else 11
+        _need(
+            self._kernel_counts[-1] == expected
+            and len(self._weighted_entries) == len(self._kernel_counts),
+            "complete native coupled dispatch and weighted boundary",
+        )
+
+    @property
+    def weighted_entries(self):
+        return tuple(self._weighted_entries)
+
+    @property
+    def receipt(self):
+        result = super().receipt
+        expected = 13 if self.mode == "serial" else 11
+        result.update(
+            protocol=PROTOCOL + ":native-coupled-control",
+            mode=self.mode,
+            dispatched_original_kernel_counts=list(self._kernel_counts),
+            split_body_ids=[2, 7, 11] if self.mode == "serial" else [],
+            weighted_boundary="after-accumulation-before-original-division",
+            weighted_boundary_readback_perturbs_timing=True,
+            weighted_sha256=[sha256(raw).hexdigest() for raw in self._weighted_entries],
+            complete_kernel_count_matches=result["status"] == "complete"
+            and self._kernel_counts == [expected, expected]
+            and len(self._weighted_entries) == 2,
+        )
+        return result
+
+
 _OBSERVER_CALL = ComEntryCapture._call
 _OBSERVER_CHECK = ComEntryCapture._check_observer_methods
 _OBSERVER_METHODS = tuple(
     (name, getattr(ComEntryCapture, name))
     for name in ("_before_call", "_dispatch", "_after_call")
+)
+_NATIVE_CONTROL_METHODS = tuple(
+    (name, getattr(NativeCoupledComControl, name))
+    for name in ("_before_call", "_dispatch", "_after_call", "_check_rows")
 )
 
 

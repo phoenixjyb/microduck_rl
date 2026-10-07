@@ -486,3 +486,144 @@ def test_original_observer_class_hook_is_pinned_before_dispatch(
                 smooth.com_pos(env.model, env.data)
     assert scope.receipt["status"] == "faulted"
     assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+@pytest.mark.parametrize("mode", [None, True, "cpu", "concurrent", "SERIAL"])
+def test_native_coupled_mode_is_literal_before_any_device_query(mode, monkeypatch):
+    monkeypatch.setattr(
+        wp, "get_device", lambda *_: pytest.fail("invalid mode queried device")
+    )
+    with pytest.raises(ValueError, match="literal coupled"):
+        capture.NativeCoupledComControl(mode=mode)
+
+
+@pytest.mark.parametrize("mode", ["original", "serial"])
+def test_native_coupled_scope_refuses_cpu_before_dispatch(mode):
+    scope = capture.NativeCoupledComControl(mode=mode)
+    with wp.ScopedDevice("cpu"), pytest.raises(ValueError, match="requires CUDA0"):
+        with scope:
+            pytest.fail("native scope entered CPU")
+    assert not torch.cuda.is_initialized()
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH
+
+
+@pytest.mark.parametrize("domain", ["cpu", "worlds", "boolean", "changed-mode"])
+def test_native_coupled_domains_refuse_before_row_allocation(domain, monkeypatch):
+    from types import SimpleNamespace
+
+    scope = capture.NativeCoupledComControl(mode="serial")
+    data = SimpleNamespace(
+        nworld=True if domain == "boolean" else (2 if domain == "worlds" else 64)
+    )
+    if domain == "changed-mode":
+        scope.mode = "original"
+    monkeypatch.setattr(
+        wp, "array", lambda *_a, **_k: pytest.fail("refused domain allocated")
+    )
+    with pytest.raises(ValueError, match="fixed-mode CUDA64"):
+        scope._before_call(None, data, "cpu" if domain == "cpu" else "cuda:0")
+
+
+@pytest.mark.parametrize("mode,expected", [("original", 11), ("serial", 13)])
+def test_native_dispatch_plan_synthetic_preserves_non_target_arguments(
+    mode, expected, monkeypatch
+):
+    # Synthetic launch recorder only. No Warp CUDA object or kernel is created.
+    class Output:
+        device = "cuda:0"
+
+        def numpy(self):
+            return np.zeros((64, 16, 3), dtype=np.float32)
+
+    scope = capture.NativeCoupledComControl(mode=mode)
+    scope._kernel_counts = [0]
+    rows = tuple(object() for _ in (2, 7, 11))
+    scope._split_rows = rows
+    validations = []
+    monkeypatch.setattr(
+        scope,
+        "_check_rows",
+        lambda device: validations.append((str(device), scope._kernel_counts[-1])),
+    )
+    monkeypatch.setattr(wp, "synchronize_device", lambda *_: None)
+    launches = []
+    monkeypatch.setattr(capture, "_LAUNCH", lambda *a, **k: launches.append((a, k)))
+    output = Output()
+    parent = object()
+    original_row = object()
+    requests = []
+    for index in range(11):
+        kernel = (
+            capture._KERNELS[0]
+            if index == 0
+            else capture._KERNELS[1]
+            if index < 8
+            else capture._KERNELS[index - 6]
+        )
+        inputs = [parent, output, original_row]
+        kwargs = dict(dim=(64, 3), inputs=inputs, outputs=[output])
+        requests.append((kernel, kwargs))
+        scope._dispatch(index, (kernel,), kwargs)
+    assert len(launches) == expected and scope._kernel_counts == [expected]
+    assert validations == [("cuda:0", 5)]  # Same readback boundary in both modes.
+    for index, (kernel, kwargs) in enumerate(requests):
+        position = index + (2 if mode == "serial" and index > 5 else 0)
+        if mode == "serial" and index == 5:
+            split = launches[position : position + 3]
+            assert [k["inputs"][2] for _, k in split] == list(rows)
+            assert all(
+                a == (kernel,)
+                and k["dim"] == (64, 1)
+                and k["inputs"][0] is parent
+                and k["inputs"][1] is output
+                and k["outputs"] is kwargs["outputs"]
+                for a, k in split
+            )
+        else:
+            a, k = launches[position]
+            assert a == (kernel,) and k["inputs"] is kwargs["inputs"]
+            assert k["outputs"] is kwargs["outputs"] and k["dim"] is kwargs["dim"]
+    assert len(scope.weighted_entries) == 1 and len(scope.weighted_entries[0]) == 12288
+    assert scope.receipt["protocol"].endswith(":native-coupled-control")
+    assert scope.receipt["complete_kernel_count_matches"] is False
+    assert all(v is False for v in scope.receipt["flags"].values())
+
+
+@pytest.mark.parametrize("bad", ["nan", "short", "repeat-boundary"])
+def test_native_weighted_boundary_refuses_invalid_values_before_division(
+    bad, monkeypatch
+):
+    class Output:
+        device = "cuda:0"
+
+        def numpy(self):
+            values = np.zeros((64, 16, 3), dtype=np.float32)
+            if bad == "nan":
+                values[0, 0, 0] = np.nan
+            return values[:2] if bad == "short" else values
+
+    scope = capture.NativeCoupledComControl(mode="original")
+    scope._kernel_counts = [8]
+    if bad == "repeat-boundary":
+        scope._weighted_entries = [b"x"]
+    monkeypatch.setattr(wp, "synchronize_device", lambda *_: None)
+    monkeypatch.setattr(
+        capture, "_LAUNCH", lambda *_a, **_k: pytest.fail("invalid division dispatched")
+    )
+    with pytest.raises(ValueError):
+        scope._dispatch(8, (capture._KERNELS[2],), dict(outputs=[Output()]))
+
+
+@pytest.mark.parametrize("level", ["instance", "class"])
+def test_native_dispatch_method_is_pinned_before_scope(level, monkeypatch):
+    scope = capture.NativeCoupledComControl(mode="serial")
+    owner = scope if level == "instance" else capture.NativeCoupledComControl
+    monkeypatch.setattr(
+        owner, "_dispatch", lambda *_: pytest.fail("foreign native dispatch")
+    )
+    monkeypatch.setattr(wp, "get_device", lambda *_: "cuda:0")
+    with pytest.raises(ValueError, match="bound native coupled"):
+        with scope:
+            pytest.fail("foreign native scope entered")
+    assert scope.receipt["status"] == "faulted"
+    assert smooth.com_pos is capture._ENTRY and wp.launch is capture._LAUNCH

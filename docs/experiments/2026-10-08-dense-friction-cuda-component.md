@@ -114,7 +114,7 @@ pass.
 
 Before GPU work, run the retained82-file CPU regression scope plus the three new
 test files on both Mac and WSL with empty CUDA visibility, using only each
-existing`.venv/bin/python`. The final predeclared collected total is2652 tests.
+existing`.venv/bin/python`. The final predeclared collected total is2671 tests.
 Require all85 files, zero skips/errors/failures, no external pytest
 selection/plugin injection, and unchanged complete source bytes. Authenticate
 the retained old scope manifest (4190B,
@@ -246,3 +246,32 @@ on the absent manifest; it created no mirror files. After transport closed,
 the complete externally anchored archive/manifest were authenticated, all
 six paths were confirmed absent, and only then were file bytes created and
 independently rehashed. The failed test unit was not restarted or changed.
+
+## Restored prerequisite and stricter overflow admission
+
+At exact source `6ce049ded0dfdc11fe6a47b02fd00ed13051fdbb`, Mac passed all2652
+tests in200.59s with zero omissions and unchanged complete source leaves.
+Retain `artifacts/tools/friction-prefix-cuda-release-mac-6ce049ded0df`.
+WSL's fresh `microduck-friction-prefix-cuda-tests-6ce049ded0df.service`, invocation
+`462dfc9e10784b3681acca14c8be15c0`, passed2652 tests in180.13s with zero
+skips/errors/failures and terminal MainPID0/SubStateexited/Resultsuccess/exit0.
+Retain `artifacts/tools/friction-prefix-cuda-tests-6ce049ded0df`. Its complete
+inventory is319B /
+`f8b263b7e185d8d248bce6657fe046238087c357151823cd0ea1035e3dfb7f75`.
+Authenticate that external anchor and all three leaf files before JSON/XML
+interpretation. No GPU child was launched at either earlier source.
+
+Owner review identified a source-only admission defect before native execution:
+the aggregate eight-positive/two-negative check could hide structural damage in
+an overflow case because that case is already classified negative. Tighten the
+aggregate to require all eight structural/replay fields to be literal `True`
+for **all ten cases**, plus literal expected overflow/component classifications.
+Overflow remains negative; its opaque prefix, suffix, sparse scratch, counters,
+valid rows and deterministic candidate replay must still be well formed. This
+does not alter inputs, numerical tolerance, old protocols or qualification flags.
+Nineteen mocked tests cover the valid matrix, every structural failure in each
+overflow case, incorrect classification, and truthy non-boolean substitution.
+
+The resulting new execution source must pass the same85-file regression with
+**2671 tests**, zero omissions, on both hosts before GPU admission. Use fresh
+source-derived units/output roots; retain all earlier completed/failed evidence.

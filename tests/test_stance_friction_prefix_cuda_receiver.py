@@ -333,3 +333,41 @@ def test_independent_receiver_never_imports_cuda_runtime():
     ]
     assert not any(name and name.startswith(("warp", "mujoco_warp")) for name in names)
     assert not any(name and name.endswith("cuda_probe") for name in names)
+
+
+def mock_component_matrix():
+    """Plain mocked decisions only; no producer, artifacts, or CUDA runtime."""
+    overflow_cases = {"overflow", "maximum"}
+    return {
+        name: {
+            **{key: True for key in r.STRUCTURAL_KEYS},
+            "component_exact_without_overflow": name not in overflow_cases,
+            "overflow_negative": name in overflow_cases,
+            "overflow_cases_match_pinned_matrix": True,
+        }
+        for name in r.CASES
+    }
+
+
+def test_mock_component_matrix_matches_predeclaration():
+    assert r.matrix_matches(mock_component_matrix()) is True
+
+
+@pytest.mark.parametrize("case", ["overflow", "maximum"])
+@pytest.mark.parametrize("key", list(r.STRUCTURAL_KEYS))
+def test_overflow_case_structural_failure_is_not_hidden(case, key):
+    cases = mock_component_matrix()
+    cases[case][key] = False
+    assert r.matrix_matches(cases) is False
+
+
+def test_mock_component_matrix_rejects_wrong_overflow_classification():
+    cases = mock_component_matrix()
+    cases["overflow"]["component_exact_without_overflow"] = True
+    assert r.matrix_matches(cases) is False
+
+
+def test_mock_component_matrix_requires_literal_boolean_structural_flags():
+    cases = mock_component_matrix()
+    cases["all-dofs"][r.STRUCTURAL_KEYS[0]] = 1
+    assert r.matrix_matches(cases) is False

@@ -45,7 +45,7 @@ LIBRARIES = {
     ),
 }
 # Filled with the exact collected source-test total before source declaration.
-EXPECTED_TESTS = 2652
+EXPECTED_TESTS = 2671
 COMPILER_CONFIG = {
     "mode": "release",
     "optimization_level": None,

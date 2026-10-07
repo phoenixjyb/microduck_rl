@@ -78,7 +78,17 @@ LIBRARIES = {
         "f8e0f74720067ee5606f189463d55142928087bc45b59d0e3e5c2b2385425a3a",
     ),
 }
-EXPECTED_TESTS = 2652
+EXPECTED_TESTS = 2671
+STRUCTURAL_KEYS = (
+    "all_prefix_rows_preserved",
+    "all_inactive_suffix_preserved",
+    "all_sparse_scratch_unchanged",
+    "counts_and_addresses_complete",
+    "candidate_rows_ascending",
+    "candidate_replay_addressed_exact",
+    "candidate_replay_full_bank_bit_identical",
+    "original_candidate_addressed_exact",
+)
 COMPILER_CONFIG = {
     "mode": "release",
     "optimization_level": None,
@@ -94,6 +104,36 @@ def canonical(value):
     return (
         json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n"
     ).encode()
+
+
+def matrix_matches(cases):
+    """Overflow stays negative AND must remain a well-formed controlled sample."""
+    need(
+        type(cases) is dict and set(cases) == set(CASES),
+        "exact ten recomputed matrix cases",
+    )
+    for name, row in cases.items():
+        need(
+            type(row) is dict
+            and set(STRUCTURAL_KEYS)
+            | {
+                "component_exact_without_overflow",
+                "overflow_negative",
+                "overflow_cases_match_pinned_matrix",
+            }
+            <= set(row),
+            "complete recomputed structural matrix fields",
+        )
+        overflow = name in {"overflow", "maximum"}
+        if not all(row[key] is True for key in STRUCTURAL_KEYS):
+            return False
+        if (
+            row["component_exact_without_overflow"] is not (not overflow)
+            or row["overflow_negative"] is not overflow
+            or row["overflow_cases_match_pinned_matrix"] is not True
+        ):
+            return False
+    return True
 
 
 def need(ok, message):
@@ -942,14 +982,7 @@ def verify_run(directory, inventory, *, expected_source, expected_tests_sha):
         if result["component_exact_without_overflow"]
     ]
     negative = [name for name in CASES if name not in positive]
-    expected = (
-        len(positive) == 8
-        and set(negative) == {"overflow", "maximum"}
-        and all(
-            row["overflow_cases_match_pinned_matrix"]
-            for row in report["cases"].values()
-        )
-    )
+    expected = matrix_matches(report["cases"])
     return {
         "protocol": PROTOCOL + ":receiver",
         "source": source_sha,

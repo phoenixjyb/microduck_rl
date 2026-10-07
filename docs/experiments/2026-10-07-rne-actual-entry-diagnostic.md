@@ -176,3 +176,100 @@ candidate committed-leaf inventory is exactly 649 and the ordered 67-file hash
 matches the predeclaration. The native host is still idle, protected services
 inactive and FilmBrain unchanged. This closes local source testing only; the
 fresh native CPU receipt and independent completed closeout remain prerequisites.
+
+## Retained native observation and independent closeout (09:15–09:28 CST)
+
+The tested, pushed source was `3a50dea5d430ae942a48e81ba5e9391a6e7d3b83`,
+tree `c503d1cc24181958678d850515261f5cf9d5cdc0`, with 649 whole leaves and
+inventory SHA-256 `079eaa1270bed50e9ac936719df042067800308015bf22cadb414c111f9a6a0c`.
+The native worktree fast-forwarded cleanly through an authenticated bundle
+(`0977a4251ddd1430775eb64f07e0fa04f3effd1f47d5976675ad066c7244a2b3`).
+The historical checkout remained clean at `2ecee471f7b999822ed19defd7e2d1c7ad09df07`.
+
+Fresh CUDA-hidden prerequisite `microduck-rne-entry-tests-3a50dea5d430.service`
+passed **2,093 tests in 128.32 s**, with zero skips, errors or failures. The
+independently observed owner was PID 3590089; completed invocation
+`7628b38d8e95469abc874d88379d7cbc`, 09:15:15–09:17:58 CST, exit 0, no restarts,
+5,495,648,256-byte peak memory. Exact frozen packages, descriptor, 12 fixture
+files, service caps, clean source, preserved apps and idle GPU closed before the
+receipt. Both hosts retain the three raw files and three independent closeout
+files under `artifacts/tools/rne-entry-tests[-closeout]-3a50dea5d430`:
+
+| File | Bytes | Whole SHA-256 |
+| --- | ---: | --- |
+| receipt.json | 5324 | f977e8d2debe9e74df8792b4d50c0a5d7792a8591df9b1f7e0f9e0f5117ea987 |
+| pytest.log | 2433 | c8e6461becb2ebd887fd2a6ffb1fd52da94f8d4f26ddf7656f1bbd1afdbef4d2 |
+| junit.xml | 398421 | 5aa163fa49c1c50f12ed3fb03947121bf9a52d31c249b20ffb71b3d416b097d2 |
+| closeout/inventory.json | 317 | 506a664d4f1aa0b98dae1f80535d64d8ed06422001f59ba0e46b9067678ad87c |
+| closeout/terminal.json | 391 | 3b7045ec2876b703895fd8e6e1e966cc55e561abd1eaafa2ab007da30719fe71 |
+| closeout/verification.json | 1924 | 2dfeae5f43b30255c90a6fc4b0f68ded9a195933c54bfea56b25c204b7e11839 |
+
+Only then did the fresh leased GPU unit
+`microduck-rne-entry-run-3a50dea5d430.service` run, 09:24:13–09:24:46 CST.
+Invocation `2b4f3eca7f4f4bc69e352bd4bd2d6500`, independently observed owner
+3599080, actual CUDA child 3599957 and parent chain, exit 0, no restarts,
+3,466,940,416-byte peak CPU memory. Its 16 bounded telemetry samples observed
+only the owned child, maximum 32 C / 1,059 MiB whole-GPU use, minimum 23,103 MiB
+free. WDDM per-PID GPU memory remained unavailable, not invented. Closure was
+idle at 630 MiB / 31 C. FilmBrain retained PIDs 521/298048 with no restarts;
+both protected services remained inactive in user and system namespaces.
+
+Exactly 14 raw artifacts are durable on both hosts in
+`artifacts/evaluations/rne-entry-run-3a50dea5d430`. The independent native
+closeout under `artifacts/tools/rne-entry-run-closeout-3a50dea5d430` retained:
+
+| File | Bytes | Whole SHA-256 |
+| --- | ---: | --- |
+| inventory.json | 1506 | 12eab5e741dae16d23902ec6835684ed83c44412177ff77eb44427581426ebab |
+| terminal.json | 390 | ba67f3013ce3e79f30cd49c0789d065e6bc31e332a06ce9adc98834bb5ed292d |
+| receiver.json | 109448 | f55d4344ad6f635a31c23e58660166b0de889c53b21f7bd1c677944d407e56be |
+| verification.json | 1909 | 451afcf742ca12cfc83b9783f6a1b8a7e718edd482d9fa1c63e701dee9c26b56 |
+
+The Mac authenticated all four closeout files before JSON, then all 14 raw files
+before any array decode and independently reproduced **every byte** of the native
+receiver. `mac-receiver.json` has the same 109,448-byte SHA; its native copy was
+verified and file/directory-synced. A console-only summary initially requested a
+nonexistent `mismatch_coordinates` field from the aggregate frame rows after
+successful receiver verification/write; a read-only corrected summary completed.
+This did not change the evidence or rerun the native job.
+
+The narrow decision is **`fresh-rne-serial-reference-exact`**:
+
+- Both actual initialized RNE snapshots are bitwise identical across all 64
+  worlds, bodies and six components; each whole snapshot SHA is
+  `19c7c4957668156328a9f47f84c82774c9beb7946fe62c1ffd796aac67ea4888`.
+  Both CoM initialized snapshots and serial weighted recurrences also match.
+- All 32 detached serial RNE reductions match every scalar of the independent
+  literal float32 recurrence. One unique result, zero mismatches at body0/body1
+  or other bodies. Reference SHA
+  `23cb3d920b1eccb11f1b57b7657fc6d519095da87e40d50c3e577907f906caa7`;
+  full serial bank SHA
+  `7035bf985975559ebedbc5738234923a763562cf22795df10e65c326fc790317`.
+- Concurrent reductions retain four unique results and 134 mismatched scalars:
+  body0 67, body1 67, other bodies zero. Max absolute delta is
+  `1.3969838619232178e-9`; large ordered-bit distances near zero are not large
+  physical forces. All coordinates and 32 repeat/64 world rows remain retained.
+  Full bank SHA `93cbd774320a805cf001044b318cd386f63031abebc6bc93629ab37e0356c12b`.
+
+**Separate negatives remain:** actual original constructor RNE output has four
+reference mismatches (worlds 21/53, body0/body1), forward output has two (world21).
+Those outputs differ in two world53 body0/body1 components. The unchanged
+constructor-to-forward frame packet still differs in `qfrc_bias` and
+`qfrc_smooth`, one scalar each at world53, max three ordered-bit steps /
+`1.3969838619232178e-9`; the other 15 fields and all seven fixed-input fields
+are exact. Full frames SHA
+`149da58d6b25f04ed0cdb94d0f1c8ba9deb9e81a8e8004e55a9f6ffc38877ec1`;
+entries SHA `51bc4ab83a584c27e28ef5b3c6a66810b3b1d69cac439ae9c94a9d981660fca0`;
+outputs SHA `894a986850b5a233cbb08111cb288fc3d688b3eeef994bc969743a31af6a9818`.
+
+This observation narrows a new prospective intervention but proves neither
+historical atomic arrival order nor historical cause. It does **not** qualify
+coupled temporal stability, storage, a learner, a skill, video or hardware.
+All seven admission flags remain false. Next is a separately predeclared actual
+live-array RNE serial sibling control at logical level 4 `(2,7,11)`, with the
+sensory postconstraint path unchanged and complete coupled frames as its gate.
+No prepared scratch result may replace actual initialized runtime arrays.
+
+After retaining both-host closeouts, all three focused RNE modules passed
+**66 tests in 7.00 s**, CUDA hidden; documentation diff whitespace checks passed.
+This evidence-only commit does not qualify a changed native source for a new run.

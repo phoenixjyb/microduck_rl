@@ -142,3 +142,92 @@ inspection, native lean source remained clean at3a50, historical source clean
 at2ece; frozen package trees were unchanged, GPU idle (666 MiB /30 C), FilmBrain
 and protected-service checks passed. Fresh native CPU qualification is still
 required for the subsequently committed exact source.
+
+## Retained native qualification at 50864a995f33
+
+Exact executed source `50864a995f338e379196d43e8446c8f2aa6aca2d`, tree
+`d9541b120b41b328e8c017376e9936ba2bd072e6`, all 656 committed leaves SHA256
+`2aa841c110bfee5e57960fc90155cff61de22742d42a7605634702581452a3ef`.
+The authenticated bundle fast-forwarded only the clean lean worktree. The old
+historical checkout remained clean at2ece. Frozen package versions and complete
+installed-source trees were checked before and after both retained services.
+
+Fresh CPU unit `microduck-rne-coupled-tests-50864a995f33.service`, invocation
+`40eb83d666154eb1bae249a118a72b87`, independently observed owner PID3609514,
+ran 09:41:58–09:44:43 Shanghai. It passed **2,160 tests in132.57s**, no skips,
+errors or failures, CUDA hidden, with peak CPU memory4,827,365,376 bytes. Terminal
+status success/exit0/PID0, no restarts, matched all declared caps. Both native
+and Mac readers authenticated the entire six-file CPU proof before JSON/XML
+decoding; actual invocation, source, collection, JUnit and fixture counts closed.
+
+GPU unit `microduck-rne-coupled-run-50864a995f33.service`, invocation
+`4da922b0a6b341698b2ae0448818c2e3`, independently observed owner PID3617504 and
+child PID3618343/parent3617504, ran09:46:25–09:46:58. Success/exit0/PID0, no
+restarts; CPU peak3,405,651,968 bytes. Eighteen real monitor samples showed only
+the owned child, maximum32C/1,097MiB used and minimum23,065MiB free. Per-PID
+WDDM memory remained honestly unavailable. Idle closeout: no compute PID,
+666MiB/30C/23,496MiB free. FilmBrain PIDs521 and298048 remained active with zero
+restarts; both protected services stayed inactive in user and system namespaces.
+
+Native and Mac receivers independently authenticate all **30 complete raw
+files**, then recompute the same104,815-byte report, whole SHA256
+`f7b1eb1a2aa16c24274c2ead81726aa206bc435dfa885705618b026313a191c1`.
+Mac output is byte-identical, separately durable on both hosts. Raw artifacts:
+`artifacts/evaluations/rne-coupled-run-50864a995f33`; CPU proof:
+`artifacts/tools/rne-coupled-tests-50864a995f33` and its `rne-coupled-tests-closeout-50864a995f33`
+sibling. Independent GPU closeout: `artifacts/tools/rne-coupled-run-closeout-50864a995f33`.
+
+| Whole retained file | Bytes | SHA256 |
+| --- | ---: | --- |
+| CPU receipt | 5454 | `b24e1ebdd19b0283b76ca7f1ad8f99ccea8417eed837ca73a59dadce09289df6` |
+| CPU pytest log | 2433 | `d004621b19554f313c2cf473a709643e05b352fe03d4ed6e2d2bf1463f6716e8` |
+| CPU JUnit | 408188 | `1934ab5e164394a7d3b633742181e9223765d1a1b90c22ea563a15e93a5aa4d7` |
+| CPU closeout inventory | 317 | `c8870b48ab00b8d9b443e084f19326ea119250536c75c608122172351deaa10f` |
+| CPU closeout terminal | 391 | `3f8de82698a2f36d98e16117a412ff98663d7d77e548c6b35269e013c12dd188` |
+| CPU closeout verification | 2552 | `ed0d9433f68955d9f737474f3e0302ba0129a9019f19e78021878d706a9d2811` |
+| GPU declaration | 5022 | `10c5420286fcfef5000619b40cd6bb91c07e5727614f0d352e6a2d349034e8a9` |
+| GPU child receipt | 51002 | `607e3ae765182914a0462bd260885e27445d6dcaa3d757f410617cdb6abdb211` |
+| GPU monitor report | 6850 | `c4fec6925c24077462fc7240f396c6ed78e2a55b355b810d7de2c392b58212a9` |
+| GPU child log | 7619 | `afe36f3b30bf2078f322abd8ca8f497f513cc690a6b2c715425646a7e92f1b9a` |
+| GPU closeout inventory (all30 anchors) | 3429 | `822da5698dac708b59597728ace88543a1c58a3ca982f5a9a087327bfe051a59` |
+| GPU independent terminal | 390 | `d756fcca0d879e22c5f0d8dbed18cfca86762b8d4f61afce999822847a7f95d8` |
+| GPU native receiver / Mac receiver (each) | 104815 | `f7b1eb1a2aa16c24274c2ead81726aa206bc435dfa885705618b026313a191c1` |
+| GPU independent verification | 1916 | `e7af4ace6d7f0419938404e79b6d39c512c4a9132d02fb7813374922eb4c0888` |
+
+## Numerical outcome and the next gate
+
+Decision **`fresh-coupled-rne-control-exact`**, with separate
+**`serial-paired-frames-exact`** and **`serial-temporal-frames-exact`**. All eight
+actual initialized RNE inputs and all eight initialized CoM inputs were exact;
+all four serial RNE outputs and all eight CoM weighted outputs matched their
+independent float32 recurrences. All four complete RNG packets matched. Both
+serial cases matched all17 fields at corresponding boundaries and within their
+own unchanged-input constructor/forward boundaries. Complete204 paired rows and
+68 temporal rows remain in the report, not a selected subset.
+
+**Original cases also happened to repeat exactly in this fresh run**, both paired
+and temporal; all four cases have zero within-case negative coordinates. This
+does not demonstrate that serialization caused temporal stability. Each of the
+four original RNE outputs nevertheless differs from the fixed recurrence in
+**four of6,144 scalars**, two inbody0 and two inbody1, worlds21 and53. Maximum
+absolute delta1.3969838619232178e-9. Large ordered-bit distances near zero must
+not be described as large physical forces. Original output packet SHA
+`c22c5e6e0eb07b297ccbe1438529f3f396d865287c225129ab85fd6457448dcc`;
+serial output packet SHA
+`019a96d8dccc970c14de80d293a703dc3dba55796fa79bb07154497fcd396570`.
+Both original frame packets SHA
+`06d6d1e59741fe4f7e8d74b7f743087cc636200c7efeb772961f028953f33e8a`;
+both serial frame packets SHA
+`b6ea5f6f0a0eadfec7ae77de3eafcb6c7223f0c562e1765d4de51c54ac3195b8`.
+
+The older coupled temporal negative, older actual-RNE observation negative and
+historical full-rollout rejection remain unchanged. All seven admission flags
+remain false. This is exactly one constructor plus one unchanged eager forward
+per case, **no physics integration, learner, storage or graph**, not a new Duck
+skill or a full-runtime qualification. Next prepare a separately bounded,
+tested protocol for actual physics-window controls and independent replay;
+do not extend this two-call control or reuse this receipt for changed source.
+
+Closeout documentation regression: all67 focused tests passed in8.09s, CUDA
+hidden, no omissions; local document links and diff-whitespace checks passed.
+No GPU experiment was rerun to obtain this documentation evidence.

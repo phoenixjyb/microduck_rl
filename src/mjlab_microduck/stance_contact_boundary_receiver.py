@@ -1068,6 +1068,201 @@ def _active_first_difference(left_stage, right_stage, stage):
     return None
 
 
+def _checked_boundary_view(bank, stage):
+    need(
+        type(stage) is str and stage in ("contact_before", "contact_after", "complete"),
+        "literal boundary stage for raw side view",
+    )
+    specs = COMPLETE_CARRIERS if stage == "complete" else CONTACT_CARRIERS
+    need(
+        type(bank) is dict and set(bank) == set(specs),
+        "exact whole boundary carrier bank for raw side view",
+    )
+    for name, (shape, dtype) in specs.items():
+        carrier = bank[name]
+        need(
+            type(carrier) is dict
+            and set(carrier) == {"shape", "dtype", "raw"}
+            and type(carrier["shape"]) is list
+            and all(type(value) is int for value in carrier["shape"])
+            and tuple(carrier["shape"]) == shape
+            and type(carrier["dtype"]) is str
+            and carrier["dtype"] == dtype
+            and type(carrier["raw"]) is bytes
+            and len(carrier["raw"]) == 4 * prod(shape),
+            "literal boundary carrier for raw side view: " + name,
+        )
+
+
+def describe_first_active_difference(left, right, stage):
+    """Add storage coordinates/stale labels, never physical identity or cause.
+
+    This side view needs caller-authenticated packets. It does not change the
+    captured report, supply provenance or grant admission.
+    """
+    _checked_boundary_view(left, stage)
+    _checked_boundary_view(right, stage)
+    difference = _active_first_difference(left, right, stage)
+    if difference is None:
+        return None
+    name = difference["field"]
+    shape = left[name]["shape"]
+    index = difference["word_index"]
+    coordinate = []
+    for axis, size in enumerate(shape):
+        width = prod(shape[axis + 1 :])
+        coordinate.append(index // width)
+        index %= width
+        need(coordinate[-1] < size, "raw coordinate inside literal carrier")
+    left_nefc, right_nefc = (
+        _int_words(left["data.nefc"]),
+        _int_words(right["data.nefc"]),
+    )
+    extent = {"kind": "whole-retained-carrier"}
+    contact_prefix = stage != "complete" and (
+        name.startswith("contact.")
+        and name != "contact.nacon"
+        or name.startswith("context.")
+    )
+    if name == "contact.nacon":
+        extent = {
+            "kind": "global-active-contact-count",
+            "left_count": _int_words(left["contact.nacon"])[0],
+            "right_count": _int_words(right["contact.nacon"])[0],
+        }
+    elif contact_prefix:
+        contact_index = coordinate[0]
+        extent = {
+            "kind": "active-contact-prefix",
+            "contact_index": contact_index,
+            "left_count": _int_words(left["contact.nacon"])[0],
+            "right_count": _int_words(right["contact.nacon"])[0],
+            "left_world": _int_words(left["contact.worldid"])[contact_index],
+            "right_world": _int_words(right["contact.worldid"])[contact_index],
+        }
+        need(
+            0 <= extent["left_world"] < 64 and 0 <= extent["right_world"] < 64,
+            "bounded recorded contact world for raw coordinate",
+        )
+    elif name == "data.nefc" or (
+        name.startswith("efc.")
+        and name != "efc.Ma"
+        and len(shape) >= 2
+        and shape[0] == 64
+    ):
+        world = coordinate[0]
+        extent = {
+            "kind": "per-world-constraint-count"
+            if name == "data.nefc"
+            else "per-world-active-EFC-rows",
+            "world": world,
+            "left_count": left_nefc[world],
+            "right_count": right_nefc[world],
+        }
+    return {
+        "protocol": "microduck-boundary-raw-coordinate-view-oct8-v1",
+        "stage": stage,
+        "delta": dict(difference),
+        "shape": list(shape),
+        "row_major_coordinate": coordinate,
+        "byte_offset": difference["word_index"] * 4,
+        "active_extent": extent,
+        "stale_prior_solver_storage": stage == "complete"
+        and name in STALE_PRIOR_FIELDS,
+        "raw_packets_unchanged": True,
+        "flags": dict(FLAGS),
+        "interpretation": (
+            "raw storage coordinate and declared stale-field label only; "
+            "not physical-contact identity, newly solved force, cause or qualification"
+        ),
+    }
+
+
+def compare_active_contact_payloads(left, right):
+    """Describe recorded input/context payload order, never physical identity.
+
+    Call only on whole-authenticated, independently validated contact packets.
+    Counting a byte-tuple side view neither sorts nor rewrites raw records.
+    Equal payloads do not establish constraint/solver equivalence or a cause.
+    Duplicate payloads remain explicitly ambiguous and are never paired.
+    """
+    groups = []
+    counts = []
+    signatures = []
+    payload_fields = (
+        tuple(
+            name
+            for name in CONTACT_INPUT_ORDER
+            if name.startswith("contact.") and name != "contact.nacon"
+        )
+        + CONTACT_CONTEXT_ORDER
+    )
+    for bank in (left, right):
+        _checked_boundary_view(bank, "contact_before")
+        count = _int_words(bank["contact.nacon"])[0]
+        need(0 <= count <= CONTACT_CAPACITY, "bounded active payload count")
+        counts.append(count)
+        rows, by_payload = [], {}
+        for index in range(count):
+            signature = tuple(
+                bank[name]["raw"][
+                    index * 4 * prod(bank[name]["shape"][1:]) : (index + 1)
+                    * 4
+                    * prod(bank[name]["shape"][1:])
+                ]
+                for name in payload_fields
+            )
+            rows.append(signature)
+            by_payload.setdefault(signature, []).append(index)
+        signatures.append(rows)
+        groups.append(by_payload)
+    left_groups, right_groups = groups
+    unique_links, ambiguous, unmatched = [], [], []
+    # Insertion order is the retained left order, followed by right-only keys.
+    # Pairing uses exact byte tuples, not hashes or decoded numeric equality.
+    keys = dict.fromkeys((*left_groups, *right_groups))
+    for payload in keys:
+        left_indices = left_groups.get(payload, [])
+        right_indices = right_groups.get(payload, [])
+        if len(left_indices) == len(right_indices) == 1:
+            unique_links.append(
+                {"left_index": left_indices[0], "right_index": right_indices[0]}
+            )
+        else:
+            info = {
+                "payload_sha256": sha256(b"".join(payload)).hexdigest(),
+                "left_indices": list(left_indices),
+                "right_indices": list(right_indices),
+            }
+            if len(left_indices) != len(right_indices):
+                unmatched.append(info)
+            if len(left_indices) > 1 or len(right_indices) > 1:
+                ambiguous.append(info)
+    return {
+        "protocol": "microduck-active-contact-payload-view-oct8-v1",
+        "payload_fields": list(payload_fields),
+        "contact_counts": {"left": counts[0], "right": counts[1]},
+        "model_inputs_exact": all(
+            left[name]["raw"] == right[name]["raw"]
+            for name in CONTACT_INPUT_ORDER
+            if name.startswith("model.")
+        ),
+        "record_order_exact": signatures[0] == signatures[1],
+        "payload_multiset_equal": not unmatched,
+        "unique_payload_links": unique_links,
+        "ambiguous_payload_groups": ambiguous,
+        "unmatched_payload_groups": unmatched,
+        "output_fields_compared": False,
+        "raw_packets_unchanged": True,
+        "flags": dict(FLAGS),
+        "interpretation": (
+            "active raw input/context payloads only; unique byte payload links "
+            "are not physical-contact identity, constraint/solver equivalence, "
+            "causal proof or qualification; duplicate payloads remain unpaired"
+        ),
+    }
+
+
 def _nonoverlapping(layouts, label):
     ranges = sorted(
         (start, end, name) for name, (start, end) in layouts.items() if end > start

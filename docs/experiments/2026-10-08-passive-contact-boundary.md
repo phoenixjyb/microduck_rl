@@ -375,3 +375,78 @@ bounded GPU trial. Preserve the same recipe, private seeds, thread maps, lease,
 capture windows and resource caps. A successful capture would still require
 independent whole-byte Mac replay and would not admit a learner, longer rollout,
 video or physical motion.
+
+## Successful passive capture, independently replayed negative
+
+At9de88d19f3ee43f93eaba1cd9319eeca60713de9, both2998-test suites passed,
+zero omissions: WSL180.24s and Mac386.77s. Their319-byte inventory SHA256s
+are `d27c6f58ba19d05572c159fad31f35932c39ebfd17d1c15adc3534d2e3dc6c28`
+and `23ed776a14e8b781a1fd98d97133d5aed510df817de4ebc753bbe84021498d72`.
+Both entire source closures/counts/thread maps and every CPU proof leaf were
+whole-authenticated on both hosts. Native CPU invocation
+a75dbdde153040f393f2279bab5cbe45 is PID0/exited/success0.
+
+The GPU owner completed successfully, invocation
+f8d9893ffbb7455496dfc6f0316fa194, owner4044266/child4044287. Seventeen samples,
+maximum32C, only the owned child; GPU idle after exit. Retain477 raw leaves /
+657294134 bytes on both hosts. Closeout
+`artifacts/tools/contact-boundary-tick-closeout-9de88d19f3ee` has69343-byte
+inventory SHA256
+`84fe5ee296cce8022ade62a4378b6a027c7b1eaedbd18887ff635bfc61467196`,
+1035016-byte native and independent Mac receiver SHA256
+`434f569bb45606339b743a15c3d39da97ee50cc949caa675543e360cacf315f5`,
+and4746-byte Mac replay SHA256
+`7896adc0fe1c9c7f7966813d62ad26b66b7bab5f6e7fe2cf9a5f176d988c9288`.
+Whole transport (1042 bytes) SHA256
+`5b291165b7fc65edd80af42ea763b6881fb037b526bb21581e396bdd44bf8b71`;
+whole archive (22678658 bytes) SHA256
+`407b3513dc15bd0693e4507df9542a744cf0ed4f840e54fa00e101d814ac0f9a`.
+Every raw leaf was authenticated before decoding; Mac independently reproduced
+the complete native receiver byte for byte, then its proof was retained and
+whole-authenticated back on100.98. The source stayed unchanged through replay.
+
+Decision is `passive-contact-boundary-capture-complete`, with candidate recipe
+repeat **false**. All63 friction calls are structurally exact, no overflow;
+the aggregate numerical repeat predicate is nevertheless false. The first
+sampled active and whole-capacity difference is forward4/contact-before,
+contact.dist slot7: little-endian words c9eb1bb7 versus2b0a1cb7. Forward0–3
+sampled boundaries are exact. At forward4/complete, first raw field difference
+is efc.id, world0 row14 (303 versus308); at forward5/complete it is data.qacc,
+and at forward6/complete data.qpos. The first friction input divergence remains
+forward5. Five original/candidate entries match exactly before later unmatched
+trajectory entries. Keep the old321 negative distinct; instrumentation and
+the separately declared runtime thread settings do not make them identical
+experimental conditions. All five flags remain false. No learner/longer
+rollout/video/physical motion follows this negative.
+
+## Source-only payload and raw-coordinate side views
+
+Read-only whole-authenticated inspection of the independently replayed run
+found the same512 active raw input/context payload tuples, with no duplicates,
+at forward4–6, but changed recorded order (500/508/492 uniquely linked payloads
+move slots respectively). This means the first contact.dist slot difference
+does not itself establish a changed contact value for a matched payload. It
+does not prove physical-contact identity, equality of constraint rows, solver
+equivalence, an allocation cause or a training-qualified runtime.
+
+Predeclare two pure, separate receiver helpers; do not wire them into or alter
+the historical capture report/decision. Validate the complete fixed carrier
+schemas before taking active side views. Count exact input/context byte tuples,
+not hashes or float equality, retain insertion order, leave duplicate tuples
+explicitly unpaired, and report unmatched multiplicity and model-input equality
+separately. Never sort/rewrite packets, compare outputs as though they were
+inputs, replace contact identifiers, or promote the earlier negative.
+
+The coordinate helper uses the unchanged active comparator and adds host-shape
+row-major coordinates, contact/per-world counts and a declared stale-storage
+label. In particular force/state/Ma/Jqvel remain prior storage before the solver;
+no per-delta label may call them newly solved. Coordinates describe storage,
+not identity. Caller whole-authentication and the retained independent replay
+are prerequisites; these pure helpers confer no provenance themselves.
+
+Focused197 tests pass, including all input/context fields, duplicate and
+multiplicity guards, signed-zero/NaN bits, inactive-only changes, matrix slots,
+EFC world/row/component coordinates, count mismatches and malformed banks.
+The unchanged94-file scope now collects3044; this exact count is frozen.
+Both full CPU suites and source-bound side-view retention are still required.
+This is a source-only diagnostic revision, not a fresh CUDA trial or admission.

@@ -431,6 +431,269 @@ def test_active_extent_counts_are_bounded_plain_ints():
         receiver._int_words(_field(struct.pack("<i", 1), (1,), "<f4"))
 
 
+def _payload_bank(count=2):
+    bank = {
+        name: _field(bytes(4 * receiver.prod(shape)), shape, dtype)
+        for name, (shape, dtype) in receiver.CONTACT_CARRIERS.items()
+    }
+    bank["contact.nacon"]["raw"] = struct.pack("<i", count)
+    bank["contact.dist"]["raw"] = struct.pack("<2I", 0, 0x80000000) + bytes(
+        4 * (receiver.CONTACT_CAPACITY - 2)
+    )
+    return bank
+
+
+def _complete_view_bank(world=2, count=4):
+    bank = {
+        name: _field(bytes(4 * receiver.prod(shape)), shape, dtype)
+        for name, (shape, dtype) in receiver.COMPLETE_CARRIERS.items()
+    }
+    counts = [0] * 64
+    counts[world] = count
+    bank["data.nefc"]["raw"] = struct.pack("<64i", *counts)
+    return bank
+
+
+def _change_raw_word(bank, name, index, word=b"\x00\x00\x00\x80"):
+    raw = bank[name]["raw"]
+    bank[name]["raw"] = raw[: index * 4] + word + raw[(index + 1) * 4 :]
+
+
+def test_coordinate_view_identifies_matrix_slot_and_contact_world_without_mutation():
+    left, right = _payload_bank(8), _payload_bank(8)
+    index = 7 * 9 + 2 * 3 + 1
+    _change_raw_word(right, "context.frame", index)
+    before = deepcopy((left, right))
+    result = receiver.describe_first_active_difference(left, right, "contact_before")
+    assert (left, right) == before
+    assert result["shape"] == [8192, 3, 3]
+    assert result["row_major_coordinate"] == [7, 2, 1]
+    assert result["byte_offset"] == index * 4
+    assert result["delta"]["right_word_le_hex"] == "00000080"
+    assert result["active_extent"] == {
+        "kind": "active-contact-prefix",
+        "contact_index": 7,
+        "left_count": 8,
+        "right_count": 8,
+        "left_world": 0,
+        "right_world": 0,
+    }
+    assert result["stale_prior_solver_storage"] is False
+    assert not any(result["flags"].values())
+
+
+@pytest.mark.parametrize("name,stale", (("efc.force", True), ("efc.J", False)))
+def test_coordinate_view_identifies_active_world_row_and_stale_solver_storage(
+    name, stale
+):
+    left, right = _complete_view_bank(), _complete_view_bank()
+    width = receiver.prod(left[name]["shape"][2:])
+    index = (2 * 512 + 3) * width + (7 if width > 1 else 0)
+    _change_raw_word(right, name, index)
+    result = receiver.describe_first_active_difference(left, right, "complete")
+    assert result["row_major_coordinate"] == [2, 3] + ([7] if width > 1 else [])
+    assert result["active_extent"] == {
+        "kind": "per-world-active-EFC-rows",
+        "world": 2,
+        "left_count": 4,
+        "right_count": 4,
+    }
+    assert result["stale_prior_solver_storage"] is stale
+    assert not any(result["flags"].values())
+
+
+@pytest.mark.parametrize("stage", ("contact_before", "contact_after", "complete"))
+def test_coordinate_view_does_not_promote_inactive_capacity_differences(stage):
+    if stage == "complete":
+        left, right = _complete_view_bank(), _complete_view_bank()
+        _change_raw_word(right, "efc.force", 2 * 512 + 4)
+    else:
+        left, right = _payload_bank(), _payload_bank()
+        _change_raw_word(right, "contact.dist", 2)
+    assert receiver.describe_first_active_difference(left, right, stage) is None
+
+
+@pytest.mark.parametrize("stage", ("contact_before", "complete"))
+def test_coordinate_view_count_mismatch_identifies_count_not_arbitrary_row(stage):
+    if stage == "complete":
+        left, right = _complete_view_bank(count=4), _complete_view_bank(count=5)
+        expected = [2]
+    else:
+        left, right = _payload_bank(1), _payload_bank(2)
+        expected = [0]
+    result = receiver.describe_first_active_difference(left, right, stage)
+    assert result["row_major_coordinate"] == expected
+    assert result["delta"]["extent_counts_equal"] is False
+    assert (
+        result["active_extent"]["right_count"] - result["active_extent"]["left_count"]
+        == 1
+    )
+
+
+@pytest.mark.parametrize("stage", (None, True, "solver", "contact"))
+def test_coordinate_view_refuses_unknown_stage(stage):
+    with pytest.raises(ValueError, match="literal boundary stage"):
+        receiver.describe_first_active_difference(
+            _payload_bank(), _payload_bank(), stage
+        )
+
+
+@pytest.mark.parametrize(
+    "damage", ("unknown", "missing", "shape", "raw", "count", "world")
+)
+def test_coordinate_view_refuses_malformed_or_out_of_range_banks(damage):
+    left, right = _payload_bank(), _payload_bank()
+    if damage == "unknown":
+        right["extra"] = right["contact.dist"]
+    elif damage == "missing":
+        del right["context.pos"]
+    elif damage == "shape":
+        right["context.frame"]["shape"] = [8192, 3]
+    elif damage == "raw":
+        right["context.frame"]["raw"] = b"bad"
+    elif damage == "count":
+        right["contact.nacon"]["raw"] = struct.pack("<i", 8193)
+    else:
+        _change_raw_word(right, "contact.dist", 0, b"\x01\x00\x00\x00")
+        _change_raw_word(right, "contact.worldid", 0, struct.pack("<i", 64))
+    with pytest.raises(ValueError):
+        receiver.describe_first_active_difference(left, right, "contact_before")
+
+
+def test_contact_payload_view_links_unique_byte_payloads_without_mutation():
+    left = _payload_bank()
+    right = deepcopy(left)
+    raw = right["contact.dist"]["raw"]
+    right["contact.dist"]["raw"] = raw[4:8] + raw[:4] + raw[8:]
+    before = deepcopy((left, right))
+    report = receiver.compare_active_contact_payloads(left, right)
+    assert (left, right) == before
+    assert report["record_order_exact"] is False
+    assert report["payload_multiset_equal"] is True
+    assert report["unique_payload_links"] == [
+        {"left_index": 0, "right_index": 1},
+        {"left_index": 1, "right_index": 0},
+    ]
+    assert report["ambiguous_payload_groups"] == []
+    assert report["output_fields_compared"] is False
+    assert not any(report["flags"].values())
+
+
+def test_duplicate_contact_payloads_are_ambiguous_and_never_arbitrarily_paired():
+    left = _payload_bank()
+    left["contact.dist"]["raw"] = bytes(4 * receiver.CONTACT_CAPACITY)
+    report = receiver.compare_active_contact_payloads(left, deepcopy(left))
+    assert report["payload_multiset_equal"] is True
+    assert report["unique_payload_links"] == []
+    assert len(report["ambiguous_payload_groups"]) == 1
+    assert report["ambiguous_payload_groups"][0]["left_indices"] == [0, 1]
+    assert report["ambiguous_payload_groups"][0]["right_indices"] == [0, 1]
+
+
+@pytest.mark.parametrize(
+    "name",
+    tuple(
+        key
+        for key in receiver.CONTACT_INPUT_ORDER
+        if key.startswith("contact.") and key != "contact.nacon"
+    )
+    + receiver.CONTACT_CONTEXT_ORDER,
+)
+def test_contact_payload_links_require_every_input_and_context_field(name):
+    left, right = _payload_bank(), _payload_bank()
+    raw = right[name]["raw"]
+    right[name]["raw"] = bytes([raw[0] ^ 1]) + raw[1:]
+    report = receiver.compare_active_contact_payloads(left, right)
+    assert report["payload_multiset_equal"] is False
+    assert len(report["unmatched_payload_groups"]) == 2
+
+
+def test_contact_payload_view_does_not_pair_missing_or_changed_multiplicity():
+    left, right = _payload_bank(), _payload_bank(1)
+    report = receiver.compare_active_contact_payloads(left, right)
+    assert report["contact_counts"] == {"left": 2, "right": 1}
+    assert report["payload_multiset_equal"] is False
+    assert report["unique_payload_links"] == [{"left_index": 0, "right_index": 0}]
+    assert len(report["unmatched_payload_groups"]) == 1
+
+
+def test_contact_payload_view_preserves_nan_bits_and_refuses_numeric_equivalence():
+    left, right = _payload_bank(), _payload_bank()
+    left["contact.dist"]["raw"] = (
+        bytes.fromhex("0100c07f") + left["contact.dist"]["raw"][4:]
+    )
+    right["contact.dist"]["raw"] = (
+        bytes.fromhex("0200c07f") + right["contact.dist"]["raw"][4:]
+    )
+    report = receiver.compare_active_contact_payloads(left, right)
+    assert report["payload_multiset_equal"] is False
+    assert len(report["unmatched_payload_groups"]) == 2
+
+
+def test_contact_payload_view_separates_inactive_capacity_outputs_and_model_inputs():
+    left, right = _payload_bank(), _payload_bank()
+    raw = right["contact.dist"]["raw"]
+    right["contact.dist"]["raw"] = raw[:-4] + bytes.fromhex("0100c07f")
+    right["contact.efc_address"]["raw"] = (
+        bytes.fromhex("01000000") + right["contact.efc_address"]["raw"][4:]
+    )
+    right["model.body_weldid"]["raw"] = (
+        bytes.fromhex("01000000") + right["model.body_weldid"]["raw"][4:]
+    )
+    report = receiver.compare_active_contact_payloads(left, right)
+    assert report["record_order_exact"] is True
+    assert report["payload_multiset_equal"] is True
+    assert report["model_inputs_exact"] is False
+    assert report["output_fields_compared"] is False
+
+
+@pytest.mark.parametrize("count", (0, 1, 8192))
+def test_contact_payload_view_bounds_empty_single_and_full_active_prefix(count):
+    bank = _payload_bank(count)
+    report = receiver.compare_active_contact_payloads(bank, deepcopy(bank))
+    assert report["contact_counts"] == {"left": count, "right": count}
+    assert report["record_order_exact"] and report["payload_multiset_equal"]
+
+
+@pytest.mark.parametrize(
+    "damage",
+    (
+        "extra",
+        "missing",
+        "shape-bool",
+        "shape",
+        "dtype",
+        "raw-type",
+        "raw-size",
+        "count-negative",
+        "count-overflow",
+    ),
+)
+def test_contact_payload_view_rejects_malformed_or_unbounded_carriers(damage):
+    left, right = _payload_bank(), _payload_bank()
+    carrier = right["contact.dist"]
+    if damage == "extra":
+        right["unknown"] = carrier
+    elif damage == "missing":
+        del right["context.frame"]
+    elif damage == "shape-bool":
+        carrier["shape"] = [True]
+    elif damage == "shape":
+        carrier["shape"] = [1]
+    elif damage == "dtype":
+        carrier["dtype"] = "<i4"
+    elif damage == "raw-type":
+        carrier["raw"] = bytearray(carrier["raw"])
+    elif damage == "raw-size":
+        carrier["raw"] = carrier["raw"][:-4]
+    else:
+        right["contact.nacon"]["raw"] = struct.pack(
+            "<i", -1 if damage == "count-negative" else 8193
+        )
+    with pytest.raises(ValueError):
+        receiver.compare_active_contact_payloads(left, right)
+
+
 def test_capture_plan_is_literal_bounded_and_non_admitting():
     plan = receiver.expected_capture_plan()
 

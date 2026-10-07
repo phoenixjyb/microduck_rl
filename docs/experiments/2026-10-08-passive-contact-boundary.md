@@ -112,7 +112,7 @@ OMP_NUM_THREADS=1, MKL_NUM_THREADS=1, OPENBLAS_NUM_THREADS=1 and
 NUMEXPR_NUM_THREADS=1. Retain these exact four settings in both receipts and
 refuse absent/changed settings. Do not mutate the owner environment or CUDA
 recipe, install packages, widen service task limits or reuse an older receipt.
-The reviewed collection is2940 tests; its ordered-scope
+The reviewed collection is2944 tests; its ordered-scope
 SHA256 is `253d755fc09f0b5286695a85303353ff6349e7f4bb88cbd3b97dea5b1872fb6a`.
 Native execution remains blocked until both same-source receipts and the
 completed native CPU user-service witness are authenticated. Do not reuse older
@@ -161,5 +161,43 @@ SHA256 is `5561314a7b489187b94ef4914714c59943463e2299a358eb49c5c7f6511721b7`.
 The bounded repair adds nine CPU settings guards; all93 focused tests pass.
 The unchanged ordered94-file scope recollects2940 tests. Both full same-source
 suites must be rerun. This is source-only evidence. Those new full runs are pending.
-No native run exists for this experiment; the earlier numerical negative remains
-the latest real-model result. Native execution remains blocked on prerequisites.
+
+At06065bf56edca8c8c21418a2a48d25d33d82bc59 those2940-test full suites passed:
+WSL179.65s and Mac315.17s, zero omissions. Their319-byte inventory SHA256s are
+`76348f2239ffb96f5e4b638b7cc16d0948526554278750c9f470c850f45a5b6c`
+and `4ecb2c247c139c58bbe1f7d659122bb8a0e0302e075c0440dc9987b577402ba4`.
+The subsequent native attempt invocationdfbfba0753d240959dd628dbb413ef77
+failed: child3998746 SIGABRT/status-6, owner3998663 status1, both nowPID0.
+Its23-byte child log says `libc++abi: terminating`. All three generated
+source/metadata/CUBIN triplets exist, but there is no child receipt or arm
+packet: compilation, explicit loading, post-load checks and constructor/first
+forward are not distinguished. The authenticated kernel log records
+`cgroup: fork rejected by pids controller` for this exact service immediately
+before signal6: task/thread creation exhaustion is a documented coincident
+condition and strongly supported proximate explanation. The responsible native
+library/pool and Python call site remain unknown; do not claim a contact cause.
+Preserve18 raw leaves/2827130 bytes and
+`artifacts/tools/contact-boundary-gpu-failure-06065bf56edc`:
+547-byte inventory SHA256
+`4ee348a15a4959de921e6421d82798e9d3aed6f65b901be93125f268619caa4f`,
+2378-byte raw-inventory SHA256
+`eede365df7abb84ecb6141ae9ebcce5ffb11cad2d7bafab93d1652eb91c9be58`.
+Seven owner samples saw only the owned child,30–32C; GPU idle afterward,
+FilmBrain identities unchanged and protected services inactive.
+
+Next bounded attempt adds child-start PYTHONFAULTHANDLER=1 and flushed bounded
+stderr phase JSON around the existing import/init, serial compile/load/hooks,
+factory check and unchanged recipe-case calls. Observe only four thread-env
+values and `/proc/self/status` Threads; do not change their values, service
+caps, physics/control/seed recipe, legacy modules or raw packets. Fatal-signal
+logging provides Python frames, not a native C++ root-cause claim. The four new
+guard cases bring the unchanged94-file scope to2944; both same-source full
+CPU prerequisites must be rerun before any retry. There is still no completed
+native contact-boundary run; the earlier complete numerical negative remains
+the latest real-model result. All qualification flags remain false.
+
+The97 focused tests pass and the94-file scope collects2944 tests for this
+logging-only revision. The bounded unchanged-thread retry is for localization,
+not blind promotion; if it identifies resource exhaustion at a native call,
+predeclare a separately bound host-thread-budget repair rather than silently
+changing this recipe or widening the service cap.

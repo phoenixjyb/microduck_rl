@@ -26,7 +26,7 @@ BRANCH = "feat/athletics-obstacle-curriculum"
 CUTOFF = 1791415800  # Newly declared Oct8 07:30 Asia/Shanghai owner cutoff.
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 600, 540, 240, 60
 CPU_SERVICE_SECONDS, CPU_TEST_SECONDS = 660, 600
-EXPECTED_TESTS = 2940  # Exact reviewed 94-file collection; receipts still required.
+EXPECTED_TESTS = 2944  # Exact reviewed 94-file collection; receipts still required.
 CPU_TEST_THREADS = {
     "OMP_NUM_THREADS": "1",
     "MKL_NUM_THREADS": "1",
@@ -673,6 +673,44 @@ def tests(source):
     return record
 
 
+def diagnostic_phase(phase, role=None):
+    """Flushed non-admitting breadcrumbs; observe, never alter native thread pools."""
+    need(
+        type(phase) is str and 0 < len(phase) <= 64,
+        "bounded diagnostic phase label",
+    )
+    need(role is None or role in {*ARMS, "candidate", "contact"}, "diagnostic role")
+    threads = None
+    status = Path("/proc/self/status")
+    if status.exists():
+        rows = [
+            line
+            for line in status.read_text().splitlines()
+            if line.startswith("Threads:")
+        ]
+        need(len(rows) == 1, "one observed native thread-count row")
+        threads = int(rows[0].split()[1])
+    settings = {name: os.environ.get(name) for name in CPU_TEST_THREADS}
+    need(
+        all(value is None or len(value) <= 64 for value in settings.values()),
+        "bounded observed thread settings",
+    )
+    raw = canonical(
+        {
+            "protocol": PROTOCOL + ":phase",
+            "phase": phase,
+            "role": role,
+            "pid": os.getpid(),
+            "threads": threads,
+            "observed_cpu_thread_env": settings,
+        }
+    )
+    need(
+        len(raw) <= 1024 and os.write(2, raw) == len(raw),
+        "complete bounded phase write",
+    )
+
+
 def _compile_modules(wp, ctx, artifacts, device, directory):
     from mujoco_warp._src import constraint
     from mjlab_microduck.stance_friction_runtime_kernel import ascending_friction_dof
@@ -708,9 +746,11 @@ def _compile_modules(wp, ctx, artifacts, device, directory):
         )
         artifact_dir = directory / ("compiled-" + role)
         need(not artifact_dir.exists(), "unique private compiled module directory")
+        diagnostic_phase("compile-start", role)
         compiled = held["compile"][0](
             module, device, artifact_dir, role + ".cubin", arch, False
         )
+        diagnostic_phase("compile-done", role)
         need(
             compiled is True and not module.execs,
             "fresh compilation before explicit load",
@@ -733,6 +773,7 @@ def _compile_modules(wp, ctx, artifacts, device, directory):
             metadata_sha256=meta_info["sha256"],
         )
         artifacts.assert_fresh_module(module, device, 256)
+        diagnostic_phase("load-start", role)
         executable = held["load"][0](
             module,
             device,
@@ -741,12 +782,16 @@ def _compile_modules(wp, ctx, artifacts, device, directory):
             output_arch=arch,
             meta_path=str(meta),
         )
+        diagnostic_phase("load-done", role)
         need(
             executable is not None
             and executable is module.execs.get((device.context, 256)),
             "actual explicit module load",
         )
+        diagnostic_phase("hooks-start", role)
         hooks = held["hooks"][0](executable, kernel)
+        diagnostic_phase("hooks-done", role)
+        diagnostic_phase("bind-start", role)
         bound = artifacts.bind_loaded_module(
             artifact,
             kernel,
@@ -756,6 +801,7 @@ def _compile_modules(wp, ctx, artifacts, device, directory):
             block_dim=256,
             expected_module_hash=module_hash,
         )
+        diagnostic_phase("bind-done", role)
         need(
             canonical(module.options | kernel.options) == options,
             "compiled source and options unchanged",
@@ -882,9 +928,16 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         "fresh process-private Warp cache",
     )
 
+    need(
+        os.environ.get("PYTHONFAULTHANDLER") == "1",
+        "child fatal-signal logging enabled at startup",
+    )
+    diagnostic_phase("torch-import-start")
     import torch
 
+    diagnostic_phase("torch-import-done")
     caller_rng = initialize_caller_rng(torch)
+    diagnostic_phase("caller-rng-initialized")
     import warp as wp
     from warp._src import context as ctx
     from mujoco_warp._src import constraint
@@ -908,7 +961,9 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         "unchanged pinned MuJoCo-Warp tree and constraint source",
     )
     compiler_config = configure_compiler(wp)
+    diagnostic_phase("warp-init-start")
     wp.init()
+    diagnostic_phase("warp-init-done")
     need(
         str(ctx.runtime.core._name) == libraries["warp.so"]["path"]
         and str(ctx.runtime.llvm._name) == libraries["warp-clang.so"]["path"],
@@ -947,7 +1002,9 @@ def child(source, lease_fd, owner_pid, declaration_sha):
     frozen_dispatch_entries(constraint, base)
     held_contact = contact_factory_binding(constraint)
     compiled, bound, _roles = _compile_modules(wp, ctx, artifacts, device, directory)
+    diagnostic_phase("three-explicit-loads-complete")
     check_contact_factory(constraint, held_contact)
+    diagnostic_phase("contact-factory-checked")
     need(_roles["contact"] is held_contact["kernel"], "compiled literal contact target")
     active_observer = None
 
@@ -1024,6 +1081,7 @@ def child(source, lease_fd, owner_pid, declaration_sha):
 
     candidate = runtime_kernel.ascending_friction_dof
     for arm in ARMS:
+        diagnostic_phase("arm-start", arm)
         selected_bound = bound["original" if arm == "original" else "candidate"]
         with wp.ScopedDevice(device), wp.ScopedStream(stream):
             observer = control.RuntimeContactBoundaryObserver(
@@ -1041,7 +1099,9 @@ def child(source, lease_fd, owner_pid, declaration_sha):
             guard()
             with observer:
                 selected_bound.assert_unchanged()
+                diagnostic_phase("recipe-case-start", arm)
                 recipe, packets = recipe_case(torch, wp)
+                diagnostic_phase("recipe-case-done", arm)
                 guard()
             arm_observers[arm] = observer.receipt()
             recipe_arms.setdefault(arm, {})["boundary"] = observer.boundary_receipt()
@@ -1299,6 +1359,7 @@ def run(source, tests_inventory_sha, mac_tests_inventory_sha):
         env = {
             **os.environ,
             "CUDA_VISIBLE_DEVICES": "0",
+            "PYTHONFAULTHANDLER": "1",
             "WARP_CACHE_PATH": str(directory / "private-warp-cache"),
         }
         check_window(CHILD_SECONDS + CLOSEOUT_SECONDS + MARGIN)

@@ -41,6 +41,37 @@ def test_cpu_child_thread_caps_refuse_visible_cuda(monkeypatch, tmp_path):
         probe.cpu_test_environment(tmp_path)
 
 
+def test_flushed_diagnostic_phase_observes_without_mutating_thread_environment(
+    monkeypatch,
+):
+    monkeypatch.setenv("OMP_NUM_THREADS", "20")
+    before = dict(os.environ)
+    writes = []
+
+    def capture(fd, raw):
+        writes.append((fd, raw))
+        return len(raw)
+
+    monkeypatch.setattr(probe.os, "write", capture)
+    probe.diagnostic_phase("compile-start", "contact")
+    assert os.environ == before
+    assert len(writes) == 1 and writes[0][0] == 2
+    value = json.loads(writes[0][1])
+    assert value["protocol"] == probe.PROTOCOL + ":phase"
+    assert value["phase"] == "compile-start" and value["role"] == "contact"
+    assert value["observed_cpu_thread_env"]["OMP_NUM_THREADS"] == "20"
+    assert len(writes[0][1]) <= 1024
+
+
+@pytest.mark.parametrize("phase", (None, "", "x" * 65))
+def test_diagnostic_phase_refuses_unbounded_label_before_write(monkeypatch, phase):
+    monkeypatch.setattr(
+        probe.os, "write", lambda *_: pytest.fail("write before phase guard")
+    )
+    with pytest.raises(ValueError, match="bounded diagnostic phase label"):
+        probe.diagnostic_phase(phase)
+
+
 def _git_tree_entry(name, raw):
     oid = sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
     return f"100644 blob {oid}\t{name}\0".encode()

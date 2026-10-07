@@ -143,7 +143,16 @@ a full-window qualification: runtime_cause_proven, native_qualified,
 full_window_qualified, training_authorized and physical_acceptance remain
 literal false. Any longer window requires a separate predeclaration.
 
-## Status
+## Status: retained negative, not runtime qualification
+
+The complete run at `321a72a6b7d3d64808dafdbc36309052495cc85b` finished
+successfully as a process but failed its numerical repeatability gate.
+Independent Mac replay authenticated every whole retained leaf and reproduced
+the native negative report byte for byte. No longer rollout or learner is
+admitted. The earlier prerequisite and failed-attempt chronology follows;
+those records are not substituted for the completed execution source.
+
+### Earlier prerequisite chronology
 
 Predeclared before native execution. The113 new focused CPU tests passed
 (2.60s), and the full90-file scope collected exactly2800 tests (10.63s).
@@ -243,3 +252,58 @@ Both failed units and all raw/private caches remain unchanged. Eleven new
 setup/receipt refusal cases bring the frozen90-file scope to2822 tests.
 Fresh exact-source Mac/WSL suites and the original bounded caps/lease gates
 are required before another separately sourced execution.
+
+### Completed three-arm execution and independent replay
+
+Execution source `321a72a6b7d3d64808dafdbc36309052495cc85b` passed all2822
+tests in the frozen90-file scope on Mac (264.09s) and WSL (175.92s), zero
+errors, failures or omissions. Mac CPU inventory319 bytes SHA256
+`ca709e7737500ae78fb1d910b1d153f35e305d406926f04508bb718890cf4712`;
+WSL CPU inventory319 bytes SHA256
+`92e5550a1c5be02455c4bd908ddfee3f329db0fb580022518f142fd95f16bfeb`.
+CPU unit invocation `7f6d949a13c34b6d91ecaafde6899adf` exited successfully.
+
+Run unit `microduck-friction-runtime-tick-run-321a72a6b7d3.service`,
+invocation `a0e9fa2b55564e98872e0d29aff7cb9e`, ownerPID3956199 and observed
+CUDA childPID3956220, completed with MainPID0, SubStateexited, Resultsuccess,
+exit0. Its16 samples ended at32.154s; temperature never exceeded32C. Only
+the owned CUDA child was observed. All three fresh arms completed, retaining
+63 friction entries and30 accepted BAM proposals. There is no failure packet.
+
+Raw evidence on both hosts:
+`artifacts/evaluations/friction-runtime-tick-run-321a72a6b7d3`,
+414 whole files /526737887 bytes. Closeout on both hosts:
+`artifacts/tools/friction-runtime-tick-closeout-321a72a6b7d3`:
+
+| Leaf | Bytes | SHA256 |
+| --- | ---: | --- |
+| inventory.json | 60551 | `233e52baa6d73fc9b23b4149f013d783638bdaa4ff814ab6eacbea765ae4bb58` |
+| receiver.json and mac-receiver.json | 1024216 each | `69a1616f48189de605f9efd0e6d4eb58372031d14ff9c6bc6e36d779383884f2` |
+| mac-replay.json | 842 | `6e75c19aa3b5464a8b60b28a69669818d55b1f5f4fb9b6ce030974229a6093a6` |
+| terminal.txt | 104 | `4edd349d407c77b66d4bf2890710eadeb6b193c43c322f86fe903213b4f87bc3` |
+
+Decision: `real-model-one-tick-candidate-repeat-negative`.
+All63 entries were structurally exact with no overflow. Constructor forward0
+has zero active friction DOFs; subsequent entries retain14 positive DOFs per
+world. Candidate0 versus candidate1 first differs in inputs at forward5.
+Original versus candidate has five matched entries (forwards0–4), all
+addressed fields exact, followed by16 unmatched entries; later trajectory
+comparison is not relabelled equivalence.
+
+Candidate recipe-state repeat is false. The complete `com.weighted`, RNG,
+masks, load friction scale, Stribeck budget, EFC type and nefc packets match;
+other retained recipe packets do not all match. This is valid structural
+friction-component evidence under the new one-tick owner, **not** a repeatable
+complete tick or proof of the original runtime cause. All five qualification
+flags remain literally false. Both earlier failed units, raw evidence and
+private caches remain unchanged.
+
+Post-run GPU occupancy was idle (no compute PIDs,664MiB display allocation,
+0% utilization,30C at the later read-only check). Protected services remained
+inactive; FilmBrain PIDs521 and298048 remained active with zero restarts.
+No services, installed packages, drivers or shared caches were changed.
+
+Next: independently retain a bit-addressed first-divergence diagnosis before
+predeclaring any new native experiment. Do not relax exactness, sort or repair
+recorded banks, select favorable retries, extend the rollout, or launch a
+learner to work around this negative.

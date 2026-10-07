@@ -695,3 +695,107 @@ both matched and unpaired capacity without oversized output.
 The unchanged94-file scope collects3143, frozen in the
 producer. Require fresh exact-source full CPU proofs on both hosts and new
 separately rooted authenticated retention. No new CUDA run follows this revision.
+
+### Completed full-row retention atd04d069507be
+
+Both3143-test suites passed with zero omissions: Mac263.12s, WSL188.34s.
+The319-byte inventory SHA256s are respectively
+`4957fc382850f723fa4e4a9ba4a2a75db3c256a302bdcd81ae355080b92d016a`
+and `e04cb7d86a704d16e96d21c31fc0ce54a37045c4c306ca6fd0fe640fb3da0cd4`.
+The exact94-file source/count/thread/proof closures authenticated on both
+hosts. Native invocation38b7a3869ed84ec38453cab2d72b19d4 closed PID0/success0,
+MemoryPeak3849744384 bytes. One ad-hoc proof-audit command initially omitted
+the isolated checkout's PYTHONPATH and imported the preserved historical
+editable package; the corrected process-local command passed, without any
+package, alias, service or historical evidence change.
+
+Independent reports at
+`artifacts/tools/contact-boundary-payload-view-d04d069507be` are byte-identical
+on both hosts:1221651-byte diagnosis SHA256
+`c6d990f6de3c610cfacc67eefe765a3bf2b8b135c0c1d635226e8c74e9f6501b`,
+113-byte inventory SHA256
+`bed573dec404c6fdd1a14beafa002053165a6404e33d2c99c9172f9da0b3547a`.
+External whole anchors were checked before decode and literal independent
+byte comparison. The source-only driver matches both hosts, SHA256
+`7b05a29b71994d7e497f6fef90a01af5e64ebeb6bb0b7594c5b92fc548cdbcae`.
+The runtime source remains9de88d19f3ee; this newer source does not rerun or
+retroactively qualify that owner. Both raw stores and prior reports remain intact.
+
+Forward0 has no active rows and null coverage/equality, not a vacuous pass.
+Forwards1–3 cover all896 same-offset non-contact rows, with all eight captured
+fields exact. Forward4 covers all2944 active rows:2048 unique-payload-linked
+contact rows plus896 same-offset non-contact rows, zero uncovered rows and no
+excluded payload links. All79488 captured words across those eight fields
+match. This is complete coverage of that captured construction subset only.
+It coexists with the retained forward4/call2 observation of1986/2048 differing
+linked post-solve force words and1062/1280 differing aggregate load words.
+
+Forward5 still covers all2944 rows; contact fields match, but393/896 non-contact
+frictionloss words differ. Forward6 retains full coverage; contact vel/Jqvel
+differ at840/2048 and aref at830/2048, while non-contact vel differs at832/896,
+aref at831/896 and frictionloss at393/896. Other compared fields match.
+These are downstream literal observations, not an intervention or physical
+error bound. No all-driver equality, causal proof, policy improvement or
+qualification follows; the old repeat-negative and all five false flags stand.
+
+## Next bounded diagnostic design: initialized solver state
+
+Status: reviewed design only, not an implemented or executable admission.
+Before any native job, finish a separate source-pinned observer/receiver,
+exact carrier and byte-cap predeclaration, focused refusal tests, full same-source
+CPU prerequisites and an idle-GPU/lease/deadline gate. No further CUDA trial
+is planned in the Oct8 07:30 window. Do not silently extend the existing
+contact protocol or treat this prose as a run receipt.
+
+Keep the three fresh sequential arms,64 worlds, one ten-substep zero-action
+tick, ascending-friction-writer-only intervention and the unchanged Newton2,
+dense, pyramidal solver recipe. Do not reorder rows, change reductions,
+disable warmstart, patch a solver kernel, restore a state or run an optimizer.
+Pin the installed solver.py SHA256
+`bba0c67182ade84f5375d6a066048e111edd3371b33d46a6f1246349f22bb30a`.
+
+The smallest useful observation is immediately after the original
+`solver.init_context(m,d,ctx,grad=True)` returns inside `_solve`, before
+`solve_init_search` or `_solver_iteration` (solver.py3301–3338,3350–3365).
+The original warmstart/smooth copy at3352–3356 must run unchanged exactly once;
+the wrapper must invoke the original init_context exactly once, with literal
+grad=True, the exact model/data/context identities and source/function binding.
+Do not infer this boundary from an allocated or stale context buffer.
+Observe only the first divergent sampled forward4 in each arm, bind its
+post-step phase to subsequent BAM call2, and retain other calls' literal schedule
+without additional solver snapshots. Constructor and odd-forward observations
+are not replacements for that pair.
+
+Bind raw layouts/identities and retain bounded full storage for qacc,
+qacc_warmstart, qacc_smooth, qM, qfrc_smooth, bounded ne/nf/nefc and the current
+active EFC banks. Include initialized Jaref, Ma, force/state, qfrc_constraint,
+cost/done, grad/grad_dot, h and Mgrad. Retain contact friction/dim/address and
+the captured payload/context correspondence; the existing construction view
+does not capture all friction/solver inputs. Full padded bytes remain retained,
+but report logical nv20 gradient/Hessian comparisons separately from nv_pad
+storage; do not assume padding is interchangeable or discard it. For nv20,
+the source's small Cholesky path loads h into a local tile and writes Mgrad
+(2732–2754,2830–2848), rather than storing a factor back into h. Avoid ambiguous
+labels such as an unqualified solved Hessian.
+
+The option input signature must also retain the bounded raw layout/value of
+`m.opt.impratio_invsqrt`, passed to update_constraint_efc at2163–2185, plus
+literal solver/cone/disableflags/iteration/tolerance and line-search settings.
+Object identity or a recipe label is not proof of equal runtime option values.
+Do not assume nv_pad32: the installed dense small-model sizing rule rounds nv
+to a multiple of4 (io.py703–715), so this nv20 recipe has nv_pad20. Verify actual
+model/data/context layouts rather than substituting a generic padded shape.
+The112043-byte installed io.py matches on both hosts, SHA256
+`731a31f254274c6e04d9843b11bdcb0502cf9d49abf26aa1c82e52e1a13fa75a`.
+
+Compare row-indexed initialized values only through authenticated current
+payload/row associations; retain same-offset non-contact matching and partial
+coverage refusal. World/DOF values compare at original offsets. A difference
+already at this checkpoint localizes it to inputs/initialization; equality
+there with later force differences localizes the first observed difference
+to subsequent iteration/output. Neither proves the responsible kernel or
+input. init_context includes constraint-cost atomics and dense tiled Hessian
+construction; their presence is source evidence, not a demonstrated cause.
+Observation copies and synchronization can alter timing, so this would be a
+new diagnostic capture, not exact reproduction of the older uninstrumented run.
+Keep historical negatives immutable and all five flags false in every outcome.

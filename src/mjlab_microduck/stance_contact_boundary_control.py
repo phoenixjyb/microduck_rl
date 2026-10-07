@@ -156,13 +156,13 @@ def _array_specs():
     add("contact.pos", (CONTACT_CAPACITY,), (CONTACT_CAPACITY, 3), "float32")
     add(
         "contact.frame",
-        (CONTACT_CAPACITY, 3),
+        (CONTACT_CAPACITY,),
         (CONTACT_CAPACITY, 3, 3),
         "float32",
     )
     add("context.geomcollisionid", (CONTACT_CAPACITY,), (CONTACT_CAPACITY,), "int32")
     add("context.pos", (CONTACT_CAPACITY,), (CONTACT_CAPACITY, 3), "float32")
-    add("context.frame", (CONTACT_CAPACITY, 3), (CONTACT_CAPACITY, 3, 3), "float32")
+    add("context.frame", (CONTACT_CAPACITY,), (CONTACT_CAPACITY, 3, 3), "float32")
 
     for name in ("ne", "nf", "nl", "nefc"):
         add("data." + name, (64,), (64,), "int32")

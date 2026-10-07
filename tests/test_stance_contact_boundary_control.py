@@ -11,6 +11,39 @@ from mjlab_microduck import stance_contact_boundary_control as boundary
 from mjlab_microduck import stance_friction_runtime_control as friction
 
 
+def test_real_cpu_frame_keeps_original_mat33_layout_not_local_vec3_view():
+    # Allocation/metadata only: no forward, integrator, CUDA, or policy execution.
+    import warp as wp
+
+    device = wp.get_device("cpu")
+    frame = wp.zeros(8192, dtype=wp.mat33, device=device)
+    layouts = boundary._layouts(
+        {"context.frame": frame}, device, ("context.frame",), "cpu-frame"
+    )
+    actual = layouts["context.frame"]
+    assert actual["shape"] == [8192]
+    assert actual["host_shape"] == [8192, 3, 3]
+    assert actual["strides"] == [36]
+    assert actual["span"] == actual["bytes"] == 8192 * 36
+    assert actual["host_dtype"] == "float32"
+    assert actual["warp_dtype"] == "<class 'warp._src.types.mat33f'>"
+    assert boundary._SPECS["contact.frame"] == boundary._SPECS["context.frame"]
+
+    # Frozen make_constraint uses this view later, but our context is the original.
+    reinterpreted = wp.array(
+        ptr=frame.ptr, dtype=wp.vec3, shape=(8192, 3), device=device, copy=False
+    )
+    assert reinterpreted.ptr == frame.ptr
+    np.testing.assert_array_equal(reinterpreted.numpy(), frame.numpy())
+    with pytest.raises(ValueError, match="literal array shape and dtype"):
+        boundary._layouts(
+            {"context.frame": reinterpreted},
+            device,
+            ("context.frame",),
+            "cpu-reinterpreted-frame",
+        )
+
+
 class FakeArray:
     def __init__(self, host, device, pointer, *, shape=None):
         self.host = host
@@ -105,7 +138,7 @@ def _environment(monkeypatch, *, arm="original", contact_first=False):
         geomcollisionid=array("context.geomcollisionid", (8192,), np.int32),
         efc_address=array("contact.efc_address", (8192, 4), np.int32),
         pos=array("context.pos", (8192, 3), logical_shape=(8192,)),
-        frame=array("context.frame", (8192, 3, 3), logical_shape=(8192, 3)),
+        frame=array("context.frame", (8192, 3, 3), logical_shape=(8192,)),
     )
     data.contact = contact
 

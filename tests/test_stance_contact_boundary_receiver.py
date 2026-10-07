@@ -207,6 +207,53 @@ def _field(raw, shape, dtype="<f4"):
     return {"raw": raw, "shape": list(shape), "dtype": dtype}
 
 
+def _matrix_frame_fixture():
+    # Synthetic CUDA identity labels only; no native/CUDA claim.
+    gpu = device()
+    carrier = _field(bytes(8192 * 36), (8192, 3, 3))
+    value = {
+        "object_id": 1,
+        "pointer": 4096,
+        "span": len(carrier["raw"]),
+        "device": "cuda:0",
+        "context": gpu["context"],
+        "warp_dtype": "<class 'warp._src.types.mat33f'>",
+        "shape": [8192],
+        "strides": [36],
+        "host_shape": [8192, 3, 3],
+        "host_dtype": "float32",
+        "bytes": len(carrier["raw"]),
+    }
+    return value, carrier, gpu
+
+
+def test_original_contact_frame_matrix_layout_has_one_logical_dimension():
+    value, carrier, gpu = _matrix_frame_fixture()
+    assert receiver.layout(value, carrier, gpu) == (4096, 4096 + 8192 * 36)
+
+
+@pytest.mark.parametrize(
+    "damage",
+    ("vec3-view", "matrix-wrong-rank", "scalar-type", "stride", "host-shape", "bytes"),
+)
+def test_matrix_frame_layout_refuses_reinterpretation_or_malformed_metadata(damage):
+    value, carrier, gpu = _matrix_frame_fixture()
+    if damage in ("vec3-view", "matrix-wrong-rank"):
+        value.update(shape=[8192, 3], strides=[36, 12])
+        if damage == "vec3-view":
+            value["warp_dtype"] = "<class 'warp._src.types.vec3f'>"
+    elif damage == "scalar-type":
+        value["warp_dtype"] = "<class 'warp._src.types.float32'>"
+    elif damage == "stride":
+        value["strides"] = [12]
+    elif damage == "host-shape":
+        value["host_shape"] = [8192, 9]
+    else:
+        value["bytes"] -= 4
+    with pytest.raises(ValueError):
+        receiver.layout(value, carrier, gpu)
+
+
 def test_unpack_packet_preserves_order_and_float_bits_without_decoding():
     # -0.0 and a quiet NaN payload are deliberately compared as bytes, not floats.
     first = bytes.fromhex("00000080 4523c17f")

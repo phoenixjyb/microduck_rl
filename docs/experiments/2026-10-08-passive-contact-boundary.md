@@ -273,3 +273,56 @@ unchanged ordered94-file scope collects2974 tests (30 additional budget/log
 guard cases), and that exact count is frozen in the producer. Ruff checks,
 format checks and diff whitespace checks pass. Both full same-source suites
 are pending; no GPU trial has been launched for this revision.
+
+At2f99d1ec95dfd2f1ba82755a5483f619ed9a4b7c, both2974-test full suites passed,
+zero omissions: WSL178.17s and Mac239.48s. Their319-byte inventory SHA256s are
+`9adba22f2c7694e7d7a605cf58e036fd8cdd342a45e03d86fd8573fd2cd14ba6`
+and `99dada3215434913e7ab7e85f17438daf75493bda32d0ee44d8f648eb0e84411`.
+The native CPU terminal is PID0/exited/success0, invocation
+810a956d6d534461803a7df84de40d42. Every CPU proof leaf is independently whole-
+authenticated on both hosts before decoding; full source closure/count/maps
+correspond. The CPU peak4744609792 bytes remains below6GiB.
+
+The ensuing native run invocationf34f2d681fe24b7da1c92a0987f3058f reached the
+original constructor's first contact-init observer and refused with exact child
+error `ValueError: literal array shape and dtype contact-before.context.frame`.
+Owner4024616/child4024637 both exited (owner1/child1); service failed/PID0.
+All33 recorded phases have the four literal settings at1 and thread counts1–4.
+The earlier stalled constructor progressed to a normal Python guard failure;
+this does not establish the earlier native pool's identity or a physics cause.
+Seven samples cover12.984s, at most32C, with only the owned CUDA child; GPU
+idle afterward, FilmBrain identities unchanged and protected services inactive.
+Retain40 raw leaves/14219071 bytes and closeout
+`artifacts/tools/contact-boundary-gpu-failure-2f99d1ec95df` on both hosts:
+550-byte inventory SHA256
+`634b31bb52c5e20d8c51381b882fd90e5cebe6a4d5a7b5080e09058f0d998488`,
+6864-byte raw-inventory SHA256
+`fedf888d5165805779c0c5fa9b4ea21b09dac5590894c2543d1a3f0560f3238d`.
+All raw/closeout leaves are whole-authenticated on Mac. No arm completed and
+there is no child receipt or contact-boundary qualification.
+
+## Original matrix-carrier layout correction
+
+Read-only diagnosis found a source-contract error, not changed installation:
+the externally anchored CPU allocation proof above already recorded actual
+`contact.frame` as logical[8192], host[8192,3,3], stride[36], Warp `mat33f`.
+The frozen Contact type uses8192 matrix elements. make_constraint later builds
+a local `[8192,3]` vec3 reinterpretation for its Jacobian; our separate context
+points at the original data.contact.frame, not that local view. The observer
+specification and fake fixture incorrectly copied the latter logical shape.
+The independent receiver also incorrectly required that extra logical axis.
+
+Correct only those logical specs/fake fixtures and independently require the
+original mat33 logical rank and dtype in the receiver. Keep host/raw shape,
+all294912 bytes, pointer/span/context/storage checks and opaque inactive bits
+unchanged. Explicitly reject the same-pointer vec3 reinterpretation rather
+than accepting a widened shape allowlist. A real CPU allocation-only test
+checks the original matrix metadata and rejects the local view, with no forward
+or integrator. Synthetic receiver cases accept that matrix carrier and reject
+wrong rank, reinterpretation, scalar dtype, stride, host shape or byte count.
+No kernel dispatch, seed, control, resource cap or runtime thread map changes.
+
+The revised focused suite passes135 tests; the unchanged94-file collection is
+2982, frozen in the producer. Both full same-source CPU suites must pass again
+before any bounded native retry. All qualification flags remain false, and no
+learner or longer rollout is admitted by this layout repair.

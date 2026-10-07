@@ -404,24 +404,22 @@ def layout(value, carrier, device):
         "<i4": "<class 'warp._src.types.int32'>",
         "<f4": "<class 'warp._src.types.float32'>",
     }[carrier["dtype"]]
-    if len(carrier["shape"]) > len(shape):
+    if carrier["dtype"] == "<f4" and carrier["shape"][-2:] == [3, 3]:
+        need(
+            shape == carrier["shape"][:-2],
+            "literal original mat33 logical array shape, not a reinterpreted vector view",
+        )
+        expected_dtype = "<class 'warp._src.types.mat33f'>"
+    elif len(carrier["shape"]) > len(shape):
         vector_types = {
             ("<f4", 2): "<class 'warp._src.types.vec2f'>",
             ("<f4", 3): "<class 'warp._src.types.vec3f'>",
             ("<f4", 5): "<class 'mujoco_warp._src.types.vec5f'>",
             ("<i4", 2): "<class 'warp._src.types.vec2i'>",
         }
-        if (
-            len(carrier["shape"]) == len(shape) + 2
-            and carrier["dtype"] == "<f4"
-            and carrier["shape"][-2:] == [3, 3]
-            and shape[-1:] == [3]
-        ):
-            expected_dtype = "<class 'warp._src.types.mat33f'>"
-        else:
-            key = (carrier["dtype"], carrier["shape"][-1])
-            need(key in vector_types, "declared vector/matrix carrier only")
-            expected_dtype = vector_types[key]
+        key = (carrier["dtype"], carrier["shape"][-1])
+        need(key in vector_types, "declared vector/matrix carrier only")
+        expected_dtype = vector_types[key]
     need(value["warp_dtype"] == expected_dtype, "actual pinned Warp dtype")
     return pointer, pointer + span
 

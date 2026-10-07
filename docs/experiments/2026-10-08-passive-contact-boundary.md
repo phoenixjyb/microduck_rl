@@ -110,9 +110,11 @@ exact-source CPU suites on both hosts, zero omissions and complete source/
 environment closure. CPU pytest children alone receive literal process-local
 OMP_NUM_THREADS=1, MKL_NUM_THREADS=1, OPENBLAS_NUM_THREADS=1 and
 NUMEXPR_NUM_THREADS=1. Retain these exact four settings in both receipts and
-refuse absent/changed settings. Do not mutate the owner environment or CUDA
-recipe, install packages, widen service task limits or reuse an older receipt.
-The reviewed collection is2944 tests; its ordered-scope
+refuse absent/changed settings. Do not retune an already imported owner or CUDA
+process, install packages, widen service task limits or reuse an older receipt.
+The separately declared runtime host-thread-budget revision below is not part
+of the earlier CPU-only repair or the logging-only trial. The reviewed
+collection is2944 tests before that new revision; its ordered-scope
 SHA256 is `253d755fc09f0b5286695a85303353ff6349e7f4bb88cbd3b97dea5b1872fb6a`.
 Native execution remains blocked until both same-source receipts and the
 completed native CPU user-service witness are authenticated. Do not reuse older
@@ -201,3 +203,73 @@ logging-only revision. The bounded unchanged-thread retry is for localization,
 not blind promotion; if it identifies resource exhaustion at a native call,
 predeclare a separately bound host-thread-budget repair rather than silently
 changing this recipe or widening the service cap.
+
+At743cd9871b1b2bb30e6d93140bcb4c865f13dfd1, both2944-test full suites passed,
+zero omissions: WSL177.05s and Mac337.97s. Their319-byte inventory SHA256s are
+`1ce7fe5a4f3392d783a7d643d230bd32b8aedb4c5baa9be895ae4b9bc7313620`
+and `3f2a93135c6925405d3cc5f30d2ca17c247eab976d5651980a4d4b273ebaa037`.
+The native run invocation68f42a25611145578ac25ce35e74e2c6 completed all three
+explicit compile/load/hooks/bind sequences, then stalled in the original
+recipe-case entry. Its33 flushed phase records end at `recipe-case-start` for
+original; there are no arm captures or child receipt. The owner closed it at
+the540s child timeout (child4008530/status-15, owner4008490/status1); the
+retained service is failed/PID0, not active or successful.
+
+The independent active witness observed owner1/child44 threads, service
+pids.current45/pids.peak64/pids.max64 and pids.events max2. The child main
+thread was waiting in futex; all four observed runtime thread-env values were
+null. This narrows the resource failure to constructor entry after explicit
+loads, not to one of those three loads. It does not identify a particular
+native pool or establish a contact/physics root cause. Retain
+`artifacts/tools/contact-boundary-active-thread-audit-743cd9871b1b.json`:
+1233 bytes, SHA256
+`cca0f62bfb007a89302b23e72acf58c8e34891bd6e2313712f9f8703191a1f50`.
+The completed failure closeout
+`artifacts/tools/contact-boundary-gpu-failure-743cd9871b1b` has667-byte inventory
+SHA256 `d1a7f6b86136c6cb6212f40cf00e1dd1694bbca6db73274a0dc2be4244b73137`
+and2382-byte raw-inventory SHA256
+`9e17cc88b5140328a3741a76c77e3d708251b47d08ac8e9aa560ba2ddc23d6f9`.
+All18 raw leaves/3037416 bytes and every closeout leaf are whole-byte
+authenticated on Mac and retained on both hosts. The258 owner samples cover
+539.715s, at most32C, with only the owned CUDA child. GPU idle afterward;
+FilmBrain identities unchanged and protected services inactive.
+
+## Separately predeclared runtime host-thread budget
+
+The two resource failures justify one bounded resource-control trial, not a
+task-limit increase or a claim of identical numerical conditions. Start the
+CUDA-hidden owner Python process with OMP_NUM_THREADS=1, MKL_NUM_THREADS=1,
+OPENBLAS_NUM_THREADS=1 and NUMEXPR_NUM_THREADS=1, explicitly in this user
+service only. Set the same four literal settings in the separately launched
+CUDA child before interpreter startup. Keep the CPU-test map separate from
+these owner and child maps. Change no machine-wide/service-global settings,
+packages, driver, shared cache, environment alias or protected workload.
+
+Before either process imports NumPy/Torch/Warp, require its literal role map
+and a single observed native thread. Validate the owner before importing the
+NumPy-bearing receiver. Child validation follows whole-byte declaration
+authentication and precedes Torch. Retain exact role/PID/settings/count
+snapshots at owner pre-import/after-child and child pre-import/after-Warp-init/
+after-recipe. Derive child snapshots from their already written phase records.
+Bind all maps into declaration, child and owner receipts, and require the
+authenticated child log's exact40-phase sequence with unchanged maps,
+owned PID and bounded thread counts. Receiver tests must reject changed maps,
+roles, process identities, counts, schema, phase order and missing/extra logs.
+
+This trial changes the observed runtime CPU environment relative to743; it
+must not be described as an identical-environment retry or retroactively
+ascribed to321/060. Physics/control/arm order, caller/private seeds, dedicated
+stream, kernel sources/options, capture windows and all existing resource caps
+remain unchanged. In particular retain tasks64, one nominal tick, no learner,
+no longer rollout, no physical motion and all five flags false. Recollect and
+freeze the exact94-file count, run focused checks and both same-source full CPU
+suites, and authenticate their inventories before any new native launch.
+An eventual completed capture remains only diagnostic evidence requiring
+independent whole-byte replay; it does not qualify training or establish a
+learned Duck capability.
+
+The integrated revision passes127 focused control/owner/receiver tests. The
+unchanged ordered94-file scope collects2974 tests (30 additional budget/log
+guard cases), and that exact count is frozen in the producer. Ruff checks,
+format checks and diff whitespace checks pass. Both full same-source suites
+are pending; no GPU trial has been launched for this revision.

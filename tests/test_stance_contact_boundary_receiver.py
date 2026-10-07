@@ -34,6 +34,175 @@ def test_cpu_receipt_refuses_missing_partial_or_changed_thread_settings(settings
         receiver.cpu_thread_settings({"cpu_test_threads": settings})
 
 
+def _thread_fixture():
+    env = dict(producer.OWNER_THREAD_ENV)
+    budget = {"owner": dict(env), "cuda_child": dict(producer.CUDA_CHILD_THREAD_ENV)}
+    owner_pid, child_pid = 101, 202
+
+    def snapshot(role, pid, settings, threads):
+        return {
+            "role": role,
+            "pid": pid,
+            "settings": dict(settings),
+            "threads": threads,
+        }
+
+    phases = []
+    for index, (phase, role) in enumerate(receiver._expected_thread_phase_order()):
+        phases.append(
+            {
+                "protocol": producer.PROTOCOL + ":phase",
+                "phase": phase,
+                "role": role,
+                "pid": child_pid,
+                "threads": 1 + (index % 7),
+                "observed_cpu_thread_env": dict(budget["cuda_child"]),
+            }
+        )
+    owner_start = snapshot("owner", owner_pid, budget["owner"], 1)
+    child_observations = {
+        "pre_import": snapshot("cuda_child", child_pid, budget["cuda_child"], 1),
+        "after_warp_init": snapshot("cuda_child", child_pid, budget["cuda_child"], 5),
+        "after_recipe": snapshot("cuda_child", child_pid, budget["cuda_child"], 7),
+    }
+    by_key = {(row["phase"], row["role"]): row for row in phases}
+    for field, key in (
+        ("pre_import", ("torch-import-start", None)),
+        ("after_warp_init", ("warp-init-done", None)),
+        ("after_recipe", ("recipe-case-done", "candidate1")),
+    ):
+        row = by_key[key]
+        child_observations[field] = {
+            "role": "cuda_child",
+            "pid": row["pid"],
+            "settings": dict(row["observed_cpu_thread_env"]),
+            "threads": row["threads"],
+        }
+    declaration = {
+        "owner_pid": owner_pid,
+        "thread_budget": deepcopy(budget),
+        "owner_thread_start": deepcopy(owner_start),
+    }
+    child = {
+        "owner_pid": owner_pid,
+        "child_pid": child_pid,
+        "thread_budget": deepcopy(budget),
+        "thread_observations": child_observations,
+    }
+    owner = {
+        "owner_pid": owner_pid,
+        "child_pid": child_pid,
+        "thread_budget": deepcopy(budget),
+        "thread_observations": {
+            "pre_import": deepcopy(owner_start),
+            "after_child": snapshot("owner", owner_pid, budget["owner"], 3),
+        },
+    }
+    return declaration, child, owner, phases
+
+
+def _thread_log(phases, *, newline=True):
+    prefix = b"Warp initialization output\n"
+    suffix = b'{"complete":true}\n'
+    lines = [
+        json.dumps(row, sort_keys=True, separators=(",", ":")).encode()
+        + (b"\n" if newline else b"")
+        for row in phases
+    ]
+    return prefix + b"".join(lines) + suffix
+
+
+def test_thread_budget_proof_accepts_literal_maps_snapshots_and_all_phases():
+    declaration, child, owner, phases = _thread_fixture()
+    proof = receiver.thread_budget_proof(declaration, child, owner, _thread_log(phases))
+
+    assert len(phases) == proof["phase_count"] == 40
+    assert proof["phase_order"][0] == {"phase": "torch-import-start", "role": None}
+    assert proof["phase_order"][-1] == {
+        "phase": "recipe-case-done",
+        "role": "candidate1",
+    }
+    assert proof["owner_threads"] == {"pre_import": 1, "after_child": 3}
+    assert proof["child_threads"] == {
+        "pre_import": 1,
+        "after_warp_init": phases[4]["threads"],
+        "after_recipe": phases[-1]["threads"],
+    }
+
+
+@pytest.mark.parametrize(
+    "damage",
+    (
+        "budget-map",
+        "budget-role",
+        "snapshot-role",
+        "snapshot-pid",
+        "snapshot-count-bool",
+        "snapshot-count-high",
+        "snapshot-map-type",
+        "log-missing",
+        "log-extra",
+        "log-reordered",
+        "log-pid",
+        "log-map",
+        "log-fields",
+        "log-protocol",
+        "log-role",
+        "log-overlong",
+        "log-no-newline",
+    ),
+)
+def test_thread_budget_proof_rejects_budget_snapshot_and_log_corruption(damage):
+    declaration, child, owner, phases = _thread_fixture()
+    raw_log = _thread_log(phases)
+    if damage == "budget-map":
+        declaration["thread_budget"]["owner"]["OMP_NUM_THREADS"] = "2"
+    elif damage == "budget-role":
+        child["thread_budget"]["unexpected"] = {}
+    elif damage == "snapshot-role":
+        owner["thread_observations"]["after_child"]["role"] = "cuda_child"
+    elif damage == "snapshot-pid":
+        child["thread_observations"]["after_recipe"]["pid"] += 1
+    elif damage == "snapshot-count-bool":
+        child["thread_observations"]["after_warp_init"]["threads"] = True
+    elif damage == "snapshot-count-high":
+        owner["thread_observations"]["after_child"]["threads"] = 65
+    elif damage == "snapshot-map-type":
+        child["thread_observations"]["pre_import"]["settings"]["MKL_NUM_THREADS"] = 1
+    elif damage == "log-missing":
+        phases.pop(0)
+        raw_log = _thread_log(phases)
+    elif damage == "log-extra":
+        phases.append(deepcopy(phases[-1]))
+        raw_log = _thread_log(phases)
+    elif damage == "log-reordered":
+        phases[0], phases[1] = phases[1], phases[0]
+        raw_log = _thread_log(phases)
+    elif damage == "log-pid":
+        phases[0]["pid"] += 1
+        raw_log = _thread_log(phases)
+    elif damage == "log-map":
+        phases[2]["observed_cpu_thread_env"]["OPENBLAS_NUM_THREADS"] = "2"
+        raw_log = _thread_log(phases)
+    elif damage == "log-fields":
+        phases[0]["extra"] = True
+        raw_log = _thread_log(phases)
+    elif damage == "log-protocol":
+        phases[0]["protocol"] = "other:phase"
+        raw_log = _thread_log(phases)
+    elif damage == "log-role":
+        phases[1]["role"] = "unexpected"
+        raw_log = _thread_log(phases)
+    elif damage == "log-overlong":
+        phases[0]["padding"] = "x" * 1100
+        raw_log = _thread_log(phases)
+    else:
+        raw_log = _thread_log(phases, newline=False)
+
+    with pytest.raises(ValueError):
+        receiver.thread_budget_proof(declaration, child, owner, raw_log)
+
+
 def _field(raw, shape, dtype="<f4"):
     return {"raw": raw, "shape": list(shape), "dtype": dtype}
 

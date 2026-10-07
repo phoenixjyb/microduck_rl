@@ -1,5 +1,6 @@
 """CPU-only guards for the passive contact-boundary owner probe."""
 
+import builtins
 from hashlib import sha1, sha256
 import json
 from pathlib import Path
@@ -39,6 +40,148 @@ def test_cpu_child_thread_caps_refuse_visible_cuda(monkeypatch, tmp_path):
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
     with pytest.raises(ValueError, match="CPU tests keep CUDA hidden"):
         probe.cpu_test_environment(tmp_path)
+
+
+def _fake_proc_status(monkeypatch, count):
+    original_is_file = Path.is_file
+    original_exists = Path.exists
+    original_read_text = Path.read_text
+    monkeypatch.setattr(
+        Path,
+        "is_file",
+        lambda path: str(path) == "/proc/self/status" or original_is_file(path),
+    )
+    monkeypatch.setattr(
+        Path,
+        "exists",
+        lambda path: str(path) == "/proc/self/status" or original_exists(path),
+    )
+    monkeypatch.setattr(
+        Path,
+        "read_text",
+        lambda path, *args, **kwargs: (
+            f"Name:\tpython\nThreads:\t{count}\n"
+            if str(path) == "/proc/self/status"
+            else original_read_text(path, *args, **kwargs)
+        ),
+    )
+
+
+def _set_runtime_thread_env(monkeypatch, role, settings=None):
+    expected = probe.THREAD_BUDGET[role] if settings is None else settings
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "" if role == "owner" else "0")
+    for name in probe.THREAD_BUDGET[role]:
+        if name in expected:
+            monkeypatch.setenv(name, expected[name])
+        else:
+            monkeypatch.delenv(name, raising=False)
+
+
+@pytest.mark.parametrize("role", ("owner", "cuda_child"))
+def test_runtime_thread_snapshot_pins_fresh_role_environment(monkeypatch, role):
+    _set_runtime_thread_env(monkeypatch, role)
+    _fake_proc_status(monkeypatch, 1)
+    monkeypatch.setattr(probe, "sys", SimpleNamespace(modules={}))
+    result = probe.runtime_thread_snapshot(role, require_fresh=True)
+    assert result == {
+        "role": role,
+        "pid": os.getpid(),
+        "settings": dict(probe.THREAD_BUDGET[role]),
+        "threads": 1,
+    }
+
+
+@pytest.mark.parametrize("damage", ("missing", "wrong", "another-pool"))
+def test_runtime_thread_snapshot_refuses_incomplete_or_changed_settings(
+    monkeypatch, damage
+):
+    role = "cuda_child"
+    _set_runtime_thread_env(monkeypatch, role)
+    if damage == "missing":
+        monkeypatch.delenv("MKL_NUM_THREADS", raising=False)
+    elif damage == "wrong":
+        monkeypatch.setenv("MKL_NUM_THREADS", "2")
+    else:
+        monkeypatch.setenv("OPENBLAS_NUM_THREADS", "64")
+    _fake_proc_status(monkeypatch, 1)
+    monkeypatch.setattr(probe, "sys", SimpleNamespace(modules={}))
+    with pytest.raises(
+        ValueError, match="exact source-bound cuda_child thread environment"
+    ):
+        probe.runtime_thread_snapshot(role, require_fresh=True)
+
+
+@pytest.mark.parametrize("module", ("numpy", "torch", "warp"))
+def test_runtime_thread_snapshot_requires_fresh_import_boundary(monkeypatch, module):
+    _set_runtime_thread_env(monkeypatch, "owner")
+    _fake_proc_status(monkeypatch, 1)
+    monkeypatch.setattr(probe, "sys", SimpleNamespace(modules={module: object()}))
+    with pytest.raises(ValueError, match="fresh native process"):
+        probe.runtime_thread_snapshot("owner", require_fresh=True)
+
+
+def test_runtime_thread_snapshot_rejects_nonfresh_thread_count(monkeypatch):
+    _set_runtime_thread_env(monkeypatch, "owner")
+    _fake_proc_status(monkeypatch, 2)
+    monkeypatch.setattr(probe, "sys", SimpleNamespace(modules={}))
+    with pytest.raises(ValueError, match="fresh single-thread process"):
+        probe.runtime_thread_snapshot("owner", require_fresh=True)
+
+
+def test_runtime_child_environment_is_process_local_and_cuda_scoped(
+    monkeypatch, tmp_path
+):
+    _set_runtime_thread_env(monkeypatch, "owner")
+    before = dict(os.environ)
+    cache = tmp_path / "private-warp-cache"
+    env = probe.runtime_child_environment(cache)
+    assert os.environ == before
+    assert {
+        key: env[key] for key in probe.CUDA_CHILD_THREAD_ENV
+    } == probe.CUDA_CHILD_THREAD_ENV
+    assert env["CUDA_VISIBLE_DEVICES"] == "0"
+    assert env["PYTHONFAULTHANDLER"] == "1"
+    assert env["WARP_CACHE_PATH"] == str(cache)
+
+
+def test_phase_thread_snapshot_uses_flushed_phase_values(monkeypatch):
+    _set_runtime_thread_env(monkeypatch, "cuda_child")
+    _fake_proc_status(monkeypatch, 4)
+    writes = []
+    monkeypatch.setattr(
+        probe.os, "write", lambda fd, raw: writes.append((fd, raw)) or len(raw)
+    )
+    record = probe.diagnostic_phase("warp-init-done")
+    assert record == json.loads(writes[0][1])
+    result = probe.phase_thread_snapshot("cuda_child", record, "warp-init-done")
+    assert result == {
+        "role": "cuda_child",
+        "pid": os.getpid(),
+        "settings": dict(probe.CUDA_CHILD_THREAD_ENV),
+        "threads": record["threads"],
+    }
+
+
+def test_run_refuses_owner_budget_before_receiver_import(monkeypatch):
+    monkeypatch.setattr(
+        probe,
+        "runtime_thread_snapshot",
+        lambda *_a, **_k: (_ for _ in ()).throw(ValueError("owner budget refused")),
+    )
+    original_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        fromlist = kwargs.get("fromlist", args[2] if len(args) > 2 else ())
+        if name == "mjlab_microduck.stance_contact_boundary_receiver" or (
+            name == "mjlab_microduck"
+            and "stance_contact_boundary_receiver" in (fromlist or ())
+        ):
+            pytest.fail("receiver imported before owner budget check")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    with pytest.raises(ValueError, match="owner budget refused"):
+        probe.run("a" * 40, "b" * 64, "c" * 64)
 
 
 def test_flushed_diagnostic_phase_observes_without_mutating_thread_environment(

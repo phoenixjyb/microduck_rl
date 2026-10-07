@@ -27,6 +27,12 @@ CONTROL_PROTOCOL = "microduck-friction-runtime-control-oct8-v1"
 BOUNDARY_CONTROL_PROTOCOL = "microduck-contact-boundary-control-oct8-v1"
 ARMS = numerical.ARMS
 FLAGS = dict(pins.FLAGS)
+THREAD_ENV_REQUIRED = {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+}
 MAX_FILES, MAX_FILE_BYTES, MAX_TOTAL_BYTES = 1024, 16 * 1024**2, 768 * 1024**2
 MAX_JSON_BYTES = 8 * 1024**2
 MAX_BOUNDARY_ARM_BYTES = 80 * 1024**2
@@ -1787,6 +1793,239 @@ def caller_rng_receipt(value):
     return value["states"]
 
 
+def _expected_thread_phase_order():
+    phases = [
+        ("torch-import-start", None),
+        ("torch-import-done", None),
+        ("caller-rng-initialized", None),
+        ("warp-init-start", None),
+        ("warp-init-done", None),
+    ]
+    for role in ("original", "candidate", "contact"):
+        for phase in (
+            "compile-start",
+            "compile-done",
+            "load-start",
+            "load-done",
+            "hooks-start",
+            "hooks-done",
+            "bind-start",
+            "bind-done",
+        ):
+            phases.append((phase, role))
+    phases.extend(
+        (("three-explicit-loads-complete", None), ("contact-factory-checked", None))
+    )
+    for arm in ARMS:
+        phases.extend(
+            (
+                ("arm-start", arm),
+                ("recipe-case-start", arm),
+                ("recipe-case-done", arm),
+            )
+        )
+    need(len(phases) == 40, "literal forty-phase thread diagnostic sequence")
+    return phases
+
+
+def _thread_settings(value, expected, label):
+    need(
+        type(value) is dict
+        and set(value) == set(THREAD_ENV_REQUIRED)
+        and value == expected
+        and all(type(key) is str and type(item) is str for key, item in value.items()),
+        "exact literal thread settings " + label,
+    )
+    return value
+
+
+def _thread_snapshot(value, role, pid, settings, *, one_thread=False):
+    need(
+        type(value) is dict
+        and set(value) == {"role", "pid", "settings", "threads"}
+        and value["role"] == role,
+        "exact thread observation schema and role",
+    )
+    plain(value["pid"], 1)
+    need(value["pid"] == pid, "thread observation process identity")
+    _thread_settings(value["settings"], settings, role)
+    threads = plain(value["threads"], 1, 64)
+    need(not one_thread or threads == 1, "single-thread pre-import observation")
+    return value
+
+
+def _thread_phase_records(raw_child_log, child_pid, child_settings):
+    need(
+        type(raw_child_log) is bytes and 0 < len(raw_child_log) <= 16 * 1024**2,
+        "whole authenticated bounded child log for thread proof",
+    )
+    marker = (DATA_PROTOCOL + ":phase").encode()
+    records = []
+    for line in raw_child_log.splitlines(keepends=True):
+        phase_like = marker in line or b'"phase"' in line
+        if not phase_like:
+            continue
+        need(
+            line.endswith(b"\n") and line.count(b"\n") == 1 and len(line) <= 1024,
+            "each phase record is one bounded newline-terminated child-log line",
+        )
+        record = decode(line[:-1])
+        need(canonical(record) == line, "canonical compact child phase JSON")
+        need(
+            type(record) is dict
+            and set(record)
+            == {
+                "protocol",
+                "phase",
+                "role",
+                "pid",
+                "threads",
+                "observed_cpu_thread_env",
+            }
+            and record["protocol"] == DATA_PROTOCOL + ":phase",
+            "exact diagnostic phase record schema and protocol",
+        )
+        plain(record["pid"], 1)
+        need(record["pid"] == child_pid, "phase emitted by the owned child")
+        plain(record["threads"], 1, 64)
+        _thread_settings(
+            record["observed_cpu_thread_env"], child_settings, "child phase"
+        )
+        records.append(record)
+    expected = _expected_thread_phase_order()
+    observed = [(record["phase"], record["role"]) for record in records]
+    need(
+        len(records) == len(expected) == 40 and observed == expected,
+        "all forty child phases present exactly once and in declared order",
+    )
+    return records
+
+
+def thread_budget_proof(declaration, child, owner, rawChildLog):
+    """Validate bounded owner/child thread settings and their authenticated timeline."""
+    from mjlab_microduck import stance_contact_boundary_probe as producer
+
+    need(
+        producer.OWNER_THREAD_ENV == THREAD_ENV_REQUIRED
+        and producer.CUDA_CHILD_THREAD_ENV == THREAD_ENV_REQUIRED,
+        "literal four-variable owner and CUDA-child thread environment maps",
+    )
+    expected = {
+        "owner": dict(THREAD_ENV_REQUIRED),
+        "cuda_child": dict(THREAD_ENV_REQUIRED),
+    }
+    owner_pid = plain(declaration["owner_pid"], 1)
+    child_pid = plain(child["child_pid"], 1)
+    need(
+        owner["owner_pid"] == child["owner_pid"] == owner_pid
+        and owner["child_pid"] == child_pid
+        and child_pid != owner_pid,
+        "thread evidence attached to the same distinct owner and child",
+    )
+    for record in (declaration, child, owner):
+        need(
+            type(record["thread_budget"]) is dict
+            and set(record["thread_budget"]) == {"owner", "cuda_child"},
+            "exact owner/child thread budget schema",
+        )
+        _thread_settings(
+            record["thread_budget"]["owner"], expected["owner"], "owner budget"
+        )
+        _thread_settings(
+            record["thread_budget"]["cuda_child"],
+            expected["cuda_child"],
+            "child budget",
+        )
+        need(record["thread_budget"] == expected, "identical literal thread budgets")
+
+    owner_start = _thread_snapshot(
+        declaration["owner_thread_start"],
+        "owner",
+        owner_pid,
+        expected["owner"],
+        one_thread=True,
+    )
+    owner_observations = owner["thread_observations"]
+    need(
+        type(owner_observations) is dict
+        and set(owner_observations) == {"pre_import", "after_child"},
+        "exact owner thread observation boundaries",
+    )
+    owner_pre = _thread_snapshot(
+        owner_observations["pre_import"],
+        "owner",
+        owner_pid,
+        expected["owner"],
+        one_thread=True,
+    )
+    need(owner_pre == owner_start, "declared owner startup equals retained observation")
+    owner_after = _thread_snapshot(
+        owner_observations["after_child"], "owner", owner_pid, expected["owner"]
+    )
+
+    child_observations = child["thread_observations"]
+    need(
+        type(child_observations) is dict
+        and set(child_observations)
+        == {"pre_import", "after_warp_init", "after_recipe"},
+        "exact child thread observation boundaries",
+    )
+    child_pre = _thread_snapshot(
+        child_observations["pre_import"],
+        "cuda_child",
+        child_pid,
+        expected["cuda_child"],
+        one_thread=True,
+    )
+    child_warp = _thread_snapshot(
+        child_observations["after_warp_init"],
+        "cuda_child",
+        child_pid,
+        expected["cuda_child"],
+    )
+    child_recipe = _thread_snapshot(
+        child_observations["after_recipe"],
+        "cuda_child",
+        child_pid,
+        expected["cuda_child"],
+    )
+
+    phases = _thread_phase_records(rawChildLog, child_pid, expected["cuda_child"])
+    by_key = {(record["phase"], record["role"]): record for record in phases}
+    for snapshot, key in (
+        (child_pre, ("torch-import-start", None)),
+        (child_warp, ("warp-init-done", None)),
+        (child_recipe, ("recipe-case-done", "candidate1")),
+    ):
+        phase = by_key[key]
+        need(
+            snapshot
+            == {
+                "role": "cuda_child",
+                "pid": phase["pid"],
+                "settings": phase["observed_cpu_thread_env"],
+                "threads": phase["threads"],
+            },
+            "snapshot derived from its exact written phase observation",
+        )
+    return {
+        "thread_budget": expected,
+        "phase_count": len(phases),
+        "phase_order": [
+            {"phase": record["phase"], "role": record["role"]} for record in phases
+        ],
+        "owner_threads": {
+            "pre_import": owner_pre["threads"],
+            "after_child": owner_after["threads"],
+        },
+        "child_threads": {
+            "pre_import": child_pre["threads"],
+            "after_warp_init": child_warp["threads"],
+            "after_recipe": child_recipe["threads"],
+        },
+    }
+
+
 def verify_run(
     directory,
     inventory,
@@ -1835,6 +2074,8 @@ def verify_run(
                 "started_utc_ns",
                 "cutoff_utc",
                 "child_timeout_seconds",
+                "thread_budget",
+                "owner_thread_start",
             },
         ),
         (
@@ -1851,6 +2092,8 @@ def verify_run(
                 "compiled",
                 "arms",
                 "caller_rng",
+                "thread_budget",
+                "thread_observations",
             },
         ),
         (
@@ -1865,6 +2108,8 @@ def verify_run(
                 "finished_utc_ns",
                 "host_after",
                 "samples",
+                "thread_budget",
+                "thread_observations",
             },
         ),
     )
@@ -1924,6 +2169,7 @@ def verify_run(
     owner_window(declaration, owner, child_pid)
     for sample in owner["samples"]:
         component.host(sample, child=child_pid)
+    thread_proof = thread_budget_proof(declaration, child, owner, raw["child.log"])
     need(
         declaration["case_order"] == list(ARMS)
         and declaration["cutoff_utc"] == "2026-10-07T23:30:00Z"
@@ -2071,6 +2317,7 @@ def verify_run(
         "recipe_candidate_repeat_exact": passed,
         "synthetic_dependency": dependency,
         "historical_negative": negative,
+        "thread_budget_proof": thread_proof,
         "passive_contact_boundary": {
             "capture_plan": declaration["capture_plan"],
             "arms": {

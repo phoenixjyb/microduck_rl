@@ -26,12 +26,28 @@ BRANCH = "feat/athletics-obstacle-curriculum"
 CUTOFF = 1791415800  # Newly declared Oct8 07:30 Asia/Shanghai owner cutoff.
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 600, 540, 240, 60
 CPU_SERVICE_SECONDS, CPU_TEST_SECONDS = 660, 600
-EXPECTED_TESTS = 2944  # Exact reviewed 94-file collection; receipts still required.
+EXPECTED_TESTS = 2974  # Exact reviewed 94-file collection; receipts still required.
 CPU_TEST_THREADS = {
     "OMP_NUM_THREADS": "1",
     "MKL_NUM_THREADS": "1",
     "OPENBLAS_NUM_THREADS": "1",
     "NUMEXPR_NUM_THREADS": "1",
+}
+OWNER_THREAD_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+}
+CUDA_CHILD_THREAD_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+}
+THREAD_BUDGET = {
+    "owner": OWNER_THREAD_ENV,
+    "cuda_child": CUDA_CHILD_THREAD_ENV,
 }
 TEST_FILES_SHA256 = "253d755fc09f0b5286695a85303353ff6349e7f4bb88cbd3b97dea5b1872fb6a"
 LOCK = prefix.LOCK
@@ -673,6 +689,70 @@ def tests(source):
     return record
 
 
+def runtime_thread_snapshot(role, *, require_fresh=False):
+    """Observe selected process-local pools before native imports."""
+    need(role in THREAD_BUDGET, "literal owner or CUDA-child thread role")
+    expected = THREAD_BUDGET[role]
+    settings = {name: os.environ.get(name) for name in expected}
+    need(settings == expected, "exact source-bound " + role + " thread environment")
+    if require_fresh:
+        need(
+            not any(name in sys.modules for name in ("numpy", "torch", "warp")),
+            "fresh native process before NumPy/Torch/Warp imports",
+        )
+    status = Path("/proc/self/status")
+    need(status.is_file(), "Linux native thread-count status")
+    rows = [
+        line for line in status.read_text().splitlines() if line.startswith("Threads:")
+    ]
+    need(len(rows) == 1, "one observed native thread-count row")
+    try:
+        threads = int(rows[0].split()[1])
+    except (IndexError, ValueError) as error:
+        raise ValueError("plain observed native thread count") from error
+    need(type(threads) is int and 1 <= threads <= 64, "bounded native thread count")
+    if require_fresh:
+        need(threads == 1, "fresh single-thread process before native imports")
+    return {"role": role, "pid": os.getpid(), "settings": settings, "threads": threads}
+
+
+def phase_thread_snapshot(role, phase_record, expected_phase):
+    """Normalize one flushed native phase into the exact snapshot schema."""
+    need(role in THREAD_BUDGET, "literal owner or CUDA-child thread role")
+    expected = THREAD_BUDGET[role]
+    need(
+        type(phase_record) is dict
+        and set(phase_record)
+        == {"protocol", "phase", "role", "pid", "threads", "observed_cpu_thread_env"}
+        and phase_record["protocol"] == PROTOCOL + ":phase"
+        and phase_record["phase"] == expected_phase
+        and phase_record["pid"] == os.getpid()
+        and phase_record["observed_cpu_thread_env"] == expected,
+        "exact flushed thread phase " + expected_phase,
+    )
+    threads = phase_record["threads"]
+    need(type(threads) is int and 1 <= threads <= 64, "bounded phase thread count")
+    if role == "cuda_child" and expected_phase == "torch-import-start":
+        need(threads == 1, "fresh single-thread child at torch import boundary")
+    return {
+        "role": role,
+        "pid": phase_record["pid"],
+        "settings": dict(expected),
+        "threads": threads,
+    }
+
+
+def runtime_child_environment(cache):
+    """Build the leased child's environment without mutating its owner."""
+    return {
+        **os.environ,
+        **CUDA_CHILD_THREAD_ENV,
+        "CUDA_VISIBLE_DEVICES": "0",
+        "PYTHONFAULTHANDLER": "1",
+        "WARP_CACHE_PATH": str(cache),
+    }
+
+
 def diagnostic_phase(phase, role=None):
     """Flushed non-admitting breadcrumbs; observe, never alter native thread pools."""
     need(
@@ -695,20 +775,20 @@ def diagnostic_phase(phase, role=None):
         all(value is None or len(value) <= 64 for value in settings.values()),
         "bounded observed thread settings",
     )
-    raw = canonical(
-        {
-            "protocol": PROTOCOL + ":phase",
-            "phase": phase,
-            "role": role,
-            "pid": os.getpid(),
-            "threads": threads,
-            "observed_cpu_thread_env": settings,
-        }
-    )
+    record = {
+        "protocol": PROTOCOL + ":phase",
+        "phase": phase,
+        "role": role,
+        "pid": os.getpid(),
+        "threads": threads,
+        "observed_cpu_thread_env": settings,
+    }
+    raw = canonical(record)
     need(
         len(raw) <= 1024 and os.write(2, raw) == len(raw),
         "complete bounded phase write",
     )
+    return record
 
 
 def _compile_modules(wp, ctx, artifacts, device, directory):
@@ -917,6 +997,7 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         and declaration["environment_alias"] == alias
         and declaration["libraries"] == libraries
         and declaration["warp_sources"] == warp_sources
+        and declaration["thread_budget"] == THREAD_BUDGET
         and declaration["owner_pid"] == owner_pid
         and declaration["lease"] == lease
         and declaration["caller_rng_seeds"] == CALLER_RNG_SEEDS,
@@ -932,7 +1013,11 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         os.environ.get("PYTHONFAULTHANDLER") == "1",
         "child fatal-signal logging enabled at startup",
     )
-    diagnostic_phase("torch-import-start")
+    runtime_thread_snapshot("cuda_child", require_fresh=True)
+    torch_import_record = diagnostic_phase("torch-import-start")
+    child_before_import = phase_thread_snapshot(
+        "cuda_child", torch_import_record, "torch-import-start"
+    )
     import torch
 
     diagnostic_phase("torch-import-done")
@@ -963,7 +1048,10 @@ def child(source, lease_fd, owner_pid, declaration_sha):
     compiler_config = configure_compiler(wp)
     diagnostic_phase("warp-init-start")
     wp.init()
-    diagnostic_phase("warp-init-done")
+    warp_init_record = diagnostic_phase("warp-init-done")
+    after_warp_init = phase_thread_snapshot(
+        "cuda_child", warp_init_record, "warp-init-done"
+    )
     need(
         str(ctx.runtime.core._name) == libraries["warp.so"]["path"]
         and str(ctx.runtime.llvm._name) == libraries["warp-clang.so"]["path"],
@@ -1061,6 +1149,7 @@ def child(source, lease_fd, owner_pid, declaration_sha):
             value.assert_unchanged()
 
     recipe_arms, arm_observers = {}, {}
+    after_recipe = None
 
     def sink(relative, raw):
         rel = Path(relative)
@@ -1101,7 +1190,10 @@ def child(source, lease_fd, owner_pid, declaration_sha):
                 selected_bound.assert_unchanged()
                 diagnostic_phase("recipe-case-start", arm)
                 recipe, packets = recipe_case(torch, wp)
-                diagnostic_phase("recipe-case-done", arm)
+                recipe_record = diagnostic_phase("recipe-case-done", arm)
+                after_recipe = phase_thread_snapshot(
+                    "cuda_child", recipe_record, "recipe-case-done"
+                )
                 guard()
             arm_observers[arm] = observer.receipt()
             recipe_arms.setdefault(arm, {})["boundary"] = observer.boundary_receipt()
@@ -1120,6 +1212,7 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         }
         for name, raw in packets.items():
             sink(arm + "/" + name, raw)
+    need(after_recipe is not None, "completed source-bound recipe thread snapshot")
     need(
         sum(len(row["entries"]) for row in arm_observers.values()) == 63,
         "exact 21 target entries per three fresh sequential arms",
@@ -1146,6 +1239,14 @@ def child(source, lease_fd, owner_pid, declaration_sha):
         "driver_version": list(ctx.runtime.driver_version),
     }
     return {
+        "thread_budget": {
+            role: dict(settings) for role, settings in THREAD_BUDGET.items()
+        },
+        "thread_observations": {
+            "pre_import": child_before_import,
+            "after_warp_init": after_warp_init,
+            "after_recipe": after_recipe,
+        },
         "protocol": PROTOCOL + ":child",
         "source_binding": binding,
         "packages": package_pin,
@@ -1223,6 +1324,8 @@ def _mac_test_prerequisite(source, binding, package_pin, inventory_sha):
 
 
 def run(source, tests_inventory_sha, mac_tests_inventory_sha):
+    owner_thread_start = runtime_thread_snapshot("owner", require_fresh=True)
+    thread_budget = {role: dict(settings) for role, settings in THREAD_BUDGET.items()}
     from mjlab_microduck import stance_contact_boundary_receiver as receiver
 
     check_window(SERVICE_SECONDS + CLOSEOUT_SECONDS + MARGIN)
@@ -1328,6 +1431,8 @@ def run(source, tests_inventory_sha, mac_tests_inventory_sha):
             "warp_sources": warp_sources,
             "unit": service,
             "owner_pid": os.getpid(),
+            "thread_budget": thread_budget,
+            "owner_thread_start": owner_thread_start,
             "lease": lease,
             "host_before": initial_host,
             "tests": test_receipt,
@@ -1356,12 +1461,7 @@ def run(source, tests_inventory_sha, mac_tests_inventory_sha):
         for name, raw in mac_tests["raw"].items():
             write(mac_copy / name, raw, cap=16 * 1024**2)
         declaration_sha = sha256(canonical(declaration)).hexdigest()
-        env = {
-            **os.environ,
-            "CUDA_VISIBLE_DEVICES": "0",
-            "PYTHONFAULTHANDLER": "1",
-            "WARP_CACHE_PATH": str(directory / "private-warp-cache"),
-        }
+        env = runtime_child_environment(directory / "private-warp-cache")
         check_window(CHILD_SECONDS + CLOSEOUT_SECONDS + MARGIN)
         with (directory / "child.log").open("xb") as log:
             process = subprocess.Popen(
@@ -1431,6 +1531,7 @@ def run(source, tests_inventory_sha, mac_tests_inventory_sha):
             process.returncode == 0 and seen and observed_ppid == os.getpid(),
             "observed successful owned GPU child",
         )
+        owner_after_child = runtime_thread_snapshot("owner")
         final_host = host()
         need(
             final_host["compute_pids"] == [] and final_host["used_mib"] <= 1024,
@@ -1450,6 +1551,11 @@ def run(source, tests_inventory_sha, mac_tests_inventory_sha):
             {
                 "protocol": PROTOCOL + ":owner",
                 "source_binding": binding,
+                "thread_budget": thread_budget,
+                "thread_observations": {
+                    "pre_import": owner_thread_start,
+                    "after_child": owner_after_child,
+                },
                 "packages": package_pin,
                 "environment_alias": alias,
                 "lease": lease,

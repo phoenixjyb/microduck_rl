@@ -1613,6 +1613,17 @@ def frozen_owner(declaration, child, owner):
     plain(lease["inode"], 1)
 
 
+def cpu_thread_settings(proof):
+    from mjlab_microduck import stance_contact_boundary_probe as producer
+
+    need(
+        type(proof) is dict
+        and type(proof.get("cpu_test_threads")) is dict
+        and proof["cpu_test_threads"] == producer.CPU_TEST_THREADS,
+        "exact CPU-only child thread settings",
+    )
+
+
 def cpu_proof(declaration, raw, expected_source, expected_tests_sha):
     from mjlab_microduck import stance_contact_boundary_probe as producer
 
@@ -1653,6 +1664,7 @@ def cpu_proof(declaration, raw, expected_source, expected_tests_sha):
                 "authenticated CPU prerequisite leaf",
             )
         proof = json_packet(raw[mode + "/receipt.json"])
+        cpu_thread_settings(proof)
         component.source(proof["source_binding"], expected_source)
         component.flags(proof["flags"])
         need(

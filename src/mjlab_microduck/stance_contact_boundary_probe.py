@@ -26,7 +26,13 @@ BRANCH = "feat/athletics-obstacle-curriculum"
 CUTOFF = 1791415800  # Newly declared Oct8 07:30 Asia/Shanghai owner cutoff.
 SERVICE_SECONDS, CHILD_SECONDS, CLOSEOUT_SECONDS, MARGIN = 600, 540, 240, 60
 CPU_SERVICE_SECONDS, CPU_TEST_SECONDS = 660, 600
-EXPECTED_TESTS = 2931  # Exact reviewed 94-file collection; receipts still required.
+EXPECTED_TESTS = 2940  # Exact reviewed 94-file collection; receipts still required.
+CPU_TEST_THREADS = {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+}
 TEST_FILES_SHA256 = "253d755fc09f0b5286695a85303353ff6349e7f4bb88cbd3b97dea5b1872fb6a"
 LOCK = prefix.LOCK
 FLAGS = prefix.FLAGS
@@ -588,6 +594,16 @@ def _checked_junit(raw):
     return int(suites[0].attrib["tests"])
 
 
+def cpu_test_environment(cache):
+    """Cap only the CPU pytest child pools; never mutate owner/CUDA settings."""
+    need(os.environ.get("CUDA_VISIBLE_DEVICES") == "", "CPU tests keep CUDA hidden")
+    return {
+        **os.environ,
+        **CPU_TEST_THREADS,
+        "WARP_CACHE_PATH": str(cache),
+    }
+
+
 def tests(source):
     check_window(CPU_SERVICE_SECONDS + CLOSEOUT_SECONDS + MARGIN)
     need(
@@ -605,7 +621,7 @@ def tests(source):
     directory = output(source, "tests")
     directory.mkdir(parents=True, exist_ok=False)
     files = test_files()
-    env = {**os.environ, "WARP_CACHE_PATH": str(directory / "private-cpu-warp-cache")}
+    env = cpu_test_environment(directory / "private-cpu-warp-cache")
     with (directory / "pytest.log").open("xb") as log:
         result = subprocess.run(
             [
@@ -643,6 +659,7 @@ def tests(source):
         "unit": service,
         "files": files,
         "tests": count,
+        "cpu_test_threads": dict(CPU_TEST_THREADS),
         "host_before": host_before,
         "host_after": host(),
         "flags": FLAGS,
@@ -1128,6 +1145,7 @@ def _mac_test_prerequisite(source, binding, package_pin, inventory_sha):
             "packages": package_pin,
             "files": test_files(),
             "tests": EXPECTED_TESTS,
+            "cpu_test_threads": dict(CPU_TEST_THREADS),
             "python": "3.12.12",
             "machine": "arm64",
             "flags": FLAGS,
@@ -1182,6 +1200,7 @@ def run(source, tests_inventory_sha, mac_tests_inventory_sha):
         and test_receipt["tests"] == EXPECTED_TESTS > 0,
         "same-source complete CPU prerequisite",
     )
+    receiver.cpu_thread_settings(test_receipt)
     test_terminal = dict(
         line.split("=", 1)
         for line in read(

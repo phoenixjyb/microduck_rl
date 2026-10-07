@@ -11,6 +11,36 @@ import pytest
 from mjlab_microduck import stance_contact_boundary_probe as probe
 
 
+@pytest.mark.parametrize("parent_value", (None, "64"))
+def test_cpu_child_thread_caps_preserve_parent_environment(
+    monkeypatch, tmp_path, parent_value
+):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
+    for name in probe.CPU_TEST_THREADS:
+        if parent_value is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, parent_value)
+    before = dict(os.environ)
+    cache = tmp_path / "private-cpu-warp-cache"
+    child = probe.cpu_test_environment(cache)
+    assert os.environ == before
+    assert {name: child[name] for name in probe.CPU_TEST_THREADS} == {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+    }
+    assert child["WARP_CACHE_PATH"] == str(cache)
+    assert child["CUDA_VISIBLE_DEVICES"] == ""
+
+
+def test_cpu_child_thread_caps_refuse_visible_cuda(monkeypatch, tmp_path):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")
+    with pytest.raises(ValueError, match="CPU tests keep CUDA hidden"):
+        probe.cpu_test_environment(tmp_path)
+
+
 def _git_tree_entry(name, raw):
     oid = sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
     return f"100644 blob {oid}\t{name}\0".encode()

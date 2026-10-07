@@ -107,7 +107,12 @@ machine-code observation claim is made.
 
 Before execution, require focused source tests and the separately frozen94-file
 exact-source CPU suites on both hosts, zero omissions and complete source/
-environment closure. The reviewed collection is2931 tests; its ordered-scope
+environment closure. CPU pytest children alone receive literal process-local
+OMP_NUM_THREADS=1, MKL_NUM_THREADS=1, OPENBLAS_NUM_THREADS=1 and
+NUMEXPR_NUM_THREADS=1. Retain these exact four settings in both receipts and
+refuse absent/changed settings. Do not mutate the owner environment or CUDA
+recipe, install packages, widen service task limits or reuse an older receipt.
+The reviewed collection is2940 tests; its ordered-scope
 SHA256 is `253d755fc09f0b5286695a85303353ff6349e7f4bb88cbd3b97dea5b1872fb6a`.
 Native execution remains blocked until both same-source receipts and the
 completed native CPU user-service witness are authenticated. Do not reuse older
@@ -137,10 +142,24 @@ is authorized by this diagnostic; further action requires its retained review.
 ## Status
 
 Implementation and predeclared capture/receiver contracts have been reviewed.
-The84 focused control/owner/receiver tests pass, including integrated three-arm
+The initial84 focused control/owner/receiver tests passed, including integrated three-arm
 fake-observer receipts, opaque inactive float bits, compiler-role records,
 packet corruption and separate Warp/Python module identities. The unchanged
 prior91 files plus these three files collect2931 tests with no collection error.
-This is source-only evidence. Both full same-source CPU runs are pending.
+At d669eec1278020dad9b4474eeea363f0ca91b711, the Mac full suite passed2931
+tests/zero omissions in187.25s. Its319-byte inventory SHA256 is
+`d395a8f372475ed9f8fd0e5fa7463947a97da8e0912b11e957e1f5c519c3638a`.
+The WSL CPU service invocation3828a98dd1bc4effa7e84c1490484f35 failed with
+`subprocess.TimeoutExpired` after600s, PID0/status1; it reached the64-task cap
+and stalled after126 tests at the first real CPU physics test. Exact cause was
+not captured; this is consistent with lazy thread-pool pressure, not a proven
+kernel defect. With the four child-only caps, the exact stalled test passed in
+5.93s under unchanged64-task/6GiB/CPU200% limits. No GPU work was launched.
+Retain the failed directory and closeout
+`artifacts/tools/contact-boundary-cpu-failure-d669eec12780`: its554-byte inventory
+SHA256 is `5561314a7b489187b94ef4914714c59943463e2299a358eb49c5c7f6511721b7`.
+The bounded repair adds nine CPU settings guards; all93 focused tests pass.
+The unchanged ordered94-file scope recollects2940 tests. Both full same-source
+suites must be rerun. This is source-only evidence. Those new full runs are pending.
 No native run exists for this experiment; the earlier numerical negative remains
 the latest real-model result. Native execution remains blocked on prerequisites.

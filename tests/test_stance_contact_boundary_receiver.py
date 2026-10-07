@@ -10,8 +10,28 @@ import numpy as np
 import pytest
 
 from mjlab_microduck import stance_contact_boundary_receiver as receiver
+from mjlab_microduck import stance_contact_boundary_probe as producer
 from test_stance_contact_boundary_control import _environment, _run
 from test_stance_friction_prefix_cuda_receiver import compiled_fixture, device
+
+
+def test_cpu_receipt_binds_exact_child_thread_settings():
+    receiver.cpu_thread_settings({"cpu_test_threads": dict(producer.CPU_TEST_THREADS)})
+
+
+@pytest.mark.parametrize(
+    "settings",
+    (
+        None,
+        {},
+        {"OMP_NUM_THREADS": "1"},
+        {name: 1 for name in producer.CPU_TEST_THREADS},
+        {**producer.CPU_TEST_THREADS, "EXTRA_THREADS": "1"},
+    ),
+)
+def test_cpu_receipt_refuses_missing_partial_or_changed_thread_settings(settings):
+    with pytest.raises(ValueError, match="exact CPU-only child thread settings"):
+        receiver.cpu_thread_settings({"cpu_test_threads": settings})
 
 
 def _field(raw, shape, dtype="<f4"):

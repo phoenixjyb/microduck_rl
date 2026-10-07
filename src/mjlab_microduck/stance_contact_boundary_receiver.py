@@ -145,6 +145,16 @@ SIDE_VIEW_PRIOR_SOLVER_FIELDS = ("efc.force", "efc.state", "efc.Ma")
 DENSE_CONSTRUCTION_SOURCE_SHA256 = (
     "b69f15e5c7206b30bfe1af12b5ca6c0bdf3e37398116846643df73a2e8f8ef53"
 )
+CONSTRUCTION_ROW_FIELDS = (
+    "efc.J",
+    "efc.pos",
+    "efc.margin",
+    "efc.D",
+    "efc.vel",
+    "efc.aref",
+    "efc.frictionloss",
+    "efc.Jqvel",
+)
 CONTACT_CARRIERS = {
     "model.body_weldid": ((16,), "<i4"),
     "model.body_dofnum": ((16,), "<i4"),
@@ -1386,6 +1396,132 @@ def describe_contact_constraint_rows(contact_after, complete):
             "observed storage addresses and captured id/type backlinks only; "
             "not proof of fresh allocation, physical-contact identity, complete "
             "contact-parameter equality, solver equivalence, cause or qualification"
+        ),
+    }
+
+
+def compare_linked_contact_construction(
+    left_after, left_complete, right_after, right_complete
+):
+    """Compare a captured row-field subset at original, payload-linked offsets.
+
+    This caller-authenticated, source-pinned side view never rewrites IDs/rows,
+    asserts full contact-parameter equality or grants numerical admission.
+    Duplicate payloads and contacts without observed rows are not compared.
+    """
+    payload = compare_active_contact_payloads(left_after, right_after)
+    need(
+        payload["model_inputs_exact"],
+        "same captured model metadata for linked row comparison",
+    )
+    views = [
+        describe_contact_constraint_rows(after, complete)
+        for after, complete in (
+            (left_after, left_complete),
+            (right_after, right_complete),
+        )
+    ]
+    maps = [{row["contact_index"]: row for row in view["contacts"]} for view in views]
+    totals = {
+        name: {
+            "compared_words": 0,
+            "differing_words": 0,
+            "exact": None,
+            "first_difference": None,
+        }
+        for name in CONSTRUCTION_ROW_FIELDS
+    }
+    links, unobserved = [], []
+    for link in payload["unique_payload_links"]:
+        a, b = maps[0][link["left_index"]], maps[1][link["right_index"]]
+        if (
+            a["status"] != "observed-address-backlink"
+            or b["status"] != "observed-address-backlink"
+        ):
+            unobserved.append(
+                {**link, "left_status": a["status"], "right_status": b["status"]}
+            )
+            continue
+        need(
+            a["world"] == b["world"] and a["condim"] == b["condim"],
+            "linked captured world and local contact row dimension",
+        )
+        exact_fields = {}
+        for name in CONSTRUCTION_ROW_FIELDS:
+            words = prod(left_complete[name]["shape"][2:])
+            byte_width = 4 * words
+            total = totals[name]
+            field_exact = True
+            for ordinal, (left_row, right_row) in enumerate(
+                zip(a["row_indices"], b["row_indices"])
+            ):
+                left_offset = (a["world"] * CONTACT_NJMAX + left_row) * byte_width
+                right_offset = (b["world"] * CONTACT_NJMAX + right_row) * byte_width
+                x = left_complete[name]["raw"][left_offset : left_offset + byte_width]
+                y = right_complete[name]["raw"][
+                    right_offset : right_offset + byte_width
+                ]
+                need(
+                    len(x) == len(y) == byte_width,
+                    "whole captured linked construction row",
+                )
+                different = sum(
+                    x[i : i + 4] != y[i : i + 4] for i in range(0, byte_width, 4)
+                )
+                total["compared_words"] += words
+                total["differing_words"] += different
+                field_exact = field_exact and different == 0
+                if different and total["first_difference"] is None:
+                    word = _first_raw_word(x, y)
+                    total["first_difference"] = {
+                        **link,
+                        "world": a["world"],
+                        "local_row_ordinal": ordinal,
+                        "component": word["word_index"],
+                        "left_row": left_row,
+                        "right_row": right_row,
+                        "left_byte_offset": left_offset + word["word_index"] * 4,
+                        "right_byte_offset": right_offset + word["word_index"] * 4,
+                        "left_word_le_hex": word["left_word_le_hex"],
+                        "right_word_le_hex": word["right_word_le_hex"],
+                    }
+            exact_fields[name] = field_exact
+        links.append(
+            {
+                **link,
+                "world": a["world"],
+                "left_rows": list(a["row_indices"]),
+                "right_rows": list(b["row_indices"]),
+                "row_fields_exact": exact_fields,
+            }
+        )
+    for total in totals.values():
+        if total["compared_words"]:
+            total["exact"] = total["differing_words"] == 0
+    return {
+        "protocol": "microduck-linked-construction-row-view-oct8-v1",
+        "phase_source_sha256": DENSE_CONSTRUCTION_SOURCE_SHA256,
+        "fields": list(CONSTRUCTION_ROW_FIELDS),
+        "field_comparisons": totals,
+        "compared_payload_links": links,
+        "unobserved_payload_links": unobserved,
+        "ambiguous_payload_groups": payload["ambiguous_payload_groups"],
+        "unmatched_payload_groups": payload["unmatched_payload_groups"],
+        "model_inputs_exact": True,
+        "captured_state_inputs_exact": {
+            name: left_complete[name]["raw"] == right_complete[name]["raw"]
+            for name in ("data.qpos", "data.qvel", "data.ctrl")
+        },
+        "all_construction_drivers_asserted_equal": False,
+        "uncaptured_contact_parameters": views[0]["uncaptured_contact_parameters"],
+        "prior_solver_fields_excluded": list(SIDE_VIEW_PRIOR_SOLVER_FIELDS),
+        "raw_packets_unchanged": True,
+        "flags": dict(FLAGS),
+        "interpretation": (
+            "captured construction-field bytes aligned by unique captured payload "
+            "and local row ordinal, at separately retained original offsets; "
+            "not complete contact equality, fresh allocation, physical identity, "
+            "solver equivalence, cause or qualification; no compared words means null exact"
         ),
     }
 

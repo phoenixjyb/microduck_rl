@@ -635,6 +635,197 @@ def test_row_view_refuses_contradictory_completed_contact_rows(damage):
         receiver.describe_contact_constraint_rows(contact, complete)
 
 
+def _linked_construction_pair():
+    left_after, left_complete = _row_view_banks()
+    right_after, right_complete = deepcopy((left_after, left_complete))
+    # Reorder captured contact slots, but retain separate constraint row offsets.
+    for name, carrier in right_after.items():
+        if (name.startswith("contact.") and name != "contact.nacon") or name.startswith(
+            "context."
+        ):
+            width = 4 * receiver.prod(carrier["shape"][1:])
+            raw = carrier["raw"]
+            carrier["raw"] = raw[width : 2 * width] + raw[:width] + raw[2 * width :]
+    for bank in (right_after, right_complete):
+        counts = [6, 4] + [0] * 62
+        bank["data.nefc"]["raw"] = struct.pack("<64i", *counts)
+    for index in (*range(6), *range(512, 516)):
+        _change_raw_word(right_complete, "efc.type", index, struct.pack("<i", 0))
+    for world, left_index, right_index, left_rows, right_rows in (
+        (0, 0, 1, range(4), range(2, 6)),
+        (1, 1, 0, (0,), (3,)),
+    ):
+        for ordinal, (left_row, right_row) in enumerate(zip(left_rows, right_rows)):
+            _change_raw_word(
+                right_after,
+                "contact.efc_address",
+                right_index * 4 + ordinal,
+                struct.pack("<i", right_row),
+            )
+            _change_raw_word(
+                right_complete,
+                "efc.id",
+                world * 512 + right_row,
+                struct.pack("<i", right_index),
+            )
+            _change_raw_word(
+                right_complete,
+                "efc.type",
+                world * 512 + right_row,
+                struct.pack("<i", 6 if world == 0 else 5),
+            )
+            for name in receiver.CONSTRUCTION_ROW_FIELDS:
+                width = receiver.prod(left_complete[name]["shape"][2:])
+                for component in range(width):
+                    word = struct.pack(
+                        "<I", 0x3F800000 + world * 10000 + ordinal * 100 + component
+                    )
+                    _change_raw_word(
+                        left_complete,
+                        name,
+                        (world * 512 + left_row) * width + component,
+                        word,
+                    )
+                    _change_raw_word(
+                        right_complete,
+                        name,
+                        (world * 512 + right_row) * width + component,
+                        word,
+                    )
+    return left_after, left_complete, right_after, right_complete
+
+
+def test_linked_construction_compares_local_ordinals_at_original_offsets():
+    banks = _linked_construction_pair()
+    before = deepcopy(banks)
+    report = receiver.compare_linked_contact_construction(*banks)
+    assert banks == before
+    assert len(report["compared_payload_links"]) == 2
+    assert len(report["unobserved_payload_links"]) == 1
+    assert report["compared_payload_links"][0]["left_index"] == 0
+    assert report["compared_payload_links"][0]["right_index"] == 1
+    assert report["compared_payload_links"][0]["left_rows"] == [0, 1, 2, 3]
+    assert report["compared_payload_links"][0]["right_rows"] == [2, 3, 4, 5]
+    assert report["field_comparisons"]["efc.J"]["compared_words"] == 100
+    assert report["field_comparisons"]["efc.Jqvel"]["compared_words"] == 5
+    assert all(value["exact"] is True for value in report["field_comparisons"].values())
+    assert report["fields"] == [
+        "efc.J",
+        "efc.pos",
+        "efc.margin",
+        "efc.D",
+        "efc.vel",
+        "efc.aref",
+        "efc.frictionloss",
+        "efc.Jqvel",
+    ]
+    assert report["prior_solver_fields_excluded"] == [
+        "efc.force",
+        "efc.state",
+        "efc.Ma",
+    ]
+    assert report["phase_source_sha256"] == receiver.DENSE_CONSTRUCTION_SOURCE_SHA256
+    assert not any(report["flags"].values())
+
+
+@pytest.mark.parametrize("name", receiver.CONSTRUCTION_ROW_FIELDS)
+def test_linked_construction_reports_raw_delta_with_both_original_offsets(name):
+    banks = _linked_construction_pair()
+    width = receiver.prod(banks[3][name]["shape"][2:])
+    component = 7 if width > 1 else 0
+    _change_raw_word(banks[3], name, 4 * width + component)
+    before = deepcopy(banks)
+    result = receiver.compare_linked_contact_construction(*banks)["field_comparisons"][
+        name
+    ]
+    assert banks == before
+    assert result["exact"] is False
+    assert result["differing_words"] == 1
+    delta = result["first_difference"]
+    assert (delta["local_row_ordinal"], delta["component"]) == (2, component)
+    assert (delta["left_row"], delta["right_row"]) == (2, 4)
+    assert delta["left_byte_offset"] == (2 * width + component) * 4
+    assert delta["right_byte_offset"] == (4 * width + component) * 4
+
+
+@pytest.mark.parametrize(
+    "words,exact",
+    (
+        ((0, 0x80000000), False),
+        ((0x7FC12345, 0x7FC12345), True),
+        ((0x7FC12345, 0x7FC12346), False),
+    ),
+)
+def test_linked_construction_preserves_signed_zero_and_nan_payload_bits(words, exact):
+    banks = _linked_construction_pair()
+    for bank, index, word in ((banks[1], 0, words[0]), (banks[3], 2, words[1])):
+        _change_raw_word(bank, "efc.Jqvel", index, struct.pack("<I", word))
+    result = receiver.compare_linked_contact_construction(*banks)["field_comparisons"][
+        "efc.Jqvel"
+    ]
+    assert result["exact"] is exact
+
+
+@pytest.mark.parametrize("case", ("empty", "unobserved", "duplicates"))
+def test_linked_construction_no_comparisons_is_null_not_vacuous_exact(case):
+    after = _payload_bank(0 if case == "empty" else 2)
+    complete = _complete_view_bank(count=0)
+    if case == "duplicates":
+        _change_raw_word(after, "contact.dist", 1, struct.pack("<I", 0))
+    report = receiver.compare_linked_contact_construction(
+        after, complete, deepcopy(after), deepcopy(complete)
+    )
+    assert report["compared_payload_links"] == []
+    assert all(
+        value
+        == {
+            "compared_words": 0,
+            "differing_words": 0,
+            "exact": None,
+            "first_difference": None,
+        }
+        for value in report["field_comparisons"].values()
+    )
+    if case == "duplicates":
+        assert len(report["ambiguous_payload_groups"]) == 1
+    elif case == "unobserved":
+        assert len(report["unobserved_payload_links"]) == 2
+        assert all(
+            link["left_status"]
+            == link["right_status"]
+            == "no-complete-contact-row-not-read"
+            for link in report["unobserved_payload_links"]
+        )
+
+
+def test_linked_construction_does_not_infer_all_drivers_equal_from_equal_row_fields():
+    banks = _linked_construction_pair()
+    _change_raw_word(banks[3], "data.qvel", 0)
+    report = receiver.compare_linked_contact_construction(*banks)
+    assert all(value["exact"] is True for value in report["field_comparisons"].values())
+    assert report["captured_state_inputs_exact"] == {
+        "data.qpos": True,
+        "data.qvel": False,
+        "data.ctrl": True,
+    }
+    assert report["all_construction_drivers_asserted_equal"] is False
+
+
+@pytest.mark.parametrize("damage", ("model", "backlink", "unknown"))
+def test_linked_construction_refuses_differing_model_or_malformed_banks(damage):
+    banks = _linked_construction_pair()
+    if damage == "model":
+        _change_raw_word(banks[2], "model.body_weldid", 0, struct.pack("<i", 1))
+    elif damage == "backlink":
+        _change_raw_word(banks[3], "efc.id", 2, struct.pack("<i", 99))
+    else:
+        banks[3]["extra"] = banks[3]["efc.id"]
+    before = deepcopy(banks)
+    with pytest.raises(ValueError):
+        receiver.compare_linked_contact_construction(*banks)
+    assert banks == before
+
+
 @pytest.mark.parametrize(
     "damage",
     (

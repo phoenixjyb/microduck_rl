@@ -511,3 +511,56 @@ condim1/3 across worlds, preceding non-contact rows, arbitrary unused addresses,
 orphan/extra/missing/backlink/type/world/extent/overflow failures. The unchanged
 94-file scope now collects3069, frozen in the producer. New same-source CPU
 proofs and separately rooted source-only retention are required again.
+
+### Completed row retention at2ad1299b090e
+
+Both3069-test suites passed without omissions: Mac326.95s, WSL184.49s.
+The319-byte inventory SHA256s are
+`1e10c5a3c02f7eebe49ddc69907e41e5d27d5fdb5237523cc89680966f0b633e`
+and `4b4549039e41b926998b8ab928dcf27a285145934c840a720221d3b38124c92a`.
+Every proof leaf and the exact source/count/thread closure was authenticated
+on both hosts. Native CPU invocationc5e1467230624f169d81d9849a9d129d closed
+PID0/exited/success0, reported service MemoryPeak5009879040 bytes, within6GiB.
+
+At `artifacts/tools/contact-boundary-payload-view-2ad1299b090e`, independent
+source-only reports on both hosts are literal-byte identical:640145-byte
+diagnosis SHA256
+`75ee9e03d8649c7d8c3d50149d31c4fec2f8e33de2effdd4795b42a2988d9f22`,
+112-byte inventory SHA256
+`cb91cc34c8abfc0c04d9c69e9ff157f2dcd9ed6e09d6e1102e37328c3398409c`.
+External whole anchors were checked before JSON decode and literal byte equality.
+The7783-byte CPU-only driver matches both hosts, SHA256
+`39bd1712fe94248fa1a1670ca81c4fd395b1a363c965cb3298e83cdb58133d86`;
+the84093-byte installed construction source also matches the pinned SHA.
+
+Forwards0–3 have no observed contact rows. At each forward4/5/6, both arms have
+2048 valid observed row backlinks and512 unique captured payload links. Of
+those links,421/416/412 respectively occupy different per-world row offsets.
+These are associations in the retained capture, not a replay, newly accepted
+runtime, physical-contact match or proven cause. The old numerical negative
+and every qualification flag remain unchanged.
+
+## Matched construction-field subset predeclaration
+
+Add a pure side view over the same caller-authenticated same-arm/forward
+packets. Require captured model metadata exact, then pair only unique raw
+input/context payload links with observed row blocks on both sides. Align by
+local within-contact row ordinal, retaining both original absolute row/byte
+offsets. Compare literal bytes for J,pos,margin,D,vel,aref,frictionloss,Jqvel;
+use id/type only as backlink guards. Do not rewrite IDs, sort raw rows, compare
+force/state/Ma, use sparse metadata as dense offsets or classify unobserved
+contacts. Report compared/differing raw-word counts and first differences for
+each field; zero compared words means null exact, never vacuous acceptance.
+Leave duplicate, unmatched and unobserved links explicitly outside the compared
+subset. Missing friction/solver parameters still prohibit a full contact
+equality or solver-equivalence conclusion even if all compared words match.
+
+Focused tests cover reordered unique contacts and shifted row offsets across
+two worlds, all eight captured fields, separate first-delta offsets/components,
+signed zero/NaN payload bits, null empty/duplicate/unobserved comparisons, model
+mismatch, malformed backlinks and raw immutability. The unchanged94-file scope
+collects3088, frozen in the producer. Separately report raw qpos/qvel/ctrl
+equality and explicitly do not assert equality of all construction drivers.
+Require fresh exact-source full CPU proofs
+on both hosts and new separately rooted authenticated retention. No new CUDA
+trial or training/longer-rollout/video/physical admission follows this view.

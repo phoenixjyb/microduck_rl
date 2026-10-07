@@ -564,3 +564,69 @@ equality and explicitly do not assert equality of all construction drivers.
 Require fresh exact-source full CPU proofs
 on both hosts and new separately rooted authenticated retention. No new CUDA
 trial or training/longer-rollout/video/physical admission follows this view.
+
+### Completed construction retention at97c3f901dafe
+
+Both3088-test suites passed with zero omissions: Mac410.99s, WSL181.42s.
+The319-byte inventory SHA256s are respectively
+`29fcbcdf455156370fe7534cc727f2258e88587b8a6389825c956ec85e3684f4`
+and `d44e3385a04c7633f9205098d5f8b2d79e3be5df86cc66f6eb581996ad96d1b4`.
+Both complete proof/source/count/thread closures were authenticated on both
+hosts. Native invocation351a530254ff451aaf24d1347e7afea6 is closed PID0/success0,
+reported service MemoryPeak4173729792 bytes, within6GiB.
+
+Independent source-only reports at
+`artifacts/tools/contact-boundary-payload-view-97c3f901dafe` are literal-byte
+identical on both hosts:1043176-byte diagnosis SHA256
+`c69f8555bf5fc18287735a3b963b1a5da7a399531bc8d1bbadef6f097d9d8c3f`,
+113-byte inventory SHA256
+`2aefc2e76d5591dde8c2967afa9d693b08a62e95753a5f23fca7fdfb7b201b36`.
+All external whole anchors were verified before JSON decode and comparison.
+The8030-byte driver matches both hosts, SHA256
+`68bf3b6d276e97151e83f964a01262cb3b9d9464a5d9ec2fb9bbcc813bb04d90`.
+
+At forwards4 and5, all55296 compared words across the eight captured contact
+construction fields match exactly after the512 unique payload links and their
+local row ordinals are aligned; captured qpos/qvel/ctrl also match. Each arm's
+original offsets remain separately recorded. This does not assert equality of
+all construction drivers or omitted contact parameters. At forward6, J,pos,
+margin,D,frictionloss still match;840 of2048 words differ in each of vel/Jqvel,
+830 in aref, and qpos/qvel differ (ctrl matches). Forwards0–3 compare no contact
+row words, so exact is null. No new simulation execution or admission occurred.
+
+## Retained post-forward load subset predeclaration
+
+The unchanged runtime loop calls BAM compute before its pre-integration forward,
+integrates, then completes its post forward (`stance_warp_runtime.py287–325`).
+The forward receipt labels constructor0, odd step-pre, nonzero even step-post
+(`stance_serial_step_control.py615–624`). The BAM friction hook snapshots
+qfrc_constraint, EFC type/id/force/nefc before its scan/write
+(`stance_bam_load_observer.py311–372,402–451`); the old receiver validates all
+ten ascending call/proposal indices and steps_before=[index]*64
+(`stance_bam_load_receiver.py605–640`). These sources remain in the unchanged
+historical source closure. This is phase/schedule evidence, not a causal test.
+
+Permit only sampled same-arm pairs forward0/call0,2/1,4/2,6/3. Odd forwards
+have no retained post-solve load counterpart; later load calls have no sampled
+contact boundary. The caller must whole-authenticate the prior replay, arm,
+boundary row forward, exact load call record/steps and full raw packets before
+slicing a call. Require exact bounded nefc and all-world active-prefix id/type
+continuity from construction to the subsequent load before force access.
+Any mismatch refuses the join; never search/reorder or compare stale
+construction efc.force. Align load forces only at unique captured-payload-linked
+observed row blocks and each arm's original offsets. Keep duplicates,
+unobserved and inactive capacity unexamined; zero compared force words is null.
+Compare qfrc_constraint separately as a fixed64-world/20-DOF aggregate across
+constraint families, never contact-isolated. Raw signed-zero/NaN bits remain
+literal observations, not new finite-physics acceptance.
+
+The pure helper explicitly cannot establish snapshot provenance by itself.
+No physical identity, fresh allocation, full solver equivalence or cause is
+inferred. Missing contact friction/solver parameters and the old repeat-negative
+remain material limits; all five flags stay false. Focused tests cover all four
+permitted phase pairs, odd/unsampled/nonliteral refusal, active id/type/count
+breaks on either arm, inactive bits, original offsets, aggregate separation,
+malformed carriers, signed-zero/NaN words and one-sided/unpaired/empty cases.
+The unchanged94-file scope collects3125, frozen in the producer. Require new
+exact-source full CPU proofs on both hosts and separately rooted authenticated
+retention; no new CUDA trial/learner/rollout/video/physical motion follows.

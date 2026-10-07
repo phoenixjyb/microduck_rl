@@ -826,6 +826,201 @@ def test_linked_construction_refuses_differing_model_or_malformed_banks(damage):
     assert banks == before
 
 
+def _post_forward_load_pair():
+    a, ac, b, bc = _linked_construction_pair()
+    loads = []
+    for complete in (ac, bc):
+        load = {
+            name: deepcopy(complete[name])
+            if name in complete
+            else _field(bytes(4 * receiver.prod(shape)), shape, dtype)
+            for name, (shape, dtype) in receiver.SOLVED_LOAD_CARRIERS.items()
+        }
+        loads.append(load)
+    return a, ac, loads[0], b, bc, loads[1]
+
+
+@pytest.mark.parametrize("forward,call", receiver.POST_FORWARD_LOAD_PAIRS)
+def test_load_view_keeps_phase_separate_from_stale_construction_force(forward, call):
+    banks = _post_forward_load_pair()
+    _change_raw_word(banks[1], "efc.force", 0, struct.pack("<I", 0x7FC12345))
+    _change_raw_word(banks[4], "efc.force", 2, struct.pack("<I", 0x80000000))
+    before = deepcopy(banks)
+    report = receiver.compare_linked_post_forward_load(
+        *banks, forward=forward, load_call=call
+    )
+    assert banks == before
+    assert report["forward"] == forward and report["load_call"] == call
+    assert report["observed_linked_force_words"] == 5
+    assert report["force_exact"] is True
+    assert report["aggregate_qfrc_constraint"]["contact_isolated"] is False
+    assert report["active_id_type_count_continuity_checked"] is True
+    assert len(report["compared_payload_links"]) == 2
+    assert "not construction efc.force" in report["force_phase"]
+    assert not any(report["flags"].values())
+
+
+def test_load_view_force_delta_retains_both_original_row_offsets():
+    banks = _post_forward_load_pair()
+    _change_raw_word(banks[5], "efc.force", 4, struct.pack("<I", 0x80000000))
+    report = receiver.compare_linked_post_forward_load(*banks, forward=4, load_call=2)
+    assert report["force_exact"] is False
+    assert report["differing_force_words"] == 1
+    delta = report["first_force_difference"]
+    assert (delta["left_row"], delta["right_row"], delta["local_row_ordinal"]) == (
+        2,
+        4,
+        2,
+    )
+    assert (delta["left_byte_offset"], delta["right_byte_offset"]) == (8, 16)
+    assert delta["left_word_le_hex"] == "00000000"
+    assert delta["right_word_le_hex"] == "00000080"
+
+
+def test_load_view_aggregate_load_delta_is_not_contact_isolated():
+    banks = _post_forward_load_pair()
+    _change_raw_word(banks[5], "data.qfrc_constraint", 3 * 20 + 6)
+    result = receiver.compare_linked_post_forward_load(*banks, forward=4, load_call=2)
+    assert result["force_exact"] is True
+    aggregate = result["aggregate_qfrc_constraint"]
+    assert aggregate["compared_words"] == 1280
+    assert aggregate["differing_words"] == 1 and aggregate["exact"] is False
+    assert aggregate["first_difference"]["world"] == 3
+    assert aggregate["first_difference"]["dof"] == 6
+    assert aggregate["contact_isolated"] is False
+
+
+@pytest.mark.parametrize(
+    "words,exact",
+    (
+        ((0, 0x80000000), False),
+        ((0x7FC12345, 0x7FC12345), True),
+        ((0x7FC12345, 0x7FC12346), False),
+    ),
+)
+def test_load_view_compares_opaque_force_words_without_float_normalization(
+    words, exact
+):
+    banks = _post_forward_load_pair()
+    for bank, index, word in ((banks[2], 0, words[0]), (banks[5], 2, words[1])):
+        _change_raw_word(bank, "efc.force", index, struct.pack("<I", word))
+    report = receiver.compare_linked_post_forward_load(*banks, forward=4, load_call=2)
+    assert report["force_exact"] is exact
+
+
+@pytest.mark.parametrize(
+    "forward,call",
+    (
+        (-2, -1),
+        (1, 0),
+        (3, 1),
+        (5, 2),
+        (7, 3),
+        (8, 4),
+        (4, 3),
+        (True, 0),
+        (0, False),
+        (0.0, 0),
+    ),
+)
+def test_load_view_refuses_unsampled_or_nonliteral_stage_pairs(forward, call):
+    with pytest.raises(ValueError, match="literal predeclared"):
+        receiver.compare_linked_post_forward_load(
+            *_post_forward_load_pair(), forward=forward, load_call=call
+        )
+
+
+@pytest.mark.parametrize("arm", (2, 5))
+@pytest.mark.parametrize("field", ("data.nefc", "efc.id", "efc.type"))
+def test_load_view_refuses_any_active_count_id_type_discontinuity(arm, field):
+    banks = _post_forward_load_pair()
+    _change_raw_word(
+        banks[arm],
+        field,
+        0 if arm == 2 or field == "data.nefc" else 2,
+        struct.pack("<i", 99),
+    )
+    before = deepcopy(banks)
+    with pytest.raises(ValueError):
+        receiver.compare_linked_post_forward_load(*banks, forward=4, load_call=2)
+    assert banks == before
+
+
+def test_load_view_ignores_inactive_id_type_force_capacity_and_preserves_it():
+    banks = _post_forward_load_pair()
+    for field in ("efc.id", "efc.type", "efc.force"):
+        _change_raw_word(banks[5], field, 500, struct.pack("<I", 0x7FC12345))
+    before = deepcopy(banks)
+    result = receiver.compare_linked_post_forward_load(*banks, forward=4, load_call=2)
+    assert result["force_exact"] is True and banks == before
+
+
+@pytest.mark.parametrize(
+    "damage", ("missing", "unknown", "shape", "boolshape", "dtype", "raw")
+)
+def test_load_view_refuses_malformed_load_carriers(damage):
+    banks = _post_forward_load_pair()
+    load = banks[5]
+    if damage == "missing":
+        del load["efc.force"]
+    elif damage == "unknown":
+        load["extra"] = load["efc.force"]
+    elif damage in ("shape", "boolshape"):
+        load["efc.force"]["shape"] = [True if damage == "boolshape" else 63, 512]
+    elif damage == "dtype":
+        load["efc.force"]["dtype"] = "=f4"
+    else:
+        load["efc.force"]["raw"] = b"short"
+    with pytest.raises(ValueError):
+        receiver.compare_linked_post_forward_load(*banks, forward=4, load_call=2)
+
+
+@pytest.mark.parametrize("case", ("empty", "unobserved", "duplicates"))
+def test_load_view_zero_compared_force_words_is_null(case):
+    after = _payload_bank(0 if case == "empty" else 2)
+    complete = _complete_view_bank(count=0)
+    if case == "duplicates":
+        _change_raw_word(after, "contact.dist", 1, struct.pack("<I", 0))
+    load = {
+        name: _field(bytes(4 * receiver.prod(shape)), shape, dtype)
+        for name, (shape, dtype) in receiver.SOLVED_LOAD_CARRIERS.items()
+    }
+    result = receiver.compare_linked_post_forward_load(
+        after,
+        complete,
+        load,
+        deepcopy(after),
+        deepcopy(complete),
+        deepcopy(load),
+        forward=0,
+        load_call=0,
+    )
+    assert result["observed_linked_force_words"] == 0
+    assert result["force_exact"] is None and result["first_force_difference"] is None
+    assert result["compared_payload_links"] == []
+
+
+@pytest.mark.parametrize("all_contacts", (False, True))
+def test_load_view_one_sided_observed_rows_are_not_compared(all_contacts):
+    banks = _post_forward_load_pair()
+    indices = [2, 3, 4, 5] + ([512 + 3] if all_contacts else [])
+    for index in indices:
+        for bank in (banks[4], banks[5]):
+            _change_raw_word(bank, "efc.type", index, struct.pack("<i", 0))
+    result = receiver.compare_linked_post_forward_load(*banks, forward=4, load_call=2)
+    assert result["observed_linked_force_words"] == (0 if all_contacts else 1)
+    assert result["force_exact"] is (None if all_contacts else True)
+    assert (
+        result["unobserved_payload_links"][0]["left_status"]
+        == "observed-address-backlink"
+    )
+    assert (
+        result["unobserved_payload_links"][0]["right_status"]
+        == "no-complete-contact-row-not-read"
+    )
+    assert result["snapshot_provenance_established_by_helper"] is False
+
+
 @pytest.mark.parametrize(
     "damage",
     (

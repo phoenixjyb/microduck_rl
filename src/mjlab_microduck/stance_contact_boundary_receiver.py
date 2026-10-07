@@ -155,6 +155,14 @@ CONSTRUCTION_ROW_FIELDS = (
     "efc.frictionloss",
     "efc.Jqvel",
 )
+POST_FORWARD_LOAD_PAIRS = ((0, 0), (2, 1), (4, 2), (6, 3))
+SOLVED_LOAD_CARRIERS = {
+    "data.nefc": ((64,), "<i4"),
+    "efc.id": ((64, 512), "<i4"),
+    "efc.type": ((64, 512), "<i4"),
+    "efc.force": ((64, 512), "<f4"),
+    "data.qfrc_constraint": ((64, 20), "<f4"),
+}
 CONTACT_CARRIERS = {
     "model.body_weldid": ((16,), "<i4"),
     "model.body_dofnum": ((16,), "<i4"),
@@ -1522,6 +1530,172 @@ def compare_linked_contact_construction(
             "and local row ordinal, at separately retained original offsets; "
             "not complete contact equality, fresh allocation, physical identity, "
             "solver equivalence, cause or qualification; no compared words means null exact"
+        ),
+    }
+
+
+def compare_linked_post_forward_load(
+    left_after,
+    left_complete,
+    left_load,
+    right_after,
+    right_complete,
+    right_load,
+    *,
+    forward,
+    load_call,
+):
+    """Compare retained BAM-boundary loads, never stale construction forces.
+
+    Caller authenticates the same-arm recipe, exact call receipt and source
+    schedule. Only the four sampled even-forward/load pairs are permitted.
+    Active id/type/count continuity must hold before reading force rows. This
+    pure helper neither establishes snapshot provenance nor proves a cause.
+    """
+    need(
+        type(forward) is int
+        and type(load_call) is int
+        and (forward, load_call) in POST_FORWARD_LOAD_PAIRS,
+        "literal predeclared sampled post-forward/load pair",
+    )
+    payload = compare_active_contact_payloads(left_after, right_after)
+    need(
+        payload["model_inputs_exact"],
+        "same captured model metadata for linked load view",
+    )
+    views = []
+    for after, complete, load in (
+        (left_after, left_complete, left_load),
+        (right_after, right_complete, right_load),
+    ):
+        view = describe_contact_constraint_rows(after, complete)
+        need(
+            type(load) is dict and set(load) == set(SOLVED_LOAD_CARRIERS),
+            "exact retained post-forward load carrier bank",
+        )
+        for name, (shape, dtype) in SOLVED_LOAD_CARRIERS.items():
+            value = load[name]
+            need(
+                type(value) is dict
+                and set(value) == {"shape", "dtype", "raw"}
+                and type(value["shape"]) is list
+                and all(type(n) is int for n in value["shape"])
+                and tuple(value["shape"]) == shape
+                and type(value["dtype"]) is str
+                and value["dtype"] == dtype
+                and type(value["raw"]) is bytes
+                and len(value["raw"]) == 4 * prod(shape),
+                "literal retained post-forward load carrier: " + name,
+            )
+        counts = _int_words(load["data.nefc"])
+        need(
+            list(counts) == view["per_world_nefc"],
+            "same captured post-forward load row counts",
+        )
+        for world, count in enumerate(counts):
+            start, end = world * CONTACT_NJMAX * 4, (world * CONTACT_NJMAX + count) * 4
+            for name in ("efc.id", "efc.type"):
+                need(
+                    complete[name]["raw"][start:end] == load[name]["raw"][start:end],
+                    "exact active captured construction-to-load id/type continuity",
+                )
+        views.append(view)
+    maps = [{row["contact_index"]: row for row in view["contacts"]} for view in views]
+    links, unobserved = [], []
+    count, differences, first = 0, 0, None
+    for link in payload["unique_payload_links"]:
+        a, b = maps[0][link["left_index"]], maps[1][link["right_index"]]
+        if (
+            a["status"] != "observed-address-backlink"
+            or b["status"] != "observed-address-backlink"
+        ):
+            unobserved.append(
+                {**link, "left_status": a["status"], "right_status": b["status"]}
+            )
+            continue
+        need(
+            a["world"] == b["world"] and a["condim"] == b["condim"],
+            "linked captured world and local load row dimension",
+        )
+        exact = True
+        for ordinal, (left_row, right_row) in enumerate(
+            zip(a["row_indices"], b["row_indices"])
+        ):
+            left_offset = (a["world"] * CONTACT_NJMAX + left_row) * 4
+            right_offset = (b["world"] * CONTACT_NJMAX + right_row) * 4
+            x = left_load["efc.force"]["raw"][left_offset : left_offset + 4]
+            y = right_load["efc.force"]["raw"][right_offset : right_offset + 4]
+            count += 1
+            if x != y:
+                differences += 1
+                exact = False
+                if first is None:
+                    first = {
+                        **link,
+                        "world": a["world"],
+                        "local_row_ordinal": ordinal,
+                        "left_row": left_row,
+                        "right_row": right_row,
+                        "left_byte_offset": left_offset,
+                        "right_byte_offset": right_offset,
+                        "left_word_le_hex": x.hex(),
+                        "right_word_le_hex": y.hex(),
+                    }
+        links.append(
+            {
+                **link,
+                "world": a["world"],
+                "left_rows": a["row_indices"],
+                "right_rows": b["row_indices"],
+                "load_force_exact": exact,
+            }
+        )
+    x, y = (
+        left_load["data.qfrc_constraint"]["raw"],
+        right_load["data.qfrc_constraint"]["raw"],
+    )
+    aggregate = _first_raw_word(x, y)
+    if aggregate is not None:
+        aggregate = {
+            **aggregate,
+            "world": aggregate["word_index"] // 20,
+            "dof": aggregate["word_index"] % 20,
+        }
+    return {
+        "protocol": "microduck-linked-post-forward-load-view-oct8-v1",
+        "forward": forward,
+        "load_call": load_call,
+        "active_id_type_count_continuity_checked": True,
+        "force_phase": (
+            "scheduled post-forward BAM load observation under caller-authenticated "
+            "receipt; not construction efc.force"
+        ),
+        "snapshot_provenance_established_by_helper": False,
+        "observed_linked_force_words": count,
+        "differing_force_words": differences,
+        "force_exact": differences == 0 if count else None,
+        "first_force_difference": first,
+        "compared_payload_links": links,
+        "unobserved_payload_links": unobserved,
+        "ambiguous_payload_groups": payload["ambiguous_payload_groups"],
+        "unmatched_payload_groups": payload["unmatched_payload_groups"],
+        "aggregate_qfrc_constraint": {
+            "compared_words": 64 * 20,
+            "differing_words": sum(
+                x[i : i + 4] != y[i : i + 4] for i in range(0, len(x), 4)
+            ),
+            "exact": x == y,
+            "first_difference": aggregate,
+            "contact_isolated": False,
+        },
+        "uncaptured_contact_parameters": views[0]["uncaptured_contact_parameters"],
+        "raw_packets_unchanged": True,
+        "flags": dict(FLAGS),
+        "interpretation": (
+            "retained load bytes at observed payload-linked row offsets with active "
+            "id/type/count continuity; caller must authenticate exact recipe timing; "
+            "not snapshot provenance, physical identity, fresh allocation, complete "
+            "solver equivalence, cause or qualification; aggregate load spans constraint families"
         ),
     }
 

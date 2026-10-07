@@ -41,6 +41,28 @@ The hardened final Mac matrix also met all eight expectations, retained at `arti
 
 The next authorized reproduction is CPU-only on the clean exact pushed feature tip in `/home/yanbo/work/microduck_rl-com-entry-20261006`, using the frozen environment and literal empty CUDA visibility. Use a unique retained user unit `microduck-friction-cpu-tests-<source12>.service`, at most 360 seconds overall / 300 seconds for the complete 79-file/2373-test pytest subprocess, MemoryMax 6GiB, CPUQuota 200%, Nice10, TasksMax64, no restart, control-group cleanup, 10-second stop timeout and retained exited state. Capture the exact source/tree/whole tracked-file hashes, actual service invocation/PID, full test list/log/JUnit, complete authenticated row audit and complete eight-case matrix in `artifacts/tools/friction-cpu-reproduction-<source12>`. Independently authenticate whole output bytes before JSON/XML decoding on the Mac, compare all row-audit bytes and all component input/output bits separately from process/platform metadata, retain both reports on both hosts and fsync them. Require at least 60 seconds of cutoff reserve. This is a new CPU-only protocol, not reuse or expansion of the prior BAM/RNE producer fences. It admits no CUDA execution.
 
+## Completed native CPU reproduction and independent comparison
+
+Executed clean pushed source **`149d0b79abda655792e4c3638a019f037dfd2f85`**, tree `17c303332483b4c9352331b8d728a72630ca6a82`. The independent Mac verifier rehashed all 875 committed tracked blobs and required the native before/after inventories to match exactly; canonical full tracked-file inventory SHA256 `0366103aba5c36dd92751f141e2d0c329ad0d08375928d3c02d38dc60e582c40`. This is a new complete tracked-tree scope, not an expansion of the previous producer's 673-leaf fence. Verified bundle SHA256 `021e2fd1610c73bc809606b281c11473659f30273234099c11545e23e214818d` fast-forwarded the clean native worktree from C3. All six installed package versions and the pinned 69-file MuJoCo-Warp source tree remained unchanged.
+
+Unit `microduck-friction-cpu-tests-149d0b79abda.service`, invocation `c742eba394c34eba90714d5b4b14c234`, observed owner 3685060 / pytest child 3685151, completed 11:50:08–11:52:39 Shanghai: success/exit0, MainPID0, no restarts. **2373 tests passed in 140.26s**, with zero omissions. Peak process memory 5245800448 bytes remained below 6GiB; the declared 360-second/64-task caps were verified from the actual unit. The source tree and external producer bytes were unchanged before/after. GPU compute occupancy was empty at independent checks; its observed temperature was 30°C and display memory 676MiB during the CPU-only check. These observations are not continuous GPU monitoring. FilmBrain PIDs521/298048 and protected inactive services were preserved.
+
+Both hosts retain all six raw files (1664427 bytes total) under `artifacts/tools/friction-cpu-reproduction-149d0b79abda`. Whole external lengths/hashes for all raw and initial closeout files were checked before any JSON/XML decoding on the Mac. The source/terminal closeout and the independent Mac verification are fsynced on both hosts in `artifacts/tools/friction-cpu-closeout-149d0b79abda`. The native copy of the complete Mac matrix is separately fsynced at `artifacts/tools/friction-cpu-cross-host-149d0b79abda/mac-matrix.json`; the original six-file raw inventory is unchanged.
+
+| Artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| raw producer.py | 6055 | `e0b50517fc62758674bdc98e004eae85e6535ab671d3c2d8bac96d9e39e438a4` |
+| raw junit.xml | 438932 | `fd53fd8478a33ebc8a93186f880419e17717dfd8236bd2768fa93997cb3c0173` |
+| raw pytest.log | 2673 | `8149db69384c48aceaab06f3ff9b747fcb8ac7e7d3812bc39ab7f24ba46e0725` |
+| raw receipt.json | 380083 | `bf21c0ab3b63854b7ecae7c2ff552acc8a9240dfce51daa37463003a508238cc` |
+| raw row-address-analysis.json | 746671 | `4dc98235f14ea123faa3410ff8de5a93fe5743c70ec708f87306a35e95ab8e27` |
+| raw native matrix.json | 90013 | `feb9ff19526a1d76e25a2bc87372142f34f7e6ca6cfdfa61b9b3aecf5c0d00c4` |
+| closeout inventory.json | 651 | `1a3b1625ab2b8acfe050628c4dafc3df0435c2363d7e68595c537b8990d3fa9c` |
+| closeout terminal.json | 340 | `b5157ae820c998cfb3529314a38855319eeb4043c3b78513b1f82d2a6d654b02` |
+| separate mac-verification.json | 6309 | `72962cf3cc84f78af55b642dd5d1c0f661d69bd83e97e7a251f4d0c00652bb64` |
+
+The authenticated row audit is byte-identical across hosts. Both eight-case matrices meet all expected component decisions, including explicit negative overflow. Across all cases/worlds, complete input bits, counters, original/candidate row sequences and addressed fields are bit-identical between the CPU hosts. Complete matrix report bytes differ intentionally because process-local IDs and platform evidence differ; source/module identities were separately verified. All cause, CUDA/native, full-window, training and physical flags remain false. These CPU results do not repair the retained GPU repeat failure or establish a learned skill.
+
 ## Follow-up gate
 
 Even a passing matrix warrants only review of a separately predeclared fresh bounded CUDA **component** probe. That would require a clean pushed source, fresh full native CPU proof, exact original/candidate source and compiled-kernel bindings, complete dense row packets/counts, negative overflow handling, one owned child under the existing shared GPU lease, resource/deadline caps and independent authenticated replay. It must not patch the retained robot runtime or reuse a previous run namespace. Runtime replacement would still require its own bounded input/output and full-window gates; training remains blocked until those gates pass. No CUDA component job is authorized by this document.

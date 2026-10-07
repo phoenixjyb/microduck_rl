@@ -55,6 +55,10 @@ Use binary packets with explicit offsets/shapes/dtypes, including inactive
 rows; do not transport rounded values. Leading singleton/broadcast model
 arrays may use zero leading stride; all written banks are contiguous. Require
 stable objects/layout within each entry and reject unexpected storage aliases.
+An actual Warp empty-array pointer may be JSON null; preserve that value
+literally, admitting it only with zero span and zero carrier bytes. Nonempty
+null pointers are refused. Address-range calculations exclude empty arrays;
+this never rewrites recorded numerical packets.
 
 Compile and explicitly load the original constraint and candidate modules
 fresh into a unique retained directory at native sm120, process-local PCH
@@ -74,7 +78,7 @@ substitute the new source closure for its historical execution source.
 
 Before GPU admission, the new exact source must pass the retained85-file
 regression plus five new test files on Mac and WSL, with a declared exact
-collected test count of **2807**, no skips/errors/failures, complete committed-source
+collected test count of **2811**, no skips/errors/failures, complete committed-source
 before/after closure and frozen package/environment witnesses. Source tests
 alone never admit runtime equivalence. Pin the existing lean `.venv` alias,
 canonical Warp library/header bytes, packages, host/GPU/driver identity and
@@ -144,3 +148,47 @@ revised90-file scope collects2807 tests (9.54s). Full revised-source CPU
 prerequisites and native execution remain pending; no new runtime or training
 result exists yet. Earlier proofs remain retained, not substituted for the
 revised execution source.
+
+### Retained first native refusal and reviewed correction
+
+Revised execution source `f00742a4910b9440f09dea2ff02d8b8feab3a23b` passed
+all2807 tests on Mac (203.13s) and WSL (175.98s), zero omissions. Mac CPU
+inventory SHA256 is
+`0e607e25e38cac8c7290122e01a8e9ec1f2eeae04af46a93261b9c25c7712083`;
+WSL CPU inventory SHA256 is
+`e8722fa98f5ab8421e1c4c8a4805d2267f12feb4390b70e73eb5859dc94fbcb0`.
+CPU unit invocation `54f0b21b438d44bc886fc6a438ac8a26` exited successfully.
+
+Run unit `microduck-friction-runtime-tick-run-f00742a4910b.service`, invocation
+`f07e285cd4884fad9e94909463b81e55`, failed with exit1. OwnerPID3940437 and
+observed CUDA childPID3940458; temperature remained30–32C. The child compiled
+the isolated modules and reached the first constructor constraint entry, but
+failed **before the target friction launch** at `int(array.ptr)` with
+`TypeError: int() argument must be a string, a bytes-like object or a real
+number, not 'NoneType'`. No complete arm or runtime acceptance exists.
+
+Read-only diagnosis on both frozen CPU environments reproduced actual
+Warp1.12 `wp.zeros((64,0), int32)`: pointerNone, shape[64,0], strides[0,4],
+zero bytes, contiguous. Its installed `types.py` explicitly uses None for an
+empty allocation. This is an observer metadata defect, not an observed driver,
+package, numerical or learned-policy failure. The correction retains null
+pointer metadata for empty arrays and refuses it for nonempty arrays. Tests
+now use real Warp CPU empty arrays and a faithful null-pointer fake backend;
+receiver checks preserve the same distinction. Gates and numerical bytes are
+unchanged. The standalone candidate also retains upstream Apache attribution.
+
+The failed33-file raw run (6459182 bytes) is retained on both hosts at
+`artifacts/evaluations/friction-runtime-tick-run-f00742a4910b`; whole external
+inventory at `artifacts/tools/friction-runtime-tick-failure-f00742a4910b`
+has5886 bytes, SHA256
+`3da8939fcc7d3adc2aeb802a2c4e1ad508cbf12ffef0ba00c8b17faa06db1c97`.
+Independent Mac whole-file authentication matched every leaf before JSON
+interpretation. Terminal106 bytes SHA256
+`b22f477f465d51614a430297e9db5e1dd143e390d30ba1a956028dc926817153`;
+host-after177881 bytes SHA256
+`3994be512da8f98da5ef92500c59d67044b77c4122b65b552d63ac1f9d585272`.
+The failed unit and all private caches remain untouched. GPU compute PIDs were
+empty after failure; FilmBrain remained PID521/PID298048 with zero restarts,
+and protected services remained inactive. A fresh corrected-source execution
+requires the full2811-test Mac/WSL prerequisites again, not a restart or reuse
+of the failed unit or its CPU receipts.

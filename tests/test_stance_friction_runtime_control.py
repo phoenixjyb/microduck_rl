@@ -13,7 +13,7 @@ class FakeArray:
     def __init__(self, host, device, pointer, *, strides=None):
         self._host = host
         self.device = device
-        self.ptr = pointer if host.nbytes else 0
+        self.ptr = pointer if host.nbytes else None
         self.shape = tuple(host.shape)
         self.strides = tuple(host.strides) if strides is None else tuple(strides)
         self.dtype = str(host.dtype)
@@ -31,6 +31,25 @@ class FakeKernel:
     @staticmethod
     def _func():
         return None
+
+
+@pytest.mark.parametrize("shape", [(64, 0), (64, 0, 0)])
+def test_identity_preserves_actual_warp_empty_pointer_null(shape):
+    import warp as wp
+
+    array = wp.zeros(shape, dtype=wp.int32, device="cpu")
+    layout = control.identity(array, array.device)
+    assert array.ptr is None and layout["pointer"] is None
+    assert layout["span"] == layout["bytes"] == 0
+    assert layout["shape"] == list(shape)
+
+
+def test_identity_refuses_null_pointer_for_nonempty_array():
+    device = SimpleNamespace(context=77)
+    array = FakeArray(np.zeros((2,), dtype=np.float32), device, 4096)
+    array.ptr = None
+    with pytest.raises(ValueError, match="live nonempty allocation"):
+        control.identity(array, device)
 
 
 def _environment(arm="original"):

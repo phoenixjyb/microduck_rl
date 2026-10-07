@@ -59,8 +59,12 @@ def identity(array, device):
         if not prod(shape)
         else item + sum((s - 1) * t for s, t in zip(shape, strides))
     )
-    pointer = int(array.ptr)
-    need(pointer > 0 or span == 0, "live nonempty allocation")
+    pointer = array.ptr
+    need(
+        (type(pointer) is int and pointer > 0)
+        or (span == 0 and (pointer is None or (type(pointer) is int and pointer == 0))),
+        "live nonempty allocation or actual null empty array pointer",
+    )
     if span:
         need(
             array.is_contiguous

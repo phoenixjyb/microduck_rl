@@ -185,7 +185,12 @@ def layout(value, carrier, device):
     )
     for key in ("object_id", "context"):
         plain(value[key], 1)
-    pointer, span = plain(value["pointer"]), plain(value["span"], 0, MAX_FILE_BYTES)
+    span = plain(value["span"], 0, MAX_FILE_BYTES)
+    if value["pointer"] is None:
+        need(span == 0, "null pointer only for empty allocation")
+        pointer = 0  # Address-range calculation only; retained metadata stays null.
+    else:
+        pointer = plain(value["pointer"])
     need(
         value["device"] == "cuda:0" and value["context"] == device["context"],
         "same actual CUDA context",

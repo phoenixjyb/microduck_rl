@@ -1,7 +1,20 @@
-"""Ascending dense DOF-friction row kernel for source-only CPU comparison.
+# Copyright 2025 The Newton Developers
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Ascending dense DOF-friction row kernel component, never admission.
 
 This is a standalone kernel component, not a runtime hook or simulator
 admission. Callers must reject sparse models before launching it.
+Dense row construction follows MuJoCo-Warp's Apache-2.0 `_friction_dof`
+implementation and calls its frozen `_efc_row` helper.
 """
 
 import warp as wp

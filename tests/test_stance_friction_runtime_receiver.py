@@ -312,6 +312,9 @@ def test_layout_accepts_empty_zero_pointer_and_float_vectors():
         0,
         0,
     )
+    null_layout = _layout_value(empty, pointer=None, span=0)
+    assert receiver.layout(null_layout, empty, device) == (0, 0)
+    assert null_layout["pointer"] is None
     vector = _carrier([2, 3, 2])
     value = _layout_value(
         vector,
@@ -334,7 +337,7 @@ def test_layout_accepts_empty_zero_pointer_and_float_vectors():
 
 @pytest.mark.parametrize(
     "mutation",
-    ["context", "span", "dtype", "pointer", "stride", "shape"],
+    ["context", "span", "dtype", "pointer", "null", "stride", "shape"],
 )
 def test_layout_refuses_wrong_context_dtype_pointer_span_or_layout(mutation):
     carrier = _carrier([2, 3])
@@ -347,6 +350,8 @@ def test_layout_refuses_wrong_context_dtype_pointer_span_or_layout(mutation):
         value["warp_dtype"] = "<class 'warp._src.types.int32'>"
     elif mutation == "pointer":
         value["pointer"] = 0
+    elif mutation == "null":
+        value["pointer"] = None
     elif mutation == "stride":
         value["strides"] = [4, 12]
     else:

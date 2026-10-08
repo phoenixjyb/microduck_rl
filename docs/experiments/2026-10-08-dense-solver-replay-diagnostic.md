@@ -226,3 +226,32 @@ CUDA build/load and kernel launch during this operation. No installed helper
 or library is patched, no row/input is repaired, and no GPU result is inferred
 from the CPU hash reproduction. Another source-bound paired CPU run and fresh
 declaration are required before any live retry.
+
+### Hash-publication repair verification and handoff
+
+Executable/source revision `ddf451ff72ca61b4c4ec88ac089a9d33c6485302`: eleven-file
+suite passed all 382 tests on both hosts, including actual frontend hash
+publication with compile/load/build/launch forbidden. Mac: 25.32 seconds,
+325,243-byte XML, SHA256
+`8a624c698098979502249d60c1fa3886783673a01161f20942aa67053f75ea30`.
+WSL: 20.01 seconds, 325,247-byte XML, SHA256
+`1e40e29e2be2f03ff7216ad1df30b03474d90b3f0938ca2e6e53466fb583ea64`.
+WSL CPU unit invocation `e2b5b516b87c45c796dd7d0a63188d68` returned success,
+MainPID=0, NRestarts=0 and empty ControlGroup. Both XMLs are retained locally;
+the native XML is also durable on WSL. No full-repository test suite was run.
+
+At 18:55:50 Shanghai, whole frozen runtime/library/source/tool pins were
+reverified unchanged. Windows and WSL still reported 8,023 MiB used /
+16,139 MiB free, utilization 0%, 31–32 C; Windows 3D PID 51276 showed 10%
+activity. Both protected services were inactive, both FilmBrain PIDs and zero
+restart counts unchanged, and no Duck service was running. The four-leaf failed
+GPU evidence was copied to Mac and authenticated in full against its external
+inventory (299,981 total bytes). The failed unit was not reset or reused.
+
+This handoff is a documentation-only descendant of the tested repair revision.
+It does not claim that the repaired child has completed CUDA compilation,
+explicit load, scratch restoration or target dispatch. The next gate is a new
+exact-source CPU prerequisite receipt and fresh shared-capacity/lease/deadline
+declaration, followed by one bounded replay and independent unit-retirement /
+artifact reception. Training, full-window qualification and physical motion
+remain prohibited by this diagnostic evidence alone.

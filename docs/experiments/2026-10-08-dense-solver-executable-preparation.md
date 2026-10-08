@@ -1,6 +1,7 @@
 # Dense solver executable preparation, October 8
 
-Status: bounded compile/explicit-load integration implemented and Mac CPU-tested. **No native
+Status: bounded compile/explicit-load integration implemented and same-source
+CPU-tested on Mac and frozen WSL. **No native
 solver probe or policy training is admitted or reported by this slice.**
 
 ## Scope and reason
@@ -81,8 +82,8 @@ fresh import without device packages. Source mutations use temporary copies
 only; the real installed solver's complete bytes are asserted before and after
 every new case. The real Mac source still matches its original frozen hash.
 Syntax, local documentation links and whitespace checks passed. A full
-repository suite was not run. Same committed-source WSL checks remain the next
-delivery step, not native compilation or GPU dispatch qualification.
+repository suite was not run. The same-source WSL closeout below is CPU evidence,
+not native compilation or GPU dispatch qualification.
 
 ### Native harness failures retained before acceptance
 
@@ -102,6 +103,50 @@ outputs remain retained without reset. The test-only repair exercises a real
 against the asserted actual 8 MiB production cap. It still requires rejection
 before any load. Production source, input caps, service limits and qualification
 gates are unchanged; the repaired exact-source suite must pass before closeout.
+
+### Repaired exact-source CPU closeout
+
+The repaired source `fb90cf5b0827408e4fc9752ade2be003c39306a9` was pushed to
+the exact fork feature branch and installed on clean WSL via a verified,
+fast-forward-only bundle. The six-file suite passed **256 tests in 38.56 s on
+Mac** and **256 tests in 5.54 s on WSL**, zero failures/errors/skips in complete
+bounded XML. These are synthetic preparation/guard checks, not native compiler,
+driver-load, solver-dispatch or policy-performance results. Independent review
+tightened function identity and cache/file preservation boundaries; it did not
+qualify a GPU collector.
+
+Native service `microduck-solver-executable-prep-cpu-fb90cf5b0827.service`,
+invocation `99019356634248909e3594eefb84913a`, exited successfully with status
+0, MainPID 0 and no restarts. CUDA stayed hidden, `PYTHONPATH` bound this
+worktree's `src`, and all numerical thread settings stayed one. Limits remained
+90 seconds, 2 GiB memory, 100% CPU quota, Nice 10, 64 tasks, 8 MiB per file and
+control-group cleanup. The two earlier failed services remain unreset and their
+logs/state are separately indexed, not counted as acceptance.
+
+| Retained artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| Repaired Mac XML | 303,847 | `e1a72d6e2ad7ca0990654be6ddaa434df08c6c7a93d9543bffb72eec404b9445` |
+| Successful WSL XML | 303,850 | `3b473fc76af161b68cc6531ee6c900aec8ebfda65669ae8f09c2174a9f322c71` |
+| Successful WSL journal | 1,021 | `152d7fd2930174e6aa75d6a398038f147592cf3210f9e3d9872dd736e554f162` |
+
+Mac XML is `artifacts/tools/dense-solver-executable-final-mac-oct8/junit-fsize-repair.xml`.
+Native evidence is `artifacts/tools/dense-solver-executable-native-fb90cf5b0827`;
+its `closeout.json` SHA256 is
+`ac8aa036a5cc332d29af11db6d6922649bb28dbac2c2cbf83921c2ca44bbfe61`.
+The authenticated Mac copy and every indexed native artifact match. The closeout
+binds source/package/interpreter pins, before/after installed solver hash,
+service limits and failure provenance. Both machines' installed whole solver
+bytes match the original frozen hash after the stated Mac repair.
+
+At `2026-10-08T16:33:02+08:00`, Windows and WSL sequential GPU snapshots both
+showed **32 C, 0% NVIDIA utilization, 8,023 MiB used / 16,139 MiB free**, UUID
+and driver unchanged. Windows also reported two active 3D-engine counters at
+9% each; those counters are not attributed to NVIDIA here and cannot establish
+idle ownership or an exclusive lease. Every Duck service MainPID was zero.
+FilmBrain retained PIDs 521/298048 with zero restarts; protected services stayed
+inactive in both scopes. No package/driver install, GPU job, lease acquisition
+or native compile/load/dispatch occurred in this closeout. The missing native
+supervisor and packet-capture gate below remain unchanged.
 
 ## Host check and remaining native gate
 

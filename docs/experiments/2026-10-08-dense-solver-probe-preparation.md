@@ -100,6 +100,18 @@ use synthetic ELF/text bytes. Independent read-only review prompted additional
 wrapper-boundary and exception/restoration tests. Same-source WSL checks are
 the next delivery step; a full repository suite has not been run.
 
+The first same-source native CPU service at `1cbd8823f446` reached the end of
+the test list but **failed** during JUnit serialization: pytest raised
+`OSError: [Errno 27] File too large`. Its 8 MiB `LimitFSIZE` remained enforced;
+the truncated XML is not accepted test evidence and the subsequent format
+replay did not run. Read-only diagnosis found that the cap-test's automatic
+parameter ID embedded its 8,388,609-byte payload in the test name. The Mac
+XML was also oversized (8,685,489 bytes), with an 8,388,661-character name.
+The repair assigns three short explicit IDs to that parametrization only.
+The actual oversized input, refusal assertions, parser caps and native service
+limits are unchanged. A fresh source-specific CPU service must pass with the
+same cap; the failed service and its original artifacts remain retained.
+
 At the turn's initial live check, WSL reported **73 C, 78% utilization,
 7,293 MiB used / 16,869 MiB free**. No Duck CUDA child was started. The next
 native protocol must separately bind the fresh child, clean source, frozen

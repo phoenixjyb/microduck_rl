@@ -237,7 +237,12 @@ def test_verify_refuses_cubin_code_or_span_mismatch():
         audit.verify_target_disassembly(elf([target()], short_code), sass(target()))
 
 
-@pytest.mark.parametrize("bad", [True, "bytes", b"x" * (audit.MAX_SASS_BYTES + 1)])
+@pytest.mark.parametrize(
+    "bad",
+    [True, "bytes", b"x" * (audit.MAX_SASS_BYTES + 1)],
+    # Keep the oversized payload out of pytest/JUnit names, not out of the test.
+    ids=["bool", "str", "over-byte-cap"],
+)
 def test_disassembler_output_type_and_cap_are_enforced(bad):
     with pytest.raises(ValueError):
         audit.parse_cuobjdump_sass(bad, target())

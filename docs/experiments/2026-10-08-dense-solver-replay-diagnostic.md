@@ -128,12 +128,12 @@ review of the retained failure and a new source-bound declaration.
 
 ## Current delivery state
 
-Runner/receiver assembly has passed paired CPU checks and a completed bounded
-native replay. The independent receiver authenticated the complete output and
-matched all 1,280 output DOFs across 64 worlds. The retained before/after packets
-are identical, limiting this to agreement and observed-dispatch evidence rather
-than an output-overwrite causal control. Native qualification and training
-remain unclaimed; the append-only closeouts below distinguish each actual stage.
+Runner/receiver assembly has passed paired CPU checks, the original bounded
+native replay, and a separate versioned destination-overwrite control. The v2
+receiver authenticated all four packet banks, verified identical inputs across
+arms, and found all 1,280 active outputs changed from the canary and matched the
+independent reference. Native qualification and training remain unclaimed;
+the append-only closeouts below distinguish each actual stage.
 
 The native WSL CPU compile was rechecked read-only: descriptor SHA256
 `91838baeac031299a008709e44cef879bdbc9bc769e84fcb2b318453ac115501` and selected
@@ -446,3 +446,74 @@ flags remain false. It demonstrates destination overwrite on the retained
 case, not a general GPU fix, stable simulation, policy or physical skill.
 Paired exact-committed-source CPU evidence and fresh shared admission are required
 before live launch. Failed artifacts/units are preserved; no automatic retry.
+
+### Completed two-arm overwrite control and retained closeout
+
+Exact implementation/source `96179731c9f408a466d20931c82709114647c59b`, tree
+`79c676e61a3106026b3c345659d19a3aac06b95a`: all eleven focused files passed
+412 tests on Mac (19.01 s) and WSL (17.56 s), no failures/errors/skips.
+Mac XML: 329,915 bytes, SHA256
+`af1cb6a742b4042b61d606390e480a8d35158f8f59210636d48d1085618f426e`.
+WSL XML: 329,919 bytes, SHA256
+`4b2b705ee8c658b7d6b530fba58106d6635855d7bfa9fe6c37f1fd2ed7cf73d2`.
+Paired receipt SHA256
+`d8a61ca22ae187d0c425d8997f0432508925ddd394985b58bcece27416e2bac2`;
+CPU unit invocation `899828b2eb5d48648fc2a384e42f12c3` completed successfully.
+Independent read-only review prompted the empty-coverage/canary-collision
+negative fixtures, distinct v2 result protocol and mirrored copy-pointer check.
+The historical v1 full receiver result remained byte-identical at its retained
+SHA256 `418bea0953bb4923c5c98bdf059dba7d8a8dbc40a856ab9c832c892a2cd4b461`.
+
+Unit `microduck-dense-solver-replay-96179731c9f4.service`, invocation
+`a3ab6acab89f4903b373b4445eed510e`, launched at 21:23:57 Shanghai with native
+deadline `1791466737` and `--output-overwrite-control`. It returned success with
+ExecMainStatus=0, MainPID=0, NRestarts=0 and empty ControlGroup. Independent
+closeout at 21:25:34 confirmed the exact kernel cgroup absent and no running
+Duck unit. The owner observed child PID 135420/birth 207328088 retire, then
+checked its cgroup contained only itself before closing the held lease.
+
+Raw directory `artifacts/evaluations/dense-solver-replay-96179731c9f4` contains
+27 whole authenticated leaves / 14,312,202 bytes, retained on WSL and copied
+intact to Mac. Inventory SHA256
+`87f6f7757beb73354fbb31d0d1ca92b580700c74303e0c0c40d43d84d4cfdf0f`;
+external closeout SHA256
+`8119103aa0657da223cc8fe207ea4f562912397088b4dafb6cf53787b0383f49`.
+The receiver was independently repeated on Mac after whole inventory
+authentication and produced identical canonical bytes to WSL, SHA256
+`8aac2fce068851e2b9e64d6ed822519c4cb35f3a37d2361e5c5a0156a4c421fb`:
+`authenticated-two-arm-output-overwrite-diagnostic-only`.
+
+All 64 worlds were active. The captured control-before output exactly matched
+the predeclared canary; all 1,280 active components changed from that preimage.
+Reference and control had zero numerical mismatches, each with maximum absolute
+error `4.789326339960098e-7`. All four complete input prefixes were byte-identical;
+both arms' guards bound the same arrays, held stream and explicit loaded CUBIN.
+Native done-row handling was not exercised because all done flags were false;
+its preservation and all-done rejection were checked only by CPU fixtures.
+
+Reference before/after and control-after complete packet SHA256:
+`4b38bda92d03ffc852989cf943374b9185799ce626342d6aef3e0ce0a641d0fe`.
+Control-before SHA256:
+`ae96d9a4ca57ee8abccfc81c305b32644a27075994ad26c6d6ce505251c4bbf8`.
+Each complete packet is 2,757,952 bytes. CUBIN: 524,128 bytes, SHA256
+`28e5788f148d35aec6cc9b2ffcad20beefeb0a66c101b150162e0894b9b43f3a`.
+Selected target SASS SHA256
+`66b87b99403f44925e3f07f66dd07ccd49830ce791147077f893ae93ecf6fec6`.
+Receipt SHA256
+`70cf1039bb700768cace37dffb8b915296a053a3f20cbda90602e3345c0e0dc2`;
+supervision SHA256
+`ce021fe0e1023b719aa259c9a458edfe6ac2957b51fd4976f6b496be31da8f29`.
+
+Whole frozen runtime/source pins remained unchanged. FilmBrain PIDs 521/298048
+stayed active with zero restarts; protected services remained inactive. Final
+views: 8,018 MiB used / 16,144 MiB free, utilization 0%, 32–33 C, Windows 3D
+activity still present. No policy/optimizer, physics tick, video, installed
+runtime/driver change, raw perception or physical motion occurred. The full
+repository test suite was not run. All qualification and training flags remain
+false: this excludes a numerical no-op for this destination on this retained
+case, but does not prove driver-consumed bytes or a general solver/runtime fix.
+
+Next gate: predeclare a bounded check of the remaining caller/initialization
+outputs against retained CPU references, including setup and Gauss-cost
+boundaries, before attempting a full simulation tick or policy training.
+Do not infer broader stability from the single dense target's overwrite result.

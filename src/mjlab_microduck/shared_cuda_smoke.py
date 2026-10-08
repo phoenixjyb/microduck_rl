@@ -270,6 +270,7 @@ def supervise(source):
     root.mkdir(mode=0o700, exist_ok=False)
     report = dict(protocol=PROTOCOL, source=identity, service=service, bounds=BOUNDS,
                   flags=FLAGS, decision="failed", telemetry=[], child_exit=None,
+                  services_before=services, failure_stage="shared-capacity-admission",
                   claim="Tensor CUDA coexistence only; no simulator or learner admission.")
     proc = None
     watchdog = None
@@ -279,8 +280,10 @@ def supervise(source):
         try:
             lease = lease_identity(fd)
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            baseline = capacity(telemetry())
+            report["lease"] = lease
+            baseline = telemetry()
             report["telemetry"].append(baseline)
+            capacity(baseline)
             child_env = dict(os.environ, CUDA_VISIBLE_DEVICES="0", PYTHONDONTWRITEBYTECODE="1")
             for key in ("XDG_CACHE_HOME", "TORCH_HOME", "TORCHINDUCTOR_CACHE_DIR", "CUDA_CACHE_PATH"):
                 cache = root / "private-cache" / key.lower()
@@ -293,6 +296,7 @@ def supervise(source):
                     "--source", source, "--child", "--lease-fd", str(fd)], env=child_env,
                     pass_fds=(fd,), stdout=log, stderr=subprocess.STDOUT)
                 child_started = time.monotonic()
+                report["failure_stage"] = "owned-child-monitor"
                 READ_DEADLINE = min(READ_DEADLINE, child_started + BOUNDS["child_seconds"])
                 def hard_stop_owned_child():
                     if proc.poll() is None:
@@ -317,6 +321,7 @@ def supervise(source):
                 watchdog.cancel()
                 watchdog.join(timeout=1)
                 READ_DEADLINE = started + BOUNDS["owner_seconds"]
+            report["failure_stage"] = "post-exit-closeout"
             post_exit = telemetry()
             report["telemetry"].append(post_exit)
             capacity(post_exit, baseline)
@@ -330,7 +335,8 @@ def supervise(source):
             need(frozen_env == (after.st_dev, after.st_ino, after.st_mtime_ns, after.st_ctime_ns), "unchanged frozen environment alias")
             need(time.monotonic() < READ_DEADLINE, "owner closeout deadline before success")
             report.update(decision="shared-cuda-tensor-smoke-complete-not-training", child=result,
-                          services_unchanged=True, lease_unchanged=True, environment_alias_unchanged=True)
+                          services_unchanged=True, lease_unchanged=True, environment_alias_unchanged=True,
+                          failure_stage=None)
         finally:
             if watchdog is not None:
                 watchdog.cancel()

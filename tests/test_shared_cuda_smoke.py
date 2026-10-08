@@ -201,6 +201,8 @@ def test_failed_admission_never_spawns_or_waits(monkeypatch, tmp_path):
     assert actions == []
     report = json.loads((out / "report.json").read_bytes())
     assert report["decision"] == "failed" and report["files"] == {}
+    assert report["telemetry"] == [sample(free=10000)]
+    assert report["failure_stage"] == "shared-capacity-admission"
 
 
 def test_completed_owner_retains_both_views_but_no_training_admission(monkeypatch, tmp_path):
@@ -225,12 +227,14 @@ def test_deadline_terminates_owned_child(monkeypatch, tmp_path):
     assert json.loads((out / "report.json").read_bytes())["decision"] == "failed"
 
 
-def test_post_exit_telemetry_failure_cannot_publish_success(monkeypatch, tmp_path):
-    out, actions = owner_fixture(monkeypatch, tmp_path, [sample(), sample(), sample(free=10000)], returncode=0)
-    with pytest.raises(ValueError):
+@pytest.mark.parametrize("failure", [sample(free=10000), RuntimeError("post-exit telemetry lost")])
+def test_post_exit_telemetry_failure_cannot_publish_success(monkeypatch, tmp_path, failure):
+    out, actions = owner_fixture(monkeypatch, tmp_path, [sample(), sample(), failure], returncode=0)
+    with pytest.raises((ValueError, RuntimeError)):
         smoke.supervise("a" * 40)
     assert actions == ["spawn-owned-child"]
-    assert json.loads((out / "report.json").read_bytes())["decision"] == "failed"
+    report = json.loads((out / "report.json").read_bytes())
+    assert report["decision"] == "failed" and report["failure_stage"] == "post-exit-closeout"
 
 
 def test_read_timeout_is_clipped_to_deadline_and_expiry_never_queries(monkeypatch):

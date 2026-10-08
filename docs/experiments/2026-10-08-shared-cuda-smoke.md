@@ -88,3 +88,61 @@ the mocked owner namespace was corrected. The actual fresh-owner CLI guard
 remains strict. Independent final read-only review found no remaining
 implementation blocker; it did not execute a GPU test. A same-source native CPU
 check and source-bound capped run remain separate delivery steps.
+
+## First native attempt: admission refusal, not CUDA failure
+
+Executed source `74c3ca1044036082d8d89acd4e02109d33307355`, module SHA256
+`e63816f65d75c66a8fb3e06c70221215a44fc40cc1d09df7c147944332a95d4d`.
+The same 76 CPU checks passed on WSL in 8.84 s (zero failures/errors/skips).
+GPU diagnostic service `microduck-shared-cuda-smoke-74c3ca104403.service`,
+invocation `e36faf3b64474b4991e99bd12ce1da93`, owner PID 13874, ran
+14:13:37–14:13:42 Shanghai and exited 1 with **`shared thermal guard`**.
+The capacity check refused **before creating a CUDA child**, private caches,
+launch receipt, tensor, simulator or learner. MainPID is zero, no restart.
+
+The original report records elapsed 5.288552 s, null child exit, empty child
+inventory and false admission flags. Its baseline was unfortunately checked
+before appending it, so its telemetry list is empty. Do not retroactively insert
+a later observation or claim exact launch-time temperature/utilization.
+
+Independent post-failure observations at 14:15:13–15 showed 95–96% NVIDIA
+utilization, 82–83 C and 5,588 MiB used / 18,574 MiB free. Windows CIM separately
+reported `ugraf` PID 5744 at 71% on the retained `0x0001224A` 3D engine.
+The CPU-only observer at 14:15:52 showed both GPU views cooled to 62 C and 0%
+sampled utilization, with the same memory. This is intermittent Windows demand,
+not a continuously reserved GPU. Plenty of VRAM did not imply spare compute.
+
+Whole retained evidence is authenticated on Mac and WSL:
+
+| File | SHA256 |
+| --- | --- |
+| Original failed report | `3e12f3e502e824e7a959ec53a3dddb8f3661152f79e8571427dd86af6067e683` |
+| Original WSL CPU JUnit | `ba0af81a0078726f745a301ade6f7dd9a469e8fcc720f2e7f68d01add20686b4` |
+| Original Mac CPU JUnit | `66bbd1c19c020e63c7e931fe348aed2aa7091771b37893ba949d3ca408db163d` |
+| Diagnostic journal | `0912765a8430e98c2bf3709c36427411c3e68fcca6f9d85ce7a9d7476c774125` |
+| Separate post-failure telemetry | `121dcc707671dd473eb3f2e5fa5336cb01d7bef4645dc9640a519610c4ab1bf0` |
+| Service closeout | `39b4a4963eb1b88bd4a603ba9efe7a330c69fd10ca61d6eb32f12909f49e8cfc` |
+
+The original failed directory contains only `report.json` under
+`artifacts/evaluations/shared-cuda-smoke-74c3ca104403`; separate diagnosis lives
+under `artifacts/tools/shared-cuda-failure-diagnosis-74c3ca104403`. Preserve all
+bytes and the failed unit. FilmBrain remained at PIDs 521/298048 with zero
+restarts; protected services stayed inactive in user/system scopes. The frozen
+interpreter, environment alias and packages were rechecked unchanged.
+
+## Evidence-only repair and conditional one-attempt retry
+
+Read-only diagnosis preceded the repair: retain the baseline **before** applying
+capacity guards; retain the failing phase, pre-run services and existing lease.
+Set the post-exit phase before querying so telemetry loss is correctly labeled.
+Independent review checked this narrow retention correction. No resource,
+thermal, demand, runtime, physics, numerical or old idle guard was relaxed.
+The extended focused Mac suite passed **77** checks, CUDA hidden.
+
+Only after committing/pushing the corrected source and passing those 77 native
+CPU checks may one fresh source-specific diagnostic attempt run. Require two
+new Windows/WSL observations below 50 C and at most 20% sampled NVIDIA demand
+in addition to the unchanged headroom guards before launch. This stricter retry
+precheck is not an idle claim. Do not loop through Windows work, extend the wall
+cap or modify consumers to force success. Stop after that attempt and retain its
+decision; even success does not admit a simulator or training.

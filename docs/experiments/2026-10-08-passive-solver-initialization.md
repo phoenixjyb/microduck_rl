@@ -1,7 +1,8 @@
 # Passive solver-initialization diagnostic, 2026-10-08
 
-Status: implementation and CPU review in progress; no native result or training
-admission. This is one bounded diagnostic, not a new learning campaign.
+Status: bounded native capture completed and independently replayed on Mac;
+candidate repetition remains negative. No training admission. This is one
+bounded diagnostic, not a new learning campaign.
 
 ## Question and retained baseline
 
@@ -108,9 +109,121 @@ direct-call/caller checks, hook ownership/closeout, field caps, layouts, singlet
 broadcasts, empty allocations, signed-zero/NaN/boolean bytes, exact recipes,
 whole hashes and optimized-Python refusal. CPU ABI consistency is not CUDA proof.
 
-Full same-source Mac/native CPU receipts and the native result are pending.
 The focused three-file suite passed **63 tests in 5.37 s** on Mac; Ruff and
 diff whitespace checks passed. Independent read-only review found no remaining
 code blocker, conditional on the full same-source prerequisites below.
 A failed CPU guard prevents GPU launch; a failed native diagnostic is diagnosed
 read-only and preserved before any subsequent revision.
+
+## Executed source and CPU prerequisites
+
+Executed source on both clean feature-branch worktrees:
+`e45a59c412bfe6bcf2de751f98159aa7fe0db463`. This closeout document is a later
+documentation-only revision, not the source executed by the native child.
+Full collection passed with zero failures, errors or skips: **Mac 3206 tests in
+258.22 s**, **native 3206 tests in 199.48 s**. Each whole inventory, receipt,
+pytest log and JUnit file was authenticated on both hosts before GPU launch.
+
+Retained CPU roots on both hosts, relative to their exact worktree:
+
+- `artifacts/tools/solver-init-tick-mac-tests-e45a59c412bf`;
+  inventory SHA256 `cf187f06ff363ca7c3763bd9e5ee8125d28f2350c282f72eb98972a08ac26f60`.
+- `artifacts/tools/solver-init-tick-tests-e45a59c412bf`;
+  inventory SHA256 `7df590e1a90769cc2326bfe784da60895c7c5169da3347e8ae3ff76b4168d05b`.
+
+Native CPU service `microduck-solver-init-tick-tests-e45a59c412bf.service`,
+invocation `fa431c4d117446349da48619b89c46a4`, owner PID 4125964, completed
+with status zero. Peak cgroup memory was 4,722,155,520 bytes, below 6 GiB.
+Both CPU checks used CUDA-hidden startup and the unchanged frozen environment.
+
+## Native capture and independent closeout
+
+Service `microduck-solver-init-tick-run-e45a59c412bf.service` completed with
+`Result=success`, `ExecMainStatus=0`, `MainPID=0`, `SubState=exited`; invocation
+`65ea298815ea4ad399dad46b4d141ca9`, owner PID 4131680, child PID 4131701.
+Journal span: **2026-10-08 09:29:00–09:29:46 Asia/Shanghai**. There were 18
+owner samples, maximum GPU temperature **32 °C**. The post-run GPU had no
+compute process, 0% utilization, 659 MiB occupancy and 32 °C. FilmBrain service
+PIDs 521 and 298048 remained active; protected AI mission services remained
+inactive in both user and system scopes. No package, driver, environment alias,
+historical cache or unrelated workload was changed.
+
+The receiver authenticated all 63 scheduled friction entries, 30 BAM proposals
+and 21 original initialization calls per arm. Each of the three initialized
+snapshots contains the declared 66 fields / 5,375,152 bytes. Raw root on both
+hosts: `artifacts/evaluations/solver-init-tick-run-e45a59c412bf`; closeout root:
+`artifacts/tools/solver-init-tick-closeout-e45a59c412bf`. The complete retained
+raw inventory has **480 leaves / 673,600,544 bytes**. Private compilation caches
+were not transported or relabeled as independent compilation proof.
+
+Whole-file anchors (SHA256):
+
+| Artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| Raw inventory `inventory.json` | 69,779 | `8dcb44a422530c4169e4133a0dfb858d24909dc9d59ac90d163f5037a014b625` |
+| Native and Mac receiver | 1,053,121 | `c91d812df1278d1cfe208951d8dad6f23f5240639989d56407a6ca38ed08f999` |
+| Native `terminal.txt` | 104 | `93cc0f1c095330b42a6de95606aa87a07c22758041e51c223ce12f3580a7a3af` |
+| `transport.json` | 1,042 | `3a1b9d67102fe6abc59378bf21791c4153289439771fe2664f6f0e2d04e8fbf3` |
+| `solver-init-closed-e45a59c412bf.tar.gz` | 23,015,138 | `45023d740749585de0ff50f6a612695ba3d4f4fc9c3685aa6e21fe642189d64b` |
+| Mac `mac-replay.json` | 4,741 | `9d1258625b04ed1ad2563a77093de209ef6ca294197854ef2e920d9c4386f3e7` |
+
+Mac authenticated the external transport anchor, compressed archive, exact
+member set and every whole raw leaf before interpretation. It independently
+ran the pure receiver while retaining literal native compiler provenance roots;
+the recomputed receiver was **byte-identical** to the native report. The Mac
+receiver and replay proof were copied back to native and their whole hashes
+rechecked. This is independent byte replay, not a second GPU execution.
+
+## Numerical result and next gate
+
+Decision: `passive-solver-init-capture-complete`;
+`recipe_candidate_repeat_exact=false`. At forward four, after initialization
+and before solver search, all 2944 active rows are covered for the eight-field
+construction subset: 2048 uniquely payload-linked contact rows and 896
+authenticated same-offset noncontact rows. All **79,488 compared words match**.
+This does not equate literal EFC storage ordering with semantic contact identity.
+The raw contact/EFC carrier banks differ, including some row addresses and IDs.
+
+At original world/DOF offsets, full-carrier 32-bit word comparison gives:
+
+| Initialized field | Compared words | Different words |
+| --- | ---: | ---: |
+| `data.qpos` | 1,344 | 0 |
+| `data.qvel` | 1,280 | 0 |
+| `data.qM` | 25,600 | 0 |
+| `data.qacc`, `data.qacc_warmstart`, `data.qacc_smooth`, `data.qfrc_smooth` | 1,280 each | 0 each |
+| `data.qfrc_constraint` | 1,280 | 477 |
+| `context.cost` | 64 | 52 |
+| `context.grad` | 1,280 | 477 |
+| `context.grad_dot` | 64 | 52 |
+| `context.Mgrad` | 1,280 | 1,234 |
+| `context.h` | 25,600 | 4,645 |
+
+These counts use authenticated packed offsets and raw bytes, with no float
+tolerance, canonicalization or state repair. Full raw EFC force/state/Ma bank
+booleans remain storage-only; initialized row-semantic force comparison is not
+implemented. `context.Jaref` raw ordering also differs and is not a world/DOF
+comparison. The underlying frozen `init_context` invokes `_update_constraint`
+and `_update_gradient` before returning. The observed mismatch therefore exists
+at this captured pre-search boundary, not only after iterative solver search.
+It does **not** prove which initialization operation introduced it: ordering,
+uncaptured drivers, copied timing and other alternatives are not excluded.
+
+Next proposed bounded diagnostic, not launched here: bracket initialization's
+constraint and gradient stages using fresh isolated packets, after reviewing
+their full input/output contracts and snapshot budgets. Add authenticated
+backlink-safe comparisons for active `Jaref` / initialized force/state; keep
+world/DOF reductions separate from row carriers. Capture or explicitly exclude
+the missing contact parameters (`friction`, `solref`, `solreffriction`, `solimp`)
+before claiming equal initialization inputs. Preserve original invocation count,
+recipe, source/device/stream binding, CPU prerequisites and independent replay.
+Do not sort/rewrite solver inputs or relax the repeatability gate on this result.
+
+All five flags remain false: native qualification, full-window qualification,
+runtime-cause proof, training authorization and physical acceptance. No learner,
+long rollout, curriculum promotion, video or physical robot motion was run.
+
+Closeout checks: the focused three-file suite passed again (**63 tests in
+76.58 s**); Ruff, diff whitespace and local Markdown link/section checks passed.
+Only this experiment document changed after the executed source. The complete
+CPU suites were not rerun for the documentation-only closeout.

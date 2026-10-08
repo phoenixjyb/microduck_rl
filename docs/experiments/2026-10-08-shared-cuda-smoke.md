@@ -146,3 +146,39 @@ in addition to the unchanged headroom guards before launch. This stricter retry
 precheck is not an idle claim. Do not loop through Windows work, extend the wall
 cap or modify consumers to force success. Stop after that attempt and retain its
 decision; even success does not admit a simulator or training.
+
+### Corrected-source closeout: retry precheck also refused
+
+Corrected source `13da386ee9b36ccedfeea6f9bf181fac2a2cc92f` was pushed and
+installed by authenticated bundle fast-forward. Module SHA256
+`6879f2af5ca6727c2b3a78cb0d9f0a0980979af0e9676b059f49ef7756063e15`.
+Native CPU unit `microduck-shared-cuda-tests-13da386ee9b3.service`, invocation
+`923059ba91af4031aadab720edd96cc8`, passed **77 checks in 5.73 s**, zero
+failures/errors/skips. The new raw-baseline and phase tests are included.
+
+The separately retained **CPU-only** retry precheck refused its first observation
+at **14:24:26 Shanghai**: Windows and WSL each reported **84 C**, **5,738 MiB
+used / 18,424 MiB free**; utilization snapshots were **87% Windows / 95% WSL**.
+The Windows engine record showed `ugraf` PID 5744 at 70% 3D and 2% Copy on LUID
+`0x0001224A`; an Intel-side instance was recorded separately, not summed.
+Error remained `shared thermal guard`. The stricter two-cool-sample precheck did
+not pass, so **no second GPU diagnostic service or CUDA child was launched**.
+The first failed service remains preserved with MainPID zero. No timer extension,
+memory/temperature relaxation, consumer stop or simulation/learner retry occurred.
+
+`artifacts/tools/shared-cuda-smoke-cpu-13da386ee9b3` contains exactly these two
+authenticated leaves on both hosts:
+
+| File | SHA256 |
+| --- | --- |
+| Native 77-case JUnit | `85c44d1dee9e8a547fa4f23499ceb382dc0c5ce87ec32d9847b90f1fe22c3495` |
+| Retry-precheck JSON | `1430ed8e64266c3894799ed43edcf5b46870d646322284e7a032bba27586a6df` |
+
+Independent Mac replay checked whole hashes before parsing the XML/JSON, all 77
+cases, the observed refusal, exact source and false flags. This is evidence
+verification, not independent CUDA execution. FilmBrain PIDs/restarts and both
+scopes of protected services remained unchanged. Current delivery is a reviewed,
+CPU-tested capacity diagnostic with safely refused admission, **not a CUDA
+success or a learned Duck skill**. Before another separately declared attempt,
+verify cool/low-demand conditions and preserve all historical refusals; Duck
+simulation/training still needs its separate unresolved numerical gate.

@@ -1,6 +1,7 @@
 # Dense solver dispatch packets, October 8
 
-Status: CPU-tested packet staging and exact dispatch integration. **No native
+Status: same-source CPU-tested packet staging and exact dispatch integration on
+Mac and frozen WSL. **No native
 collector, GPU dispatch, numerical qualification or policy training is reported.**
 
 ## Bounded next slice
@@ -89,8 +90,43 @@ accepted evidence. The corrected focused scope passed 75 cases before four
 additional cases and the final 294-case integration run.
 
 Mac XML: `artifacts/tools/dense-solver-packets-mac-oct8/integration.xml`.
-A full repository suite has not been run. Same committed-source capped WSL
-checks are required before delivery closeout; neither CPU suite is GPU admission.
+A full repository suite has not been run. The matching capped WSL checks below
+complete source delivery closeout; neither CPU suite is GPU admission.
+
+### Same-source WSL closeout
+
+Executed source `230b91bdd3a3de6cb2da5220e424c82999f09e66` was committed and
+pushed to the fork feature branch, then installed on clean exact WSL by a
+whole-hash-verified fast-forward bundle. Service
+`microduck-solver-packets-prep-cpu-230b91bdd3a3.service`, invocation
+`d146f0fb1b294880a08f1d8127288d66`, succeeded with exit 0, MainPID 0 and no
+restarts: **294 passed in 9.89 s**, complete XML with zero failures/errors/skips.
+Limits remained 90 s, 2 GiB memory, CPU quota 100%, Nice 10, 64 tasks, 8 MiB per
+file, control-group cleanup and no restart. CUDA was hidden, `PYTHONPATH` named
+the exact source tree, and all four numerical thread settings stayed one.
+
+| Retained whole file | Bytes | SHA256 |
+| --- | ---: | --- |
+| Mac integration XML | 309,019 | `e0e83e01dc975e433721df6b3f68f551c763e91785a2c3e2233d95be79c658be` |
+| WSL integration XML | 309,022 | `548fbf09377116d6043f2d9d743375249a7c8fb92363b92bcc42014111a6e2fa` |
+| WSL service journal | 1,148 | `71f413d527d056d83b682a68f0931aebf1ac6ff531fcf59444e7c823d710d191` |
+
+Native directory `artifacts/tools/dense-solver-packets-native-230b91bdd3a3`
+has closeout JSON SHA256
+`26e80b2085f01cf1e1376cbc97c0a6cc2ac356c04e5fe3366dc7e3f08d9bba27`.
+Its authenticated Mac copy and every indexed artifact match. The source,
+frozen package/interpreter versions, before/after installed solver hash,
+service settings, runner hash and workload snapshot are retained. Both installed
+solver leaves still match the original frozen whole hash. No environment,
+driver, package, historical cache/capture, lease or unrelated service was changed.
+
+At `2026-10-08T16:56:54+08:00`, sequential Windows/WSL NVIDIA samples showed
+0% utilization, 6,923 MiB used / 17,239 MiB free, temperatures 32/31 C, unchanged
+GPU UUID and driver. Windows active 3D-engine counters were 12% and 1%, without
+NVIDIA process attribution here; samples do not establish idle ownership.
+Every Duck user-service MainPID was zero. FilmBrain kept PIDs 521/298048 and zero
+restarts, and protected services remained inactive in both scopes. No native
+compile/load/dispatch, lease acquisition or Duck GPU process occurred.
 
 ## Host and next actual native gate
 

@@ -92,3 +92,47 @@ and tested with its own exact source fence, paired CPU evidence, fresh deadlines
 shared-capacity/service checks, inherited FilmBrain lease, resource caps, exact
 module bindings, exclusive artifact paths and independent cgroup retirement.
 Do not widen a historical fence to run new code. Do not train on synthetic banks.
+
+## Retained CPU closeout
+
+Executed source: `ba58241c04044ce9297754b9ee6e555d6efa0a96`, clean exact feature
+branch on both Mac and 100.98. Thirteen focused files were run with CUDA hidden:
+the eleven retained scratch/replay contracts, the Gauss arithmetic tests, and
+the new cost-stage tests. This is not the full repository suite.
+
+- Mac: 540 passed, zero failures/errors/skips, 22.01 seconds. XML 895011 bytes,
+  SHA256 `152651745cf9ce9c39853733159f2309c43a93510e4753e43ae3499d991dbd4c`.
+- WSL: 540 passed, zero failures/errors/skips, 20.49 seconds. XML 895015 bytes,
+  SHA256 `36c1782260f0b7e16a15281adee7e606677effdf9896ff3e1dbb661c686c2ec6`.
+- The 68 new tests used synthetic packets and CPU mock array/readback objects.
+  Their successful nonzero control is not a native GPU result.
+
+Retained XMLs on Mac and WSL:
+`artifacts/tools/caller-cost-stage-preparation/ba58241c-mac-tests.xml` and
+`ba58241c-wsl-tests.xml` (the Mac XML is local; the WSL XML is retained on both).
+The source bundle SHA256 is
+`bfe392ca154442192c6c0e51cfacfd50613c59fb6b96c4d4817e0901a5d5820f`.
+
+The WSL capped CPU unit `microduck-cost-stages-cpu-ba58241c.service` used
+invocation `888494327e84458f93a59084b200fefb`; it finished with `Result=success`,
+`ExecMainStatus=0`, `MainPID=0`, empty cgroup and zero restarts. Its retained
+`active/exited` state is not a running workload. Caps were 150 seconds, 4 GiB
+RAM, 200% CPU quota, Nice 10, 64 tasks, 16 MiB/file, no restart and control-group
+termination. No GPU lease was acquired and no GPU workload was launched.
+
+The read-only Luna review prompted sealing binding attributes and making both
+capture bytes and capture-time hashes read-only. Regression tests now refuse
+coordinated binding or packet/hash reassignment; explicit false provenance
+fields prevent a capture receipt from being mistaken for executable/dispatch
+authentication. A final read-only review found no remaining concrete contract
+defect; the reviewer did not run tests or native work.
+
+After the CPU run, frozen interpreter/alias, packages, runtime libraries, Warp
+and MuJoCo-Warp source trees and the disassembler pins reverified unchanged.
+Both FilmBrain services remained active at PIDs 521 and 298048, zero restarts.
+Both protected AI mission services remained inactive in user and system scopes.
+No Duck unit was running. The WSL point-in-time GPU reading was 8023 MiB used,
+16139 MiB free, 0% utilization and 31 C: shared capacity, not exclusive-idle
+ownership. The next required work remains the separately tested native
+caller/executable adapter and capped owner, followed by independently received
+native stage evidence. Simulation/training acceptance has not advanced here.

@@ -128,11 +128,11 @@ review of the retained failure and a new source-bound declaration.
 
 ## Current delivery state
 
-Runner/receiver assembly is under CPU integration and independent review.
-An isolated real CPU allocation/restore check has already caught and corrected
-the aggregate-contact-counter ABI mapping before any live launch. Native GPU
-execution and training remain unclaimed. The final CPU evidence and any live
-closeout will be appended only after their actual completion.
+Runner/receiver assembly has passed paired CPU checks and bounded native
+attempts. The latest attempt compiled and explicitly loaded the frozen solver
+and restored scratch, then failed at runner/helper constructor assembly before
+target dispatch. Native numerical qualification and training remain unclaimed;
+the append-only closeouts below distinguish each actual stage reached.
 
 The native WSL CPU compile was rechecked read-only: descriptor SHA256
 `91838baeac031299a008709e44cef879bdbc9bc769e84fcb2b318453ac115501` and selected
@@ -255,3 +255,46 @@ exact-source CPU prerequisite receipt and fresh shared-capacity/lease/deadline
 declaration, followed by one bounded replay and independent unit-retirement /
 artifact reception. Training, full-window qualification and physical motion
 remain prohibited by this diagnostic evidence alone.
+
+### Repaired hash preparation: actual compile/load, constructor refusal
+
+Source `bb66741273a2c6a99901af3b74a94f7bb59ebcf1`: both eleven-file suites
+passed 382 tests (Mac 19.01 s; WSL 19.62 s), without failures/errors/skips.
+Mac XML: 325,243 bytes, SHA256
+`9adf6d0f81a2a481a3b3ed0d372f1f27ce3fdae35dac1f209bfc102c180e6c32`.
+WSL XML: 325,247 bytes, SHA256
+`740c2a44ebfc860240ecfa34e9e0ca119a2495b76730eb3105e3f2cdf652ee1c`.
+Paired receipt SHA256
+`442d0ad0b5eb45a87a42f692c035fba104202575d10f8ea421f4bf75d0827f43`;
+CPU unit invocation `a00d326c156640f7b452a58898a7a98e` retired successfully.
+
+GPU unit `microduck-dense-solver-replay-bb66741273a2.service`, invocation
+`c8280e415073412b976b9e5b46099816`, reached fresh sm120 compilation, selected
+offline disassembly, explicit load and scratch restoration. It then failed at
+the dispatch-guard constructor, before any target launch:
+`TypeError: DenseSolverDispatchGuard.__init__() takes 1 positional argument
+but 3 positional arguments (and 6 keyword-only arguments) were given`.
+Read-only signature inspection found both dispatch-guard and packet-capture
+constructors are keyword-only; the runner incorrectly called both positionally.
+Both calls now use named arguments. Two CPU regression cases bind the actual
+runner AST calls against the real inert constructor signatures, not permissive
+mock signatures. Focused runner tests: 38 passed; paired current-source CPU
+tests and a fresh declaration remain mandatory before another live attempt.
+
+Retained raw directory `artifacts/evaluations/dense-solver-replay-bb66741273a2`
+has 12 authenticated leaves / 2,727,832 bytes on WSL and Mac. External inventory
+SHA256 `db150c571870c3c8703e877c7f559ce8ec682f497063ccaa60877e344b76ac51`;
+external closeout SHA256
+`0d3c8c2c33f91a3407712e3f4f4c6d4747efed915c1398ce7b146369f8cd6b46`.
+Retained CUBIN: 524,128 bytes, SHA256
+`7fc1fa79f7796fd1c2c199c485d03545d6eb5f9818e39aa7598e53cb99e175dc`;
+target SASS: 364,943 bytes, SHA256
+`66b87b99403f44925e3f07f66dd07ccd49830ce791147077f893ae93ecf6fec6`.
+These files are forensic evidence, not a completed replay receipt.
+
+External closure at 20:08:39 Shanghai confirmed MainPID=0, ExecMainStatus=1,
+NRestarts=0, empty ControlGroup and absent exact kernel cgroup. No Duck unit
+remained running. Whole source/runtime pins and FilmBrain PIDs 521/298048 were
+unchanged, protected services inactive. Both GPU views returned 8,022 MiB used /
+16,140 MiB free, utilization 0%, 33 C; Windows 3D activity remained present.
+No numerical replay, training, skill, runtime-cause or physical gate passed.

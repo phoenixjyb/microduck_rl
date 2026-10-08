@@ -1,6 +1,8 @@
 """CPU-only runner admission tests; no CUDA or service mutation."""
 
 from hashlib import sha256
+import ast
+import inspect
 import json
 import os
 from pathlib import Path
@@ -12,6 +14,25 @@ import pytest
 
 from mjlab_microduck import stance_solver_replay_probe as probe
 from mjlab_microduck.stance_solver_init_control import SOLVER_RECIPE
+
+
+@pytest.mark.parametrize("name", ["DenseSolverDispatchGuard", "DenseSolverPacketCapture"])
+def test_child_constructor_calls_bind_actual_keyword_only_contracts(name):
+    # Bind the actual runner call AST to real, inert helper signatures. No
+    # synthetic replacement can accidentally accept positional arguments that
+    # the live constructors reject; binding never constructs CUDA objects.
+    from mjlab_microduck.stance_solver_dispatch_guard import DenseSolverDispatchGuard
+    from mjlab_microduck.stance_solver_packets import DenseSolverPacketCapture
+    constructor = {"DenseSolverDispatchGuard": DenseSolverDispatchGuard,
+                   "DenseSolverPacketCapture": DenseSolverPacketCapture}[name]
+    calls = [node for node in ast.walk(ast.parse(inspect.getsource(probe.child)))
+             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+             and node.func.id == name]
+    assert len(calls) == 1
+    call = calls[0]
+    assert not call.args
+    assert all(keyword.arg is not None for keyword in call.keywords)
+    inspect.signature(constructor).bind(**{keyword.arg: object() for keyword in call.keywords})
 
 
 def test_import_is_inert_in_fresh_process():

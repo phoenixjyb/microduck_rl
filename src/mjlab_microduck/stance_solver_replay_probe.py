@@ -428,9 +428,9 @@ def child(args):
         restored = scratch.DenseSolverScratchRestorer(packet, arrays, device=device, stream=stream,
             stage=stage, copy=held_copy, synchronize=held_sync, guard=guard)
         restored.restore()
-        observer = DenseSolverDispatchGuard(solver, wp, runtime=warp_context.runtime, binding=binding,
+        observer = DenseSolverDispatchGuard(solver=solver, wp=wp, runtime=warp_context.runtime, binding=binding,
                                             model=model, data=data, context=context, stream=stream)
-        capture = DenseSolverPacketCapture(wp, data, context, stream)
+        capture = DenseSolverPacketCapture(wp=wp, data=data, context=context, stream=stream)
         observer.run(capture=capture)
         frozen.write(root / "packet-before.bin", capture.raw("before"))
         frozen.write(root / "packet-after.bin", capture.raw("after"))

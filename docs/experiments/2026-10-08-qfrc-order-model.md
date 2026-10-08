@@ -53,13 +53,14 @@ Negative reproduction is retained, not retried under undeclared math choices.
 Do not generalize a serial force-sum model to atomic cost or tiled hessian paths.
 All five qualification/training/physical flags remain false.
 
-## Checks and retained outcome
+## Precommit checks
 
 Mac focused checks: 83 passed (35 arithmetic, 34 initialized-row view, 14
 historical receiver), with no failures or omissions; Ruff and whitespace checks
 passed. Independent read-only review found no blocking arithmetic or mapping
-issue and independently repeated all 35 arithmetic tests. Full retained replay
-is intentionally pending until this three-path source is committed cleanly.
+issue and independently repeated all 35 arithmetic tests. At predeclaration,
+full retained replay was pending until this three-path source was committed
+cleanly. Its completed outcome is recorded below.
 
 The arithmetic alternatives follow the distinctions explained in NVIDIA's
 [floating-point guide](https://docs.nvidia.com/cuda/archive/11.5.2/floating-point/index.html).

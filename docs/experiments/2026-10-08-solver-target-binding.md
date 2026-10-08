@@ -86,5 +86,46 @@ plus 64 unchanged historical scope tests). Independent read-only review found
 no correctness blocker and required the installed-path/package provenance to
 remain a separate future collector obligation. It did not rerun the tests.
 
-Same-source WSL CPU verification and retained source-bound reports are the next
-delivery step. No GPU execution or new Duck skill is claimed.
+## Same-source CPU closeout
+
+Executed source `b1f0a2a14f00e2f1fdcf46c8286568ba725b9b71`, checker SHA256
+`00b00db6599d746c64f218c0b5a917ea66e46f622e4225cb59ab71edf946c989`.
+Mac passed 87 checks in 0.52 s; WSL passed the same 87 in 0.47 s, zero
+failures/errors/skips. WSL unit
+`microduck-solver-static-target-cpu-b1f0a2a14f00.service`, invocation
+`9c3c9cbb55f3471b8741ccf66691dea0`, exited zero with MainPID zero and no
+restarts. Its ceilings were 90 s, 2 GiB RAM, 100% CPU, Nice 10, 64 tasks and
+4 MiB/file, not measured peaks. CUDA was hidden for both CPU runs.
+
+Each replay binds the clean exact execution source and whole committed checker,
+reads its resolved installed 3.8.1 solver path without importing the package,
+and emits the same **974-byte canonical static contract**, SHA256
+`53d41f7cae73ee85ab5186bd06b4121fd6ff65318e3e8e30ef6b4dc7d8fda1a8`.
+Path provenance is separately recorded; the static API alone does not prove it.
+No device package was imported in either replay. Native flags remain false.
+
+Retained leaves copied between Mac and WSL and rechecked by whole hash:
+
+| Evidence | SHA256 |
+| --- | --- |
+| Mac JUnit | `0554e0baa1c8961217042e632afa1e78ed1a8c54d007fa73a934878ca937336d` |
+| Mac source/path-bound replay | `f2d0420bafc137b9f1c497d2af637aba080843f22ba80b9cc1f97e186de68b5f` |
+| WSL JUnit | `1655cdb7c53579bf2aac99df27f1489825b34c4137caa384e42ca9f2569aed77` |
+| WSL pytest log | `88c7225da7f027530fc050810b788d001dea4ba8bbfa0883f931ae2e8326b03f` |
+| WSL source/path-bound replay | `41006321f2a8db43760c4b41fc239878019c7bc26cae3e1fd1f486e126fd3462` |
+| WSL service/environment closeout | `d6688de2f606477500e0d359db8fe8ec3c63bdec364cc8067f77e85a3db93745` |
+| Windows bounded tool inventory | `ca62f26cabc33ad7b6ec4db7db4dc6583c24f9770ae06dc8be43344fd64433eb` |
+
+The CPU namespaces are `artifacts/tools/solver-static-target-mac-oct8` and
+`artifacts/tools/solver-static-target-native-b1f0a2a14f00`; the Windows inventory
+is `artifacts/tools/windows-cuda-tool-inventory-oct8-50f9331e.json`.
+The first bundle fetch requested a branch ref not carried in that bundle;
+read-only inspection identified its `HEAD` ref. Fetching that ref and checking
+the exact source permitted a clean fast-forward before starting the CPU unit.
+No test service or GPU child had started on the failed fetch.
+
+Closeout verified every retained Duck unit's MainPID zero, FilmBrain unchanged
+at PIDs 521/298048 with zero restarts, protected services inactive in both
+scopes, and frozen interpreter/packages unchanged. Python syntax, local doc
+links and whitespace checks passed. The full repository suite and native
+solver execution were not run. No GPU execution or new Duck skill is claimed.

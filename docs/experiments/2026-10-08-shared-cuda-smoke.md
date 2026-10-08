@@ -182,3 +182,14 @@ CPU-tested capacity diagnostic with safely refused admission, **not a CUDA
 success or a learned Duck skill**. Before another separately declared attempt,
 verify cool/low-demand conditions and preserve all historical refusals; Duck
 simulation/training still needs its separate unresolved numerical gate.
+
+### Later observation at source 50f9331e: still no retry launched
+
+A fresh CPU-only strict precheck at 14:40:41 Shanghai retained Windows 70 C / 0%
+and WSL 66 C / 34%, each 5,911 MiB used / 18,251 MiB free. The unchanged
+thermal guard again refused the first observation, before a second sample or
+CUDA child/service. A cooler preceding snapshot did not reserve Windows load.
+No second GPU smoke attempt has been launched. Whole precheck SHA256
+`b8a29277c8afe41adef3e541695411e3723b25546cc84b88c53d6ba65835361b`
+is retained on both hosts. Work continued CPU-only with the separately tested
+[dense solver static contract](2026-10-08-solver-target-binding.md), not training.

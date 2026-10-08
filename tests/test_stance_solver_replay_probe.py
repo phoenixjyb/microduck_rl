@@ -198,6 +198,16 @@ with wp.ScopedDevice('cpu'):
     restored.restore()
     assert restored.receipt()['restored_fields'] == list(scratch.RESTORE_ORDER)
     assert solver.update_constraint_init_qfrc_constraint_dense.module.execs == {}
+    from warp._src import context as warp_context
+    # Hash publication must remain frontend-only even in the actual frozen ABI.
+    warp_context.Module._compile = forbidden
+    warp_context.Module.load = forbidden
+    wp._src.build.build_cuda = forbidden
+    wp._src.build.load_cuda = forbidden
+    prepared = probe.prepare_symbol(solver)
+    assert not any(prepared[key] for key in ('compiled','loaded','launched'))
+    assert prepared['target_symbol'].startswith('update_constraint_init_qfrc_constraint_dense_')
+    assert solver.update_constraint_init_qfrc_constraint_dense.module.execs == {}
     for name in scratch.RESTORE_ORDER:
         assert arrays[name].numpy().tobytes(order='C') == packet.fields[name]
 print('CPU_ALLOCATION_RESTORE_ONLY')

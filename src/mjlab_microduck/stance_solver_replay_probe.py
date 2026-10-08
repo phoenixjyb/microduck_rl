@@ -306,6 +306,35 @@ def scratch_arrays(model, data, context):
     return values
 
 
+def prepare_symbol(solver):
+    """Resolve a fresh module's frontend hashes without compile/load/launch.
+
+    Warp's get_mangled_name refuses a fresh kernel until ModuleHasher has
+    published kernel.hash. The executable helper intentionally expects that
+    symbol to exist when it snapshots its immutable runtime entries.
+    """
+    from mjlab_microduck.stance_solver_target_binding import TARGET
+    kernel = getattr(solver, TARGET)
+    module = kernel.module
+    need(module.options.get("block_dim") == 256 and module.options.get("strip_hash") is False
+         and (module.options | kernel.options).get("enable_backward") is False
+         and not module.execs and not module.failed_builds,
+         "fresh source-hashed backward-disabled module before frontend hashing")
+    options = canonical(module.options)
+    caches, failures = module.execs, module.failed_builds
+    digest = module.get_module_hash(256)
+    need(type(digest) is bytes and len(digest) == 32
+         and type(kernel.hash) is bytes and len(kernel.hash) == 32
+         and module.execs is caches and not caches
+         and module.failed_builds is failures and not failures
+         and canonical(module.options) == options,
+         "frontend hashing publishes kernel symbol without compile or load")
+    symbol = kernel.get_mangled_name() + "_cuda_kernel_forward"
+    need(symbol == TARGET + "_" + kernel.hash.hex()[:8] + "_cuda_kernel_forward",
+         "exact source-hashed target symbol")
+    return dict(module_hash=digest.hex(), target_symbol=symbol, compiled=False, loaded=False, launched=False)
+
+
 def child(args):
     # No GPU import is reachable before declaration, source/runtime, lease,
     # unit, input and private-cache authentication completes.
@@ -364,8 +393,11 @@ def child(args):
         data = mw.put_data(native, mujoco.MjData(native), nworld=64, nconmax=128, njmax=512)
         context = solver.create_solver_context(model, data)
         recipe_signature(model, data)
+        symbol = prepare_symbol(solver)
         prepared = executable.DenseSolverExecutable(wp, warp_context, solver, device,
                                                      root / "compiled-dense-solver")
+        need(prepared.module_hash.hex() == symbol["module_hash"] and prepared.symbol == symbol["target_symbol"],
+             "executable snapshot matches fresh frontend hash and symbol")
         prepared.compile()
         tool = declaration["runtime"]["tool"]
         need(tool_binding() == tool, "same disassembler immediately before use")

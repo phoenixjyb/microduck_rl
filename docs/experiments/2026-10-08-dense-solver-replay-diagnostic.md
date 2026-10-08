@@ -172,3 +172,57 @@ continues requesting pinned staging only after authenticated CUDA admission and
 initialization; CPU tests do not establish that GPU pinned-allocation path.
 No installed library/source, driver or live workload is modified to hide the
 failure. A new committed-source paired CPU run is required before CUDA.
+
+### Repaired paired CPU check and first bounded GPU attempt
+
+Source `7785922aea2e324b49a673e64892253d04a06eca`: both eleven-file CPU suites
+passed all 382 tests, without failures, errors or skips. Mac: 17.42 seconds,
+325,243-byte XML, SHA256
+`dcff0a1867fd138c96925a5204846fda952c117482f1a50479ed697a06613b25`.
+Native: 21.69 seconds, 325,247-byte XML, SHA256
+`25f99708b8813553682ed06044c5f32119295f488c453baf0f505d92282f37be`.
+Native CPU invocation `adc028fdd2064a4a86ee68e78a4ff939` completed successfully
+with MainPID=0 and empty ControlGroup. Paired CPU evidence SHA256:
+`b1b037a254903461f5b6eec6a19e7fd6a3d865b6d08056519c71705dee2546fb`.
+
+Fresh shared admission at 18:45:32 Shanghai: both host counters reported
+8,023 MiB used / 16,139 MiB free, driver utilization 0%, 31–32 C. Windows 3D
+engine PID 51276 showed 12% activity; this was not exclusive/idle admission.
+Protected services remained inactive; FilmBrain PIDs 521/298048 remained active
+with zero restarts. Owner acquired the existing lease and declared deadline
+1791457233, exact effective unit caps, complete source/runtime bindings and
+the historical replay input before spawning its fresh child.
+
+GPU unit `microduck-dense-solver-replay-7785922aea2e.service`, invocation
+`81d9fd8851954b13a717a64b9284e912`, failed at executable construction:
+`RuntimeError: Missing hash for kernel update_constraint_init_qfrc_constraint_dense
+in module mujoco_warp._src.solver`.
+The child reached authenticated CUDA initialization and fresh allocation, but
+not CUBIN compilation/load, scratch restoration, target dispatch or numerical
+comparison. MainPID=0, ExecMainStatus=1, no restarts and the owned cgroup absent
+were independently checked. Owned-session cleanup reported no remaining
+processes, no signals and no errors. GPU returned to 8,023 MiB used /
+16,139 MiB free, utilization 0%, 32 C. No runtime/training/skill gate passed.
+
+Retained raw directory: `artifacts/evaluations/dense-solver-replay-7785922aea2e`.
+Four-leaf inventory SHA256:
+`f5beff9ee24901fa523c36e4445e7c4fbc13ffed70156767bc4ef65983ad8397`.
+Declaration: 261,477 bytes, SHA256
+`44026add8560eab22ab369b14590c4a113cfe07df82663d11581c7f147976352`.
+Child log: 5,670 bytes, SHA256
+`2ecb5040f087bbe6e1ac1e7dafe010669d8fa493e10ac3b40c53de55d7c5f43d`.
+Failure JSON: 367 bytes, SHA256
+`22d81c5e2700d2137f7cc5446f285cbf60d7b7f60a6c00e6ad96e8a858a9d06a`.
+All failed evidence/unit state is preserved; no reuse or overwrite is allowed.
+
+Read-only CPU reproduction showed the fresh target's `kernel.hash` was None.
+Calling frozen `module.get_module_hash(256)` published the target hash and
+source-derived symbol with an empty executable cache. Installed Warp's
+`ModuleHasher` explicitly publishes `kernel.hash`; `get_mangled_name()` refuses
+it beforehand. The runner now resolves frontend hashes before the executable
+snapshot, verifies unchanged options/empty caches and binds the snapshot to
+the same hash/symbol. Its real CPU regression forbids module compile/load,
+CUDA build/load and kernel launch during this operation. No installed helper
+or library is patched, no row/input is repaired, and no GPU result is inferred
+from the CPU hash reproduction. Another source-bound paired CPU run and fresh
+declaration are required before any live retry.

@@ -260,3 +260,22 @@ def test_completed_but_over_budget_probe_is_still_failure(monkeypatch, tmp_path)
         supervisor.supervise((sys.executable, "-c", "pass"), cwd=str(tmp_path),
                              env={}, log=None, probe=probe, timeout=0.3,
                              probe_timeout=0.02, grace=0.02, interval=0.05, proc=proc)
+
+
+def test_failed_inventory_fallback_never_reopens_numeric_root_pid():
+    class LostRoot(Proc):
+        def snapshot(self):
+            raise PermissionError("inventory lost")
+
+        def signal_root(self, signum):
+            self.held_signals.append(signum)
+
+    proc = LostRoot([identity()])
+    proc.held_signals = []
+    owned = supervisor.OwnedSession(SimpleNamespace(pid=10, poll=lambda: None), proc)
+    # Simulate an external reaper followed by a same-tick PID reuse. Only the
+    # original held pidfd is safe; no numeric PID fallback is allowed.
+    proc.values = [identity(parent=99)]
+    receipt = owned.stop(0.001, 0.001)
+    assert proc.sent == [] and proc.held_signals
+    assert receipt["remaining"] is None and receipt["errors"]

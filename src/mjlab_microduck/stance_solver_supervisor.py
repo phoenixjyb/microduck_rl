@@ -87,6 +87,15 @@ class LinuxProc:
                 errors.append("root wait timed out")
         return {"remaining": None, "errors": errors}
 
+    def signal_root(self, signum):
+        if self.root_fd is None:
+            raise RuntimeError("held original root handle unavailable")
+        try:
+            signal.pidfd_send_signal(self.root_fd, signum)
+            return True
+        except ProcessLookupError:
+            return False
+
     def close(self):
         if self.root_fd is not None:
             os.close(self.root_fd)
@@ -186,9 +195,8 @@ class OwnedSession:
                     failures.append(type(error).__name__ + ": " + str(error))
                     # Restrict fallback to the birth-bound direct child. The
                     # enclosing capped user unit must retire any unseen tasks.
-                    current = self.proc.read(self.root.pid)
-                    if current is not None and current.key == self.root.key:
-                        self.proc.send(current, signum)
+                    if hasattr(self.proc, "signal_root"):
+                        self.proc.signal_root(signum)
                 if time.monotonic() >= end:
                     break
                 time.sleep(interval)

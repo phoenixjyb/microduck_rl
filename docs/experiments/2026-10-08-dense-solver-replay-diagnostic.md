@@ -128,11 +128,12 @@ review of the retained failure and a new source-bound declaration.
 
 ## Current delivery state
 
-Runner/receiver assembly has passed paired CPU checks and bounded native
-attempts. The latest attempt compiled and explicitly loaded the frozen solver
-and restored scratch, then failed at runner/helper constructor assembly before
-target dispatch. Native numerical qualification and training remain unclaimed;
-the append-only closeouts below distinguish each actual stage reached.
+Runner/receiver assembly has passed paired CPU checks and a completed bounded
+native replay. The independent receiver authenticated the complete output and
+matched all 1,280 output DOFs across 64 worlds. The retained before/after packets
+are identical, limiting this to agreement and observed-dispatch evidence rather
+than an output-overwrite causal control. Native qualification and training
+remain unclaimed; the append-only closeouts below distinguish each actual stage.
 
 The native WSL CPU compile was rechecked read-only: descriptor SHA256
 `91838baeac031299a008709e44cef879bdbc9bc769e84fcb2b318453ac115501` and selected
@@ -321,3 +322,79 @@ MainPID=0, ExecMainStatus=1, empty ControlGroup were observed. This is an
 admission refusal, not a CUDA or constructor failure. The failed unit remains
 preserved. The next distinct-source launch must calculate its deadline on the
 native host immediately before systemd-run, without weakening the guard.
+
+### Completed guarded replay and independently repeated receiver
+
+Exact source `4579312b269439a6784cf0b9577398131b6af777`, tree
+`8ff273b359ca4021d6c7a11cfc1bbb9935d99fbe`: all 384 focused tests passed on
+both hosts (Mac 19.43 s; WSL 16.93 s), without failures/errors/skips.
+Mac XML: 325,587 bytes, SHA256
+`c6000edc7fd3db61694909b73901b59d8bd2bc3c7258fae9db2003b920e185d8`.
+WSL XML: 325,591 bytes, SHA256
+`d7ff9e8eeda8ae414774238e403a575d1656b58dbe83175732985fa5804fba2f`.
+Paired CPU receipt SHA256
+`7c9ba43d4e9c330c73c9cc4350c50d80d183acb0d9e140bdc4d83fbd6f230790`;
+CPU unit invocation `4a3736c7546b4fa0a90eca13ea4fcb70` retired successfully.
+
+GPU unit `microduck-dense-solver-replay-4579312b2694.service`, invocation
+`3a02c18c10fb4e538671d5a3a08d7c51`, launched at 20:25:57 Shanghai using the
+native-calculated fresh deadline `1791463257`. It completed with Result=success,
+ExecMainStatus=0, MainPID=0, no restarts, empty ControlGroup and the exact kernel
+cgroup absent. The owner observed child PID 121252/birth 206980092 exit and
+checked only itself remained before releasing its lease. The external closeout
+confirmed no running Duck unit; it does not rely on the owner's retirement claim.
+
+Retained raw directory `artifacts/evaluations/dense-solver-replay-4579312b2694`:
+25 whole authenticated leaves / 8,788,864 bytes, copied intact to Mac. Inventory
+SHA256 `23cd2bc43a908dc81afad7a11a9ece4e1e8f3dde069c7c43adfdaa1975f37c19`.
+External closeout SHA256
+`3847a35563c6c658de5a5a4c43150c91c5332dd03214e1b4d22444e6a59bbb3d`.
+The independent CPU receiver was run on both WSL and Mac against the complete
+inventory before record decoding. Both produced identical canonical decision
+bytes, SHA256
+`418bea0953bb4923c5c98bdf059dba7d8a8dbc40a856ab9c832c892a2cd4b461`:
+`authenticated-one-launch-numerical-replay-only`.
+
+All 64 worlds were active (`done=false`) with 46 active EFC rows, and all 20 DOFs
+per world were compared. Zero mismatches; maximum absolute error
+`4.789326339960098e-7` under the predeclared abs/rel `2e-5` diagnostic comparison.
+Maximum relative error was 1.0 for near-zero reference components; absolute
+tolerance dominates these cases. No tolerance or serialized inputs were changed.
+Entire input banks were unchanged. Both complete 2,757,952-byte packet banks
+have the same SHA256
+`4b38bda92d03ffc852989cf943374b9185799ce626342d6aef3e0ce0a641d0fe`.
+Thus the restored output already agreed: this run does not demonstrate an
+observable output overwrite, distinguish a hypothetical no-op numerically,
+diagnose the historical initialization rejection or qualify a simulation tick.
+
+Retained CUBIN: 524,120 bytes, SHA256
+`0cd22da97ba4060012c4f36bb8cce7177ddb7dcaedffa5b6d929af99b8c464ec`.
+Selected target SASS: 364,943 bytes, SHA256
+`66b87b99403f44925e3f07f66dd07ccd49830ce791147077f893ae93ecf6fec6`.
+Receipt SHA256
+`4b0ffa52ca4d65089b2e5280b2e6363b2a507706aee6b7f5b9be6a35e185f0b3`;
+supervision SHA256
+`5382ba776eebe1fc54de77ba01672fe1f68e591a89d6af377bb67dbec415f753`.
+Compile/load/object/stream/dispatch bindings passed; driver-consumed machine
+code was not observed. All numerical/native/full-window/runtime-cause/training/
+physical qualification flags remain false. No policy, optimizer, physics tick,
+MP4, raw perception or physical motion was started. No full-repository suite ran.
+
+At 20:27:14 Shanghai, whole runtime/source pins and FilmBrain PIDs 521/298048
+remained unchanged, protected services inactive. Both GPU views returned
+8,022 MiB used / 16,140 MiB free, utilization 0%, 32–33 C. Windows 3D activity
+remained present; this was shared-capacity admission, not exclusive idleness.
+
+### Next diagnostic gate, not a training promotion
+
+The next bounded experiment should separately predeclare an output-overwrite
+control: retain this exact historical replay as its unchanged reference arm,
+retain every input bank byte, and use a documented finite non-reference canary
+only for the destination `qfrc_constraint` in a distinct control arm. Authenticate
+the canary before dispatch, require all active output DOFs to overwrite it and
+match the independent reference, preserve done-row bits, and require no-op /
+partial-write / input-tampering negative fixtures to fail the pure receiver.
+This changes the scratch-output contract and must not be smuggled into the
+completed protocol. It needs a reviewed declaration and paired CPU tests before
+any fresh capped GPU launch. Even a passing control would not establish full
+solver initialization, simulation stability, policy training or a learned skill.

@@ -84,6 +84,25 @@ Syntax, local documentation links and whitespace checks passed. A full
 repository suite was not run. Same committed-source WSL checks remain the next
 delivery step, not native compilation or GPU dispatch qualification.
 
+### Native harness failures retained before acceptance
+
+The first source-`0b0f8795fc31` CPU service failed at collection with six import
+errors: its pytest subprocess resolved the shared environment's older editable
+checkout instead of this worktree. The parent-only `sys.path` setting did not
+propagate to the subprocess. A new retained run explicitly sets `PYTHONPATH` to
+this exact worktree's `src` and asserts the imported package path; no environment
+reinstallation is needed or authorized.
+
+That second run reached all cases but yielded **255 passed, one failed**: the
+oversized-binary fixture wrote 8 MiB plus one byte and hit the service's unchanged
+`LimitFSIZE=8M`, raising `OSError: [Errno 27] File too large` before the helper's
+refusal assertion. This is not a passing WSL suite. Both failed units and raw
+outputs remain retained without reset. The test-only repair exercises a real
+1,025-byte leaf against a 1,024-byte reader cap, then synthetic `fstat` metadata
+against the asserted actual 8 MiB production cap. It still requires rejection
+before any load. Production source, input caps, service limits and qualification
+gates are unchanged; the repaired exact-source suite must pass before closeout.
+
 ## Host check and remaining native gate
 
 The renewed read-only connection to `gw98-direct` reached `DESKTOP-HNKBDR1` and

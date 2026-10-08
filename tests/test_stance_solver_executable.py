@@ -366,11 +366,28 @@ def test_symlink_generated_leaf_is_refused_before_load(case, tmp_path):
     assert [event[0] for event in case.events] == ["compile"]
 
 
-def test_oversized_generated_leaf_is_refused_before_load(case):
+def test_oversized_generated_leaf_is_refused_before_load(case, tmp_path, monkeypatch):
+    # Exercise an actual over-cap regular file without exceeding the supervisor's
+    # unchanged 8 MiB LimitFSIZE. The full production bound is checked separately
+    # through synthetic fstat metadata for the held generated leaf.
+    small = tmp_path / "over-small-cap.bin"
+    small.write_bytes(b"x" * 1025)
+    with pytest.raises(ValueError, match="bounded file size"):
+        executable._read_plain(small, 1024, "small cap fixture")
     case.collector.compile()
     binary = case.destination / "solver.sm120.cubin"
-    binary.write_bytes(b"x" * (executable.MAX_BINARY_BYTES + 1))
-    with pytest.raises(ValueError):
+    assert executable.MAX_BINARY_BYTES == 8 * 1024**2
+    held = binary.stat()
+    original_fstat = os.fstat
+
+    def oversized_fstat(fd):
+        actual = original_fstat(fd)
+        if (actual.st_dev, actual.st_ino) == (held.st_dev, held.st_ino):
+            return NS(st_mode=actual.st_mode, st_size=executable.MAX_BINARY_BYTES + 1)
+        return actual
+
+    monkeypatch.setattr(os, "fstat", oversized_fstat)
+    with pytest.raises(ValueError, match="bounded file size"):
         case.collector.load(case.sass)
     assert [event[0] for event in case.events] == ["compile"]
 

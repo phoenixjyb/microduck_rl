@@ -91,7 +91,7 @@ An initial real-bank decode caught an incorrect synthetic matrix-dtype oracle:
 It was corrected with an independent literal regression; the real authenticated
 bank now decodes. The installed solver file was not changed.
 
-The focused suite has 40 cases. It includes inert import, authenticated packet
+The initial focused suite had 40 cases (41 after the final hardening below). It includes inert import, authenticated packet
 and staging mutation refusal, one-shot failures, explicit stream copies,
 synthetic proc birth/reuse protection, probe refusal/deadline, and an isolated
 real Warp **CPU-only** allocation/copy test over 24 arrays with kernel launches
@@ -139,6 +139,39 @@ No installed source, dependency or driver change was performed in this chunk.
 Windows also had an active 3D engine counter at 10%; this is not a declaration
 that Windows or the shared GPU was idle. A later GPU diagnostic must obtain
 fresh occupancy and lease evidence rather than reusing these samples.
+
+### Final held-root fallback hardening
+
+Source `e99743d1ad6b1a152dfbf5a523c6b1c5f0474681` additionally removes the
+numeric-root-PID fallback if session inventory fails. Even if an external
+reaper makes the original numeric PID reusable, fallback signals use only the
+original retained root pidfd. A regression simulates same-tick reuse and proves
+no reopened numeric-root signal. Original evidence above remains retained.
+
+The final nine-file scope passed **335 tests** on this exact source: macOS
+12.87 seconds, WSL 11.75 seconds, zero errors/failures/skips. Mac XML:
+`artifacts/tools/dense-solver-bootstrap-mac-oct8/hardened-integration.xml`,
+318,555 bytes, SHA256
+`f8b2efdaa47c3620756b21d8220767ad6c28b726388d41d1c19e9ed9a5574a31`.
+Native root: `artifacts/tools/dense-solver-bootstrap-final-native-e99743d1ad6b`.
+Its XML is 318,559 bytes, SHA256
+`e6065cfbd4529c103edee011789e7193aa0ce4b8761fac5ddc1202fa4038ac7d`;
+closeout JSON is 2,273 bytes, SHA256
+`46a8f9db9aa9cc0fbca6a88c3cdee50e25a35e7dac2f0cb8f5f9df0c871ed256`.
+All final native artifacts were copied and independently authenticated on Mac.
+
+Unit `microduck-solver-bootstrap-final-cpu-e99743d1ad6b.service`, invocation
+`7b2067347fac438199d7e65db02abb38`, succeeded with MainPID 0, no restarts, and
+empty ControlGroup. It used the same bounded CPU protocol, TimeoutStartSec 120,
+and no redundant RuntimeMaxSec setting. FilmBrain PIDs/restart counts and
+protected services remained unchanged; all Duck MainPIDs were zero; installed
+solver bytes retained their frozen hash. The 17:57:46 Shanghai sample still had
+16,140 MiB free, Windows/WSL 32/31 C, driver utilization 0%, and an active
+Windows 3D counter (8%). This is not GPU-idle or CUDA acceptance evidence.
+
+The final source was pushed to the exact fork feature branch and fast-forwarded
+on WSL without changing dependencies, drivers, existing caches or workloads.
+This document's subsequent evidence-only commit changes no tested code.
 
 ## Next gate
 

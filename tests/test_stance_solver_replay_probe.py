@@ -192,7 +192,7 @@ with wp.ScopedDevice('cpu'):
     arrays = probe.scratch_arrays(model,data,context)
     def stage(name,raw,logical,shape,dtype,wdtype):
         return wp.array(np.frombuffer(raw,dtype=dtype).reshape(shape).copy(),
-                        dtype=arrays[name].dtype,device='cpu',pinned=True)
+                        dtype=arrays[name].dtype,device='cpu',pinned=False)
     restored = scratch.DenseSolverScratchRestorer(packet,arrays,wp.get_device('cpu'),None,
         stage=stage,copy=wp.copy,synchronize=lambda stream: None,guard=lambda: None)
     restored.restore()

@@ -142,3 +142,33 @@ fingerprint; all other descriptor fields match. Its whole descriptor SHA256 is
 `2308c6a2e24f74646cefb264df0e3ce2e94957e2396f2af3fc7ee954e0118b85`. The CPU
 allocation test checks the applicable platform fingerprint; it does not assert
 cross-platform bitwise compiled-plant equivalence or diagnose that difference.
+
+### First committed native CPU check: refused, no CUDA launch
+
+Source `85742501c1c41a33ba34788273efd2fbd85b635b`: Mac eleven-file suite
+382 passed in 16.23 seconds. XML: 325,243 bytes, SHA256
+`37eb44e8abea9335bee3cf1f992a49650e3bdb1c7650b38a3e4d59ef8e9c174f`.
+Native source/runtime/input CPU preflight authenticated tree
+`044a56f63ce89389e47493068da981a9432ee8fb` (956 whole source leaves),
+frozen library/source/tool pins and the retained input bank.
+
+Native CPU unit `microduck-dense-solver-replay-cpu-85742501.service`, invocation
+`205876c79293448783e840225691b0b0`, returned 1 failed/381 passed in 19.83 seconds.
+It retired with MainPID=0, NRestarts=0, Result=exit-code and empty ControlGroup.
+The failed unit/XML are preserved; no reset or overwrite is performed.
+Failed native XML: 342,057 bytes, SHA256
+`74d53b847b55a67ab217b13b0fc393145f9d2c9ebbb5e769db14e4b8fdb69bf3`.
+
+Read-only diagnosis: the CPU-only allocation fixture incorrectly requested
+`pinned=True` while CUDA_VISIBLE_DEVICES was empty. In the frozen CUDA-enabled
+Warp build, `CpuPinnedAllocator.alloc()` calls `wp_alloc_pinned`, which returned
+null with CUDA error 100 (no CUDA-capable device detected). Its error-reporting
+branch then accessed missing `self.device`, masking allocation failure with
+`AttributeError: 'CpuPinnedAllocator' object has no attribute 'device'`.
+
+The fixture now uses ordinary pageable CPU staging. It still checks exact raw
+bytes, actual ABI/allocation layouts and no kernel dispatch. The live child
+continues requesting pinned staging only after authenticated CUDA admission and
+initialization; CPU tests do not establish that GPU pinned-allocation path.
+No installed library/source, driver or live workload is modified to hide the
+failure. A new committed-source paired CPU run is required before CUDA.

@@ -298,3 +298,26 @@ remained running. Whole source/runtime pins and FilmBrain PIDs 521/298048 were
 unchanged, protected services inactive. Both GPU views returned 8,022 MiB used /
 16,140 MiB free, utilization 0%, 33 C; Windows 3D activity remained present.
 No numerical replay, training, skill, runtime-cause or physical gate passed.
+
+### Constructor repair CPU check and stale admission refusal
+
+Source `e2f05d69aae2504fa22971f4965108b871b3de7e`: all 384 focused tests
+passed on both hosts (Mac 21.75 s; WSL 18.09 s), with no failures/errors/skips.
+Mac XML: 325,587 bytes, SHA256
+`e49dc482129d4dde8ebbae6196a71b1bb1990ed6d2dfdae77587ecb45387b493`.
+WSL XML: 325,591 bytes, SHA256
+`54a54233e9706123c9e7565b94a36e0c154f6871dce0c4214a17e4c24f953d8c`.
+Paired receipt SHA256
+`6721e8458678770561adc3981f3bb90a98309b69900b618365990685a5d2d8c3`;
+CPU invocation `5b17158300c34e9fa82ed1b7e49707d3` completed successfully.
+
+Unit `microduck-dense-solver-replay-e2f05d69aae2.service`, invocation
+`1aeca57726824cfaa0e83a0e85f1719d`, refused at the first owner deadline guard
+at 20:18:01 Shanghai. The earlier preflight's deadline `1791462429` no longer
+left the required 660 seconds at execution. Exact error:
+`ValueError: fresh bounded wall-clock deadline and full reserve`.
+No declaration, output directory, lease acquisition or GPU child was created;
+MainPID=0, ExecMainStatus=1, empty ControlGroup were observed. This is an
+admission refusal, not a CUDA or constructor failure. The failed unit remains
+preserved. The next distinct-source launch must calculate its deadline on the
+native host immediately before systemd-run, without weakening the guard.

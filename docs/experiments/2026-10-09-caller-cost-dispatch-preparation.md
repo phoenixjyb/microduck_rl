@@ -91,3 +91,43 @@ This adapter is not that owner. Every qualification flag remains false, and
 explicit load provenance, native GPU execution, capture origin and external
 retirement authentication remain false in its receipt. Training is still gated
 on broader retained simulation evidence, not this CPU preparation.
+
+## Retained paired CPU closeout
+
+Executed source: `a931612436ca4708cbdf4bdc8c61bf4d51d7863c`, clean exact feature
+branch on Mac and WSL. Fourteen focused files were run with CUDA hidden: the
+thirteen retained scratch/replay/Gauss/cost-stage files plus the new adapter
+tests. Both XMLs independently verify 633 tests with zero failures, errors or
+skips; this is **not** the full repository suite. The 93 new adapter tests use
+the frozen Python caller with synthetic CPU objects, not native GPU execution.
+
+- Mac: 633 passed in 62.68 seconds. XML 907172 bytes, SHA256
+  `7bfc291f97984699cffb351a3488a5c56b88e808bd02b454c2a0177b1eb685e4`.
+- WSL: 633 passed in 46.15 seconds. XML 907176 bytes, SHA256
+  `451f21b94c4b38125fdc7c8877704fd9d76b4ea38ef6685c0f55e0c2a22611e9`.
+
+Retained paths under `artifacts/tools/caller-cost-dispatch-preparation/` are
+`a9316124-mac-tests.xml` (Mac) and `a9316124-wsl-tests.xml` (WSL and verified
+whole-byte copy on Mac). The source bundle SHA256 is
+`83eb873bf1ab1a106ed347bd3b949298df5145c0aa5da8ccf9f1ae2c6115c1cc`.
+
+The WSL CPU unit `microduck-cost-dispatch-cpu-a9316124.service`, invocation
+`b94d98d5fe0b495f99eed303ddac3ed3`, finished successfully with exit status 0,
+MainPID 0, empty cgroup and zero restarts. Its retained active/exited state
+is not a running workload. Verified caps: 150-second startup timeout, 4 GiB RAM,
+200% CPU, Nice 10, 64 tasks, 16 MiB/file, no restart, control-group termination.
+No GPU lease was acquired or GPU job launched. No Duck unit remained running.
+
+Afterward the frozen environment alias, interpreter, package/library, Warp and
+MuJoCo-Warp source-tree and disassembler pins reverified unchanged. FilmBrain
+observatory and video services remained active at PIDs 521 and 298048, zero
+restarts. Both protected AI mission services remained inactive in user and
+system scopes. Point-in-time GPU state was 8145 MiB used, 16017 MiB free,
+2% utilization and 34 C: shared capacity, not exclusive ownership.
+
+The bounded read-only Luna review found no concrete defect in this slice and
+confirmed that held runtime objects and declared base are not independent
+runtime/checkout authentication. The reviewer ran no tests or native work.
+All qualification and physical/training gates remain false. The next slice is
+the separately tested multi-module explicit-load owner and capped collector,
+not training or policy promotion.

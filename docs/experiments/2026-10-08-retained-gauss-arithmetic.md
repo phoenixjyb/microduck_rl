@@ -65,3 +65,65 @@ simulation window or learning. The next native diagnostic must have its own
 predeclared source/capture fence and test evidence; it must retain pre/post setup
 and Gauss boundaries, preserve the all-active non-elliptic guard, and independently
 prove capped-unit retirement before a further GPU job. Training remains paused.
+
+## Retained closeout
+
+Executed source: `d7dd2e673d36a02256c749c7c20cff62f1de9806` on the clean exact
+feature branch on both Mac and 100.98. The same twelve focused test files (the
+eleven retained scratch/replay contracts plus the new Gauss tests) passed:
+
+- Mac: 472 passed, no failures/errors/skips; 18.68 seconds. XML 337297 bytes,
+  SHA256 `cb7efc21feb47d94275f70f229fe3c4183f499fd22142fa591393c6c957830aa`.
+- WSL: 472 passed, no failures/errors/skips; 17.73 seconds. XML 337301 bytes,
+  SHA256 `46a1de0e1e5767d1d64ff9c9a1425844953bf44ee172da9d16ac6b3e67a56daf`.
+- WSL CPU unit: `microduck-gauss-cpu-d7dd2e67.service`, invocation
+  `b7775f9bf6ae4d5ab24d7defa21bf762`, `Result=success`, `ExecMainStatus=0`,
+  `MainPID=0`, empty cgroup, zero restarts; retained exited state is not a
+  running workload. CPU-only resource caps were 150 seconds, 4 GiB RAM,
+  200% CPU quota, Nice 10, 64 tasks, 16 MiB/file and control-group termination.
+
+The Mac and WSL checker reports were independently generated from their retained
+anchors, copied back without overwrite, and compared as complete bytes. Both
+are 29150 bytes with SHA256
+`1bfd090d46ffe7fda826b165969f5311674b73ddfcc3fcbfbddf8d3f4e3083be`:
+
+- `artifacts/tools/retained-gauss-arithmetic/d7dd2e67-mac.json`
+- `artifacts/tools/retained-gauss-arithmetic/d7dd2e67-wsl.json`
+- Paired XMLs use the same directory and source prefix, ending in
+  `-mac-tests.xml` and `-wsl-tests.xml`.
+
+Decision: `retained-gauss-arithmetic-consistent-only`. All 64 active worlds
+have zero out-of-bound results and zero bit mismatches under either hypothesis.
+However, every captured Gauss value is only `3.963656371842135e-15`; the largest
+mathematical error is `5.546696567206813e-22`, while the conservative bound is
+`0.0006766296188161527`. This near-zero case cannot distinguish the arithmetic
+hypotheses or stress a meaningful acceleration cost. It is not a new full-tick,
+runtime-cause, simulation, learning or physical acceptance result.
+
+A read-only Luna review found no concrete defects in the rational rounding,
+bound scope, hash-before-parse order or CPU-only behavior. The review did not run
+tests or touch the GPU. It helped retain the explicit separation of Gauss from
+total constraint cost.
+
+After the CPU checks, the frozen interpreter/alias, package versions, libraries,
+Warp and MuJoCo-Warp source trees and disassembler pins reverified unchanged on
+WSL. No running Duck unit remained. FilmBrain services remained active at
+PIDs 521 and 298048 with zero restarts; both protected AI mission services were
+inactive in user and system scopes. The point-in-time WSL GPU reading was
+8018 MiB used, 16144 MiB free, 0% utilization and 32 C. This is shared capacity,
+not an exclusive-idle claim. No GPU lease was acquired or GPU job launched by
+this side view. The full repository suite was not run.
+
+### Next bounded experiment design
+
+Before another full simulation tick, implement and test a distinct caller-stage
+capture protocol for the unchanged setup and Gauss kernels. Retain actual
+pre/post `init_cost` arrays to verify reset and prior-cost transfer; retain
+pre/post EFC and Gauss cost separately so row-cost atomics cannot be confused
+with Gauss arithmetic. Include a predeclared nondegenerate Gauss-only input
+control (for example literal per-DOF `Ma=1`, smooth force `0`, acceleration `1`,
+smooth acceleration `0`, whose twenty-DOF Gauss result is `10`). Label this a
+synthetic solver control, not a physical model state. Preserve the complete
+non-elliptic restored bank, finite inputs, explicit held stream, exact kernel
+bindings, resource caps and external closeout. Do not use these synthetic
+inputs for training or treat a passed control as full-simulation admission.

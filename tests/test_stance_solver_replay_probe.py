@@ -28,11 +28,86 @@ def test_child_constructor_calls_bind_actual_keyword_only_contracts(name):
     calls = [node for node in ast.walk(ast.parse(inspect.getsource(probe.child)))
              if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
              and node.func.id == name]
-    assert len(calls) == 1
-    call = calls[0]
-    assert not call.args
-    assert all(keyword.arg is not None for keyword in call.keywords)
-    inspect.signature(constructor).bind(**{keyword.arg: object() for keyword in call.keywords})
+    assert len(calls) == 2  # One unchanged reference and one distinct control arm.
+    for call in calls:
+        assert not call.args
+        assert all(keyword.arg is not None for keyword in call.keywords)
+        inspect.signature(constructor).bind(**{keyword.arg: object() for keyword in call.keywords})
+
+
+def canary_copy_case():
+    from mjlab_microduck.stance_solver_replay_receiver import overwrite_canary
+    events = []
+    dtype = object()
+    device = SimpleNamespace(is_cpu=False, is_cuda=True)
+    cpu = SimpleNamespace(is_cpu=True, is_cuda=False)
+    stream = SimpleNamespace(device=device, cuda_stream=91)
+
+    class Array:
+        shape = (64, 20)
+        is_contiguous = True
+        requires_grad = False
+        def numpy(self):
+            assert self.device is cpu, "GPU numpy readback forbidden"
+            return SimpleNamespace(shape=self.shape, dtype=SimpleNamespace(str="<f4"),
+                flags=SimpleNamespace(c_contiguous=True), nbytes=len(self.raw),
+                tobytes=lambda order: self.raw)
+
+    output = Array()
+    output.dtype, output.device, output.ptr, output.pinned = dtype, device, 100_000, False
+    host = Array()
+    host.dtype, host.device, host.ptr, host.pinned = dtype, cpu, 200_000, True
+    host.raw = overwrite_canary()
+    wp = SimpleNamespace(array=Array, float32=dtype)
+    data = SimpleNamespace(qfrc_constraint=output)
+    def stage(name, raw, logical, shape, wire, warp_dtype):
+        assert (name, raw, logical, shape, wire, warp_dtype) == (
+            "data.qfrc_constraint", overwrite_canary(), (64, 20), (64, 20), "<f4", "float32")
+        events.append("stage")
+        return host
+    def copy(dst, src, *, stream):
+        assert dst is output and src is host and stream.cuda_stream == 91
+        events.append("copy")
+    def sync(value):
+        assert value is stream
+        events.append("synchronize")
+    return wp, data, device, stream, host, events, dict(stage=stage, copy=copy,
+        synchronize=sync, guard=lambda: events.append("guard"))
+
+
+def test_canary_copy_alters_only_destination_using_held_stream_then_synchronizes():
+    wp, data, device, stream, host, events, callbacks = canary_copy_case()
+    record = probe.stage_output_canary(wp, data, device, stream, **callbacks)
+    assert [e for e in events if e != "guard"] == ["stage", "copy", "synchronize"]
+    assert record["destination_object_id"] == id(data.qfrc_constraint)
+    assert record["source_object_id"] == id(host)
+    assert record["stream_object_id"] == id(stream)
+    assert record["synchronized"] is True
+    assert record["flags"] == probe.FLAGS
+
+
+@pytest.mark.parametrize("fault", ["bytes", "unpinned", "gpu-source", "shape"])
+def test_canary_copy_rejects_bad_staging_before_any_copy(fault):
+    wp, data, device, stream, host, events, callbacks = canary_copy_case()
+    if fault == "bytes":
+        host.raw = b"x" * len(host.raw)
+    elif fault == "unpinned":
+        host.pinned = False
+    elif fault == "gpu-source":
+        host.device = device
+    else:
+        host.shape = (1280,)
+    with pytest.raises(ValueError):
+        probe.stage_output_canary(wp, data, device, stream, **callbacks)
+    assert "copy" not in events
+
+
+def test_overwrite_protocol_is_explicit_opt_in_and_leaves_v1_unchanged():
+    from mjlab_microduck.stance_solver_replay_receiver import OVERWRITE_PROBE_PROTOCOL
+    assert probe.overwrite_mode(SimpleNamespace()) == probe.PROTOCOL
+    assert probe.overwrite_mode(SimpleNamespace(output_overwrite_control=True)) == OVERWRITE_PROBE_PROTOCOL
+    with pytest.raises(ValueError, match="literal overwrite"):
+        probe.overwrite_mode(SimpleNamespace(output_overwrite_control=1))
 
 
 def test_import_is_inert_in_fresh_process():

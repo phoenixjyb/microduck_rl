@@ -398,3 +398,51 @@ This changes the scratch-output contract and must not be smuggled into the
 completed protocol. It needs a reviewed declaration and paired CPU tests before
 any fresh capped GPU launch. Even a passing control would not establish full
 solver initialization, simulation stability, policy training or a learned skill.
+
+### Predeclared two-arm destination-overwrite control
+
+Source baseline: `dfb8339c4c47f809b6e7735e6e582939e8c36dd7`. Opt-in flag:
+`--output-overwrite-control`. Probe protocol
+`microduck-dense-solver-replay-overwrite-probe-oct8-v2`; receiver protocol
+`microduck-dense-solver-replay-overwrite-receiver-oct8-v2`. Existing v1 decoding
+and historical artifacts remain unchanged; v1 cannot masquerade as a control.
+Source scope is still the same five reviewed paths since `e6cf84d...`.
+
+One fresh child prepares the same frozen executable/device/context/stream and
+allocations, then runs two sequential arms under the existing unit, child,
+lease, workload, capacity, cache and deadline bounds. Arm one restores the exact
+24-field historical bank and executes the unchanged caller once as before.
+Arm two restores that complete bank again, then stages **only** destination
+`data.qfrc_constraint` from an owned pinned CPU buffer, using the held copy
+entry and explicit held stream. The copy is synchronized and its whole CPU
+staging bytes rechecked before constructing the second one-shot observer.
+No solver initialization, physics tick, input-row rewrite or installed edit occurs.
+
+Canary recipe: little-endian float32, shape `[64,20]`, flat index `i=0..1279`:
+`(+1 if i is even else -1) * (4096 + i % 32)`. Exactly 5,120 finite bytes,
+SHA256 `4c52c8fc33c766f4cc6ffb68bc64d9ea076b0420cd4f79fe83ca12723fb623a9`.
+The declaration pins this recipe, destination and exactly two target calls.
+Reference `packet-before.bin`/`packet-after.bin` and distinct
+`control-packet-before.bin`/`control-packet-after.bin` are retained in full;
+the extra copy, scratch and guard receipts are bound to the v2 envelope.
+Total four packet banks: 11,031,808 bytes, within the existing bounded inventory.
+
+The whole inventory is authenticated before decoding. Both one-shot guard
+records must bind the same CUBIN/context/device, source caller, five array
+identities/pointers/layouts and stream. All four `nefc/J/force/done` input banks
+must be byte-identical across arms and phases, including inactive padding.
+The captured control-before output must equal the exact canary. Both arms must
+match the unchanged ascending-row float32 reference. Each active DOF must
+change bits from its canary preimage, with reference/canary separation greater
+than sixteen times the existing combined abs/rel diagnostic tolerance. Done
+worlds retain their canary output bits; an all-done matrix is rejected. No-op,
+partial write, nonfinite/wrong output, canary/manifest tampering, cross-arm or
+post-target input changes, altered done-row bits, substituted stream/destination,
+aliased packet roles and stale inventory must fail focused CPU fixtures.
+
+Acceptance is only `authenticated-two-arm-output-overwrite-diagnostic-only`.
+All numerical/native/full-window/runtime-cause/training/physical qualification
+flags remain false. It demonstrates destination overwrite on the retained
+case, not a general GPU fix, stable simulation, policy or physical skill.
+Paired exact-committed-source CPU evidence and fresh shared admission are required
+before live launch. Failed artifacts/units are preserved; no automatic retry.

@@ -1,6 +1,7 @@
 """Synthetic packet/inventory fixtures only; never run CUDA or native tools."""
 
 from hashlib import sha256
+from copy import deepcopy
 import json
 import struct
 
@@ -447,3 +448,165 @@ def test_receive_rejects_substituted_user_cgroup(tmp_path, monkeypatch):
     inventory["receipt.json"] = {"bytes": len(raw), "sha256": sha256(raw).hexdigest()}
     with pytest.raises(ValueError, match="bounded service caps"):
         receiver.receive(root, inventory)
+
+
+def control_pair(reference_before, reference_after):
+    offset = receiver._FIELD_LAYOUT["qfrc_constraint"][2]
+    canary = receiver.overwrite_canary()
+    before = reference_before[:offset] + canary
+    after = bytearray(reference_after)
+    done_offset = receiver._FIELD_LAYOUT["done"][2]
+    for world in range(64):
+        if before[done_offset + world]:
+            after[offset + world * 80:offset + (world + 1) * 80] = canary[world * 80:(world + 1) * 80]
+    return before, bytes(after)
+
+
+def test_literal_finite_canary_and_complete_active_overwrite_with_done_preservation():
+    raw = receiver.overwrite_canary()
+    assert len(raw) == 5120 and struct.unpack_from("<4f", raw) == (4096, -4097, 4098, -4099)
+    assert receiver.overwrite_manifest()["sha256"] == sha256(raw).hexdigest()
+    rb, ra = packet_pair()
+    cb, ca = control_pair(rb, ra)
+    result = receiver.compare_overwrite_packets(rb, ra, packet_record(rb, ra), cb, ca, packet_record(cb, ca))
+    assert result["active_worlds"] == 63 and result["done_worlds"] == 1
+    assert result["overwritten_dofs"] == 1260
+    assert result["qualification"] == receiver.FLAGS
+
+
+@pytest.mark.parametrize("fault", ["no-op", "partial-write", "wrong-output", "nan-output",
+    "canary-tamper", "cross-arm-input", "post-input", "done-row"])
+def test_control_rejects_false_passes_even_with_updated_packet_hashes(fault):
+    rb, ra = packet_pair()
+    cb, ca = control_pair(rb, ra)
+    offset = receiver._FIELD_LAYOUT["qfrc_constraint"][2]
+    before, after = bytearray(cb), bytearray(ca)
+    if fault == "no-op":
+        after = bytearray(cb)
+    elif fault == "partial-write":
+        after[offset:offset + 4] = before[offset:offset + 4]
+    elif fault == "wrong-output":
+        struct.pack_into("<f", after, offset, 33.0)
+    elif fault == "nan-output":
+        struct.pack_into("<f", after, offset, float("nan"))
+    elif fault == "canary-tamper":
+        struct.pack_into("<f", before, offset, 4095.0)
+    elif fault in ("cross-arm-input", "post-input"):
+        position = receiver._FIELD_LAYOUT["J"][2] + (511 * 20 + 19) * 4  # inactive padding still bound
+        struct.pack_into("<f", after, position, 7.0)
+        if fault == "cross-arm-input":
+            struct.pack_into("<f", before, position, 7.0)
+    else:
+        struct.pack_into("<f", after, offset + 20 * 4, 9.5)
+    cb, ca = bytes(before), bytes(after)
+    with pytest.raises(ValueError):
+        receiver.compare_overwrite_packets(rb, ra, packet_record(rb, ra), cb, ca, packet_record(cb, ca))
+
+
+def _refresh(root):
+    return {str(path.relative_to(root)): dict(bytes=len(path.read_bytes()),
+            sha256=sha256(path.read_bytes()).hexdigest()) for path in root.rglob("*") if path.is_file()}
+
+
+def _complete_control_bundle(root, monkeypatch):
+    _complete_bundle(root, monkeypatch)
+    receipt = json.loads((root / "receipt.json").read_bytes())
+    declaration = json.loads((root / "declaration.json").read_bytes())
+    rb, ra = packet_pair()
+    cb, ca = control_pair(rb, ra)
+    control_guard = deepcopy(receipt["guard"])
+    control_guard["packets"] = packet_record(cb, ca)
+    control_guard["packets"]["copy_stream_handle"] = 99
+    receipt["protocol"] = declaration["protocol"] = receiver.OVERWRITE_PROBE_PROTOCOL
+    declaration["overwrite_control"] = receiver.overwrite_manifest()
+    layout = control_guard["layouts"][4]
+    receipt["overwrite_control"] = dict(manifest=receiver.overwrite_manifest(),
+        guard=control_guard, scratch=deepcopy(receipt["scratch"]),
+        files=dict(packet_before="control-before.bin", packet_after="control-after.bin"),
+        copy=dict(bytes=5120, sha256=sha256(receiver.overwrite_canary()).hexdigest(),
+            source_object_id=5000, source_pointer=7000,
+            destination_object_id=layout["object_id"], destination_pointer=layout["pointer"],
+            device_object_id=13, stream_object_id=44, stream_handle=99,
+            dtype_object_id=layout["dtype_object_id"], shape=[64, 20],
+            source_cpu_pinned=True, synchronized=True, flags=dict(target_contract.FLAGS)))
+    (root / "control-before.bin").write_bytes(cb)
+    (root / "control-after.bin").write_bytes(ca)
+    raw = receiver._canonical(declaration)
+    (root / "declaration.json").write_bytes(raw)
+    receipt["declaration_sha256"] = sha256(raw).hexdigest()
+    (root / "receipt.json").write_bytes(receiver._canonical(receipt))
+    return _refresh(root)
+
+
+def test_full_v2_receiver_binds_both_arms_without_qualifying_training(tmp_path, monkeypatch):
+    root = tmp_path / "run"
+    result = receiver.receive(root, _complete_control_bundle(root, monkeypatch))
+    assert result["decision"] == "authenticated-two-arm-output-overwrite-diagnostic-only"
+    assert result["protocol"] == receiver.OVERWRITE_RECEIVER_PROTOCOL
+    assert result["overwrite_control"]["overwritten_dofs"] == 1260
+    assert result["qualification"] == receiver.FLAGS
+
+
+@pytest.mark.parametrize("fault", ["v1-masquerade", "missing-control", "wrong-copy-destination",
+    "wrong-copy-stream", "wrong-copy-hash", "wrong-control-stream", "aliased-packets", "promoted-manifest",
+    "same-copy-pointer"])
+def test_full_control_envelope_rejects_substitutions(tmp_path, monkeypatch, fault):
+    root = tmp_path / "run"
+    _complete_control_bundle(root, monkeypatch)
+    receipt = json.loads((root / "receipt.json").read_bytes())
+    control = receipt["overwrite_control"]
+    if fault == "v1-masquerade":
+        receipt["protocol"] = receiver.PROBE_PROTOCOL
+    elif fault == "missing-control":
+        del receipt["overwrite_control"]
+    elif fault == "wrong-copy-destination":
+        control["copy"]["destination_pointer"] += 4
+    elif fault == "wrong-copy-stream":
+        control["copy"]["stream_handle"] += 1
+    elif fault == "wrong-copy-hash":
+        control["copy"]["sha256"] = "0" * 64
+    elif fault == "wrong-control-stream":
+        control["guard"]["stream_object_id"] += 1
+    elif fault == "aliased-packets":
+        control["files"]["packet_before"] = receipt["files"]["packet_before"]
+    elif fault == "same-copy-pointer":
+        control["copy"]["source_pointer"] = control["copy"]["destination_pointer"]
+    else:
+        control["manifest"]["qualification"]["training_authorized"] = True
+    (root / "receipt.json").write_bytes(receiver._canonical(receipt))
+    with pytest.raises(ValueError):
+        receiver.receive(root, _refresh(root))
+
+
+def test_control_packet_inventory_tampering_is_rejected_before_any_json(tmp_path, monkeypatch):
+    root = tmp_path / "run"
+    inventory = _complete_control_bundle(root, monkeypatch)
+    (root / "control-after.bin").write_bytes(b"tampered")
+    monkeypatch.setattr(receiver, "_json", lambda *args: pytest.fail("decode preceded authentication"))
+    with pytest.raises(ValueError):
+        receiver.receive(root, inventory)
+
+
+def test_all_done_control_is_not_an_overwrite_demonstration():
+    rb, _ = packet_pair()
+    before = bytearray(rb)
+    offset = receiver._FIELD_LAYOUT["done"][2]
+    before[offset:offset + 64] = b"\x01" * 64
+    rb = ra = bytes(before)
+    cb, ca = control_pair(rb, ra)
+    with pytest.raises(ValueError, match="nonempty complete active overwrite coverage"):
+        receiver.compare_overwrite_packets(rb, ra, packet_record(rb, ra), cb, ca, packet_record(cb, ca))
+
+
+def test_valid_reference_equal_to_canary_does_not_discriminate_noop():
+    rb, ra = packet_pair()
+    before, after = bytearray(rb), bytearray(ra)
+    for raw in (before, after):
+        struct.pack_into("<i", raw, receiver._FIELD_LAYOUT["nefc"][2], 1)
+        struct.pack_into("<f", raw, receiver._FIELD_LAYOUT["J"][2], 4096.0)
+        struct.pack_into("<f", raw, receiver._FIELD_LAYOUT["force"][2], 1.0)
+    struct.pack_into("<f", after, receiver._FIELD_LAYOUT["qfrc_constraint"][2], 4096.0)
+    rb, ra = bytes(before), bytes(after)
+    cb, ca = control_pair(rb, ra)
+    with pytest.raises(ValueError, match="discriminates a no-op"):
+        receiver.compare_overwrite_packets(rb, ra, packet_record(rb, ra), cb, ca, packet_record(cb, ca))

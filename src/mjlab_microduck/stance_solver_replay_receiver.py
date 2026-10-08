@@ -24,6 +24,9 @@ from mjlab_microduck import stance_solver_target_binding as target_contract
 
 PROTOCOL = "microduck-dense-solver-replay-receiver-oct8-v1"
 PROBE_PROTOCOL = "microduck-dense-solver-replay-probe-oct8-v1"
+OVERWRITE_PROBE_PROTOCOL = "microduck-dense-solver-replay-overwrite-probe-oct8-v2"
+OVERWRITE_PROTOCOL = "microduck-dense-solver-output-overwrite-control-oct8-v1"
+OVERWRITE_RECEIVER_PROTOCOL = "microduck-dense-solver-replay-overwrite-receiver-oct8-v2"
 PINNED_SOURCE_BRANCH = "feat/athletics-obstacle-curriculum"
 PINNED_GPU_UUID = "GPU-7d72b360-33bc-2cee-3ff4-a954474011b5"
 NATIVE_ROOT = "/home/yanbo/work/microduck_rl-com-entry-20261006"
@@ -465,6 +468,21 @@ def _f32_at(raw, index):
     return struct.unpack_from("<f", raw, index * 4)[0]
 
 
+def overwrite_canary():
+    """Literal finite float32 destination-only control, independent of outputs."""
+    return struct.pack("<1280f", *(float((1 if i % 2 == 0 else -1) * (4096 + i % 32))
+                                   for i in range(1280)))
+
+
+def overwrite_manifest():
+    raw = overwrite_canary()
+    return dict(protocol=OVERWRITE_PROTOCOL, recipe="alternating-sign-4096-plus-index-mod32-f32le",
+                destination="data.qfrc_constraint", shape=[64, 20], dtype="<f4",
+                bytes=len(raw), sha256=sha256(raw).hexdigest(), target_calls=2,
+                reference_arm="historical-unchanged", control_arm="destination-only-canary",
+                qualification=dict(FLAGS))
+
+
 def compare_packets(before_raw, after_raw, packet_record):
     """Check full input-bank immutability and CPU float32 solver replay."""
     need(type(packet_record) is dict and set(packet_record) == {
@@ -550,6 +568,47 @@ def compare_packets(before_raw, after_raw, packet_record):
         "numerical_match": all(row["mismatches"] == 0 for row in world_rows),
         "numerical_acceptance": False,
     }
+
+
+def compare_overwrite_packets(reference_before, reference_after, reference_record,
+                              control_before, control_after, control_record):
+    """Fail closed on no-op/partial writes, tampering or non-discriminating canary."""
+    reference = compare_packets(reference_before, reference_after, reference_record)
+    control = compare_packets(control_before, control_after, control_record)
+    need(reference["numerical_match"] and control["numerical_match"],
+         "both arms match the independent float32 reference")
+    output_offset, output_size = _FIELD_LAYOUT["qfrc_constraint"][2:]
+    need(reference_before[:output_offset] == control_before[:output_offset]
+         == control_after[:output_offset] == reference_after[:output_offset],
+         "whole cross-arm input banks are byte-identical")
+    canary = overwrite_canary()
+    need(control_before[output_offset:] == canary and len(canary) == output_size,
+         "exact finite canary observed before target dispatch")
+    done_offset = _FIELD_LAYOUT["done"][2]
+    active = overwritten = done = 0
+    for world in range(64):
+        is_done = control_before[done_offset + world]
+        if is_done:
+            done += 1
+            continue  # compare_packets already requires bitwise done-row preservation.
+        active += 1
+        for dof in range(20):
+            index = world * 20 + dof
+            offset = output_offset + index * 4
+            value = _f32_at(canary, index)
+            # Both independent comparisons must pass, and the reference-arm
+            # result must be far outside the canary's tolerance neighborhood.
+            ref = _f32_at(reference_after[output_offset:], index)
+            need(abs(value - ref) > 16 * (ABS_TOLERANCE + REL_TOLERANCE * max(abs(value), abs(ref))),
+                 "every active canary component discriminates a no-op")
+            need(control_after[offset:offset + 4] != control_before[offset:offset + 4],
+                 "every active destination component overwritten")
+            overwritten += 1
+    need(active > 0 and overwritten == active * 20, "nonempty complete active overwrite coverage")
+    return dict(reference=reference, control=control, active_worlds=active, done_worlds=done,
+                overwritten_dofs=overwritten, cross_arm_inputs_identical=True,
+                exact_canary_before_target=True, no_op_discriminated=True,
+                qualification=dict(FLAGS))
 
 
 def _binding_check(executable, guard, files, artifact_bytes, native_root, device_record):
@@ -737,10 +796,12 @@ def receive(artifact_root, inventory, receipt_name="receipt.json"):
     receipt_raw = artifact_bytes[receipt_path]
     receipt = _json(receipt_raw, "receipt")
     need(_canonical(receipt) == receipt_raw, "receipt uses canonical JSON bytes")
+    overwrite = receipt.get("protocol") == OVERWRITE_PROBE_PROTOCOL
+    extra = {"overwrite_control"} if overwrite else set()
     need(set(receipt) == {
         "protocol", "source", "declaration_sha256", "owner_pid", "child_pid",
         "device", "native_root", "executable", "guard", "scratch", "files", "flags",
-    } and receipt["protocol"] == PROBE_PROTOCOL,
+    } | extra and receipt["protocol"] in (PROBE_PROTOCOL, OVERWRITE_PROBE_PROTOCOL),
          "exact dense solver replay receiver envelope")
     source = receipt["source"]
     need(type(source) is str and len(source) == 40
@@ -778,7 +839,7 @@ def receive(artifact_root, inventory, receipt_name="receipt.json"):
         "protocol", "source", "source_binding", "native_root", "owner_pid", "runtime",
         "service", "cpu_tests", "lease", "services", "baseline", "bounds",
         "deadline_unix", "replay_input", "exclusive_gpu_claimed", "flags",
-    } and declaration.get("protocol") == PROBE_PROTOCOL
+    } | extra and declaration.get("protocol") == receipt["protocol"]
          and declaration.get("source") == source and declaration.get("native_root") == native_root
          and declaration.get("owner_pid") == receipt["owner_pid"]
          and declaration.get("flags") == target_contract.FLAGS,
@@ -838,7 +899,7 @@ def receive(artifact_root, inventory, receipt_name="receipt.json"):
     pair = receipt["guard"].get("packets")
     comparison = compare_packets(artifact_bytes[files["packet_before"]],
                                  artifact_bytes[files["packet_after"]], pair)
-    return {
+    result = {
         "protocol": PROTOCOL,
         "decision": "authenticated-one-launch-numerical-replay-only",
         "artifact_count": len(artifact_bytes),
@@ -848,3 +909,47 @@ def receive(artifact_root, inventory, receipt_name="receipt.json"):
         "supervision": supervision,
         "qualification": dict(FLAGS),
     }
+    if overwrite:
+        need(declaration["overwrite_control"] == overwrite_manifest(), "exact declared overwrite control")
+        record = receipt["overwrite_control"]
+        need(type(record) is dict and set(record) == {"manifest", "guard", "scratch", "copy", "files"}
+             and record["manifest"] == declaration["overwrite_control"]
+             and record["scratch"] == receipt["scratch"], "same historical restoration in control arm")
+        control_files = record["files"]
+        need(type(control_files) is dict and set(control_files) == {"packet_before", "packet_after"}
+             and all(type(name) is str and name in artifact_bytes for name in control_files.values())
+             and len(set(control_files.values())) == 2
+             and not (set(control_files.values()) & set(files.values())), "distinct control packet roles")
+        control_guard = record["guard"]
+        need(type(control_guard) is dict
+             and all(control_guard.get(key) == receipt["guard"].get(key)
+                     for key in ("layouts", "stream_object_id", "stream_handle", "binding")),
+             "same control allocations, stream and explicit loaded binding")
+        _binding_check(receipt["executable"], control_guard, files | control_files,
+                       artifact_bytes, native_root, receipt["device"])
+        copy = record["copy"]
+        need(type(copy) is dict and set(copy) == {"bytes", "sha256", "source_object_id", "source_pointer",
+             "destination_object_id", "destination_pointer", "device_object_id", "stream_object_id",
+             "stream_handle", "dtype_object_id", "shape", "source_cpu_pinned", "synchronized", "flags"}
+             and copy["bytes"] == len(overwrite_canary())
+             and copy["sha256"] == sha256(overwrite_canary()).hexdigest()
+             and type(copy["source_object_id"]) is int and copy["source_object_id"] > 0
+             and type(copy["source_pointer"]) is int and copy["source_pointer"] > 0
+             and copy["destination_object_id"] == control_guard["layouts"][4]["object_id"]
+             and copy["destination_pointer"] == control_guard["layouts"][4]["pointer"]
+             and copy["source_pointer"] != copy["destination_pointer"]
+             and copy["dtype_object_id"] == control_guard["layouts"][4]["dtype_object_id"]
+             and copy["source_object_id"] not in {row["object_id"] for row in control_guard["layouts"]}
+             and copy["device_object_id"] == receipt["device"]["object_id"]
+             and copy["stream_object_id"] == control_guard["stream_object_id"]
+             and copy["stream_handle"] == control_guard["stream_handle"]
+             and copy["shape"] == [64, 20] and copy["source_cpu_pinned"] is True
+             and copy["synchronized"] is True and copy["flags"] == target_contract.FLAGS,
+             "held-stream finite canary copy bound to exact destination")
+        result["overwrite_control"] = compare_overwrite_packets(
+            artifact_bytes[files["packet_before"]], artifact_bytes[files["packet_after"]], pair,
+            artifact_bytes[control_files["packet_before"]], artifact_bytes[control_files["packet_after"]],
+            control_guard.get("packets"))
+        result["decision"] = "authenticated-two-arm-output-overwrite-diagnostic-only"
+        result["protocol"] = OVERWRITE_RECEIVER_PROTOCOL
+    return result

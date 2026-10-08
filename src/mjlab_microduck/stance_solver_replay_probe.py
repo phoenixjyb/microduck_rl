@@ -335,6 +335,54 @@ def prepare_symbol(solver):
     return dict(module_hash=digest.hex(), target_symbol=symbol, compiled=False, loaded=False, launched=False)
 
 
+def overwrite_mode(args):
+    from mjlab_microduck import stance_solver_replay_receiver as receiver
+    enabled = getattr(args, "output_overwrite_control", False)
+    need(type(enabled) is bool, "literal overwrite-control mode")
+    return receiver.OVERWRITE_PROBE_PROTOCOL if enabled else PROTOCOL
+
+
+def stage_output_canary(wp, data, device, stream, *, stage, copy, synchronize, guard):
+    """One held-stream destination-only copy; GPU readback belongs to capture."""
+    from mjlab_microduck.stance_solver_replay_receiver import overwrite_canary
+    raw = overwrite_canary()
+    destination = data.qfrc_constraint
+    held_numpy = wp.array.numpy
+    held_numpy_code = held_numpy.__code__
+    guard()
+    source = stage("data.qfrc_constraint", raw, (64, 20), (64, 20), "<f4", "float32")
+
+    def check():
+        guard()
+        need(data.qfrc_constraint is destination and type(source) is wp.array
+             and tuple(source.shape) == tuple(destination.shape) == (64, 20)
+             and source.dtype is destination.dtype is wp.float32
+             and destination.device is device and stream.device is device
+             and source.device.is_cpu is True and source.device.is_cuda is False
+             and source.pinned is True and source.requires_grad is False
+             and source.is_contiguous is True and destination.is_contiguous is True
+             and destination.requires_grad is False
+             and type(source.ptr) is int and source.ptr > 0
+             and type(destination.ptr) is int and destination.ptr > 0
+             and source.ptr != destination.ptr
+             and wp.array.numpy is held_numpy and held_numpy.__code__ is held_numpy_code,
+             "literal owned pinned canary staging and exact destination")
+        host = held_numpy(source)
+        need(tuple(host.shape) == (64, 20) and host.dtype.str == "<f4"
+             and host.flags.c_contiguous is True and host.nbytes == len(raw)
+             and host.tobytes(order="C") == raw, "whole finite CPU canary staging bytes")
+    check()
+    copy(destination, source, stream=stream)
+    check()
+    synchronize(stream)
+    check()
+    return dict(bytes=len(raw), sha256=sha256(raw).hexdigest(), source_object_id=id(source),
+        source_pointer=source.ptr, destination_object_id=id(destination), destination_pointer=destination.ptr,
+        device_object_id=id(device), stream_object_id=id(stream), stream_handle=stream.cuda_stream,
+        dtype_object_id=id(destination.dtype), shape=[64, 20], source_cpu_pinned=True,
+        synchronized=True, flags=FLAGS)
+
+
 def child(args):
     # No GPU import is reachable before declaration, source/runtime, lease,
     # unit, input and private-cache authentication completes.
@@ -345,7 +393,8 @@ def child(args):
     need(sha256(declaration_raw).hexdigest() == args.declaration_sha256,
          "whole owner declaration bytes")
     declaration = read_json(root / "declaration.json")
-    need(declaration["protocol"] == PROTOCOL and declaration["source"] == args.source
+    protocol = overwrite_mode(args)
+    need(declaration["protocol"] == protocol and declaration["source"] == args.source
          and declaration["owner_pid"] == args.owner_pid and declaration["native_root"] == str(root)
          and declaration["flags"] == FLAGS and declaration["bounds"] == BOUNDS
          and declaration["replay_input"] == INPUT, "exact owner replay declaration")
@@ -358,6 +407,9 @@ def child(args):
     need(shared.lease_identity(args.lease_fd) == declaration["lease"], "same inherited lease")
     fcntl.flock(args.lease_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     packet = historical_packet()
+    if protocol != PROTOCOL:
+        from mjlab_microduck.stance_solver_replay_receiver import overwrite_manifest
+        need(declaration.get("overwrite_control") == overwrite_manifest(), "exact declared overwrite control")
     for key, name in (("WARP_CACHE_PATH", "warp-cache"), ("CUDA_CACHE_PATH", "cuda-cache"),
                       ("XDG_CACHE_HOME", "xdg-cache"), ("TORCH_EXTENSIONS_DIR", "torch-cache")):
         path = root / name
@@ -434,7 +486,7 @@ def child(args):
         observer.run(capture=capture)
         frozen.write(root / "packet-before.bin", capture.raw("before"))
         frozen.write(root / "packet-after.bin", capture.raw("after"))
-        receipt = dict(protocol=PROTOCOL, source=args.source, native_root=str(root),
+        receipt = dict(protocol=protocol, source=args.source, native_root=str(root),
             declaration_sha256=args.declaration_sha256, owner_pid=args.owner_pid, child_pid=os.getpid(),
             device=dict(alias=str(device), arch=device.arch, context=device.context,
                         object_id=id(device), gpu_uuid=device.uuid),
@@ -443,6 +495,23 @@ def child(args):
                        metadata=str(prepared.meta_path.relative_to(root)),
                        generated_source=str(prepared.source_path.relative_to(root)), sass="target.sass",
                        packet_before="packet-before.bin", packet_after="packet-after.bin"), flags=FLAGS)
+        if protocol != PROTOCOL:
+            # Restore the reference boundary in full, then alter only the
+            # destination. Never modify installed code or the retained bank.
+            control_restored = scratch.DenseSolverScratchRestorer(packet, arrays, device=device, stream=stream,
+                stage=stage, copy=held_copy, synchronize=held_sync, guard=guard)
+            control_restored.restore()
+            copied = stage_output_canary(wp, data, device, stream, stage=stage,
+                                        copy=held_copy, synchronize=held_sync, guard=guard)
+            control_observer = DenseSolverDispatchGuard(solver=solver, wp=wp, runtime=warp_context.runtime,
+                binding=binding, model=model, data=data, context=context, stream=stream)
+            control_capture = DenseSolverPacketCapture(wp=wp, data=data, context=context, stream=stream)
+            control_observer.run(capture=control_capture)
+            frozen.write(root / "control-packet-before.bin", control_capture.raw("before"))
+            frozen.write(root / "control-packet-after.bin", control_capture.raw("after"))
+            receipt["overwrite_control"] = dict(manifest=declaration["overwrite_control"], copy=copied,
+                guard=control_observer.record(), scratch=control_restored.receipt(),
+                files=dict(packet_before="control-packet-before.bin", packet_after="control-packet-after.bin"))
     need(runtime_binding() == declaration["runtime"] and source_binding(args.source) == declaration["source_binding"]
          and shared.lease_identity(args.lease_fd) == declaration["lease"], "same complete runtime source and lease after replay")
     frozen.write(root / "receipt.json", receipt)
@@ -465,16 +534,22 @@ def owner(args):
         services = shared.service_snapshot()
         baseline = shared.capacity(shared.telemetry())
         root.mkdir(mode=0o700)
-        declaration = dict(protocol=PROTOCOL, source=args.source, source_binding=source,
+        protocol = overwrite_mode(args)
+        declaration = dict(protocol=protocol, source=args.source, source_binding=source,
                            native_root=str(root), owner_pid=os.getpid(), runtime=runtime, service=service,
                            cpu_tests=tests, lease=lease, services=services, baseline=baseline,
                            bounds=BOUNDS, deadline_unix=args.deadline, replay_input=INPUT,
                            exclusive_gpu_claimed=False, flags=FLAGS)
+        if protocol != PROTOCOL:
+            from mjlab_microduck.stance_solver_replay_receiver import overwrite_manifest
+            declaration["overwrite_control"] = overwrite_manifest()
         frozen.write(root / "declaration.json", declaration)
         env = child_env(root)
         argv = (sys.executable, "-m", "mjlab_microduck.stance_solver_replay_probe", "--child",
                 "--source", args.source, "--deadline", str(args.deadline), "--owner-pid", str(os.getpid()),
                 "--lease-fd", str(fd), "--declaration-sha256", sha256(canonical(declaration)).hexdigest())
+        if protocol != PROTOCOL:
+            argv += ("--output-overwrite-control",)
 
         def probe():
             shared.READ_DEADLINE = time.monotonic() + BOUNDS["probe_seconds"] - 1
@@ -515,6 +590,7 @@ def main():
     parser.add_argument("--owner-pid", type=int)
     parser.add_argument("--lease-fd", type=int)
     parser.add_argument("--declaration-sha256")
+    parser.add_argument("--output-overwrite-control", action="store_true")
     args = parser.parse_args()
     if args.child:
         child(args)

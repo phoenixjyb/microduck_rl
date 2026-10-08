@@ -1,6 +1,6 @@
 # Retained solver binary scope, 2026-10-08
 
-Status: bounded CPU verifier; committed replay and outcome pending.
+Status: same-source Mac/WSL CPU replay complete; solver binary binding missing.
 Base `a0455e2b27584cbec7850b5ed19a3d67dbfe13b1`, exact feature branch
 `feat/athletics-obstacle-curriculum`; three new paths only: this note,
 `stance_solver_binary_scope.py` and its tests. No historical fence is expanded.
@@ -68,3 +68,66 @@ Independent worker review and primary-source web lookup could not start because
 their backend returned HTTP 403. No review pass is claimed. Installed source,
 whole retained artifacts, owner review and executable tests are the evidence
 used here; a separate review remains required before a new native protocol.
+
+## Same-source retained outcome
+
+Executed source `648037059318690ea7ee91f8d8c0ac114c8b8523` on both hosts,
+CUDA hidden, numerical thread settings all one. Each passed **78 checks**
+(64 new scope/parser/refusal tests plus 14 historical receiver tests), with
+zero failures, errors or skips. Each authenticated all 480 original leaves
+and reproduced the whole historical receiver before this scope audit.
+
+Reports are byte-identical: 199,173 bytes, SHA256
+`dbaf327295892a8f40b71c6c354eefe234ffe4c786a1a1e5b4558925ab9b9f09`.
+All nine retained compiled leaves agree with the historical inventory and
+loaded-input records. Metadata, generated source and defined ELF forward
+symbols agree exactly across all roles:
+
+| Historical role | ELF sections | Defined functions including helpers | Forward entrypoints | Bound solver target |
+| --- | ---: | ---: | ---: | --- |
+| Original friction/constraint module | 106 | 41 | 10 | no |
+| Candidate ascending friction | 34 | 4 | 1 | no |
+| Contact init | 34 | 2 | 1 | no |
+| Total | — | **47** | **12** | **no** |
+
+Decision **`missing-retained-solver-binary-binding`**. The target is absent
+from all three retained explicit roles. This does not assert its absence from
+the GPU context: the historical simulator did run the solver, but these files
+do not bind that solver module's loaded input artifact or instructions. The
+recorded `fuse_fp=true` and fresh-cache claims belong to the three roles above,
+not to the dense solver kernel. No instructions were disassembled, no GPU
+stack initialized, and every qualification/training/physical flag stays false.
+
+### CPU owners and transfer verification
+
+Mac owner elapsed 6.263159 s. WSL user unit
+`microduck-solver-binary-scope-cpu-648037059318.service`, invocation
+`6b18aa473c3c4604bd7a0a84622467db`, owner PID 4183235, finished with status
+zero and MainPID zero at 12:46:37 Asia/Shanghai (start 12:46:27); owner elapsed
+8.450259753 s. WSL enforced 240 s, 100% CPU, 6 GiB memory, 64 tasks and
+16 MiB/file ceilings; these are not measured peaks.
+
+| Whole proof | Bytes | SHA256 |
+| --- | ---: | --- |
+| Mac | 1,048 | `70b7569a0dfc853bbbf17b61a1d65c881c16530aee6c90b2396ac44a5ffd96be` |
+| WSL | 1,082 | `1a86f915aec3fe1b56f80cb3364ba492088f97e831c6cea63a7bbbc40053406c` |
+
+Each anchored proof binds exactly four leaves (JUnit, pytest log, replay stderr
+and report). Both hosts reauthenticated both proofs and each leaf after mutual
+transfer, including canonical serialization and whole-report equality. Original
+directories are `artifacts/tools/solver-binary-scope-cpu-648037059318` on their
+respective hosts; cross copies are `solver-binary-scope-native-648037059318`
+on Mac and `solver-binary-scope-mac-648037059318` on WSL. Original raw capture
+bytes were reused; no second raw archive was created.
+
+FilmBrain stayed active at PIDs 521 and 298048. Protected AI-mission services
+stayed inactive in both user and system scopes. The frozen `.venv` alias and
+package versions were unchanged. GPU memory was already occupied by other
+consumers (6,748 MiB at initial inspection, 6,021 MiB at closeout); no Duck CUDA
+job was started, no existing workload was stopped, and no idle-GPU claim is made.
+
+The read-only tool check found no `cuobjdump` or `nvdisasm` on PATH or at the
+eight checked `/usr/bin` and CUDA `/usr/local` bin paths (default, 12.9, 13.2).
+This is not an exhaustive installation inventory. No tooling was installed.
+Resolve a byte-pinned inspection tool as part of the separately reviewed native
+declaration; do not substitute unrelated binaries or guessed instructions.

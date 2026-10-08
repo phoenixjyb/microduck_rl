@@ -1,6 +1,7 @@
 # Initialized solver row side view, 2026-10-08
 
-Status: CPU-only implementation and review; retained numerical view pending.
+Status: CPU-only view completed on Mac and native at the same committed source;
+initialized row-local fields match, while aggregate buffers differ.
 No GPU job, learner update or new physics capture is authorized by this checker.
 
 ## Scope and evidence boundary
@@ -83,4 +84,105 @@ the owner reviewed its findings and diff. A combined-short-option review concern
 was disproved by a live recursive 918-blob Git-tree check; explicit flags and a
 nested-file fixture now make that contract clearer.
 
-Committed-source Mac/native replay and exact outcome hashes remain pending.
+Executed analysis source on both hosts:
+`e1f6b96189da4b2e1dffc9f22269a9c9d6fe8864`. This outcome document is a later
+documentation-only closeout, not the source used to execute the checker.
+The final precommit combined suite passed 48 tests in 21.27 s. Same-source CPU
+owners again passed 48 tests per host, zero failures/errors/skips, then each
+authenticated all raw leaves and recomputed the complete historical receiver.
+The old complete 3206-test suites were not rerun: this is an additive pure side
+view, with no GPU launch or change to the already executed owners/receivers.
+
+Native retained service: `microduck-initialized-row-view-cpu-e1f6b96189da.service`,
+invocation `7958b595c2f74a37857e89c0dc16be6c`, owner PID 4140306. Journal span
+**2026-10-08 09:58:22–09:58:32 Asia/Shanghai**. Terminal: `MainPID=0`,
+`Result=success`, `ExecMainStatus=0`, `SubState=exited`. CPU owner budget 420 s,
+test child 90 s, replay child 300 s, memory ceiling 6 GiB, CPU 200%, tasks 64,
+nice 10, restart no, control-group kill; CUDA hidden and all four numerical
+thread environment settings one. Observed owner spans: Mac 34.239538 s,
+native 8.840212 s. No GPU workload was started.
+
+Local native cgroup `MemoryPeak` was reported as **not set** after exit; do not
+claim a measured peak. The enforced memory ceiling is a separate fact.
+
+Retained directories, relative to each exact worktree:
+
+- Each host's own original: `artifacts/tools/initialized-row-view-cpu-e1f6b96189da`.
+- Native proof copied to Mac: `artifacts/tools/initialized-row-view-native-e1f6b96189da`.
+- Mac proof copied to native: `artifacts/tools/initialized-row-view-mac-e1f6b96189da`.
+
+Each directory retains the canonical report, whole-anchoring proof, pytest log,
+JUnit and replay stderr. Reports are **byte-identical** across hosts. Whole
+proofs and their exact leaf sets were authenticated after transfer.
+
+| Whole artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| Mac/native `report.json` | 185,413 | `6ba82c0c066df014ddff8f7bb7b8c2c5c5af648e6a1ee3233196d0e88c85aa92` |
+| Mac `proof.json` | 1,038 | `271cb6923a690ecd00a542832b4e62eca9a86112e2d81ae6a04f2be58ee8ee41` |
+| Native `proof.json` | 1,072 | `f6559bca741d54f9d0538b04d59d4bb141bdc48a2e77aee3c46441ce9711f91b` |
+
+## Retained numerical result
+
+The initialized view independently reconstructs **complete active storage-row
+coverage: 2944/2944 in each arm**, zero uncovered rows, zero ambiguous/unmatched/
+unobserved payload-link groups and no excluded done worlds.
+
+| Active initialized field | Contact words | Noncontact words | Different words |
+| --- | ---: | ---: | ---: |
+| `context.Jaref` | 2,048 | 896 | 0 |
+| `efc.force` | 2,048 | 896 | 0 |
+| `efc.state` | 2,048 | 896 | 0 |
+
+These 8,832 comparisons use the separately retained **original** row offsets;
+literal row banks still have different order. At original world/DOF offsets,
+`efc.Ma`, qM, positions/velocities, acceleration/warm-start/smooth buffers,
+smooth force, `context.gauss` and `context.prev_cost` all match. Aggregate
+differences remain: constraint force **477/1280** words, cost **52/64**, gradient
+**477/1280**, gradient norm **52/64**, preconditioned gradient **1234/1280** and
+hessian **4645/25600**. Whole direct-carrier equality/difference is not a claim
+about fresh writes to every padding word.
+
+Interpretation: the prior raw initialized force-bank mismatch is **not** a
+paired active force mismatch in this capture. The initialized row-local subset
+matches; some aggregates do not. This narrows the proposed investigation but
+does not prove a CUDA cause, full solver-driver equivalence or physical contact
+identity. Uncaptured parameters and instrumentation effects remain excluded
+from such claims. The one-tick repetition gate is still negative and all five
+qualification/training/physical flags remain false.
+
+## Next bounded step: accumulation-order sensitivity
+
+The earlier broad pre/post-constraint capture was a proposal, not launched.
+This retained outcome supports trying a **CPU-only arithmetic side view first**.
+Frozen source facts: dense constraint-force computation visits active rows in
+storage order (`solver.py` 1988–2010); constraint cost uses atomic additions;
+dense hessian computation uses a tiled reduction (`2923–2968`). The two arms
+have different stored contact-row order. Sensitivity of finite-precision
+accumulation to those orders is therefore a **hypothesis**, not a proven runtime
+cause. No solver input may be sorted or rewritten on that inference.
+
+Smallest proposed arithmetic experiment:
+
+1. Authenticate the same complete capture and source again. Use only active
+   captured dense J / initialized force terms, existing row links and original
+   world/DOF offsets; reject nonfinite inputs rather than replace them.
+2. Predeclare explicit round-to-nearest-even binary32 arithmetic hypotheses,
+   including separate multiply/add versus fused multiply-add. Preserve signed
+   zero and subnormal behavior; host NumPy output alone is not a compiled-GPU
+   arithmetic oracle. Compare exact model bits with observed constraint force.
+3. In a separate **analysis-only** view, compare corresponding term sets under
+   the two recorded storage orders and a shared linked-row order. Never restore,
+   normalize, canonicalize or mutate simulation state. Declare exactly which
+   order and arithmetic model each result uses.
+4. Report match counts, first differing words, nonfinite/exclusion coverage and
+   hypotheses not reproduced. Even an exact modeled reproduction demonstrates
+   consistency/sensitivity, not the actual compiler's instructions, atomic
+   schedule, causal mechanism or training qualification. Cost and tiled hessian
+   require their own protocols; do not infer them from the serial force model.
+
+This arithmetic experiment is predeclared here at design level, **not implemented
+or executed yet**. It may remove the need for another broad GPU snapshot. If its
+coverage is insufficient, return to compact passive phase bracketing with a
+fully specified budget. Do not start a long learner or promote a skill from this
+diagnostic. No physical duck is present and no motion, perception training or
+video was authorized or run.

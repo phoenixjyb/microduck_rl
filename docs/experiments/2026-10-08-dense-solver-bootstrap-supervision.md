@@ -101,7 +101,44 @@ Review also caught a pre-exit inventory race and stale timeout timestamps.
 Unreaped-root final scans, post-inventory clock checks and actual probe-completion
 timestamps now guard success. Attach failure uses the held root handle and
 explicitly requires the cgroup backstop for uninspected descendants.
-Integration and native closeout evidence will be recorded after verification.
+The final nine-file integration scope passed **334 tests**, zero failures,
+errors or skips, on both macOS (12.27 seconds) and WSL (12.50 seconds). This is
+not a full repository suite or a CUDA solver execution. Executed committed source:
+`4cac2f2a8d6057cc5e61341d4620caed423ffc68`, pushed to the fork and independently
+verified as its exact feature-branch tip at the time of source delivery.
+
+Mac evidence: `artifacts/tools/dense-solver-bootstrap-mac-oct8/delivery-integration.xml`
+(318,413 bytes, SHA256
+`57979f89e67aada1f7385ad0c2d6226e5c7174e56fe61f44f1366d42508455d0`).
+WSL evidence: `artifacts/tools/dense-solver-bootstrap-native-4cac2f2a8d60/junit.xml`
+(318,417 bytes, SHA256
+`e8d1967e553eaaacb35a10bc9719d42e0cf51e0c3e0d24696bb1c4303a50faeb`).
+Closeout JSON: 2,272 bytes, SHA256
+`f8aade7591057b7e3a50d5a83a7466a08d8561d817f896be8a8fbf2cf3296a3b`.
+All indexed native closeout artifacts were copied to Mac and independently
+authenticated against the complete closeout hash and leaf inventory.
+
+Native user unit: `microduck-solver-bootstrap-prep-cpu-4cac2f2a8d60.service`,
+invocation `a66ad1a6bd264dadb57847ad112c42ad`, exit 0, success, MainPID 0,
+no restarts, retained active/exited, and empty ControlGroup after completion.
+CPU-only environment, 2 GiB memory, CPU 100%, Nice 10, 64 tasks, 8 MiB per-file
+cap, KillMode control-group, no restart. The effective outer deadline was
+**TimeoutStartSec=120**, with the runner's pytest timeout 105 seconds.
+The journal explicitly notes that RuntimeMaxSec is ignored for Type=oneshot;
+the recorded RuntimeMaxSec property is not presented as an effective deadline.
+
+At closeout, all Duck user-service MainPIDs were zero. FilmBrain observatory
+remained PID 521 and video-playground PID 298048, both active with no restarts.
+The two protected AI mission services remained inactive at user and system scope.
+The installed solver retained its whole-file SHA256
+`bba0c67182ade84f5375d6a066048e111edd3371b33d46a6f1246349f22bb30a`.
+No installed source, dependency or driver change was performed in this chunk.
+
+2026-10-08 17:49:58 Shanghai closeout samples (not simultaneous): Windows
+32 C, WSL 31 C, both driver utilization 0%, 8,022 MiB used and 16,140 MiB free.
+Windows also had an active 3D engine counter at 10%; this is not a declaration
+that Windows or the shared GPU was idle. A later GPU diagnostic must obtain
+fresh occupancy and lease evidence rather than reusing these samples.
 
 ## Next gate
 

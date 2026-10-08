@@ -1,7 +1,7 @@
 # Dense solver probe preparation, October 8
 
-Status: existing inspection tools resolved; CPU-tested dispatch/disassembly
-guards prepared. **The capped native collector is not yet assembled or run.**
+Status: existing inspection tools resolved; dispatch/disassembly guards verified
+on Mac and frozen WSL. **The capped native collector is not yet assembled or run.**
 No historical source fence, solver, row order, numerical tolerance or training
 gate is changed. The prior numerical rejection remains in force.
 
@@ -97,8 +97,8 @@ scope, static target, unchanged artifact binding, and historical ELF scope.
 The dispatch fixtures execute real frozen Python function code with synthetic
 device/buffer/launch objects; **they are not GPU evidence**. Disassembly tests
 use synthetic ELF/text bytes. Independent read-only review prompted additional
-wrapper-boundary and exception/restoration tests. Same-source WSL checks are
-the next delivery step; a full repository suite has not been run.
+wrapper-boundary and exception/restoration tests. A full repository suite has
+not been run.
 
 The first same-source native CPU service at `1cbd8823f446` reached the end of
 the test list but **failed** during JUnit serialization: pytest raised
@@ -111,6 +111,50 @@ The repair assigns three short explicit IDs to that parametrization only.
 The actual oversized input, refusal assertions, parser caps and native service
 limits are unchanged. A fresh source-specific CPU service must pass with the
 same cap; the failed service and its original artifacts remain retained.
+
+### Same-source capped CPU closeout
+
+Repair source: `d419327870f91cca2e19243534219d09d6e78b1c`, pushed to the
+exact fork feature branch and installed on clean WSL by verified fast-forward
+bundle. The native service
+`microduck-solver-dispatch-prep-cpu-d419327870f9.service`, invocation
+`ab245e3d54874be4ada953d0ce090f6f`, succeeded with exit 0, MainPID 0 and no
+restarts: **210 passed in 2.71 s**, zero failures/errors/skips in complete XML.
+Its original limits remained 90 s, 2 GiB memory, 100% CPU quota, Nice 10,
+64 tasks and 8 MiB per file. The same committed source passed **210 checks in
+87.93 s on Mac**, also with complete bounded XML and zero failures/errors/skips.
+Timing differences are not performance evidence for the simulator.
+
+| Retained artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| Native `junit.xml` | 296,895 | `0bc1ac59a9f650b30277f08ad1b4809f3e647a20975c9a7c512fefc9d22c7cc6` |
+| Mac `junit.xml` | 296,892 | `cae4c495e22f3b60b70300b0d8f4eeb24d6142ba7304795e3aad2656e425d8a7` |
+| Native format replay | 898 | `5dca3e83332907497e7f60c47d68e0a61f76535fdaa5a375ba987ab38ce0951e` |
+
+Directories are `artifacts/tools/solver-dispatch-prep-native-d419327870f9`
+and `artifacts/tools/solver-dispatch-prep-mac-d419327870f9`. The complete native
+`closeout.json` has SHA256
+`7c247a5fc8d4c005bd9ba45845857afa7ce08308da3486c30e5a67a59e92fc89`;
+it binds the frozen source/environment, test files' reports, retained service
+journal/state and unchanged tool executable hashes. Its authenticated copy
+and every indexed artifact were checked on Mac. The Mac/native format replay
+bytes match exactly and still say **not solver evidence**.
+
+The failed `1cbd8823f446` service remains failed, not reset. Its truncated XML
+SHA256 is `295c328603d0eb09c2b5570ad67782cb5a0cd2eed37034ea407b97cdcd3c48ca`.
+Retained full journal SHA256 is
+`cbd09900dd26c566a14e7cfb3c8a7ec283d187f40b0e06700658fde80c5d50b6`;
+failed service-state SHA256 is
+`a566848011a9eec2c3539ce537825c212bbf6e1d187fb352230b30311e81fc79`.
+These stay separate from the successful new-source evidence.
+
+Native closeout found every Duck user-service MainPID zero. FilmBrain
+observatory and video playground stayed active with original PIDs 521/298048
+and zero restarts; protected AI services stayed inactive in user/system scopes.
+The Linux GPU snapshot then read **31 C, 0% utilization, 6,432 MiB used /
+17,730 MiB free**. This snapshot is not an idle lease, Windows ownership
+attribution or a GPU admission: no Duck GPU process was started by these checks.
+The unchanged native collector and numerical acceptance gates remain below.
 
 At the turn's initial live check, WSL reported **73 C, 78% utilization,
 7,293 MiB used / 16,869 MiB free**. No Duck CUDA child was started. The next

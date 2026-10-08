@@ -8,11 +8,12 @@ from hashlib import sha256
 import inspect
 from pathlib import Path
 import sys
-from threading import Lock
+from threading import Lock, get_ident
 from types import CodeType
 
 from mjlab_microduck import stance_cuda_artifact_binding as artifacts
 from mjlab_microduck import stance_solver_target_binding as static
+from mjlab_microduck.stance_solver_packets import DenseSolverPacketCapture
 
 PROTOCOL = "microduck-dense-solver-dispatch-guard-oct8-v1"
 _HOOK_LOCK = Lock()
@@ -55,6 +56,8 @@ class DenseSolverDispatchGuard:
         self.stream_handle = stream.cuda_stream
         self.active = self.used = self.completed = False
         self.calls = 0
+        self.capture = None
+        self.owner_thread = get_ident()
         self.layouts = self._layouts()
         self._guard()
 
@@ -81,6 +84,7 @@ class DenseSolverDispatchGuard:
         return tuple(result)
 
     def _guard(self):
+        need(get_ident() == self.owner_thread, "same owned dispatch thread")
         b, s, wp = self.binding, self.solver, self.wp
         b.assert_unchanged()
         need(sha256(self.path.read_bytes()).hexdigest() == static.SOLVER_SHA256,
@@ -108,6 +112,9 @@ class DenseSolverDispatchGuard:
              and self.stream.device is b.device and type(self.stream.cuda_stream) is int
              and self.stream.cuda_stream == self.stream_handle > 0, "eager sm120 stream without tape")
         need(self._layouts() == self.layouts, "same target buffer identities and pointers")
+        if self.capture is not None:
+            need(type(self.capture) is DenseSolverPacketCapture, "exact packet capture class")
+            self.capture._assert_bound(self)
 
     def _launch(self, *args, **kwargs):
         self._guard()
@@ -143,16 +150,29 @@ class DenseSolverDispatchGuard:
                  and type(call["block_dim"]) is int and call["block_dim"] == 256,
                  "unchanged eager forward launch defaults")
             self.calls += 1
+            if self.capture is not None:
+                self.capture._snapshot("before")
+                self._guard()
         result = self.original(*args, **kwargs)
         self._guard()
+        if call["kernel"] is self.kernel and self.capture is not None:
+            # Capture before returning to the caller's subsequent Gauss launch.
+            self.capture._snapshot("after")
+            self._guard()
         return result
 
-    def run(self):
+    def run(self, *, capture=None):
         need(not self.used and not self.active, "one-shot observer")
+        need(capture is None or type(capture) is DenseSolverPacketCapture,
+             "exact optional packet capture class")
         need(_HOOK_LOCK.acquire(blocking=False), "exclusive owned launch hook")
         self.used = True
         try:
             self._guard()
+            if capture is not None:
+                capture._attach(self)
+                self.capture = capture
+                self._guard()
             self.wp.launch = self.wrapper
             self.active = True
             self.caller(self.model, self.data, self.context)
@@ -168,12 +188,15 @@ class DenseSolverDispatchGuard:
             _HOOK_LOCK.release()
             if foreign:
                 self.completed = False
+            if capture is not None and capture.guard is self:
+                capture._finish(self.completed)
+            if foreign:
                 raise ValueError("foreign launch hook preserved, no successful receipt")
 
     def record(self):
         need(self.completed and not self.active and self.calls == 1, "completed one-shot dispatch")
         self._guard()
-        return dict(protocol=PROTOCOL, decision="dense-solver-dispatch-guard-complete-not-qualification",
+        result = dict(protocol=PROTOCOL, decision="dense-solver-dispatch-guard-complete-not-qualification",
                     observed_target_calls=self.calls, caller="_update_constraint",
                     dispatch_line=self.source["dispatch"]["dispatch_line"],
                     dimensions=[64, 20], input_order=self.source["dispatch"]["inputs"],
@@ -183,3 +206,6 @@ class DenseSolverDispatchGuard:
                     stream_object_id=id(self.stream), stream_handle=self.stream.cuda_stream,
                     binding=self.binding.record(), flags=dict(static.FLAGS),
                     numerical_acceptance=False, driver_loaded_code_observed=False)
+        if self.capture is not None:
+            result["packets"] = self.capture.record()
+        return result

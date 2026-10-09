@@ -110,3 +110,31 @@ Independent read-only final review passed129/129 focused tests in0.23s using the
 existing virtualenv with CUDA hidden, and found no blocking geometry/state/config
 issue. It confirmed that the timeout lower bound is optimistic route arithmetic,
 not a guarantee of feasibility under actual command slew or robot dynamics.
+
+### Exact-source CPU delivery
+
+Source `a93cfa4716ed40e0a11fbd581bc7617faacf04cb` was pushed to the fork
+feature branch and fast-forwarded into the clean native100.100 worktree.
+The source bundle SHA256 is
+`211e26d8d4aa5bfc68914384d55f40bf53954f472aba23413546619a11592acc`.
+Committed-source Mac/native regressions passed300 tests in6.72s/5.39s. All300
+ordered JUnit identities match with zero failures/errors/skips. Retained files
+under `artifacts/tools/corner-navigation/` on both machines:
+
+- `a93cfa47-mac-tests.xml`,1090371B, SHA256
+  `f7c4980387042e8da10541cee8a09f514ff6731d05c60c175c43e820e6bedee3`;
+- `a93cfa47-linux-tests.xml`,1090377B, SHA256
+  `f22604658409076b3220d6eec5c1c3ecaa357084977467cb0028eb0f812bdc88`;
+- `a93cfa47-terminal-evidence.json`,8001B, SHA256
+  `98c4a119b642defff111dff478f8eb5578c0012c7bc88e5d3fca014f86fbab5f`.
+
+The CPU-only `microduck-corner-contracts-a93cfa47.service` finished exit0,
+PID0/empty cgroup, elapsed6.878578s, invocation
+`4da8a0af5e694ff0b396e22ae02a8245`. Its terminal transcript and exact unit
+definition retain the six-file argv, CUDA-hidden/thread1 environment and
+60s/2GiB/CPU200%/Tasks64 resource caps. Owner validation checked those fields
+and exact argv using the previously hash-bound quoted-unit parser, not a lossy
+space-split rendering. Grounding DINO1592/946MiB remained the sole GPU process;
+all four protected AI Mission system/user scopes stayed inactive, and the
+post-run lease file was observed empty. No GPU workload, policy update, robot physics
+rollout or new skill acceptance was performed by this delivery.

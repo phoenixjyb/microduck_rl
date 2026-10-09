@@ -779,3 +779,120 @@ Decision is fixed to
 All solver, simulator, training, compiled-binary and physical qualification flags
 remain false regardless of arithmetic residual size. A subsequent physics
 control would need its own evidence-backed, tested predeclaration.
+
+## Retained measured constraint-input arithmetic result
+
+Executed clean committed source bd2815fb0d99640c531fa4a28be2919ea4b8961f after
+fork push and hash-verified native fast-forward. Both committed-source suites
+passed753 cases, no failure/error/skip, identical complete testcase multisets;
+the sole actual-physics test was explicitly deselected (Mac24.64s, native5.82s).
+The first native launch used the erroneous single token `not_actual_duck...`
+instead of the intended pytest expression `not actual_duck...`: it selected no
+tests, deselected all754, exited5, and ran no physics. Read-only journal/XML
+diagnosis preceded retry. Its failed service/243B zero-case XML remain retained,
+not reset/restarted/overwritten or counted as a successful suite. Corrected
+retry used a separate `microduck-ada-response-contracts-bd2815fb-r1.service`
+and fresh XML under the unchanged60s/2G CPU contract caps.
+
+Failed-selector invocation7f5165f3608447a1be1dc98829475a2b elapsed0.456349s;
+successful retry invocation066d0d19064d4243863fbadd2475521b elapsed6.387348s,
+exit0/MainPID0/empty group. The separate selection-bound receipt pins both
+terminal receipts and immutable helper bytes, checks exact full eleven-file
+argv, binds native XML hashes to local copies, and verifies the negative
+754-deselected summary versus the positive753-pass/1-deselect summary and full
+Mac testcase inventory. Independent review requested this stronger binding;
+an exit5/partial-command check alone would not prove the selection diagnosis.
+The arithmetic packet itself does not depend on the failed selection attempt.
+
+Then `microduck-ada-constraint-input-bd2815fb.service`, invocation
+8f0035c5fcd64e6d88fce8106d064e95, finished in **1.271054s**, successful exit0/
+MainPID0/empty control group under90s/6G and the exact five-entry hidden-CUDA,
+single-thread environment. This service performed pure packet/source arithmetic
+only. No physics/runtime/device allocation, collision, constraint construction,
+solver, integration or optimizer call was made. Native terminal occupancy was
+961MiB used/15232MiB free,44C/0%; sole foreign Dino PID1592 stayed at946MiB and
+both protected services stayed inactive in user and system scopes. No advisory
+GPU lease change was needed.
+
+Both96,096B output JSONs are **byte identical**. Fresh-process full reception
+passed independently on Mac and native; Warp/Torch/MuJoCo/MuJoCo-Warp remained
+absent from imported modules. All347 numeric Model bindings, the new complete
+five-by114 Data bank,32 own-address contact recipes, four native and four GPU
+aggregate bins, full result leaves, numeric headers/RECORD and source audit
+recomputed. Independent Luna re-received both packets and checked the separate
+selection receipt/local XMLs, finding no remaining scoped blocker. That review
+did not run SSH/services; actual native terminal/remote XML binding is the
+owner's separate read-only evidence.
+
+| Complete captured GPU contact-row parameter | Maximum absolute float64 recipe minus captured FP32 |
+| --- | ---: |
+| D | 1.2963849310709818e-7 |
+| aref | 3.127977976635776e-8 |
+| vel | 0 |
+| pos | 0 |
+| margin | 0 |
+| frictionloss | 0 |
+
+These are source-arithmetic residuals, not a tolerance gate or compiled-kernel
+identity proof. Every captured value and residual remains in the packet. The
+closed positive-ref/power2 recipe reproduces the new measured contact-row inputs
+closely under the predeclared widened-arithmetic convention; it does not
+reconstruct the missing native contact scalar parameters or contact Jacobian.
+
+Selected entries of the full, unmasked aggregate nominal proxy differences:
+
+| Ordered world1 floor/foot bin | Native/GPU original row counts | GPU minus native H[2,2] | GPU minus native h[2] |
+| --- | ---: | ---: | ---: |
+| geom0/29 | 8/16 | 3.0183082526704785 | -0.1808022540619001 |
+| geom0/79 | 8/16 | 3.018975883554497 | -0.18073954588214802 |
+
+Both world-specific motor-friction bins have14/14 rows and zero differences
+at these selected base-z entries. Full20x20 matrices,20-component vectors,
+constants and final-state histograms remain retained. This exposes substantial
+differences in the unlike contact aggregate terms despite the small same-bank
+CPU/GPU solver differences. It is evidence to investigate upstream contact
+construction, not to infer exclusive cause: no point matching, row averaging,
+state masking, actual Newton matrix or physical-equivalence claim was made.
+
+Exact retained files under `artifacts/tools/ada-measured-boundary/`, on both
+hosts; no old evidence or failed attempt was overwritten:
+
+- bd2815fb-mac-constraint-input.json and bd2815fb-linux-constraint-input.json
+  (96096B each):
+  1d7ded608c976ddc599dfab31cfd4eebdda58ccea3d338ac81bfbbe79d824e56
+- bd2815fb-mac-tests.xml (102371B):
+  43aa106e1d0d9bdf790ab1a34e512e30523fc2ed793a6420898e8c2e9706f9dd
+- bd2815fb-linux-tests.xml, failed selection (243B):
+  4501ab09284e9484b5c68703fbb4436e6e82d954fe9f6431767a5354d8ddd4e3
+- bd2815fb-linux-r1-tests.xml (102376B):
+  bf0947451711fe9689ce761092878dd23d65998258f26b205b6b3a3806d8256b
+- bd2815fb-contract-selection-failure-service.json (4177B):
+  a811f1cbf8df1c3e35def8035a88f1b633463c71416a448b4a547675d88a3649
+- bd2815fb-contract-r1-service.json (4885B):
+  6b2df283d7483ac407cb51d60f7ef1af5160a3c422c496d838964c192a98b22e
+- bd2815fb-contract-selection-bound.json (200553B):
+  87b99a18b32c49618356d440d39b0fcc43953b79a7403c4dfa3aaba61b1ba333
+- bd2815fb-constraint-input-service.json (3950B):
+  22f51833b215a7562bfb0d7675e82b2ed9e5191388668241778d0666eeaf094f
+- retain_constraint_input_service.py (5967B):
+  dfcb988081a92974b10b745cb9d412a04981a93d7a81cedab75a838829bd27ec
+- retain_constraint_contract_selection.py (5131B):
+  49cb7e5671407412a63301b786056592225d43babf2485c15ed93d17caea165e
+- bd2815fb.bundle, verified incremental source bundle fromee05ee65 (17857B):
+  512f3d6f4c5a6aea41f14c6c60f6508626398420797cd4dcd045f0341c0d3d2e
+
+Decision remains
+**measured-constraint-input-arithmetic-not-cause-isolation-or-admission**;
+all original qualification/training/physical flags remain false. This bounded
+diagnostic is complete; the authorized until07:00 campaign continues. Next
+useful control is an evidence-backed predeclaration to recover full native
+contact-construction inputs or compare a separately controlled upstream arm,
+not PPO or hardware motion. Reserve the existing06:50 launch cutoff.
+
+Closeout documentation check matched all twelve artifact sizes/hashes against
+both hosts, the existing relative Markdown link and whitespace. Native user
+running-service inventory contains no Duck service; unrelated CPU/parser,
+grounding and media services remain preserved. Source/runtime code has not
+changed after the753-case execution revision. Retain this documentation commit
+separately from the clean immutable execution source; do not reinterpret a
+future wrong-HEAD receipt refusal as a reason to loosen its source contract.

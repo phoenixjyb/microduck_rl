@@ -3,8 +3,8 @@
 Base `6fe37f27cd4ea1009a78502a8f29b60cb4bdc7fe`, exact branch
 `feat/athletics-obstacle-curriculum`. This separates the next response arm from
 the completed [collision-only intervention](2026-10-10-ada-saved-pose-collision.md).
-Current changes are a **read-only installed-source audit and tests**, not a
-solver runner or an executed experiment. No library, plant, driver, motor,
+The source audit below is complete; the later implementation-primitives section
+does not yet provide an executable solver CLI/receiver. No library, plant, driver, motor,
 acceptance gate, curriculum or training protocol changes.
 
 ## Source audit and dependency decision
@@ -180,3 +180,49 @@ Both hosts retain these files under `artifacts/tools/ada-solver-stage-audit/`:
 Next implementation is the guarded eleven-pose CPU response runner and its
 closed receiver, with focused tests/review before any separately frozen
 source execution. The scientific/authority boundaries above remain unchanged.
+
+## Staged response implementation primitives, not runtime execution
+
+At base `bdf0beb7fea4894e8eb687352664042b0da9aa46`, added
+`ada_saved_pose_response.py` and its focused tests. The module has **no main
+or standalone CLI**. It imports no simulator runtime until its explicit run
+primitive is called. That primitive has not been called by the owner/reviewer
+or tests. Launch/reception/source-binding/cache gates must be implemented and
+reviewed separately before any response physics.
+
+The prepared code implements all eleven pose binders; explicit no-flex/
+equality/mocap/activation/tendon/body-transmission/custom-callback guards;
+joint-only14 transmissions and seven sites; dense/CPU/default dispatch checks;
+exact frozen staged calls and deferred factorization. It stops immediately
+after solve, deliberately before acceleration sensors as well as integration.
+Position/velocity sensors retain ordinary source order with supplied sites and
+default energy flags0. All seven callbacks must be absent.
+
+Each of five capture boundaries retains owned raw bytes and complete logical
+and expanded NumPy layouts for **all114 Data arrays**, not just active rows.
+Every stage checks unchanged347 model-array bytes, within-process static/
+pointer/options binding, all eleven prepared poses and seven state inputs.
+Only construction-time EFC addresses may differ in generated Contact records.
+The before/after solver write fence compares every Data array and allows changes
+only in qacc, qfrc_constraint, solver_niter, efc.Ma, efc.force and efc.state,
+matching the frozen solver's declared Data outputs. Other bytes—including
+warmstart, candidate addresses, Jacobians, constraint inputs and mass factors—
+must remain exact. Capacities, constraint coverage/counts and solver iteration
+limits fail closed; they do not impose a new numerical acceptance tolerance.
+
+Pure mock/NumPy fixtures passed48 focused cases and239 combined cases with
+the audit/collision/metadata suites (combined4.44s on Mac). These test exact
+ordering/factorization, all extra site layouts/hashes/finiteness, state signed
+zero/one-bit changes, callback/topology/CPU refusals, complete Data snapshots,
+candidate address stage semantics and solver-input write refusals. The first
+AST fence test incorrectly handled subscript-rooted calls; it was corrected
+to inspect the called attribute directly. No physics was run during that
+test failure or repair.
+
+Independent Luna source/API review passed48/48 in0.43s, verified that every
+guarded model/data/callback attribute exists in the frozen types, and found
+the stage order and six-output fence consistent with the frozen source. The
+review explicitly notes these are **synthetic contract tests**, not proof of
+actual native Data layout, CPU solver behavior, CUDA identity or admission.
+Next implement the closed receiver and exact-source CLI; then re-review and
+freeze the full arm before any capped response invocation.

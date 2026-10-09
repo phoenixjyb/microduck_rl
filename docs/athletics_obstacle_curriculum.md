@@ -734,3 +734,15 @@ new simulator or learner admission. Libraries, plant, rewards, observations and
 acceptance thresholds were not changed by these diagnostics. Earlier WSL stance,
 recovery and obstacle evidence remains separate and was not re-scored/promoted.
 No new hopping, obstacle, football or physical capability follows from this slice.
+
+### October10 renewed skill development: moving corners
+
+The renewed request adds a separate
+[moving-corner teacher and lesson](experiments/2026-10-10-moving-corner-lesson.md).
+It prepares bounded forward/yaw commands over a frozen base: gentle30-degree
+turns first, measured heading/speed recovery, then larger corners and eventual
+corridor/obstacle composition. Retained HC0 evidence favors moving turns over
+the currently unusable in-place pivot. Actor observations and old acceptance
+gates remain unchanged. The code and synthetic tests are not a trained skill;
+an admitted runtime and separately predeclared frozen-base baseline precede any
+learner. Stop/pivot, hopping and ball balancing retain their own gates.

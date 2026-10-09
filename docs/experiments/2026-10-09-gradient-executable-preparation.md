@@ -75,3 +75,70 @@ disassembler inputs, loaded objects, capacity/lease evidence and same-invocation
 retirement. Neither this loader nor the adapter may bypass that remaining gate.
 Hessian/search/line-search/convergence, the full solver window and curriculum
 training remain outside the accepted scope.
+
+## Retained CPU closeout
+
+Execution source `a2f11651ecb25cea9977b36df7185468dd842a7b`, tree
+`6c133d38793a3a4de076d3aea0000ddeb9a535dc`: all 991 committed plain-file
+blobs matched before and after checks. This section is a later documentation
+closeout, not tests relabeled at a newer commit. The new five-path fence leaves
+all previous contracts unchanged.
+
+All 1127 cases in the declared 23 files passed with zero failures, errors or
+skips, including 113 new binary/executable cases. WSL ran one aggregate suite
+in 101.49 seconds. Mac ran 23 isolated per-file pytest processes in 312.18
+seconds total, each bounded to 120 seconds and inheriting Nice 10. The exact
+case multiset matches across both hosts; the process partition is explicitly
+different, not a claim of identical execution environments. All checks had
+CUDA hidden and the established pre-import thread limits.
+
+The earlier Mac aggregate attempt at source
+`915e617de72dd5ce207d5c47365916aacaf709e7` reached its 260-second outer
+deadline without a complete JUnit result. Its source and incomplete-run receipt
+are preserved and never counted as a pass. Read-only inspection found competing
+Mac load; the isolated partition reduces retained parent memory but does not
+prove a particular resource cause. No unrelated process was stopped, no test
+assertion or ABI subprocess timeout was relaxed, and no environment/driver was
+reinstalled. A subsequent narrow guard change holds exact caller code identity,
+including refusal of an equal-but-distinct code clone, before the accepted run.
+
+The independent read-only Luna review found no blocker, preserved the pristine
+API prerequisite and suggested additional cache/hook coverage. Tests include
+a plausible executable with an extra cache key and second-entry hook/metadata
+mutation; failures preserve partial cache state but cannot yield a receipt.
+
+WSL unit `microduck-gradient-executable-cpu-a2f11651ecb2.service`, invocation
+`c2c8951881ac4f33bb52cad1b3a721ae`, retired successfully: MainPID 0,
+ExecMainStatus 0, Result success, empty ControlGroup and original cgroup absent.
+It retained the 300-second start / 10-second stop, 4 GiB, 200% CPU, 64 tasks,
+Nice 10, 16 MiB file, no-core, control-group kill and no-restart limits.
+Sampled peak tasks were 14; every `pids.events` sample remained `max 0`.
+Frozen runtime and protected workload snapshots matched before/after. FilmBrain
+PIDs 521 and 298048 remained active with zero restarts; the two protected AI
+mission services remained inactive in both system and user scopes.
+
+At the dated 12:20 Asia/Shanghai closeout, sequential Windows/WSL views both
+reported 8216 MiB GPU memory used and 15946 MiB free, 35/34 C and 3/2%
+utilization. A Windows 3D engine remained active. This is not an idle-device
+claim, simultaneous sampling, per-process attribution, lease or capacity
+reservation for a later native attempt.
+
+Retained artifacts are on both hosts under
+`artifacts/tools/gradient-executable-preparation/`. Independent Mac verification
+checks 55 inventoried files / 4277694 bytes, all whole hashes, the 991-leaf
+source binding, identical test-case multiset and retired-unit evidence.
+The paired receipt additionally binds the preserved incomplete run and Mac
+per-file helper; the paired helper/receipt are retained on both hosts.
+
+| Evidence | SHA256 |
+| --- | --- |
+| `a2f11651ecb2-mac-tests.xml` (combined isolated runs) | `0117b6eda3861668852ac6a598bab2448c81d9e08ec0cc17e61d5968e04ac424` |
+| `a2f11651ecb2-wsl-tests.xml` | `d8f9fc7ace604206f58a9611a16a4a4ad7746bdc857b06b34aa125ca0db186bf` |
+| `a2f11651ecb2-wsl-report.json` | `6fd6ca52489f20c29db436d6bdbf08af66c9cd49d638022cfe6047a9b6171bd6` |
+| `a2f11651ecb2-wsl-closeout.json` | `8f4866ce9c0637fecba03ad290f5d7c734019c022182ea26f76022faf0eabd30` |
+| `a2f11651ecb2-paired-check.json` | `a647a125b723c58d8a76ea5a31201a25a603b3965b2cdd945dade86dc3c13588` |
+
+The loader's CPU preparation is closed. No live compilation/loading, native
+gradient capture, full solver qualification or learned skill was accepted.
+All six flags remain false; finish the separately fenced owner/child and
+independent receiver before considering any bounded GPU run or training.

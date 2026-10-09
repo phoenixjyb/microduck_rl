@@ -45,8 +45,10 @@ SCHEMA_PATH = Path(__file__).with_name("ada_native_constraint_schema.json")
 SCHEMA = json.loads(SCHEMA_PATH.read_bytes())
 CALLBACKS = ("get_mjcb_act_bias", "get_mjcb_act_dyn", "get_mjcb_act_gain", "get_mjcb_contactfilter",
     "get_mjcb_control", "get_mjcb_passive", "get_mjcb_sensor", "get_mjcb_time")
-BANK_RAW_MAX = 144 * 1024**2
+BANK_RAW_MAX = 96 * 1024**2
 LEAF_MAX = 64 * 1024**2
+MJB_MAX = 128 * 1024**2
+WORLD_SPECIFIC = ("model/dof_frictionloss", "model/dof_damping")
 NATIVE_FILES = {
     "mujoco/_functions.cpython-312-x86_64-linux-gnu.so": "05d8fcc40281e5278b37e8a5acaea736c5bac83ce436b3255ca75fca64184eef",
     "mujoco/include/mujoco/mjdata.h": "e2c7ac8a6011372eb1df4e9a53d63f8ddbc3fb940fd68d906480fe85ad0931d7",
@@ -59,6 +61,37 @@ CONTACT_TAILS = dict(dist=(), pos=(3,), frame=(3, 3), includemargin=(), friction
     solreffriction=(2,), solimp=(5,), dim=(), geom=(2,), flex=(2,), vert=(2,), efc_address=(),
     elem=(2,), exclude=(), mu=(), H=(6, 6))
 CONTACT_INTS = ("dim", "geom", "flex", "vert", "efc_address", "elem", "exclude")
+
+
+def storage_contract():
+    names = sorted(k for k, v in SCHEMA.items() if v["kind"] in ("array", "bytes") and k not in WORLD_SPECIFIC)
+    return dict(mode="exact-shared-static-model-bytes-v1", base_world=0, logical_worlds=2,
+        world1_stored_numeric_paths=list(WORLD_SPECIFIC), shared_numeric_field_count=len(names),
+        shared_numeric_paths_sha256=sha256(json.dumps(names, separators=(",", ":")).encode()).hexdigest())
+
+
+def pack_storage(arrays):
+    """Store identical model fields once; original two MJBs remain distinct."""
+    numeric = {k for k, v in SCHEMA.items() if v["kind"] in ("array", "bytes")}
+    need(all({k.removeprefix(f"model/{w}/") for k in arrays if k.startswith(f"model/{w}/")} == numeric
+             for w in range(2)), "complete two-world model before storage sharing")
+    shared = numeric - set(WORLD_SPECIFIC)
+    for k in shared:
+        a, b = arrays["model/0/" + k], arrays["model/1/" + k]
+        need(a.shape == b.shape and a.dtype == b.dtype and a.tobytes() == b.tobytes(), "exact current shared storage: " + k)
+    return {k: v for k, v in arrays.items() if k not in {"model/1/" + n for n in shared}}, storage_contract()
+
+
+def expand_storage(stored, contract):
+    """Logical decoding only, not a new native Model or physical reconstruction."""
+    need(contract == storage_contract(), "fixed exact shared-storage contract")
+    need({k.removeprefix("model/1/") for k in stored if k.startswith("model/1/")} == set(WORLD_SPECIFIC), "only world-specific numeric fields stored for world1")
+    result = dict(stored)
+    for k, row in SCHEMA.items():
+        if row["kind"] in ("array", "bytes") and k not in WORLD_SPECIFIC:
+            need("model/0/" + k in stored, "complete current shared numeric model storage")
+            result["model/1/" + k] = stored["model/0/" + k]
+    return result
 
 
 def runtime_targets():
@@ -305,7 +338,7 @@ def capture(report, banks):
             before, meta = model_snapshot(model)
             size = mujoco.mj_sizeModel(model)
             print("native compiled world", w, "MJB bytes", size, "numeric model bytes", sum(a.nbytes for a in before.values()), flush=True)
-            need(0 < size < LEAF_MAX, "bounded current MJB: " + str(size))
+            need(0 < size < MJB_MAX, "bounded current MJB: " + str(size))
             mjb = np.empty(size, np.uint8); mujoco.mj_saveModel(model, None, mjb)
             data = mujoco.MjData(model)
             for name, value in state.items():
@@ -369,12 +402,13 @@ def receive(output, source, input_root):
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         entries = archive.infolist()
         need(len(entries) <= 2048 and sum(e.file_size for e in entries) < BANK_RAW_MAX + 1024**2
-             and all(e.file_size < LEAF_MAX and e.compress_type == zipfile.ZIP_DEFLATED for e in entries), "bounded complete compressed bank before decoding")
+             and all(e.file_size < BANK_RAW_MAX and e.compress_type == zipfile.ZIP_DEFLATED for e in entries), "bounded complete compressed bank before decoding")
     with np.load(io.BytesIO(raw), allow_pickle=False) as bank:
         need(len(bank.files) == len(set(bank.files)), "unique capture inventory")
         arrays = {k: bank[k].copy() for k in bank.files}
     need(manifest(arrays) == payload["arrays"], "all complete numeric capture bytes/layouts")
     need(sum(a.nbytes for a in arrays.values()) < BANK_RAW_MAX, "bounded complete uncompressed numeric bytes")
+    arrays = expand_storage(arrays, value["array_storage"])
     result = value["capture"]
     summary = summarize(arrays, report, banks, result["model_static"])
     need(all(result[k] == v for k, v in summary.items()), "recomputed complete capture summary")
@@ -382,7 +416,7 @@ def receive(output, source, input_root):
     for w, row in enumerate(value["mjb"]):
         path = output.parent / row["file"]
         need(path.name == output.stem + f"-world{w}.mjb" and path.is_file() and not path.is_symlink()
-             and path.stat().st_size == row["bytes"] < LEAF_MAX
+             and path.stat().st_size == row["bytes"] < MJB_MAX
              and sha256(path.read_bytes()).hexdigest() == row["sha256"], "current full serialized MJB bytes")
     need(len(value["mjb"]) == 2 and result["model_fences_equal"] is True and not result["guarded_paths_attempted"]
          and result["held_warp_executables"] == 0, "native-only fences; not historical identity")
@@ -419,7 +453,8 @@ def main():
     services = host.service_snapshot(); foreign = host.foreign_processes(); telemetry = host.telemetry()
     report, banks = prior.authenticated_banks(args.input); provenance = native_provenance()
     result, arrays, mjbs = capture(report, banks)
-    payload = retain(args.output.with_suffix(".npz"), arrays)
+    stored, storage = pack_storage(arrays)
+    payload = retain(args.output.with_suffix(".npz"), stored)
     files = []
     for w, mjb in enumerate(mjbs):
         path = args.output.parent / (args.output.stem + f"-world{w}.mjb")
@@ -430,7 +465,7 @@ def main():
     value = dict(protocol=PROTOCOL, decision=DECISION, source=source, module_sha256=sha256(Path(__file__).read_bytes()).hexdigest(),
         schema_sha256=sha256(SCHEMA_PATH.read_bytes()).hexdigest(),
         predecessor_report_sha256=prior.REPORT_SHA256, predecessor_files=report["files"],
-        native_installed_provenance=provenance, meta=META, capture=result, payload=payload, mjb=files,
+        native_installed_provenance=provenance, meta=META, capture=result, payload=payload, mjb=files, array_storage=storage,
         protected_services=services, foreign_processes=foreign, telemetry_before=telemetry, telemetry_after=host.telemetry())
     host.write_json(args.output, value); receive(args.output, args.source, args.input)
     print(DECISION, "historical_outputs_equal=" + str(result["historical_outputs_equal"]))

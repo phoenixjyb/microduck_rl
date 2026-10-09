@@ -979,3 +979,55 @@ contact/EFC linkage, current versus historical fields/active rows/counters and
 failure signals. Retain receipt/service/evidence hashes and commit the closeout.
 All existing qualification/training/learned-skill/physical flags remain false;
 no PPO, Locked/H2 promotion, video or physical motion follows this capture alone.
+
+### Native size-guard stop and exact shared-storage revision
+
+Execution revision a7b2449d5b2616ed45688449d466830778f1f928 is preserved in the
+fork and native history. Its12 CPU suites passed830 cases on each host (Mac
+38.09s, native6.55s; one actual-physics test deselected); the complete830
+classname/name multisets agree with zero errors, failures or skips. Native
+contracts unit invocation2230f58482fa4cc4b1f8d288b87aae5b finished successfully,
+PID0 and empty cgroup, with the declared60s/2GiB/16MiB limits.
+
+The first capture unit, invocation1b8e0faa3c8c47be8ebaa09d7b5824d6, exited1
+after5.676774s under its original90s/6GiB/64MiB file limit. Exact error:
+`ValueError: bounded current MJB: 80760771`.
+Its journal records compiled world0 MJB80760771B and public numeric
+Model/Option80759191B. The guard is immediately before MJB save, MjData
+allocation and the first forward call: no new forward, contact-force decoding,
+integration or GPU simulation occurred. There is no partial JSON/NPZ/MJB at
+the output prefix. Preserve the failed unit, source and journal; do not reset,
+restart or replace it. This is a diagnosed file-budget shortfall, not evidence
+of a failed physics solve. Warp's CUDA-error100 line is expected with literal
+empty CUDA_VISIBLE_DEVICES; the sole NVIDIA process remained DINO1592/946MiB.
+
+Read-only diagnosis retained the whole terminal service receipt:
+`artifacts/tools/ada-measured-boundary/a7b2449d-size-failure-service.json`
+(9269B), SHA256
+06b07bb4d217393d80ea63010f1184c21e55e6a3463b2eac01a9b70aa8b982cf.
+Its helper binds exact source/branch/machine, argv, environment, all service
+limits, timestamps, failed exit, empty cgroup, absent partial output paths and
+the four inactive protected-service scopes. Source/test evidence stays separate
+from service evidence, and neither is training admission.
+
+The next **new source/unit/output prefix** changes storage only. Keep two fresh
+compiled native models, two public forwards and all prior call/state/physics
+protocols unchanged. Before packing, compare every common public model array
+by dtype, shape and exact bytes. Store those475 identical fields once, with a
+fixed source-bound shared-path inventory/hash; retain both actual world-specific
+frictionloss/damping fields independently (authenticated old frictionloss
+differs by world, damping is identical). The portable receiver reconstructs
+only the logical byte namespace for checking; it does not create a Model,
+recompute a parameter or invent a physical match. Keep both complete MJBs,
+which remain world-specific, with independent before/after byte fences/hashes.
+
+The revised compressed numeric bank has<96MiB stored raw array bytes,<64MiB
+serialized bytes,≤2048 ZIP entries, each expanded entry<96MiB and aggregate
+ZIP expansion<97MiB before decode. Each complete MJB is<128MiB, so the three
+large-leaf budget is<320MiB. Increase **only the new capture unit's**
+LimitFSIZE to128MiB; retain RuntimeMax90s, MemoryMax6GiB and all other limits,
+five literal CPU environment values, protected services and workload checks.
+Current native free disk250757680KiB and Mac free76516728KiB comfortably
+exceed this bounded retained evidence budget. No installed library, plant,
+acceptance threshold, GPU lease or old artifact is changed. Re-test/review,
+commit/push and exact-clean native synchronization precede the second attempt.

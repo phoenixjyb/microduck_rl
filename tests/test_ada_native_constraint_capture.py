@@ -274,12 +274,13 @@ def receiver_fixture(tmp_path, monkeypatch):
     monkeypatch.setattr(p.prior, "authenticated_banks", lambda root: (report, banks))
     monkeypatch.setattr(p.host, "read", lambda *args, **kwargs: Path(p.__file__).read_bytes() if args[-1].endswith(".py") else p.SCHEMA_PATH.read_bytes())
     output = tmp_path / "capture.json"
+    stored, storage = p.pack_storage(arrays)
     value = dict(protocol=p.PROTOCOL, decision=p.DECISION, source={"commit": "a" * 40}, meta=deepcopy(p.META),
         module_sha256=sha256(Path(p.__file__).read_bytes()).hexdigest(), schema_sha256=sha256(p.SCHEMA_PATH.read_bytes()).hexdigest(),
         predecessor_report_sha256=p.prior.REPORT_SHA256, predecessor_files={}, capture=summary,
         protected_services={scope + ":" + service: "inactive" for scope in ("system", "user") for service in p.host.SERVICES},
         native_installed_provenance={k: dict(bytes=100, sha256=v, record_sha256_matches=True) for k, v in p.NATIVE_FILES.items()},
-        payload=p.retain(output.with_suffix(".npz"), arrays), mjb=[])
+        payload=p.retain(output.with_suffix(".npz"), stored), array_storage=storage, mjb=[])
     for w in range(2):
         path = tmp_path / (output.stem + f"-world{w}.mjb")
         raw = b"synthetic MJB bytes, no native model"; path.write_bytes(raw)
@@ -304,3 +305,28 @@ def test_portable_receiver_recomputes_full_packet_and_rejects_forged_claims(tmp_
     if damage == "none": assert p.receive(output, "a" * 40, tmp_path)[0]["capture"]["historical_outputs_equal"] is True
     else:
         with pytest.raises(ValueError): p.receive(output, "a" * 40, tmp_path)
+
+
+@pytest.mark.parametrize("damage", ["none", "field", "dtype", "shape", "missing", "contract", "extra_world1"])
+def test_exact_shared_storage_preserves_world_specific_motor_and_rejects_mismatch(damage):
+    model, _ = public_model_fixture()
+    arrays = {f"model/{w}/" + k: v.copy() for w in range(2) for k, v in model.items()}
+    arrays["model/1/model/dof_frictionloss"][0] = 17.
+    if damage == "field": arrays["model/1/model/body_mass"][0] = 1.
+    if damage == "dtype": arrays["model/1/model/body_mass"] = np.zeros(1, np.float32)
+    if damage == "shape": arrays["model/1/model/body_mass"] = np.zeros((1, 1), np.float64)
+    if damage == "missing": arrays.pop("model/1/model/body_mass")
+    if damage in ("field", "dtype", "shape", "missing"):
+        with pytest.raises(ValueError): p.pack_storage(arrays)
+        return
+    stored, contract = p.pack_storage(arrays)
+    assert contract["shared_numeric_field_count"] == 475
+    assert len([k for k in stored if k.startswith("model/1/")]) == 2
+    if damage == "contract": contract["shared_numeric_field_count"] = 474
+    if damage == "extra_world1": stored["model/1/model/body_mass"] = np.zeros(1)
+    if damage != "none":
+        with pytest.raises(ValueError): p.expand_storage(stored, contract)
+    else:
+        expanded = p.expand_storage(stored, contract)
+        assert all(all(row.values()) for row in p.compare(expanded, arrays).values())
+        assert expanded["model/1/model/dof_frictionloss"][0] == 17.

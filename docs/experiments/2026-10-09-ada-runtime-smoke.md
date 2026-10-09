@@ -91,3 +91,52 @@ Four-file CPU regression (new diagnostic plus unchanged shared smoke, idle gate
 and execution profile) passed; the final post-freeze counts are retained with
 the execution evidence. Separate CUDA-hidden Mac Warp CPU compilation produced
 all 32 exact values. None of these checks is GPU or simulator qualification.
+
+## First attempt and CPU-only compiler diagnosis
+
+Execution source `cd6a73dac6a0b0f6660dd53b03986311e0ef28ca` passed **135 CPU
+tests** on both Mac and 100.100. Its GPU unit invocation
+`0931a758209c4448b70b9baf9388d7fb` failed with exit 1 after 1.73 seconds.
+Torch reached and completed the synchronized CUDA calculation, but the overall
+attempt did not produce an accepted child receipt. Warp initialized on sm89,
+then NVRTC compilation failed **before module loading or kernel execution**:
+
+`NVRTC_ERROR_COMPILATION (6)`; `warp/native/mat.h(1852): catastrophic error:
+unable to obtain mapped memory`.
+
+This is not a new driver mismatch, a robot-physics result or evidence of a CUDA
+numerical failure. The failed unit retired with MainPID 0, exit 1, no restarts
+and empty ControlGroup. Only Grounding DINO PID 1592 remained in compute telemetry.
+The failed report/log/generated CUDA source remain untouched in the original
+`artifacts/evaluations/ada-runtime-smoke-cd6a73dac6a0/` directory.
+
+Read-only source review found Warp 1.12.0 defaults to automatic precompiled
+headers (PCH). NVIDIA documents this compiler-state cache and its memory/file
+behavior in the [NVRTC 12.9 guide](https://docs.nvidia.com/cuda/archive/12.9.0/nvrtc/index.html).
+Two separate, 60-second-capped CPU compilation controls used the **same retained
+2294-byte CUDA source**, architecture 89, frozen Warp, CUDA hidden, no device
+load/launch, the same 6 GiB RAM/200 percent CPU/64 tasks/16 MiB file bound and
+fresh caches. Hidden CUDA initialization listed CPU only; its expected CUDA
+error 100 is not an exposed-GPU driver fault. With PCH on, the exact mapped-memory
+error reproduced; the syscall trace showed repeated 64 KiB mappings from a
+scratch FD through offset `0xfe6000`, followed by **SIGXFSZ** (file-size ceiling).
+With PCH off, compilation completed in 0.40 seconds and wrote a 20816-byte CUBIN.
+This isolates the PCH/resource-bound interaction without enlarging any limit.
+No installed source, package, driver, service, solver or GPU gate was changed.
+
+| CPU control evidence | SHA256 |
+| --- | --- |
+| identical input CUDA source | `299ba7653f66bb5abad4daf739367b5493524d1485278da03b916c5c54a93c91` |
+| PCH-off generated CUBIN | `041a85e85bf0170a3a625767c6afeaddac1198d75b5814a054f200886b44480d` |
+
+## Predeclared second revision
+
+Protocol `microduck-ada-runtime-smoke-oct9-v2-no-pch` changes **only this
+diagnostic child's compiler configuration** to `use_precompiled_headers=False`.
+The strict child receipt records that false value, and the child disables the
+driver compiler cache before imports. This does not disable or replace the
+independent Warp private kernel cache. All deadlines, resource bounds, numerical
+inputs, foreign-process guards and false qualification flags remain unchanged.
+A new clean source commit creates a new absent evidence directory and unit;
+never overwrite or relabel the failed first attempt. One capped GPU attempt is
+permitted only after focused tests, reviewed diagnosis and source freeze.

@@ -25,7 +25,7 @@ def receipt():
     return dict(protocol=smoke.PROTOCOL, gpu_uuid=smoke.GPU, name=smoke.NAME,
                 capability=[8, 9], torch_cuda="12.8", torch="2.9.1", warp="1.12.0",
                 elements=32, torch_values=values.copy(), warp_values=values.copy(),
-                torch_peak_bytes=4096, flags=deepcopy(smoke.FLAGS))
+                torch_peak_bytes=4096, warp_precompiled_headers=False, flags=deepcopy(smoke.FLAGS))
 
 
 def test_import_is_stdlib_only_and_inert_in_fresh_process():
@@ -136,6 +136,7 @@ def test_child_receipt_never_promotes_any_qualification_flag(flag):
     ("capability", [8, 6]), ("torch_cuda", "13.0"), ("torch", "new"),
     ("warp", "new"), ("elements", 31), ("torch_peak_bytes", 0),
     ("torch_peak_bytes", smoke.BOUNDS["torch_allocator_bytes"] + 1),
+    ("warp_precompiled_headers", True), ("warp_precompiled_headers", 0),
 ])
 def test_child_receipt_rejects_changed_identity_or_bound(field, value):
     result = receipt()
@@ -252,6 +253,7 @@ def owner_fixture(monkeypatch, tmp_path, samples, *, child_returncode=0,
             actions.append("spawn-owned-child")
             self.returncode = child_returncode
             assert kwargs["env"]["CUDA_VISIBLE_DEVICES"] == "0"
+            assert kwargs["env"]["CUDA_CACHE_DISABLE"] == "1"
             assert len(kwargs["pass_fds"]) == 1
             assert all(Path(kwargs["env"][key]).is_dir() for key in smoke.CACHES)
             (output / "child.log").touch(exist_ok=True)

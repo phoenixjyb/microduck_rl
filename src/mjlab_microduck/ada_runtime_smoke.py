@@ -19,7 +19,7 @@ import threading
 import time
 import uuid
 
-PROTOCOL = "microduck-ada-runtime-smoke-oct9-v1"
+PROTOCOL = "microduck-ada-runtime-smoke-oct9-v2-no-pch"
 ROOT = Path("/home/converge/work/microduck_rl-athletics-obstacle-curriculum")
 BRANCH = "feat/athletics-obstacle-curriculum"
 MACHINE = "0c79e415429b4933a400159bfa79a34d"
@@ -173,7 +173,7 @@ def warp_affine(wp, device):
 
 def validate_child(result):
     need(set(result) == {"protocol", "gpu_uuid", "name", "capability", "torch_cuda", "torch", "warp",
-                         "elements", "torch_values", "warp_values", "torch_peak_bytes", "flags"}, "closed child schema")
+                         "elements", "torch_values", "warp_values", "torch_peak_bytes", "warp_precompiled_headers", "flags"}, "closed child schema")
     need(result["protocol"] == PROTOCOL and result["gpu_uuid"] == GPU and result["name"] == NAME
          and result["capability"] == [8, 9] and result["torch_cuda"] == "12.8"
          and result["torch"] == "2.9.1" and result["warp"] == "1.12.0"
@@ -184,6 +184,7 @@ def validate_child(result):
              and result[name] == expected_values(), "every element matches independent CPU arithmetic")
     need(type(result["torch_peak_bytes"]) is int and 0 < result["torch_peak_bytes"] <= BOUNDS["torch_allocator_bytes"],
          "bounded Torch tensor allocation, not total VRAM")
+    need(result["warp_precompiled_headers"] is False, "PCH disabled for this bounded compiler only")
     need(type(result["flags"]) is dict and set(result["flags"]) == set(FLAGS)
          and all(value is False for value in result["flags"].values()), "all qualification flags remain false")
 
@@ -193,6 +194,7 @@ def child(source, fd):
     lease_identity(fd)
     fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     need(os.environ.get("CUDA_VISIBLE_DEVICES") == "0", "one exposed child GPU")
+    need(os.environ.get("CUDA_CACHE_DISABLE") == "1", "disabled driver compiler cache")
     root = directory(source)
     for key in CACHES:
         need(Path(os.environ.get(key, "")).resolve() == root / "private-cache" / key.lower(), "private cache binding")
@@ -214,6 +216,7 @@ def child(source, fd):
         torch.cuda.synchronize(0)
         torch_values = torch_output.cpu().tolist()
     wp.config.kernel_cache_dir = os.environ["WARP_CACHE_PATH"]
+    wp.config.use_precompiled_headers = False
     wp.init()
     device = wp.get_device("cuda:0")
     need(device.is_cuda and device.arch == 89 and device.ordinal == 0, "actual Warp Ada device")
@@ -222,7 +225,8 @@ def child(source, fd):
     result = dict(protocol=PROTOCOL, gpu_uuid=device_uuid, name=properties.name, capability=[8, 9],
                   torch_cuda=torch.version.cuda, torch=importlib.metadata.version("torch"),
                   warp=wp.__version__, elements=BOUNDS["elements"], torch_values=torch_values,
-                  warp_values=warp_values, torch_peak_bytes=torch.cuda.max_memory_allocated(0), flags=FLAGS)
+                  warp_values=warp_values, torch_peak_bytes=torch.cuda.max_memory_allocated(0),
+                  warp_precompiled_headers=wp.config.use_precompiled_headers, flags=FLAGS)
     validate_child(result)
     write_json(root / "child.json", result)
 
@@ -262,7 +266,7 @@ def supervise(source):
         capacity(baseline)
         foreign = foreign_processes()
         report.update(lease=lease, foreign_before=foreign)
-        child_env = dict(os.environ, CUDA_VISIBLE_DEVICES="0", PYTHONDONTWRITEBYTECODE="1")
+        child_env = dict(os.environ, CUDA_VISIBLE_DEVICES="0", PYTHONDONTWRITEBYTECODE="1", CUDA_CACHE_DISABLE="1")
         for key in CACHES:
             cache = root / "private-cache" / key.lower()
             cache.mkdir(parents=True, exist_ok=False)

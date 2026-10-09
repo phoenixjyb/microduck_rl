@@ -117,3 +117,98 @@ do not claim no driver probe or change the installed library/driver. Preserve
 the first empty private cache and failed service for diagnosis; retry at a new
 tested source with fresh outputs/cache, same180s effective caps and unchanged
 plant/protocol.
+
+## Frozen replay result and reception
+
+Corrected execution source `2d0da53fd8ab4e6b9aed366a3ff925a1b7c2a0a4`
+passed **303 cases across eight focused CPU files** on Mac49.21s and
+native80.79s, zero failures/errors/skips; complete testcase multisets match.
+Native regression invocation `3fae219409eb4cf28b0d3ec342342fba` used verified
+Type=exec/240s caps, finished82.286299s including interpreter/test startup, and
+retired MainPID0/status0/Result success/empty ControlGroup.
+
+Replay invocation `9226bbb39aff4129a32faf9366bfab5c` used verified
+Type=exec/180s and every declared resource/environment limit. It finished in
+**14.695247s**, MainPID0/status0/Result success, active/exited, empty ControlGroup.
+The private cache compiled six modules on **CPU**; no CUDA kernel ran. Retained
+service evidence includes the complete journals and all five completed service
+invocations, including the ineffective first regression cap and refused replay.
+
+Both freshly compiled selected native plants match the predecessor's fingerprint
+`6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
+Every one of347 Warp model arrays matches the complete prepared bank's bytes,
+dtype, shape and strides before/after collision. Both exact seven-state inputs
+remain unchanged. All native/Warp `ne/nf/nl/nefc/solver_niter` counters are zero;
+all candidate EFC addresses are -1, and the shared broadphase count is4 with no
+overflow. No contact force, constraint construction, solve or integration occurs.
+
+| Fixture | Native candidates | Warp CPU candidates |
+| --- | ---: | ---: |
+| Air-gap world0 | 0 | 0 |
+| Shallow-contact world1, left foot | 2 | 4 |
+| Shallow-contact world1, right foot | 2 | 4 |
+
+All shallow candidates have condim3, ordered pairs `[0,29]`/`[0,79]` and distance
+inside includemargin; all eight Warp candidates have the CONSTRAINT type bit.
+Neither geometric margin inclusion nor that bit means an EFC was constructed.
+Complete raw records, including uncomputed native mu/H scratch, are retained.
+No one-to-one physical point correspondence is asserted.
+
+The **same four-versus-eight multiplicity is already present on CPU before any
+solver**. It therefore does not require a GPU solver to appear, and localizes
+that count difference to the collision-generation boundary for these fixtures.
+This is not evidence that all acceleration/force residuals are caused by it,
+that either manifold is wrong, or that CUDA/native/integrated simulation is
+qualified. Original same-backend origin/repeat and training gates remain open.
+
+Complete actual body, joint-axis, inertial and geometry poses are retained and
+compared descriptively. They are **not bit-identical**: Warp CPU versus native
+double geom position maximum residual is `2.0957069468696687e-08`m, rotation
+matrix maximum `2.3841857776929487e-07`; Warp CPU versus retained Ada geom
+position maximum is `1.4901161193847656e-08`m, rotation maximum
+`1.7881393432617188e-07`. These are results, not new acceptance tolerances.
+All nine kinematic field residuals and float32 bit-mismatch counts are recorded.
+
+The446144-byte NPZ contains84 fully hashed arrays: all candidate fields,
+all nine actual pose fields on both backends, seven input states, model geometry
+indices/radii/mesh addresses and both exact foot meshes. Larger hull graphs are
+bound by the complete347 model-array hashes to the existing prepared bank, not
+copied again. Exact whole-file/per-array hashes, field inventory, finiteness,
+source/predecessor bindings, seven states, candidate summaries and both
+kinematic comparisons passed the CPU-only `receive()` on Mac. These artifacts,
+test XMLs, service receipt and read-only capture helper are retained on both
+hosts under `artifacts/tools/ada-collision-replay/`; private compiler caches
+remain only on native. Source and evidence retention are not physics admission.
+Independent Luna reception reran the pure receiver and checked every declared
+JSON/NPZ/helper/service/XML hash, full raw contacts and counters, both meshes,
+303-test XMLs and the non-bit-exact kinematic residuals. No blocker was found;
+the review performed no SSH, GPU, service operation or file edit.
+
+Native identity, frozen packages and clean exact checkout were freshly verified.
+Grounding DINO PID1592 remains the sole compute owner (946MiB); GPU snapshot
+961MiB used/15232MiB free/46C/0% utilization. This is a post-run snapshot, not
+a measured peak. All four system/user protected mission-service states remain
+inactive. No unrelated job, driver/package or production service was changed.
+
+| Retained corrected evidence | SHA256 |
+| --- | --- |
+| Replay module bytes | `3147a40562e29ddd94deb6a4d6219cfeb6b9997f6b6c9f1078a22dcd35f1d7b6` |
+| `2d0da53f-linux-replay.json` | `00a4e2bbd7c43a1376c97883ce274e3640b2c395a50f751561c96c5d5f8ad45b` |
+| `2d0da53f-linux-replay.npz` | `c85afc7f17721c6b4d7343df587e0cb22b744261afdeb54f7623f957d93c93a1` |
+| `2d0da53f-native-services.json` | `f15fcda85b6874719f854b2c307e8eb1aedf6925e0970c682f95711800e6e1ba` |
+| `2d0da53f-mac-tests.xml` | `8224fcac0cb55a05fbb9e3375e312d6bdc46ca8a51d1867c117ad3d4314ae970` |
+| `2d0da53f-linux-tests.xml` | `61d3906a5bed6790f63304a811223cb4d6477fe76452b32c4009fa3a19537b10` |
+| `retain_cpu_services.py`, read-only capture helper | `8011ea491669d6f394df555df767f50f26e3362163b6406355cc29fab3c2aa2f` |
+
+## Next bounded control, not launched here
+
+Predeclare a solver-response separation control before any new GPU/training
+experiment. First determine whether CPU Warp and retained Ada generated contact
+tables can be compared honestly using generator metadata and complete actual
+pose inputs, without assuming duplicate ordered keys imply point identity.
+If actual poses are replayed into a separate diagnostic collision arm, label that
+as bypassing kinematics, bind every supplied pose byte, and do not mutate this
+default-flags control or the production plant. Any later force comparison must
+keep full rows, solver inputs and whole-manifold resultants; no contact-count
+normalization, guessed spatial pairing, tolerance change or force injection.
+This result alone authorizes no policy promotion, PPO, hardware or robot motion.

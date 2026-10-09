@@ -147,3 +147,86 @@ Read-only service receipt helper remains the previously retained
 At17:29:59 UTC it verified both protected services inactive in both scopes,
 Dino PID1592/946MiB only,44C/0%,961MiB total used. Source/test evidence only;
 the new measurement and identical-bank control remain unexecuted.
+
+## Narrow actual CPU allocation/static validation predeclaration
+
+At clean base56f5e8a2, add `ada_measured_model_probe.py` before implementing the
+GPU capture runner. Independent frozen-source review found that the complete
+walker supports the actual retained Model/Data shapes, including NumPy-typed
+counts, `geom_pair_type_count`, nested BlockDim/TileSet/Option/Callback and
+array tuples. Preserve NumPy scalar dtype/raw bytes; do not coerce them into
+Python integers. Numeric Option arrays remain part of the separate347-array
+binding. `put_model` applies its existing tolerance floor unconditionally, not
+only on GPU; do not change it or mislabel it a backend-only mutation.
+
+This CPU probe compiles the same actual plant, performs one put_model and
+one make_data with explicit nworld2/nconmax128/naconmax256/naccdmax256/
+njmax512/njmax_nnz10240, and expands/copies the same two motor fields. Frozen
+`mjlab/sim/randomization.py:42-48` launches its repeat kernel **twice**, once
+per field. Retain these allocation/model-expansion launches and actual passive
+CPU executable/cache metadata, not a zero-kernel claim. Allocation's one
+internal native kinematics call remains counted separately. Copy only the
+original seven state fields; do not supply any prepared geometry poses or call
+fixture kinematics, forward, collision, constraint construction, factorization,
+solver, sensors or integration.
+
+Require exact347 model bytes/layouts, complete114 CPU Data fields, every actual
+array on CPU, zero collision/EFC/solver counters, unchanged unsupported-topology
+and callback guards, and complete actual static serialization bound to a fresh
+walk. The portable receiver additionally checks every declared dataclass field
+against frozen types.py AST declaration order; omitted real scalar subtrees
+cannot pass by editing parent field lists. It independently checks all114 raw
+leaves, original state bytes, capacities, source/service/flag/cache envelopes.
+Portable reception does not allocate a fresh current Model/Data or establish
+runtime binary identity. Native execution performs the actual static walk;
+receiver schema/source checks and actual captured values remain distinct.
+
+Bind the model-expansion Python source to its wheel RECORD and exact SHA256
+`35d0bddcd6ef3b0317cb89987e0c42bbf1862fcd4beb795c1327ade814c2a64c`;
+retain the unchanged MuJoCo-Warp/Warp stage-source audit digest separately.
+No library/version/model/driver or simulator acceptance changes.
+
+The executed `expand_model_fields` function's module name/source file and the
+imported module file must resolve to that verified wheel file before its call.
+Require one completed expansion call with exactly model/2/two named fields.
+`source_expected_model_expansion_launches=2` is an inference from that frozen
+source and completed matched expansion, **not** a dynamic launch trace or a
+ModuleExec hook count. Post-run passive executable inventory must consist of
+the one repeat kernel entry already retained in exactly received CPU response
+05216efe: module repeat_array_kernel_39317a34/block_dim1, source/options hash
+`64511f00215be403f7a05e8069fbed3ff8b6b02bb3b0a9560b56c2ee9f1f1847`,
+one kernel hook, the two retained zero-smem metadata entries, CPU device, and
+opaque handle explicitly **not** treated as loaded binary identity. Unexpected
+modules/options/metadata fail closed and are diagnosed; do not loosen this
+inventory after a failure. Retain actual cache files/hashes separately.
+
+Frozen schema checking is annotation-backed, including nested mandatory
+dataclass kinds, typed tuples, Warp array paths, integer/bool/float NumPy dtype
+families, actual enum types and absent callbacks. Replacing a typed dataclass
+with an arbitrary dictionary or turning a Warp array into a scalar is refused.
+
+After focused tests, independent review, committed source push, clean native
+sync and matching native contract checks, execute exactly one CPU probe as
+`microduck-ada-model-probe-<source8>.service`. Use the preceding response
+180s/6G capped service properties and exactly its five environment entries:
+literal CUDA_VISIBLE_DEVICES empty and four thread pools1. Source-bound CLI
+requires the actual service PID/invocation/caps, frozen native machine/venv,
+clean exact branch, protected services inactive before/after, and launch before
+22:50 UTC. Retain outputs in `artifacts/tools/ada-measured-boundary/` as
+`<source8>-linux-model-probe.json`, matching `.npz`, with absent private cache
+`<source8>-cpu-model-cache` under that same parent. Authenticate input directory
+`artifacts/evaluations/ada-duck-contact-0ce8c9d0a820` by the historical report
+and all prior file hashes. No new fixture physics or GPU Duck run under this
+predeclaration. Require exact native reception with cache rehash and portable
+Mac reception; failures are diagnosed read-only before any repair.
+
+Preparation checks: owner seven-file suite473/473 in3.57s and whitespace checks
+passed. Independent Luna read-only final review passed65 probe cases in0.71s
+and found no material source/test blocker for the allocation-only CPU arm.
+That review executed neither allocation nor physics. It confirmed both limits:
+two expansion launches are source-inferred, and portable reception checks the
+retained typed static manifest rather than remeasuring live scalar values.
+The earlier negative expansion-source test initially aliased its expected dict;
+the fixture was corrected with deepcopy before final passing tests. No runtime
+probe has run yet. Native contract suite uses the existing60s/2G limits and
+unique source8 artifacts; the actual allocation arm separately uses180s/6G.

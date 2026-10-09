@@ -654,3 +654,128 @@ local bytes and identical native copies, the existing relative Markdown link,
 and whitespace. No runtime/source code changed after the665-case tested
 execution revision. Commit/push this retained result separately from that
 immutable execution source.
+
+## Predeclared measured constraint-input arithmetic audit
+
+Next is a pure, CPU-hidden upstream arithmetic diagnostic, not another physics
+run or a simulator-admission decision. Source
+`src/mjlab_microduck/ada_constraint_input_audit.py` and its synthetic test module
+must be committed, independently reviewed, pushed and clean-synced before a
+retained execution. Preserve the frozen plant, libraries, original gates,
+inactive protected mission services and sole foreign Dino workload. Deadline
+remains2026-10-10 07:00 Asia/Shanghai; launch cutoff06:50. No PPO, video, hardware,
+raw perception or new collision/constraint/solver/integration call is authorized
+by this audit. Import/help are runtime-inert.
+
+The exact new measured GPU report is source
+daebeb6ee97b1ce0c4a665331306bcb78a94204c, SHA256
+5146e17ace38e5b0e2897cb0a3febf1202b66d9d69b757ac0398e2c581d267de.
+Its full570-leaf packet, complete static/source bindings and original predecessor
+are re-received, not replaced by a hand-picked subset. Historical numeric
+**Model** bytes are usable only after every one of347 raw model-array hashes
+matches both the authenticated predecessor manifest and the actual new GPU
+model hash map. This is an explicit full-model binding already enforced by the
+measured allocation/runtime/receiver chain. Historical **Data**, old poses,
+old contact tables and old EFC parameters must not supply GPU scalar recipes.
+The complete predecessor prepared-inputs file remains anchored by the prior
+receiver (SHA256
+3d454f4d61e1af4667bc84acfac054724f0589c13964937455d8a49a32d83f61).
+
+After that full binding, decode only four model inputs using their exact
+canonical raw layouts: timestep, impratio_invsqrt, body_invweight0 and geom_bodyid.
+Use the NEW before-solve Data for all eight dim3 contacts and32 own-contact
+pyramid rows. Verify actual world/geom/body topology, unique contiguous row
+addresses, row type/id and exact vel/Jqvel linkage. Each contact must carry the
+frozen ContactType.CONSTRAINT bit1; an independent SENSOR bit is permitted,
+while zero/sensor-only flags are refused. This closed arm requires
+disableflags0, positive solref, positive friction/body inverse-weight sum and
+solimp power2; refuse other arms rather than extend coverage after seeing a
+result. Recompute D, aref, vel, pos, margin and frictionloss from the installed
+frozen `_efc_contact_update`/`_efc_row` formulas. Preserve all32 captured values
+and complete recipe-minus-captured leaves; report all six max-absolute residuals
+without a pass tolerance.
+
+Source arithmetic uses widened FP32 inputs and source-ordered Python float64
+products/sums, not an emulation of Warp FP32 fusion, pow or loaded machine code.
+The installed MuJoCo-Warp constraint.py RECORD/source hash is
+b69f15e5c7206b30bfe1af12b5ca6c0bdf3e37398116846643df73a2e8f8ef53;
+the existing full stage source audit is rehashed. Numeric constants are pinned
+to plain bounded MuJoCo3.10.0 headers and their wheel RECORD:
+
+- mjmodel.h (63289B):
+  bcd51b20cb29b6aac7c8b9e1cf348f569b7fc2239f9226b844737c73511d90c8
+- mjtype.h (27906B):
+  ec580ce2a4ef0c1f6a3e68b3c5b5eeaf61d03413827453e2d0a87c3bd92d16e4
+
+Separately retain complete unmasked nominal row-sum proxies H=J^T D J,
+h=J^T D aref and c=0.5 aref^T D aref. Reduce original rows in ascending index
+order with explicit float64 arithmetic, no BLAS/RMS/averaging. Partition every
+active row exactly once into world-specific friction or ordered-foot-pair bins;
+check own contact type/id/address linkage. Native inputs are the authenticated
+native post-solve active rows. GPU inputs are the NEW measured J/D/aref with
+before/after-solve byte equality; final states are descriptive histograms only.
+Retain full20x20 matrices/vectors/scalars, both row counts and GPU-minus-native
+aggregate differences. The four bin keys are grouping metadata, **not physical
+point correspondences**: native has two points/foot and GPU four. Apply no state
+mask and claim neither actual solver Hessian reconstruction nor response/cause
+isolation. Native contact scalar parameters are unavailable, so no native
+parameter-recipe reconstruction or per-point cross-backend comparison is made.
+
+Reference only: frozen upstream
+[MuJoCo native constraint source](https://raw.githubusercontent.com/google-deepmind/mujoco/3.10.0/src/engine/engine_core_constraint.c)
+and [MuJoCo-Warp tagged constraint source](https://raw.githubusercontent.com/google-deepmind/mujoco_warp/v3.8.1/mujoco_warp/_src/constraint.py).
+The installed RECORD-bound wheel source, not an assumption that the web tag has
+identical bytes, is the execution arithmetic authority.
+
+Retained output is one exclusive, fsynced, bounded256KiB canonical JSON on each
+host, named `<execution-source8>-{mac,linux}-constraint-input.json` under
+`artifacts/tools/ada-measured-boundary/`. Portable receiver requires clean exact
+branch/HEAD/current module bytes, re-receives both complete input packets and
+recomputes every output leaf, source/header/layout/model binding and false flag.
+Fresh-process receipt and byte comparison across hosts are required; any
+difference is reported, not normalized or hidden. Native execution is one CPU
+user service `microduck-ada-constraint-input-<source8>.service`: Typeexec,
+RemainAfterExityes, RuntimeMaxSec90, MemoryMax6G, CPUQuota200%, TasksMax64,
+Nice10, LimitFSIZE16M, LimitCORE0, Restartno, KillModecontrol-group,
+TimeoutStopSec10, exact repository/venv interpreter. Exactly five environment
+entries: CUDA_VISIBLE_DEVICES empty and OMP/MKL/OPENBLAS/NUMEXPR_NUM_THREADS1.
+Verify exact machine/source/clean tree, inactive protected services in both
+scopes and unchanged Dino inventory before and after. Retain invocation,
+successful exit/MainPID0/empty group, elapsed time, caps, environment, result
+hash and terminal GPU/protected-service evidence separately. No GPU allocation
+is needed, and do not manipulate the existing GPU advisory lease.
+
+Run all eleven retained CPU contract modules on both committed-source hosts
+with the single real-physics test explicitly deselected. Compare complete
+JUnit testcase multisets and failure/error/skip counts; native contract service
+retains the previous60s/2G resource profile. Source/test preparation currently
+passes88 new synthetic/header tests after adding explicit aggregate linkage and
+checking the fixed floating-point reduction convention. Add independent review
+and the full suite evidence before retained execution. Stop on any genuine
+receiver/byte/provenance failure and diagnose read-only.
+
+Independent Luna review found that the original synthetic fixture could enter
+the recipe without the CONSTRAINT contact bit, while the frozen update kernel
+would skip that contact. Actual measured contacts all carry bit1, but the
+pre-execution guard was incomplete. Added the int32/eight-entry bit guard,
+corrected the fixture, and added zero/sensor-only/wrong-dtype refusals plus the
+valid combined-bit case. No runtime packet or acceptance gate was changed.
+Complete internal wiring tests also exercise all570 new-stage leaves, the full
+347-model binding,32 own-contact recipes and unlike native/GPU row counts with
+only the outer authenticated-packet fixtures mocked. Poisoning historical
+non-state/non-Model bytes has no effect; changing any new J/D/aref solver input
+afterward is refused. An initial test-only bare-pose-name KeyError was corrected
+to the actual `/data/` keys; all four new wiring cases then passed.
+
+Final preparation suite: all eleven CPU-hidden contract modules passed753 tests,
+the sole actual-physics test explicitly deselected (34.70s). Fresh independent
+Luna review re-ran88 focused cases (3.12s) and found no remaining source/test
+blocker after the two guards and fixture correction. Relative local link and
+`git diff --check` passed. These are contract/source checks only; commit this
+predeclaration before clean committed-source tests and retained execution.
+
+Decision is fixed to
+**measured-constraint-input-arithmetic-not-cause-isolation-or-admission**.
+All solver, simulator, training, compiled-binary and physical qualification flags
+remain false regardless of arithmetic residual size. A subsequent physics
+control would need its own evidence-backed, tested predeclaration.

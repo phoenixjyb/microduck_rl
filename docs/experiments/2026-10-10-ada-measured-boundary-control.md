@@ -1627,3 +1627,62 @@ passed. Terminal and receiver helper SHA256s are respectively
 96b987ba2b984b358e3545231eacf7eff196ce6f9a66b67211356557bb4f72b4
 and26a64f8895502302ff9a584905703715305eca02f369e873d1f78eb5f7f02725;
 terminal parsing reuses the immutable2f6270e4 v2 quoted-argv reader.
+
+### Own-manifold algebra result at f960d590
+
+Execution source `f960d5905550a280e4350ce740c4f0a53c51f54f` was committed,
+pushed and fast-forwarded exactly into the clean native feature branch before
+execution. Its incremental source bundle SHA256 is
+3039e334e440c20784f28a565e206c79ed38896748cacbd9290435096c11b58f.
+Committed Mac/native16-file pure suites passed1118 with the one actual-physics
+case deselected in49.60s/8.91s. All1118 ordered testcase identities match;
+neither JUnit has a failure, error or skip. JUnit byte hashes are
+2d1d120baf68e796c2f4763fa8c7f5419bb082feb1923595ffd2afba54480766
+(Mac154263B) and86e5f967fc9846fc29031176a4fe22686c74fa09f4882a78d83dee12ef1b379d
+(native154268B).
+
+The retained contracts unit `microduck-own-recipe-contracts-f960d590.service`
+finished exit0 in9.510238s, invocation85167b2ec1c64b8085ec897ca63a5ace;
+the pure arithmetic unit `microduck-own-recipe-algebra-f960d590.service`
+finished exit0 in3.619191s, invocationb31f4780ceb542e4993464cbeeeea57e.
+Both have PID0/empty cgroup and the exact predeclared argv, environments,
+transient definitions and caps. The9769B contracts-service receipt SHA256 is
+f93d47c04d67af1581c77e33e41ece7157997c5fe6d6494eb4b00962ceb69cb8;
+the7329B algebra-service receipt SHA256 is
+d4361b3fa5d81dcc23f2d0d8e28748483736a094839a46cd569a9d1f95b073a8.
+Both receipts retain four inactive protected scopes and unchanged DINO1592/
+946MiB. No Duck GPU allocation, lease mutation or simulator call occurred.
+
+Both `f960d590-{mac,linux}-own-manifold-recipe.json` files are byte-identical,
+146436B, SHA256060e392640e9a5d33dd42c218e63d016dcf0ef79d7c96ec08e1cd3226f5d51d6.
+Fresh independent complete reception on each host regenerated every row/input/
+conversion/captured-dtype scalar hash/source descriptor without importing
+Torch/Warp/MuJoCo/MuJoCoWarp. Both828B `f960d590-{mac,linux}-own-recipe-reception.json`
+receipts are byte-identical, SHA256
+d3252e28bbc7729194a82dc93c273a2a5eb9572f73f69ef336a88070e2e0da99.
+All source/JSON/JUnit/service/reception evidence is retained under the existing
+tools directory; no old packet, cache, helper or service was replaced.
+
+For every own native16 and measured GPU32 contact row, the ordered F64 C and
+Warp source recipes have exactly zero differences across D,aref,vel,pos,margin
+and frictionloss. The explicit ratio-reconstruction difference is also zero
+for these captured parameters. Both recipes exactly reproduce all six native
+captured fields; against widened measured GPU fields, maximum absolute
+differences are D1.2963849310709818e-7 and aref3.127977976635776e-8, with the
+other four fields zero. Those latter differences are retained observations,
+not an FP32 rounding/fusion explanation or an acceptance tolerance.
+
+The deterministic decision remains
+`own-manifold-like-input-source-algebra-not-compiled-construction-or-admission`.
+The complete native-family CPU intervention and this ordinary-domain algebra
+agreement justify looking next at source-bound contact/constraint generation
+and phase identity, not reward tuning or PPO. They do not isolate count,
+geometry, J, recipe arithmetic, precision or a single cause; synthetic excluded
+branch disagreements remain relevant. No cross-generator physical point pairing,
+compiled binary identity, native before-solve replay, simulator qualification,
+training/policy promotion or physical motion is established.
+Independent postexecution review regenerated the complete Linux packet in a
+fresh CPU-hidden process, checked both raw report/receipt byte identities,
+all48 row partitions and arithmetic residuals,1118-case test inventories,
+both exact capped terminal units and unchanged protected/DINO scopes. Its
+focused no-cache/no-bytecode suite passed76 in1.90s; no blocker was found.

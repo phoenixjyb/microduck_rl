@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import struct
 
 from mjlab_microduck import ada_contact_diagnosis as prior
 
@@ -18,11 +19,20 @@ COUNTERS = ("ne", "nf", "nl", "nefc", "solver_niter")
 VERSIONS = {"torch": "2.9.1", "warp-lang": "1.12.0", "mujoco": "3.10.0",
             "mujoco-warp": "3.8.1", "mjlab": "1.3.0"}
 COLLISION_OPTIONS = dict(enableflags=0, disableflags=0, cone=0, ccd_iterations=35, ccd_tolerance=1e-6)
+WARP_COLLISION_OPTIONS = dict(COLLISION_OPTIONS, ccd_tolerance=struct.unpack("<f", struct.pack("<f", 1e-6))[0])
 
 
-def collision_options(opt):
-    values = {k: getattr(opt, k) for k in COLLISION_OPTIONS}
-    need(values == COLLISION_OPTIONS, "unchanged predeclared collision scalar options")
+def collision_options(opt, *, warp=False):
+    values = {k: getattr(opt, k) for k in COLLISION_OPTIONS if k != "ccd_tolerance"}
+    if warp:
+        import numpy as np
+        tolerance = opt.ccd_tolerance.numpy()
+        need(tolerance.shape == (1,) and tolerance.dtype == np.float32
+             and tolerance.tobytes() == np.asarray([COLLISION_OPTIONS["ccd_tolerance"]], dtype=np.float32).tobytes(),
+             "unchanged Warp float32 CCD tolerance array bytes")
+        values["ccd_tolerance"] = float(tolerance[0])
+    else: values["ccd_tolerance"] = opt.ccd_tolerance
+    need(values == (WARP_COLLISION_OPTIONS if warp else COLLISION_OPTIONS), "unchanged predeclared collision scalar options")
     return values
 
 
@@ -162,7 +172,7 @@ def replay(report, banks):
     with wp.ScopedDevice("cpu"):
         model = mjwarp.put_model(models[0])
         from mujoco_warp._src.types import BroadphaseType, BroadphaseFilter
-        warp_options = collision_options(model.opt)
+        warp_options = collision_options(model.opt, warp=True)
         need(model.opt.broadphase == BroadphaseType.NXN
              and model.opt.broadphase_filter == (BroadphaseFilter.PLANE | BroadphaseFilter.SPHERE | BroadphaseFilter.OBB), "unchanged Warp collision dispatch")
         warp_options.update(broadphase=int(model.opt.broadphase), broadphase_filter=int(model.opt.broadphase_filter))
@@ -264,7 +274,7 @@ def receive(output, source, root):
     need(result["measured_native_kinematics_calls"] == result["native_collision_calls"] == 2
          and result["allocation_native_kinematics_calls"] == result["measured_warp_kinematics_calls"] == result["warp_cpu_collision_calls"] == 1
          and all(result["versions"][k].split("+")[0] == v for k, v in VERSIONS.items())
-         and result["warp_collision_options"] == dict(COLLISION_OPTIONS, broadphase=0, broadphase_filter=11)
+         and result["warp_collision_options"] == dict(WARP_COLLISION_OPTIONS, broadphase=0, broadphase_filter=11)
          and all(row["collision_options"] == COLLISION_OPTIONS
                  and row["selected_fields_sha256"] == report["child"]["plant"]["selected_fields_sha256"] for row in result["plant_bindings"])
          and all(v == 0 for row in result["counters"]["native"] for v in row.values())
@@ -331,7 +341,6 @@ def main():
     import warp as wp
     import torch
     args.cache.mkdir()
-    wp.config.enable_cuda = False
     wp.config.enable_precompiled_headers = False
     wp.config.kernel_cache_dir = str(args.cache)
     wp.init()

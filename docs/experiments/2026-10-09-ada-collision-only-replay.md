@@ -56,11 +56,11 @@ library patch. All qualification/training/physical flags remain false.
 
 Fresh native100.100 CPU process using frozen Torch2.9.1/Warp1.12.0/MuJoCo3.10.0/
 MuJoCoWarp3.8.1/mjlab1.3.0. Require exact clean committed branch and module bytes,
-literal `CUDA_VISIBLE_DEVICES=''`, all thread pools1, Warp CUDA disabled before
-initialization, CPU-only devices, Torch CUDA uninitialized throughout, a fresh
+literal `CUDA_VISIBLE_DEVICES=''`, all thread pools1, CPU-only enumerated Warp
+devices, Torch CUDA uninitialized throughout, a fresh
 private compiler cache, precompiled headers off, and exclusive outputs.
 
-Replay user service: RuntimeMaxSec180, MemoryMax6G, CPUQuota200%, TasksMax64,
+Replay user service: Type=exec, RuntimeMaxSec180, MemoryMax6G, CPUQuota200%, TasksMax64,
 Nice10, LimitFSIZE16M, LimitCORE0, Restart=no, KillMode=control-group,
 TimeoutStopSec10, RemainAfterExit=yes. Focused regression service uses240s with
 the same remaining limits. Preserve Grounding DINO and all unrelated owners;
@@ -83,3 +83,37 @@ localize that multiplicity difference to collision generation. It would **not**
 prove that it fully causes the force/acceleration residual, qualify integrated
 dynamics, resolve the separate same-backend origin/repeat gate, or admit PPO.
 Evidence and source hashes will be appended after the frozen run.
+
+## Refused first execution and corrected representation guard
+
+Initial source `9c03ae6d16007ab5affc9c89dd787734078d86ef` passed298 focused
+cases on Mac and native. Native first regression used Type=oneshot; systemd
+explicitly warned RuntimeMaxSec was ineffective. That service finished in80.66s
+(invocation `88158298c7d7484791477fd10e5a19a7`, MainPID0/status0/empty cgroup),
+but is **not** retained as proof of a time-capped execution. Retested with
+Type=exec and verified RuntimeMaxUSec4min plus all declared limits;298 passed
+in81.11s, invocation `ddba864ab7ed4c90a188cdeda5d5704f`, status0/empty cgroup.
+Mac passed298 in53.85s; all three XML testcase multisets matched with no skips.
+
+First replay invocation `2038c4ca71544ebf99e0997c7f3a76e4` used effective
+Type=exec/3min caps but refused with `ValueError: unchanged predeclared collision
+scalar options`, status1, MainPID0 and empty cgroup. No fixture kinematics,
+collision, constraint or solve was reached, and no JSON/NPZ was produced.
+Read-only source/live-option inspection found the guard erroneously compared
+Warp's **one-element float32 array** `opt.ccd_tolerance` to a scalar. The native
+value is1e-6; the installed Warp representation is its exact float32 encoding,
+`9.999999974752427e-07`. Correct only this representation check: compare shape,
+dtype and exact bytes, then report the actual encoding. This is not a changed
+collision tolerance or a relaxed residual gate. New tests reject wrong shape,
+dtype and one-ULP alterations. Complete model-array binding still covers this
+option array independently.
+
+Warp1.12 has no `config.enable_cuda` setting: assigning that name was inert.
+Remove it and correct the claim. With literal CUDA_VISIBLE_DEVICES empty, Warp
+does probe the driver and prints error100/no visible device, but enumerates only
+CPU and creates no Duck GPU workload. Require CPU-only enumerated devices,
+explicit CPU scopes, Torch CUDA uninitialized and unchanged foreign GPU owners;
+do not claim no driver probe or change the installed library/driver. Preserve
+the first empty private cache and failed service for diagnosis; retry at a new
+tested source with fresh outputs/cache, same180s effective caps and unchanged
+plant/protocol.

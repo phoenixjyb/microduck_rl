@@ -38,6 +38,20 @@ def test_collision_scalar_options_are_not_reporting_only(key):
     with pytest.raises(ValueError): p.collision_options(opt)
 
 
+@pytest.mark.parametrize("damage", ["none", "dtype", "shape", "ulp", "flag"])
+def test_warp_ccd_tolerance_is_bound_as_exact_float32_array_not_scalar(damage):
+    value = np.asarray([1e-6], dtype=np.float32)
+    if damage == "dtype": value = value.astype(np.float64)
+    if damage == "shape": value = np.repeat(value, 2)
+    if damage == "ulp": value[0] = np.nextafter(value[0], np.float32(1))
+    opt = SimpleNamespace(**p.COLLISION_OPTIONS)
+    opt.ccd_tolerance = SimpleNamespace(numpy=lambda: value)
+    if damage == "flag": opt.disableflags = 1
+    if damage == "none": assert p.collision_options(opt, warp=True) == p.WARP_COLLISION_OPTIONS
+    else:
+        with pytest.raises(ValueError): p.collision_options(opt, warp=True)
+
+
 @pytest.mark.parametrize("key", p.p.base.UNCHANGED)
 @pytest.mark.parametrize("damage", ["hash", "length", "state"])
 def test_state_binding_refuses(key, damage):
@@ -186,7 +200,7 @@ def test_receiver_refuses_changed_contract_before_array_decoding(tmp_path, monke
                   module_sha256=sha256(b"module").hexdigest(), versions=p.VERSIONS,
                   measured_native_kinematics_calls=2, native_collision_calls=2,
                   allocation_native_kinematics_calls=1, measured_warp_kinematics_calls=1, warp_cpu_collision_calls=1,
-                  warp_collision_options=dict(p.COLLISION_OPTIONS, broadphase=0, broadphase_filter=11),
+                  warp_collision_options=dict(p.WARP_COLLISION_OPTIONS, broadphase=0, broadphase_filter=11),
                   plant_bindings=[dict(collision_options=p.COLLISION_OPTIONS, selected_fields_sha256="b" * 64)] * 2,
                   counters=dict(native=[dict(nefc=0)] * 2, warp_cpu=dict(nefc=[0, 0])),
                   payload=dict(file="result.npz", bytes=1, sha256="0" * 64))

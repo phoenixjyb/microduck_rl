@@ -1244,3 +1244,76 @@ false. A further row-family intervention, if developed, must be separately
 predeclared, preserve the complete measured surrounding context, explicitly
 bind every changed/held field and index translation, and remain a hybrid
 diagnostic rather than a native end-to-end replay.
+
+## Pure native row-family hybrid packet predeclaration
+
+The next immutable source adds `ada_native_row_family_plan.py` and synthetic
+tests. This is **packet preparation only**; its CLI does not import a simulator,
+allocate Model/Data, execute physics, or authorize a subsequent solver. Require
+the exact ec81 native arithmetic report SHA256674c6d7779bad3daef7c54aa761745d26df03cf44051753811f3dfcaf05490ae
+and independently recompute it before encoding. Bind the same complete native
+f854 capture, original eleven-file packet, measured daeb GPU bank and pinned C
+reference. Preserve all347 measured GPU Model hashes and the complete184
+portable static manifest through references rather than duplicate storage.
+
+Encode a complete114-field Data bank with exactly31 declared overrides and83
+byte-held measured before-solve leaves. Override ne,nf,nl,nefc and global nacon;
+native per-world ncon0/4 remains explicitly **descriptive**, because frozen
+Warp Data has no ncon array. Override dense EFC J,D,aref,frictionloss,type,id,
+pos,margin,vel and Jqvel (the latter from native efc_vel). Override every field
+of the16-field Warp Contact table. Explicit float64-to-float32 casts are not
+an emulation of an FP32 constructor. Unsupported shape/type/finite/capacity,
+row kind, DOF ID, contact ID, address or rigid-foot layout fails closed.
+
+Concatenate native contacts in their own world/slot order, not a GPU contact
+matching: world0 supplies0 slots, world1 supplies4 slots. Each native slot owns
+four contiguous pyramid rows14..29; global ids0..3 are linked consistently in
+type/id/address/dim/worldid. Clear all overridden EFC inactive tails to0.
+Inactive contact geometry/flex/vert/world/address/collisionid indices are-1;
+other inactive contact fields are0. Native supplies twelve compatible contact
+fields; own global worldid and four-address vectors are explicit translations.
+Two fields are explicitly synthetic: active type1=CONSTRAINT, and
+geomcollisionid=-1 throughout. No collision provenance is invented. This bank
+must not enter collision, constraint construction, sensors, force decoders,
+ordinary forward, integration or optimizers. It is not a complete native
+forward-context or physically point-matched replay.
+
+Hold all83 surrounding Data leaves byte-exact, including qM/factors/smooth
+forces and acceleration, warmstart, saved states, dense empty sparse metadata,
+and the measured GPU before-solve solver outputs. Never transplant native
+post-solve qacc, force, state, b or solver_niter. Retain every114 leaf's layout,
+before/encoded hash and changed/held policy, all own contact links and an
+exclusive full raw NPZ. A portable receiver independently regenerates every
+leaf and descriptor and rejects omitted, added, duplicated, changed or
+scope-forged packets. The sparse/elliptic or other solver read-set has **not**
+been proved by packet preparation; actual_solver_read_set_proved and
+subsequent_solver_execution_authorized remain false. A runtime intervention
+would need a separate reviewed read-set/branch analysis and exact-source
+predeclaration, fresh CPU cache, complete actual bindings and one public solve.
+
+Before real packet encoding, run focused/full CPU synthetic tests and
+independent source review, commit/push and synchronize the exact-clean native
+branch. Initial uncommitted tests caught an incorrectly proposed ncon target;
+inspection of the authenticated canonical layout established that it does not
+exist, so the proposal was corrected rather than fabricating an extra field.
+An additional test initially did not damage the one-element nacon shape; the
+fixture was corrected to actually change that shape. No real packet, runtime
+or service was executed during either failing test attempt.
+
+Owner focused suite passed212 cases in8.55s; the complete14-file pure suite
+passed964 cases with one actual-physics case deselected in82.07s. Independent
+review passed73 focused cases in7.54s and found no packet-layer blocker.
+The reviewer checked frozen solver/type/constraint sources: subsequent runtime
+scope must be dense/Newton/pyramidal, expected friction/pyramid EFC kinds only,
+and authentic empty dense sparse metadata. Contact.type and geomcollisionid
+are not read by the frozen solver Python source; elliptic paths consume other
+contact fields, so they cannot be silently admitted. These source observations
+do not prove compiled-code behavior or authorize a solver in this packet arm.
+
+Both hosts use fresh source-prefix JSON≤256KiB plus complete NPZ<2MiB in the
+retained tools directory. Native contracts use60s/2GiB/16MiB limits; pure
+encoding uses120s/2GiB/16MiB. All prior Type=exec/RemainAfterExit=yes,
+CPUQuota200%/TasksMax64/Nice10/LimitCORE0/Restart=no/KillMode=control-group/
+TimeoutStop10s limits, five literal CUDA-empty/thread1 assignments, protected
+services/DINO preservation and22:50UTC launch cutoff apply. No new native,
+Warp, GPU, optimizer or integration call occurs. All admission flags stayfalse.

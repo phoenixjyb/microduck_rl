@@ -1196,3 +1196,51 @@ KillMode=control-group and TimeoutStop10s. Five literal CUDA-empty/thread1
 environment assignments, inactive protected services, unchanged DINO, no GPU
 lease entry and the22:50UTC launch cutoff remain mandatory. No physical
 motion, policy training, installed-library/plant/gate change or raw perception.
+
+### Current native recipe execution and independent closeout
+
+Execution source ec81e2bb2ffd25f6e847036cb0deb1ab1836478d passed the same891
+pure cases on Mac20.92s/native6.78s; one explicitly actual-physics test was
+deselected. Classname/name multisets match exactly, with zero failures/errors/
+skips. Independent source review passed48 focused cases in5.01s; independent
+post-execution reception recomputed both reports without importing a simulator
+runtime and found no blocker. JUnit leaves under the retained tools directory:
+
+| Leaf | Bytes | SHA256 |
+| --- | ---: | --- |
+| ec81e2bb-mac-tests.xml | 123432 | bf2bbcffeef62a4a7e7635e1ed3553a9ef687845061b1fab3f6217a5fa29e80e |
+| ec81e2bb-linux-tests.xml | 123437 | 42943f11ca0ee47d59d6daa167cf02e0495752d1aa7c10cd042c58b1e406a614 |
+| ec81e2bb-contracts-service.json | 5129 | 1109e45daa6ac8fdbeff0564d4f43275f00bd01115f644c237176585e83ea777 |
+| ec81e2bb-arithmetic-service.json | 4837 | b943ccfade42949cab05cf91f9fcb0a10109752957673d184e2272890ed3eac6 |
+
+The native arithmetic unit completed successfully in2.682441s, invocation
+ffba8650e3e248479ad823b90a098fc4, exit0/PID0/empty cgroup. The receipt binds
+its exact source, argv,120s/2GiB limits, all five environment assignments,
+unchanged DINO1592/946MiB and four inactive protected service scopes. The
+read-only receipt helper `retain_native_recipe_service.py` SHA256
+cb04e9e48d6e78970e555c5f488a726bd36e8c0192bf2707b4351a2e861c2a00
+is retained with the results; no service was restarted or foreign workload
+changed. The two host reports `ec81e2bb-{mac,linux}-native-recipe.json` are
+byte-identical79729B, SHA256
+674c6d7779bad3daef7c54aa761745d26df03cf44051753811f3dfcaf05490ae.
+All above leaves and the helper are retained on both hosts.
+
+All44 native rows have exact FP64 byte agreement for each of R,D,diagA,aref,
+vel,pos,margin,frictionloss,K,B,I,P; every numerical residual and every byte
+disagreement count is0. The16 selected Model precision descriptors all report
+cast-to-measured-GPU-dtype byte agreement. Their largest native-minus-widened
+GPU differences include body_invweight0 5.20583537308994e-05 (including its
+rotational component) and dof_invweight0 2.953653176973603e-05. Those are
+descriptive rounding brackets, not tolerances or complete Model identity.
+
+The report independently retains each backend's different contact inputs:
+native four included contacts/two per foot versus measured GPU eight/four
+per foot, each with its own distances, slots and row addresses. Recipe
+agreement establishes consistency of the captured native construction
+arithmetic; it does not make these unlike manifolds corresponding physical
+points, isolate a single cause, prove loaded machine-code identity, or open
+solver/simulator/training/physical admission. All qualification flags remain
+false. A further row-family intervention, if developed, must be separately
+predeclared, preserve the complete measured surrounding context, explicitly
+bind every changed/held field and index translation, and remain a hybrid
+diagnostic rather than a native end-to-end replay.

@@ -1375,3 +1375,92 @@ is established. The next meaningful bounded experiment is a separately
 reviewed **one-call CPU solver-only joint row-family intervention**, holding
 the authentic GPU mass/force/warmstart context and all Model/statics fixed;
 do not claim it as a full native solver replay or launch PPO from this packet.
+
+### Predeclared native-family CPU solver-only hybrid control
+
+This separately authorized arm is one fresh CPU Warp **public solver call**
+using the complete c9b37b54 native-family packet. It is a joint31-field input
+intervention, not a single-variable ablation or end-to-end native replay.
+Hold all83 measured GPU surrounding Data fields, all347 Model arrays and
+all184 statics byte-exact. Native F64 J/D/aref/contact fields have already been
+explicitly cast to F32; the native capture is post-forward, not a recovered
+native before-solve phase. Never transplant native final outputs, change the
+plant/libraries/gates, pair unlike contact manifolds, or imply FP32 constructor
+emulation. Synthetic contact.type and geomcollisionid may go to this guarded
+solver path only, never collision/construction/sensors/force decoding.
+
+Execution must use exact-clean committed/pushed/synchronized feature source,
+unchanged frozen packages and audited sources, CUDA_VISIBLE_DEVICES empty,
+CPU-only enumerated Warp devices, uninitialized Torch CUDA, a fresh private
+CPU cache and a unique retained user unit. The actual pre/post branch guard
+requires dense/Newton/pyramidal with zero native disable/enable flags and
+noslip iterations, only friction/pyramid active EFC kinds, authentic empty
+dense sparse metadata, ne/nl0/0,nf14/14,nefc14/30,nacon4 and fixed capacities.
+This is a Python source-path guard, **not** compiled machine-code read-set
+proof. Existing frozen source review finds contact dereferences in the
+elliptic branch; sparse/elliptic and other regimes are excluded.
+
+Allow one put_model allocation-native kinematics call and the existing two
+Model expansion launches; no fixture kinematics, native forward, collision,
+constraint construction, mass factorization, sensor, force decoder, ordinary
+forward, integration or optimizer call. Restore all114 actual Data arrays
+before solve; retain full114 before and full114 after, finite layouts/bytes,
+pointer/Model/static fences, and require only the six declared solver outputs
+to change. Counters must remain within the unchanged iteration cap.
+
+Immutable input anchors are c9b37b54-linux-native-family JSON
+585d728f420cc1ef7bc4a9bcf3ab9d9b3682cfeb8c8f96d97b4d0df26b6bfcb2
+and NPZ9a885cd219762de5345139438cb7f3b7e9581bbcbecefaa3f386bb9272023285;
+prior complete same-context CPU solver JSON
+b0287a679ad297dfb40a71a6c03a2e99a3227d298da109edcdde3b9e131c0339
+and NPZ8193be85083cb50e031a3fa95238daa3d6f7eeb2fa36f60c93e5074e3406cb40.
+Bind each archival module to its unchanged historical execution blob;
+recompute every plan descriptor and114 payload leaves, plus every228 baseline
+leaf, restore/write fence, output comparison and counter. Do not modify or
+bypass older live exact-source receivers. The new receiver has explicit
+immutable archival bindings and must run in a **separate fresh process**:
+pure plan recomputation deliberately refuses an imported simulator runtime.
+
+Primary retained observations are all six full allocated solver outputs
+against both measured GPU and prior same-context CPU, with exact hashes,
+byte equality, differing scalar counts and ordered widened max differences.
+Also retain full2x20 hybrid F32-minus-current-native F64 qacc and
+qfrc_constraint differences per world. No tolerance, survivor rule, admission
+threshold or contact matching is introduced. Even improvement is only
+evidence about this hybrid family within the held measured context; no
+exclusive cause, native phase identity, binary identity, simulator/PPO or
+physical qualification follows. The deterministic decision remains
+`native-family-cpu-hybrid-response-collected-not-cause-isolation-or-admission`.
+
+Before execution: focused synthetic tests, complete15-file pure suite,
+independent review, exact-source commit/push/native fast-forward and native
+contract run. Retain terminal receipt, actual private CPU cache byte inventory
+and independent full receptions on both hosts. Native contracts60s/2GiB;
+solver180s/6GiB, fresh report≤256KiB/full NPZ<2MiB/cache≤96MiB.
+Use inherited16MiB file cap, CPUQuota200%,TasksMax64,Nice10,LimitCORE0,
+Typeexec,RemainAfterExityes,Restartno,KillModecontrol-group,TimeoutStop10s
+and five literal CUDA-empty/thread1 assignments. Preserve DINO1592/946MiB
+and four inactive protected service scopes. No GPU Duck workload is launched;
+the existing advisory lease inode is left untouched. Launch before22:50UTC
+and retain/close out by23:00UTC. Any failure is first diagnosed read-only;
+failed source-prefix evidence is never overwritten or restarted.
+
+The initial uncommitted synthetic test run passed75 and failed one success
+fixture because its repeat executable opaque handle lacked the frozen
+required prefix. That fixture was corrected, not the production guard;
+the focused suite then passed76 in8.13s. No real solver ran during either
+attempt. A pre-execution source check also removed an invalid same-process
+self-reception, preserving the pure receiver's no-runtime-import boundary.
+Independent review then passed76 focused cases in10.17s and suggested
+explicit Warp option checks and a clearer reference label. Both were applied:
+disableflags/enableflags are checked on both actual Models, native noslip stays
+zero (frozen Warp Option has no noslip member), and
+`original_gpu_bank_cpu_reference` explicitly names the differing-input prior
+CPU result. Added negative option tests bring the focused suite to78;
+independent rerun78/11.18s. The revised complete15-file pure suite passed1042
+with one actual-physics case deselected in63.97s (earlier1040/61.24s before
+the extra guards). Independent source review found no runner/receiver blocker.
+Terminal helpers require canonical source-prefix destinations and the exact
+ordered15-file test argv/JUnit destination or exact solver argv, not only
+command fragments. Helpers are retained with raw source hashes alongside
+the execution evidence; these receipts do not promote the diagnostic scope.

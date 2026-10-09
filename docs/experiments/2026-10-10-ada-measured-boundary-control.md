@@ -361,3 +361,101 @@ hash comparison and documentation status corrections. Neither review nor the
 source/mock suite ran allocation, simulator physics, GPU work or services.
 Execution-source SHA and matching committed-source/native JUnit receipts will
 be resolved and retained before any launch; dirty-source execution is forbidden.
+
+## Retained actual new measured GPU boundary
+
+Execution source **`daebeb6ee97b1ce0c4a665331306bcb78a94204c`** was reviewed,
+committed/pushed to the exact fork feature branch and clean-fast-forwarded on
+native100.100 before launch. Its matching source nine-file suites passed593
+cases on Mac (19.28s) and native, with identical complete testcase multisets,
+zero failures/errors/skips and one explicitly deselected actual-physics test.
+Native contract unit invocation `fa7715c58c1041b39c8a8d552fa2751a` succeeded
+in5.179066s under all60s/2G limits, PID0/empty ControlGroup.
+
+Prelaunch exact-source/source-audit/allocation reception and available exclusive
+advisory lease check passed CPU-hidden with no simulator runtime imports or GPU
+calls. Snapshot: Dino PID1592 sole foreign owner,961MiB used/15232MiB free,
+44C/0%, declared empty owned lease device66306/inode11419619, protected services
+inactive in both scopes. This receipt preceded the actual capped owner launch.
+
+Unit `microduck-ada-measured-boundary-daebeb6ee97b.service`, invocation
+`1138238649d14adeabb11c86533e8470`, completed successfully under the predeclared
+180s/6G caps. Actual terminal duration34.737338s (supervisor34.687609s),
+MainPID0/status0/Result success/empty ControlGroup, active/exited rather than
+a live worker. Peak captured GPU used1262MiB/temperature50C/utilization6%;
+foreign owner, protected services and existing lease stayed unchanged. The
+watchdog and capacity gates were not loosened. No other workload was stopped.
+
+Native full receiver with every fresh private cache leaf rehashed passed, then
+portable Mac reception passed independently in a fresh CPU-hidden process
+without Warp/Torch/MuJoCo runtime imports. All570 raw stage leaves,114 canonical
+layouts,461 static array paths and184 scalar/container nodes were received.
+The complete actual static manifest equals the retained CPU allocation digest
+8180631a...fcf78e; its JSON file hash below is distinct from that semantic digest.
+All347 model bytes/layouts match the predecessor and CPU allocation. The actual
+eleven before-collision poses remain byte-exact throughout this new run, as do
+the original seven state fields. All six allowed solver output fields changed;
+every other Data field is byte-exact across solve.
+
+| Boundary | nacon / ncollision | nf | nefc | solver_niter |
+| --- | --- | --- | --- | --- |
+| Before collision | 0 / 0 | [0,0] | [0,0] | [0,0] |
+| After collision | 8 / 4 | [0,0] | [0,0] | [0,0] |
+| After construction | 8 / 4 | [14,14] | [14,46] | [0,0] |
+| Before solve | 8 / 4 | [14,14] | [14,46] | [0,0] |
+| After solve | 8 / 4 | [14,14] | [14,46] | [1,4] |
+
+The new GPU solve's twenty final fields retained in the historical packet are
+all byte-equal to their old GPU counterparts. This is a **subset descriptive
+agreement**, not recovery/authentication of the historical missing full pose or
+before-solve bank. Both feet again have four distinct generated contacts;
+ordered vertical resultants are3.2832817435264587N and3.284973382949829N. Their
+existing native comparison remains a generated-manifold comparison, not an
+identical-input CPU solver control. The new complete GPU before-solve bank now
+makes that separate control possible without guessing historical inputs.
+
+Native private cache contains84 files/19224432 bytes;25 already-held CUDA
+ModuleExec metadata rows were retained. Cache file hashes are not loaded-object
+byte identity; module source/options/opaque handles are not executed-kernel
+proof or dynamic launch counts. All runtime/solver/simulator/training/physical
+qualification flags remain false. No integrator, optimizer, BAM proposal,
+CPU identical-bank solve, policy training or physical motion ran in this arm.
+
+Native packet root is `artifacts/evaluations/ada-measured-boundary-daebeb6ee97b`;
+the eight portable files also reside on Mac under
+`artifacts/tools/ada-measured-boundary/ada-measured-boundary-daebeb6ee97b`.
+Private cache stays native only. Source tests/prelaunch/terminal helper receipts
+are retained on both hosts under `artifacts/tools/ada-measured-boundary/`.
+
+| Retained evidence | SHA256 |
+| --- | --- |
+| report.json (100413 bytes) | `5146e17ace38e5b0e2897cb0a3febf1202b66d9d69b757ac0398e2c581d267de` |
+| child.json (81247 bytes) | `d6c3b4b0524fa6a7fb6c29411afc125e1ffbdca9eb4060afa69673ebd97fde86` |
+| child.log | `697c5618834554c19cd3b4a16848b068b2c5689d8e845cfbec4b7bca08a18c4e` |
+| launch.json | `18f2759cd63df139b552a15ccf28706125e59ec08ac2b2f0b5f35cbe18d3a6f4` |
+| measured-stages.npz (1180648 bytes) | `b73b220693f77bf4c33de50bd7b5d5bd63805bb50f6d91b5d54581e8712cd195` |
+| measured-statics.json | `5d2a23d4b17e289033c4a9532970b0b4bd2ffce5232783ca444ca318c9f7738e` |
+| measured-layout.json | `334d7d3e125e47d9dae37470b79443875415799bbd195329b7403125a273955c` |
+| measured-analysis.json | `1ec22c0ca60cc1fe21bb68680b38e7561e29adb74a60592d557d5be52d474c32` |
+| daebeb6e-mac-tests.xml | `3abb9acb5143358b9469a1dd50279dcb4a76ab85c5bc71fbc4607a85fe1a94dd` |
+| daebeb6e-linux-tests.xml | `b69d71df69be1d286c4bc9e250eaf5df85f41eaaa4c5fad4a6c0f346146504b5` |
+| daebeb6e-contract-service.json | `7a3d55813fdd0b7690d8f4ae302d2cebc5bca17475d1ebb47e9c32050b6c6fed` |
+| daebeb6e-prelaunch.json | `fbb607158251bfbdf2ebfb88a19fa84a305a58b8c1354a122459293fd8b4cced` |
+| daebeb6e-gpu-service.json | `2ac2c91901b380e7d35efc879ae253b39fe6cdd98942deeba201a64aa60cc1e2` |
+| retain_measured_boundary_services.py | `4b4e3c51e1f0ffe606646d13e8b2257dd7624eff20596bced796022d21560805` |
+
+Next: separately implement/review/test/predeclare a CPU-only solver control,
+binding this exact report/full packet, restoring every before-solve array and
+proving all model/static/byte bindings before one public solve. Never recompute
+kinematics, collision, constraints, factorization, sensors, actuation or forces
+in that control. Original simulator/PPO admission remains closed.
+
+Independent Luna actual-artifact review passed portable reception in a fresh
+CUDA-hidden process with no simulator runtime imports. It independently checked
+the eight-file/source/predecessor/allocation packet,570/461/184 inventories,
+all eleven new poses, stage counters and six-only output fence, matching593-case
+XMLs, terminal service/helper/report/NPZ hashes and20/20 old final-field byte
+agreement. It found no packet blocker and preserved the historical-boundary,
+same-bank CPU-control, training and physical limits. Native cache was not
+queried by that review; the owner's separate native84-file rehash is the
+cache evidence. This closes **diagnostic packet reception only**.

@@ -1779,3 +1779,52 @@ integration or optimizer step occurred. The prospective solver distinction is
 explicit, while `execution_ready=false` and all admission flags remain false.
 Next prepare/test a closed before/after projection contract before implementing
 or launching the separately reviewed real native phase collector.
+
+### Predeclared native phase projection contract and retained compatibility
+
+Add pure `ada_native_phase_projection.py` before any real collector. Each
+world's closed68-leaf projection contains the declared20 output/state fields,
+all EFC/contact leaves, counters, warnings and all solver statistics, retaining
+correctly shaped zero-size world0 contact leaves. Require exact F64/int32/int64
+layouts, finite values, all seven independently supplied state bytes, the
+declared native0/4-contact and14/30-row fixture counters, bounded iteration/
+matrix/island counts, warning0 and every own contact type/id/address partition.
+These are projected-array checks, not full native Data coverage or producer
+authentication; even synthetic arrays can satisfy them. No physical contact
+matching or admission follows. All68 leaves must survive comparison, including
+solver-written outputs; any nonzero difference is retained without tolerance.
+
+Read-only inspection of the SHA-authenticated f854 bank showed its dense J
+uses the full flat array, while sparse row metadata getters are zero, not a
+populated20-per-row table. The initial uncommitted projection assumption was
+corrected before any real compatibility analysis: retain all sparse metadata
+bytes/descriptors and differences but do not interpret them as dense storage
+indices. Dedicated tests exercise each retained metadata leaf. No captured
+packet, underlying model, library or gate was modified.
+
+The separately source-bound compatibility arm reauthenticates/regenerates the
+entire838 phase plan, all f854 capture/payload/MJB references and original state
+inputs. Decode all68 leaves per world from **retained post-forward only** data
+into owned copies, then validate each against independently restored F64 input
+states. Retain complete136 descriptors/raw hashes and the referenced full954
+Model-array inventory count. Do not relabel this as before-solve, manufacture
+a pre-boundary, compare before/after, execute native calls, or infer producer/
+compiled/cause/simulator/training/physical identity. The deterministic decision
+is `retained-post-forward-projection-compatible-not-before-solve-capture`;
+all runtime/capture/admission flags and `execution_ready` remain false.
+
+Before this pure compatibility analysis: synthetic192 focused tests, independent
+review, full18-file suite, commit/push/exact clean native fast-forward and native
+contracts60s/2GiB. Compatibility120s/2GiB, outputJSON≤256KiB, fresh source-prefix
+names, existing exact transient argv/env/caps/terminal and both fresh full
+receivers apply. All launches precede22:50UTC; unchanged protected/DINO scopes,
+no GPU lease mutation. Latest focused192 tests passed0.65s. Helper SHA256s are
+d35f034ee3e2218a0942b38cfcae89e1c30c03b6f48ced9579a9423f5c2ff9b0
+(terminal) and7bee3843635c50de8116ae8522bb0a059fa6111569dd591ebf192f36e3b5b7b1
+(receiver); py_compile passed. No retained compatibility analysis or real native
+capture ran before this predeclaration.
+The complete18-file suite passed1352 with one actual-physics deselection in
+23.44s. Independent source/document/helper review passed192 focused synthetic
+tests in0.39s with no cache/bytecode, found no blocker and performed no actual
+analysis or simulator execution. Exact source/commit/native contracts precede
+the separately retained compatibility packet.

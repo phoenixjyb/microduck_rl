@@ -85,3 +85,67 @@ initialization boundary described in the preceding API preparation remains
 unqualified: this collector is diagnostic scaffolding, not authority to bypass
 that gate or restart training. A native attempt still needs explicit reviewed
 closure of that boundary plus a fresh capacity/lease/workload admission.
+
+## Retained paired CPU closeout
+
+Execution source `d8b9ee26d41432855dcab672f18d42cff2a4423b`, tree
+`09e6ec8aeb51f9ccb35b1af60b4b7ccd03f8a252`: all 999 committed plain-file
+blobs matched before and after both checks. This section is a later documentation
+closeout, not tests relabeled at its newer commit.
+
+All 1315 cases across the declared 26 files passed on both hosts with zero
+failures, errors or skips, including 83 collector and 33 receiver cases.
+Mac used 26 serial isolated CPU processes with the unchanged 120-second per-file
+timeout and Nice 10, 187.12 seconds total. WSL used one aggregate suite,
+118.10 seconds pytest time (118.73 seconds owner-measured subprocess time).
+Independent Mac reception matched the exact testcase multiset, not identical
+process partition, operating system or Python patch version.
+
+WSL unit `microduck-gradient-native-cpu-d8b9ee26d414.service`, invocation
+`64d42e8256f941098f6d6cd59d2de515`, finished successfully: MainPID 0,
+ExecMainStatus 0, no restarts, empty ControlGroup and original cgroup absent.
+Active/exited is the retained oneshot record, not a running CPU or GPU process.
+The unchanged CPU caps were 300-second start / 10-second stop, 4 GiB RAM,
+200% CPU, 64 tasks, Nice 10, 16 MiB file, no core/restart and control-group kill.
+Peak sampled tasks were 14, every `pids.events` sample was `max 0`, and
+MemoryPeak was 3614744576 bytes. CUDA stayed hidden, all four pre-import thread
+limits were 1, and WSL used this exact checkout's `PYTHONPATH`.
+
+Whole frozen runtime bindings and protected service snapshots matched before
+and after. FilmBrain observatory PID 521 and video-playground PID 298048 stayed
+active with zero restarts. Both AI mission services stayed inactive in both
+scopes. No installed source, virtual environment, package, driver, GPU workload
+or unrelated service was changed.
+
+Artifacts are retained on both hosts under
+`artifacts/tools/gradient-native-preparation/`. The independent checker
+authenticated 58 inventoried files / 4347712 bytes, plus closeout/helper anchors,
+all source leaves, paired case lists, literal runtime pins and same-invocation
+CPU retirement. Its paired receipt is copied byte-for-byte to WSL. A derived
+canonical `d8b9ee26d414-cpu-evidence.json` binds the two original XML anchors and
+the exact 26-file list; WSL independently accepts it with `tests_record`.
+Future owner calls must supply its absolute retained path for a canonical
+declaration envelope. This evidence belongs to execution source d8b9ee26, not
+a later checkout; it grants no native admission.
+
+At 14:37 Asia/Shanghai, sequential Windows/WSL samples showed 8310 MiB used,
+15852 MiB free, 35 C and 2/3 percent utilization. A Windows 3D engine was active.
+These samples neither prove an idle GPU nor reserve capacity for a later run.
+
+Development checks caught and corrected a collector packet-variable shadow,
+a receiver fixture's wrong capture protocol, and an object-identity comparison
+in a test of separately authenticated historical packets. Working XML remains
+retained outside the accepted execution inventory. The final paired checks
+required no runtime or environment repair. Luna implemented the separate
+receiver/test files; the owner reviewed its closed records and added actual
+disk-backed inventory/bank reception and strict false-boolean coverage before
+acceptance. No native attempt, learned policy, MP4 or physical result is claimed.
+
+| Evidence | SHA256 |
+| --- | --- |
+| `d8b9ee26d414-mac-tests.xml` | `2579cbf73ace0d268c8467954c4b7be70ecaa15332a43ecd6e51417863c8e65e` |
+| `d8b9ee26d414-wsl-tests.xml` | `d3c268e5dfa56db5f437b526a1b07e1d7a97402c9d08cf81fe1c5e785e611b66` |
+| `d8b9ee26d414-wsl-report.json` | `87c1114dc93cd081f9973003d2149685494880e198498163d9c0ca6dbd7e10b1` |
+| `d8b9ee26d414-wsl-closeout.json` | `4189d9e24d696e3319693e824de57b45047df899d3e8bdf9d1406cb30f7ab656` |
+| `d8b9ee26d414-paired-check.json` | `ca6c909bdaf78c8c134ee82863fc799fff3d164fc79e7387609e81017a29d48e` |
+| `d8b9ee26d414-cpu-evidence.json` | `a004ad5fa5d40d2e1e6280edb7d8b734ca73fdd8e70a654faecab87b88068460` |

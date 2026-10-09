@@ -89,6 +89,9 @@ separation is about 0.0188951 m; each native foot has two distinct points about
 **structural keys** and unresolved correspondence, not proven duplicate positions.
 No nearest-neighbor relation or pointwise force comparison is established.
 
+The following reconstruction table uses the Mac evaluator over the retained
+native-double/Ada-float32 banks, not a new physics execution.
+
 | Float64 row-force reconstruction against stored constraint force | Maximum absolute residual |
 | --- | ---: |
 | Native, air-gap world | 0 |
@@ -110,6 +113,49 @@ The summed upward-force delta is 0.3180691256798545 N, concentrated in the
 shallow-contact solve. Summation does not erase the differing manifold: these
 are different generated contacts, not matched force samples. The checker also
 retains all horizontal forces, moments and generalized friction/contact terms.
+
+## Frozen verification and retained outputs
+
+Diagnostic source `b50117e2b585ee443f2ef65c17ad620c68d9a4a2` passed **247
+cases across seven focused CPU files** on Mac (47.73 s) and native100.100
+(80.36 s), zero failures/errors/skips. The complete testcase multisets match.
+These are CPU checks, not a new CUDA or physics run. Native regression invocation
+`08e5d915d84043fc8f1a675e834fd18a` retired with MainPID0, exit0, Result success,
+active/exited and empty ControlGroup.
+
+The source-bound CPU arithmetic CLI completed on both hosts. Native diagnosis
+invocation `93d29c38e9ea43d8bbf4dc1f68baa8dc` used the declared 90 s/6 GiB/
+200%/64-task/Nice10/16 MiB/no-core/no-restart/control-group/10 s stop caps, and
+retired with MainPID0, exit0, Result success and empty ControlGroup. Frozen
+package versions, machine/checkout identity, all four system/user mission-service
+states and Grounding DINO PID1592 were rechecked unchanged. GPU remained at
+961 MiB used /15232 MiB free; this chunk launched no CUDA workload.
+
+Mac and Linux outputs are **not byte-identical**: 47 generalized-force arithmetic
+leaves differ, with maximum absolute cross-evaluator difference
+`1.7763568394002505e-15`. Native-host float64 reconstruction of the native bank
+has maximum residual `8.881784197001252e-16`, versus the Mac evaluator's
+`1.3376344303039911e-17`; Ada-bank reconstruction has the same maximum residual
+`2.942979335784912e-07` in both evaluators. The predecessor arrays, module/input
+hashes, source identities, contact resultants, counts and false qualification
+flags are unchanged and equal. Retain these arithmetic differences without a
+tolerance, rounding normalization or a cross-host bit-exact claim.
+
+All four JSON/XML artifacts are retained on both Mac and native under
+`artifacts/tools/ada-contact-diagnosis/`; no extra copy of the 15 MiB predecessor
+input bank or compiler cache was needed. Independent Luna reviewed the source
+and force/frame/origin conventions, then independently verified both complete
+JSON/XML byte bindings, all predecessor file hashes, false flags, equal resultants
+and the exact 47 evaluator differences. This accepts retention, not physics or
+solver correctness.
+
+| Evidence | SHA256 |
+| --- | --- |
+| Diagnostic module bytes | `1f95c8c5dda2b5416c79ae47cbf7d08f2a5f85642502cb9514cb92a35983318c` |
+| `b50117e2-mac-diagnosis.json` | `d2713cc7b0da10a0c0c38cc716e219cd7b30cd77f40e7fab6f3454f3370a816d` |
+| `b50117e2-linux-diagnosis.json` | `4c5f532f9bebdce4e8983517533a6d551681539877d4027fb88a9124b4452ca1` |
+| `b50117e2-mac-tests.xml` | `a16313787fa242fa3eb5bb6290df8592a7498f5e65dad5bf9acc48fa9dfe0ef6` |
+| `b50117e2-linux-tests.xml` | `413b2507c1bcf57da5ca6029a6c55a6ea06b44ff0fbda876648ecb2bcda88b4a` |
 
 ## Next separately predeclared collision-only control
 

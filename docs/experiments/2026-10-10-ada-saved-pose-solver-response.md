@@ -226,3 +226,29 @@ review explicitly notes these are **synthetic contract tests**, not proof of
 actual native Data layout, CPU solver behavior, CUDA identity or admission.
 Next implement the closed receiver and exact-source CLI; then re-review and
 freeze the full arm before any capped response invocation.
+
+The primitives were committed/pushed as
+`7f31329c9dfa592b93efaad322be77e25b3779b0` and fast-forwarded cleanly on
+native100.100. Committed-source four-file tests passed **239/239 on both
+hosts**, Mac4.59s and native1.65s (CLI timing); full testcase multisets match
+with zero failures/errors/skips. The native synthetic-test service reused
+the source-audit60s/2G/CPU200%/thread1/Tasks64/Nice10/FSIZE16M/CORE0/
+Restart=no/KillMode control-group/Stop10s caps; no response primitive ran.
+Invocation `75dc998423614c349f561b59d121f7ba` finished in2.215121s,
+MainPID0/status0/Result success/empty ControlGroup, active/exited. The helper
+again verified inactive protected services and Grounding DINO as sole GPU
+compute owner. No CPU response or GPU Duck workload has been launched.
+
+Both hosts retain these files under `artifacts/tools/ada-saved-pose-response/`:
+
+| Evidence | SHA256 |
+| --- | --- |
+| `7f31329c-mac-tests.xml` | `fbf1bc29287e00f06fc7cacc205155a18ca8e88e66430437dc7c07ef8898e011` |
+| `7f31329c-linux-tests.xml` | `ac16bb54550f7fbbd26b0a5fb684f327f3e38fc100b6e070d79503d8a6c581a2` |
+| `7f31329c-native-service.json` | `7825a2c6291cce2000fda4c11549b23afae61dddeeeb85d2b3d2b6967ca70ff4` |
+| read-only `retain_primitive_test_service.py` | `959a714cf638622a15fafac2167bab1c87a5c3b9e8296b895bcbe1f68189a0e7` |
+
+The receiver must decode and independently validate all five complete raw
+stage banks, not trust these mocked tests as actual boundary evidence. Add
+source-bound exclusive CLI/private-cache receipts, final complete-row/wrench
+arithmetic and negative reception tests before a new physics predeclaration.

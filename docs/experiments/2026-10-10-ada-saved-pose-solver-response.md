@@ -391,3 +391,56 @@ Success requires native reception **with cache** plus exact portable Mac
 reception from the new packet. A numerical residual reduction alone is not a
 passed reception gate. Preserve Dino/protected services and all diagnostic
 interpretation limits. No solver tolerance, new GPU/PPO work or physical motion.
+
+## Retained v2 exact reception
+
+Source `05216efe9d33a80d7a839eaa20b7a57ea05dbe86` was pushed and
+fast-forwarded cleanly on native100.100. The five-file committed-source suite
+passed **315/315 on both hosts**, Mac2.64s; full testcase multisets match with
+no failures/errors/skips. Contract unit invocation
+`de63a72a44544333a10e7dafed804acf` completed in2.714729s under60s/2G caps.
+
+Response unit `microduck-ada-response-05216efe.service`, invocation
+`50a4b911d8644a29984df3201d1613db`, succeeded in37.778253s under all180s/6G
+caps. MainPID0/status0/Result success/empty ControlGroup, active/exited.
+Native reception independently recomputed the complete packet and rehashed
+all72 private-cache files (4812174 bytes). Portable Mac reception now passes
+**exactly**, including all numeric analysis fields, not a tolerance-based check.
+The24 passive CPU executable receipts still do not bind loaded binary bytes.
+Independent Luna portable artifact reception also passed: all source/layout/
+570-array/arithmetic bindings, exact v1 leaf equality, both315-case XMLs and
+service/helper hashes. Its scope excludes direct host queries/native-cache
+rehashing; the owner performed those native checks separately and verified
+all seven native artifact hashes against the retained Mac copies.
+
+All570 saved Data stage leaves are **byte-identical to v1**; even the complete
+NPZ hash is identical. Thus the tested revision changes the response-local
+reduction convention, not the collision, construction, solve, state or motor
+inputs. Counters, eight candidates, model/pose/state bindings and the six changed
+solver outputs remain those listed above. Ordered full-row reconstructed-minus-
+stored generalized maxima are[0,4.973262548446655e-7]; they are descriptive
+float64-versus-stored-float32 residuals, not a new acceptance tolerance.
+Historical Ada qacc residual remains7.62939453125e-6. No skill, integrated
+trajectory, GPU-origin, same-manifold solver or simulator qualification follows.
+
+Both hosts retain the v2 files under `artifacts/tools/ada-saved-pose-response/`;
+native private-cache bytes remain only on native to avoid duplicate storage:
+
+| Evidence | SHA256 |
+| --- | --- |
+| `05216efe-linux-response.json` (245711 bytes) | `af380438ef6da87e1e77f7eefcb5cdc1da8724fab757a8b9d2836c2f0a8386e9` |
+| `05216efe-linux-response.npz` (1180648 bytes) | `b3c52c1463863389ba8161ac9fca0bd080b020e01b48920405904024c183dc34` |
+| `05216efe-mac-tests.xml` | `3e1865c978428999aae716b0039d4edd3dcf21d5cfb8a07e229bd01c75b4e18e` |
+| `05216efe-linux-tests.xml` | `7e79bf408787624cba41b13455367c05036385fff3f0ff23353f19c4abc4b89d` |
+| `05216efe-contract-test-service.json` | `68ab894ad123406b3910bcdc1fe26e9fca3192ef763777d38e6b96086cebd779` |
+| `05216efe-native-services.json` | `88141ada9e65bf30fe83317408c1d4dfc7f0e997e8bad2f694258732417769d2` |
+| read-only `retain_response_services.py` | `8a6104530e3b4940762b9372c71be4751beb6c9dbe0d298b98639349452bb060` |
+
+Both protected mission services remain inactive in system and user scopes.
+Grounding DINO PID1592 is the only GPU compute owner (946MiB); no Duck GPU
+job or active Duck CPU process remains from these units. The driver/library/
+plant/acceptance gates are untouched. Next prepare a separately bounded,
+source-tested **complete measured Ada collision/pre-solver boundary capture**
+and identical-bank control, rather than reconstructing GPU inputs from solved
+outputs or promoting small response residuals. Any GPU execution still needs
+its own occupancy/lease/cap/deadline proof and numerical-gate review first.

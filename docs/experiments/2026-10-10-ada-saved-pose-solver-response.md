@@ -444,3 +444,22 @@ source-tested **complete measured Ada collision/pre-solver boundary capture**
 and identical-bank control, rather than reconstructing GPU inputs from solved
 outputs or promoting small response residuals. Any GPU execution still needs
 its own occupancy/lease/cap/deadline proof and numerical-gate review first.
+
+## CPU cache-option erratum and future preparation
+
+A later source review found the three CPU replay CLIs assigned a dynamic
+`wp.config.enable_precompiled_headers` attribute. The frozen Warp option is
+actually **use_precompiled_headers** (`warp/config.py:241`). The former
+attribute was a no-op, so earlier CPU PCH-disabled wording does not establish
+that actual option state. Frozen `warp/_src/build.py:117-139` CPU compilation
+does not consume that option; the CUDA builder does (`build.py:97`). This
+does not explain the v1 BLAS reduction mismatch, change retained CPU raw
+results/cache hashes, or invalidate exact v2 reception. Existing GPU supervisor
+already sets the correct option. Preserve all historical artifacts unchanged.
+
+Future CPU replay/saved-collision/response CLIs now share a tested helper that
+requires the real boolean option, sets use_precompiled_headers=False and
+verifies it together with the private cache path. Missing/phantom/nonboolean
+options fail closed. The change does not alter frozen libraries or physics.
+The [new measured-boundary preparation](2026-10-10-ada-measured-boundary-control.md)
+documents the next source-only primitives and remaining runtime launch gates.

@@ -341,8 +341,8 @@ def main():
     import warp as wp
     import torch
     args.cache.mkdir()
-    wp.config.enable_precompiled_headers = False
-    wp.config.kernel_cache_dir = str(args.cache)
+    from mjlab_microduck.ada_saved_pose_collision import configure_private_cpu_cache
+    configure_private_cpu_cache(wp, args.cache)
     wp.init()
     need(all(d.is_cpu for d in wp.get_devices()) and not torch.cuda.is_initialized(), "CPU devices only")
     result, arrays = replay(report, banks)

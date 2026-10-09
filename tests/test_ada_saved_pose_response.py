@@ -197,3 +197,23 @@ def test_no_integration_ordinary_forward_or_fixture_kinematics():
              for n in ast.walk(tree) if isinstance(n, ast.Call)}
     assert not names & {"kinematics", "mj_kinematics", "mj_forward", "forward", "step", "mj_step", "_advance", "sensor_acc"}
     assert "make_constraint" in names and "solve" in names and "collision" in names
+
+
+def test_actual_private_cache_option_and_no_phantom_property(tmp_path):
+    wp = NS(config=NS(kernel_cache_dir=None, use_precompiled_headers=True))
+    p.saved.configure_private_cpu_cache(wp, tmp_path)
+    assert wp.config.kernel_cache_dir == str(tmp_path) and wp.config.use_precompiled_headers is False
+    assert not hasattr(wp.config, "enable_precompiled_headers")
+    for config in (NS(), NS(use_precompiled_headers=1), NS(enable_precompiled_headers=False)):
+        with pytest.raises(ValueError, match="actual frozen Warp PCH option"):
+            p.saved.configure_private_cpu_cache(NS(config=config), tmp_path)
+
+
+def test_cpu_clis_use_only_the_frozen_pch_property():
+    for module in (p.saved.p, p.saved, p):
+        tree = ast.parse(Path(module.__file__).read_text())
+        attrs = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
+        assert "enable_precompiled_headers" not in attrs
+        calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call)]
+        assert any((isinstance(n.func, ast.Attribute) and n.func.attr == "configure_private_cpu_cache")
+                   or (isinstance(n.func, ast.Name) and n.func.id == "configure_private_cpu_cache") for n in calls)

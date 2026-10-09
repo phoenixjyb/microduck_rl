@@ -159,6 +159,20 @@ def provenance_layout(result):
     need(sum(x["bytes"] for x in files.values()) <= 96 * 1024**2, "bounded cache total")
 
 
+def configure_private_cpu_cache(wp, cache):
+    """Set the actual frozen Warp option, never an arbitrary module attribute.
+
+    PCH is consumed by build_cuda, not build_cpu, in frozen Warp1.12.0.
+    Keep the intended configuration explicit without claiming loaded binaries.
+    """
+    need(hasattr(wp.config, "use_precompiled_headers")
+         and type(wp.config.use_precompiled_headers) is bool, "actual frozen Warp PCH option")
+    wp.config.kernel_cache_dir = str(cache)
+    wp.config.use_precompiled_headers = False
+    need(wp.config.use_precompiled_headers is False and wp.config.kernel_cache_dir == str(cache),
+         "actual private cache and PCH configuration")
+
+
 def metadata_comparison(contact, active):
     import numpy as np
     cpu = {k: contact[k] for k in (set(metadata.INT_FIELDS) | set(metadata.FLOAT_FIELDS)) - {"slot"}}
@@ -346,8 +360,7 @@ def main():
     import warp as wp
     import torch
     args.cache.mkdir()
-    wp.config.kernel_cache_dir = str(args.cache)
-    wp.config.enable_precompiled_headers = False
+    configure_private_cpu_cache(wp, args.cache)
     wp.init()
     need(all(d.is_cpu for d in wp.get_devices()) and not torch.cuda.is_initialized(), "CPU-only devices")
     result, arrays = run(report, banks)

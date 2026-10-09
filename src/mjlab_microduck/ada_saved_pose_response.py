@@ -537,7 +537,7 @@ def main():
     audit = source.audit(); report, banks = saved.p.prior.authenticated_banks(args.input)
     import warp as wp
     import torch
-    args.cache.mkdir(); wp.config.kernel_cache_dir = str(args.cache); wp.config.enable_precompiled_headers = False
+    args.cache.mkdir(); saved.configure_private_cpu_cache(wp, args.cache)
     wp.init()
     need(all(d.is_cpu for d in wp.get_devices()) and not torch.cuda.is_initialized(), "CPU-only response devices")
     result, arrays = run(report, banks)

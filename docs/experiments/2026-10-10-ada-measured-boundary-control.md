@@ -121,3 +121,29 @@ offsets. The source-only imports/AST checks and tests do not execute physics.
 Native at17:27 UTC retained clean base7ca75aca, Dino PID1592/946MiB as the
 only GPU compute owner,43C/0%, and both protected services inactive in system
 and user scopes. This snapshot is not authority for a later GPU launch.
+
+## Retained source-only verification
+
+Source `a8fa2ef9517e7bfaa0159740f0ae5e9204f96ce3` was pushed to the fork and
+clean-fast-forwarded on native100.100. Committed-source Mac408/408 (6.67s) and
+native408/408 (2.57s) JUnit testcase multisets match exactly, with zero
+failures/errors/skips. Native unit
+`microduck-ada-response-contracts-a8fa2ef9.service`, invocation
+`1a5ad9bc07db42f0a5b7a778ce991137`, completed in3.133567s with the declared
+60s/2G caps, status0/Result success/MainPID0/empty ControlGroup, active/exited.
+No simulator allocation, collision, solve or GPU Duck job ran in this suite.
+
+Both hosts retain these files in `artifacts/tools/ada-measured-boundary/`:
+
+| Evidence | SHA256 |
+| --- | --- |
+| `a8fa2ef9-mac-tests.xml` | `cf5c24e46e8a7b2d0ec5af06fcf40a49ea6635e51affd3364124cd46bb569c35` |
+| `a8fa2ef9-linux-tests.xml` | `cbd3fe78c2bef749c4658eca01700748e0ae696139dfe9f420d1b1e944edeeaa` |
+| `a8fa2ef9-native-services.json` | `fbdea309d42825afd1d64c00157da614e37dc976a2905d2b8f4beb5a4b51f5f7` |
+
+Read-only service receipt helper remains the previously retained
+`ada-saved-pose-response/retain_response_services.py`, SHA256
+`8a6104530e3b4940762b9372c71be4751beb6c9dbe0d298b98639349452bb060`.
+At17:29:59 UTC it verified both protected services inactive in both scopes,
+Dino PID1592/946MiB only,44C/0%,961MiB total used. Source/test evidence only;
+the new measurement and identical-bank control remain unexecuted.

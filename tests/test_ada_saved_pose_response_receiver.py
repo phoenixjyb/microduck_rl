@@ -106,6 +106,20 @@ def test_complete_stage_reception_and_independent_force_arithmetic():
                for v in result["current_minus_historical_ada_fields"].values())
 
 
+def test_fixed_generalized_reduction_order_without_blas(monkeypatch):
+    active, fields = {}, {"qfrc_constraint": np.zeros((2, 20), np.float32)}
+    for w in range(2):
+        J = np.zeros((3, 20), np.float32); J[:, 0] = [2**60, 1, -2**60]
+        active.update({f"rows/{w}/J": J, f"rows/{w}/force": np.ones(3, np.float32),
+                       f"rows/{w}/type": np.array([1, 6, 1], np.int32)})
+    monkeypatch.setattr(p.saved.p.prior, "reconstruction", lambda *args: pytest.fail("no backend-dependent reconstruction"))
+    result = p.ordered_reconstruction(active, fields)
+    # Fixed ascending-row IEEE64: (2**60 + 1) - 2**60 is0, not a regrouped1.
+    assert all(r["total_generalized_force"][0] == 0 and r["contact_generalized_force"][0] == 1
+               and r["friction_generalized_force"][0] == 0 for r in result)
+    assert all(r["max_abs"] == 0 for r in result)
+
+
 @pytest.mark.parametrize("damage", ["missing", "extra", "bytes", "dtype", "nan", "pose", "state", "layout", "stride"])
 def test_complete_stage_packet_refusals(damage):
     arrays, layout, report, banks, _ = packet(); key = "after_solve/data/qpos"

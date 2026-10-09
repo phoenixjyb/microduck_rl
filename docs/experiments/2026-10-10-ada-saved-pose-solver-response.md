@@ -267,8 +267,10 @@ may be omitted or shared by two contact groups.
 
 Diagnostic force decoding is host arithmetic over the new solved EFC rows,
 not another kernel call or imposed force. Float32 pair/add rounding follows
-frozen `support._decode_pyramid`; existing float64 all-row reconstruction and
-ordered-pair world wrench sums then apply. Historical comparisons are explicitly
+frozen `support._decode_pyramid`; float64 all-row reconstruction and ordered-pair
+world wrench sums then apply. V1 used the historical BLAS reduction; the v2 repair
+below uses explicit ascending scalar row-order/no-BLAS reconstruction.
+Historical comparisons are explicitly
 **current minus historical** and never establish identical solver inputs,
 physical point identity or acceptance. No tolerance is introduced.
 
@@ -311,3 +313,81 @@ physics was called during these tests or review. The five-file response,
 source-audit, saved-collision and metadata regression suite passed314/314 on
 Mac in2.67s; `git diff --check` passed. Native committed-source tests,
 first response execution and retained result hashes remain separate next gates.
+
+## First response execution and portable arithmetic diagnosis
+
+Source `c1634dfd956815380e4214d2ccda13b92d70354b` was pushed and
+fast-forwarded cleanly on native100.100. Its committed-source five-file suite
+passed314/314 on both hosts, Mac2.60s; full testcase multisets match with no
+failures/errors/skips. The Linux contract unit invocation
+`c6f65f6b88864787a278a2a6b964af78` completed in2.705104s under60s/2G caps.
+
+CPU response unit `microduck-ada-response-c1634dfd.service`, invocation
+`74532b078709493788e5c455c21a9a4b`, succeeded in37.599239s under all180s/6G
+caps. MainPID0/status0/Result success/empty ControlGroup, active/exited.
+Native closed reception independently rehashed all72 private-cache files
+(4812174 bytes) and recomputed all570 stage leaves.24 already-held CPU
+ModuleExec receipts remain passive metadata, not loaded-binary byte proof.
+The CUDA-hidden initialization log emits Warp CUDA error100 before choosing
+the CPU-only device; it is not a service failure or a CUDA execution claim.
+
+Actual stages: initially zero candidates/EFC/solver work; collision ncollision4,
+nacon8 with zero EFC/solver counts; construction and pre-solve nf[14,14],
+nefc[14,46], ne/nl0; final solver_niter[1,4]. Only the six predeclared Data
+outputs changed across solve. Every prepared pose/state/model binding stayed
+exact. Candidate metadata residuals are the earlier collision-arm residuals:
+dist1.127773430198431e-10m, pos1.862645149230957e-09m; frame/friction0.
+
+Each foot has four generated contacts. New summed vertical diagnostic forces
+are3.2832815647125244N and3.284973293542862N. Relative to retained Ada,
+vertical deltas are-1.7881393432617188e-7N and-8.940696716308594e-8N;
+qacc max residual7.62939453125e-6. These are descriptive different-input
+comparisons, not same-manifold controls, solver acceptance or skill evidence.
+
+The **Mac v1 receiver failed closed**, despite native v1 reception passing:
+`ValueError: every actual stage invariant and resultant recomputed`. Read-only
+owner and independent Luna diagnosis found exactly six differing scalar leaves,
+all Mac-minus-native **+3.469446951953614e-18**: world1 DOFs4 and8 of
+contact_generalized_force, total_generalized_force and reconstructed_minus_stored.
+Every other analysis field and the complete saved arrays/layouts/counters agree.
+The shared historical helper uses float64 NumPy `J.T @ force`, whose BLAS
+reduction tree is backend-dependent. This is a reception/arithmetic portability
+failure, not a failed solve or divergent physics. Do not call v1 portable reception
+accepted; preserve the original packet/source unchanged.
+
+Both hosts retain these v1 artifacts in `artifacts/tools/ada-saved-pose-response/`:
+
+| Evidence | SHA256 |
+| --- | --- |
+| `c1634dfd-linux-response.json` | `1144f106916d138104073d5d6cc7166e877670f8eef29bc49771d203d95d8f71` |
+| `c1634dfd-linux-response.npz` (1180648 bytes) | `b3c52c1463863389ba8161ac9fca0bd080b020e01b48920405904024c183dc34` |
+| `c1634dfd-mac-tests.xml` | `6137052ffc09020a8464178b0298c4c0bfe545be7b199aa95241c2b3ae42967a` |
+| `c1634dfd-linux-tests.xml` | `c57c111c8081800ccfeee5b3af3033683d6170b85815e10db22864f755c84791` |
+| `c1634dfd-contract-test-service.json` | `a1e70dca9ee971288817e865c90314497fd2d5c7067cf8b7e671695e35d36c7a` |
+| `c1634dfd-native-services.json` | `fbc9d7da315a656538e41b9178bd3650577793f45e911c269cead8e5e927d89a` |
+| read-only `retain_response_services.py` | `8a6104530e3b4940762b9372c71be4751beb6c9dbe0d298b98639349452bb060` |
+
+## Minimal response v2 arithmetic repair predeclaration
+
+At base c1634dfd, leave historical/shared arithmetic and all physics unchanged.
+The response-local generalized reconstruction now casts each float32 operand to
+Python IEEE float64, computes each product explicitly and adds it in increasing
+raw EFC-row order, separately for friction/contact/all-row sums. Subtraction from
+stored generalized force is then explicit scalar float64. No BLAS matrix reduction,
+reassociation, tolerance, normalization or row omission. The stated reduction
+convention and response protocol advance to v2; this does not change any simulator
+gate. An adversarial2**60,1,-2**60 cancellation fixture requires the declared
+ascending-row sum0, distinguishing a regrouped1. Full packet test remains exact.
+Independent Luna read-only repair review passed124 focused tests in0.82s and
+verified explicit separate binary64 products/additions and unchanged historical
+helper. The owner corrected the older paragraph's reduction description as
+requested. Five-file regression passed315 cases; no new response has run yet.
+
+After focused tests, independent review, exact new source push/clean native sync
+and native contract tests, run a fresh **v2** CPU service using the identical
+predeclared180s/6G invocation/path template above with the new source8. Retain
+fresh output/cache paths; do not overwrite v1 or reuse its compiled cache.
+Success requires native reception **with cache** plus exact portable Mac
+reception from the new packet. A numerical residual reduction alone is not a
+passed reception gate. Preserve Dino/protected services and all diagnostic
+interpretation limits. No solver tolerance, new GPU/PPO work or physical motion.

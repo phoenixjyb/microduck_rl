@@ -23,7 +23,7 @@ STAGES = ("before_collision", "after_collision", "after_construction", "before_s
 CALLBACKS = ("passive", "control", "act_dyn", "act_gain", "act_bias", "sensor", "contactfilter")
 SOLVER_OUTPUTS = {"/data/qacc", "/data/qfrc_constraint", "/data/solver_niter",
                   "/data/efc/Ma", "/data/efc/force", "/data/efc/state"}
-PROTOCOL = "microduck-eleven-prepared-pose-cpu-response-v1"
+PROTOCOL = "microduck-eleven-prepared-pose-cpu-response-v2"
 DECISION = "saved-prepared-pose-cpu-response-diagnostic-not-admission"
 NATIVE_ROOT = Path("/home/converge/work/microduck_rl-athletics-obstacle-curriculum")
 MACHINE = "0c79e415429b4933a400159bfa79a34d"
@@ -349,6 +349,35 @@ def field_delta(historical, current):
     return value
 
 
+def ordered_reconstruction(active, fields):
+    """Explicit float64 products/sums in ascending retained row order.
+
+    Do not dispatch a NumPy/BLAS dot: its reduction tree is backend-dependent.
+    Every original active row remains included; no tolerance or normalization.
+    """
+    import numpy as np
+    result = []
+    for world in range(2):
+        J, force, kinds = (active[f"rows/{world}/{k}"] for k in ("J", "force", "type"))
+        need(J.shape == (len(force), 20) and kinds.shape == force.shape
+             and np.isfinite(J).all() and np.isfinite(force).all(), "finite complete ordered row arithmetic")
+        friction, contact, total = [0.] * 20, [0.] * 20, [0.] * 20
+        for row in range(len(force)):
+            need(int(kinds[row]) in (1, 6), "only guarded friction/contact rows")
+            selected = friction if int(kinds[row]) == 1 else contact
+            for col in range(20):
+                product = float(J[row, col]) * float(force[row])
+                selected[col] = selected[col] + product
+                total[col] = total[col] + product
+        stored = [float(v) for v in fields["qfrc_constraint"][world]]
+        need(len(stored) == 20 and np.isfinite([friction, contact, total, stored]).all(), "finite ordered generalized result")
+        delta = [a - b for a, b in zip(total, stored)]
+        result.append(dict(world=world, friction_generalized_force=friction, contact_generalized_force=contact,
+            total_generalized_force=total, stored_constraint_generalized_force=stored,
+            reconstructed_minus_stored=delta, max_abs=max(map(abs, delta))))
+    return result
+
+
 def analyze_stages(arrays, layout, report, banks):
     """Recompute boundaries and all descriptive resultants without runtime."""
     import numpy as np
@@ -383,7 +412,7 @@ def analyze_stages(arrays, layout, report, banks):
     changed = solver_write_fence(before, after)
     data = decoded["after_solve"]; active = active_response(data, descriptor)
     fields = {k: data["/data/" + k].reshape(2, -1) for k in saved.p.p.base.FIELDS}
-    arithmetic = dict(resultants=saved.p.prior.resultants(active), generalized=saved.p.prior.reconstruction(active, fields))
+    arithmetic = dict(resultants=saved.p.prior.resultants(active), generalized=ordered_reconstruction(active, fields))
     cross = []
     current = {tuple(x["key"]): x for x in arithmetic["resultants"]}
     for side in ("cpu", "gpu"):
@@ -400,7 +429,7 @@ def analyze_stages(arrays, layout, report, banks):
                 complete_resultant_arithmetic=arithmetic, descriptive_historical_resultants=cross,
                 current_minus_native_fields=saved.p.p.base.comparison(banks["cpu-fields.npz"], fields),
                 current_minus_historical_ada_fields={k: field_delta(banks["gpu-fields.npz"][k], v) for k, v in fields.items()},
-                arithmetic_precision="Float32 pyramid pair/add decoding, then float64 all-row reconstruction and aggregate arithmetic; no tolerance",
+                arithmetic_precision="Float32 pyramid pair/add decoding; generalized float64 scalar products and ascending raw-row additions (no BLAS); float64 aggregate wrenches; no tolerance",
                 generated_manifold_comparison_not_same_manifold_solver_control=True)
 
 

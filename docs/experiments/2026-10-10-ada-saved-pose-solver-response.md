@@ -3,8 +3,9 @@
 Base `6fe37f27cd4ea1009a78502a8f29b60cb4bdc7fe`, exact branch
 `feat/athletics-obstacle-curriculum`. This separates the next response arm from
 the completed [collision-only intervention](2026-10-10-ada-saved-pose-collision.md).
-The source audit below is complete; the later implementation-primitives section
-does not yet provide an executable solver CLI/receiver. No library, plant, driver, motor,
+The source audit and implementation-primitives sections retain their historical
+gates. The closed CLI/receiver added below still requires exact-source execution
+checks before its first capped response run. No library, plant, driver, motor,
 acceptance gate, curriculum or training protocol changes.
 
 ## Source audit and dependency decision
@@ -184,8 +185,8 @@ source execution. The scientific/authority boundaries above remain unchanged.
 ## Staged response implementation primitives, not runtime execution
 
 At base `bdf0beb7fea4894e8eb687352664042b0da9aa46`, added
-`ada_saved_pose_response.py` and its focused tests. The module has **no main
-or standalone CLI**. It imports no simulator runtime until its explicit run
+`ada_saved_pose_response.py` and its focused tests. At that primitive revision
+the module had **no main or standalone CLI**. It imports no simulator runtime until its explicit run
 primitive is called. That primitive has not been called by the owner/reviewer
 or tests. Launch/reception/source-binding/cache gates must be implemented and
 reviewed separately before any response physics.
@@ -252,3 +253,61 @@ The receiver must decode and independently validate all five complete raw
 stage banks, not trust these mocked tests as actual boundary evidence. Add
 source-bound exclusive CLI/private-cache receipts, final complete-row/wrench
 arithmetic and negative reception tests before a new physics predeclaration.
+
+## Closed response CLI/receiver predeclaration
+
+At base `c33d464cc25a8ed6f3fbba4c79b6338fba0a4b54`, added a closed
+CLI and pure byte-bank receiver for the staged primitives. The receiver derives
+expanded component layouts independently from all114 authenticated logical Data
+layouts and checks the exact **570-array** five-stage inventory. Every pose/state
+byte is rechecked in every bank. It recomputes actual counters, all14 friction
+rows per world, complete contiguous dim3 four-row contact addresses and raw-slot
+links, candidate stability and the six-output solver write fence. No active row
+may be omitted or shared by two contact groups.
+
+Diagnostic force decoding is host arithmetic over the new solved EFC rows,
+not another kernel call or imposed force. Float32 pair/add rounding follows
+frozen `support._decode_pyramid`; existing float64 all-row reconstruction and
+ordered-pair world wrench sums then apply. Historical comparisons are explicitly
+**current minus historical** and never establish identical solver inputs,
+physical point identity or acceptance. No tolerance is introduced.
+
+The exact-source native CLI requires literal CUDA hidden, this machine/root,
+clean feature branch and committed module bytes; frozen package/source bindings;
+absent canonical output/NPZ/private-cache paths; actual running user service with
+all declared180s/6G caps, RemainAfterExit=yes, PID/invocation and the exact five
+CPU/thread environment tokens. It refuses after **2026-10-09 22:50 UTC** to
+preserve the ten-minute closeout reserve. Output uses exclusive-create and a
+bounded finite JSON/NPZ. Native reception must supply the private cache to rehash
+every cache file; portable Mac reception checks its declared inventory only,
+without duplicating native cache storage. Both modes explicitly leave loaded
+binary bytes unbound.
+
+Predeclared first response invocation, after exact-source tests/review/push and
+clean native fast-forward:
+
+```text
+unit: microduck-ada-response-<source8>.service
+python: /home/converge/work/microduck_rl-athletics-obstacle-curriculum/.venv/bin/python
+module: mjlab_microduck.ada_saved_pose_response
+--source <exact committed 40-hex source>
+--input /home/converge/work/microduck_rl-athletics-obstacle-curriculum/artifacts/evaluations/ada-duck-contact-0ce8c9d0a820
+--output /home/converge/work/microduck_rl-athletics-obstacle-curriculum/artifacts/tools/ada-saved-pose-response/<source8>-linux-response.json
+--cache /home/converge/work/microduck_rl-athletics-obstacle-curriculum/artifacts/tools/ada-saved-pose-response/<source8>-private-cache
+```
+
+Caps are the already declared180s/6G CPU-only caps above. Run one fresh retained
+unit, never repair/retry it while active, and diagnose any failure read-only
+before changes. No GPU lease or new GPU process is needed for this CPU arm;
+foreign Grounding DINO and inactive protected mission services are preserved.
+Successful collection still means only an artificial eleven-prepared-pose,
+CPU-generated-manifold response, **not simulator admission or PPO permission**.
+
+Pure response tests passed **123/123** on Mac in0.79s. Independent Luna
+read-only source/API/receiver review repeated123/123 in0.81s, checked all114
+actual predecessor layouts and the frozen float32 decoder source. It identified
+the optional-cache reception distinction, now explicit in API/docs. No runtime
+physics was called during these tests or review. The five-file response,
+source-audit, saved-collision and metadata regression suite passed314/314 on
+Mac in2.67s; `git diff --check` passed. Native committed-source tests,
+first response execution and retained result hashes remain separate next gates.

@@ -30,8 +30,8 @@ def topology():
     return native, model, data
 
 
-def test_import_inert_and_no_standalone_cli():
-    code = "import sys; from mjlab_microduck import ada_saved_pose_response; assert not {'numpy','torch','warp','mujoco','mujoco_warp'} & sys.modules.keys(); assert not hasattr(ada_saved_pose_response,'main')"
+def test_import_inert_with_guarded_cli():
+    code = "import sys; from mjlab_microduck import ada_saved_pose_response; assert not {'numpy','torch','warp','mujoco','mujoco_warp'} & sys.modules.keys(); assert callable(ada_saved_pose_response.main)"
     subprocess.run([sys.executable, "-c", code], check=True, timeout=15)
 
 

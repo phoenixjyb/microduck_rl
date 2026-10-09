@@ -157,3 +157,80 @@ inventory and externally observed original invocation/cgroup retirement before
 independent Mac/WSL reception. No native collector is implemented or launched
 by this preparation. Even a received prefix remains short of Hessian/line-search/
 convergence/full-window/plant acceptance or curriculum training admission.
+
+## Retained paired CPU evidence
+
+Executed source `a5da24a670fd26e5a420c61ce7cba158f1e8c0d8`, tree
+`c4ac39a02236bb3315b297085d8184f2cb3a424a`, was committed and pushed before
+the paired checks. A verified incremental bundle fast-forwarded the clean
+native worktree; its source binding checked all 983 committed blobs and the
+exact new three-path fence. Old module leaves and native evidence stayed unchanged.
+
+**927 tests in twenty focused files passed on both hosts**, including 70 new
+prefix cases, with CUDA hidden and zero failures/errors/skips. Mac pytest took
+102.95 seconds, WSL 75.38 seconds. Not the whole repository suite or GPU evidence.
+The independent read-only Luna review found no blocker in the source pin,
+arithmetic, eight-hash-before-decode order, write-set and predecessor guards;
+it did not rerun tests. Owner reviewed the diff and retained explicit future
+parent-byte/capture and prefix-stop obligations.
+
+Files retained on both hosts under `artifacts/tools/gradient-prefix-preparation/`:
+
+- `a5da24a6-mac-tests.xml`: 1212353 bytes, SHA256
+  `df15f3d38a47b95eecdcd500b0b27bb376b7694f51c8fba486159f9745cfcf07`.
+- `a5da24a6-wsl-tests.xml`: 1212356 bytes, SHA256
+  `8921bc202b2a16ac619f873e4ec024af7d829d56c08a235585ff5aac15473df9`.
+- `a5da24a6-mac-audit.json` and `a5da24a6-wsl-audit.json`: identical 336933
+  bytes, SHA256 `2ab37b4c811d8656b76efbae49ee7c781234f04c14399899ca20f74622551015`.
+- `a5da24a6-source.bundle`: SHA256
+  `75872f1af7656baffdd05e8c08d23f56f176584c874c7dceb041b7f187fbc2c0`.
+- `a5da24a6-wsl-closeout.json`: 65380 bytes, SHA256
+  `5a7ed782cb18f7128f8fd8279ba507d2fc752da0cfc80f430e10f18b2d130eef`.
+
+Each fresh CPU audit reauthenticated the entire native predecessor envelope
+and reproduced its exact receiver bytes before computing predictions. All 20
+DOFs in each of 64 worlds differ between the paired predicted gradients:
+
+- Reference predicted gradient SHA256
+  `224608728e232d39efa86c599f0ed07da7cdf918376092589ba3ebdcbc56c935`.
+- Positive-control predicted gradient SHA256
+  `a55349035f3ab775c9c36b91b384eb1d38436877e8d2467a4f8fd6ce67832aac`.
+
+Additional pure sidechecks compared that reference prediction with grad bytes
+already present in the older authenticated 66-field initialized historical
+packet. All 1280 gradient bits match, and all 64 older grad_dot values lie
+within the declared exact norm intervals. This is **older-reference consistency**,
+not a capture of the newly proposed prefix or its positive control. Historical
+packet whole SHA256 remains
+`b47122d67e3568bf4e413c3905b0ca329e727ee900b168f93dd4c5f27bce4441`;
+historical norm-field SHA256 is
+`d5e34375caa192f8fa8dea0c547b70f9ae233630df94dea87328dbcb4f6ddd9f`.
+`a5da24a6-mac-historical-sidecheck.json` and
+`a5da24a6-wsl-historical-sidecheck.json` are identical 907 bytes, SHA256
+`ce5159753c49e36a434bdd2ebac0aa68f95e6eb75c6de28e7eaa6f6117ce13eb`.
+They bind the same full CPU audit and historical packet, with new-prefix and
+positive-control-capture flags false.
+
+CPU-only unit `microduck-gradient-prefix-prep-cpu-a5da24a6.service`, invocation
+`176a47a35c384f9aa9467b460b40063b`, completed successfully: MainPID=0,
+ExecMainStatus=0, Result=success, NRestarts=0, empty ControlGroup, active/exited.
+An independent external query found the original kernel cgroup absent. Caps
+were Type=oneshot, TimeoutStartSec=300, TimeoutStopSec=10, 4 GiB memory,
+200 percent CPU, Nice=10, TasksMax=64, 16 MiB/file, KillMode=control-group,
+Restart=no. These are ceilings, not measured peaks. Frozen native runtime,
+source/library/tool and venv-alias checks passed unchanged in the closeout.
+
+No Duck user unit remained running. FilmBrain observatory PID 521 and video
+playground PID 298048 stayed active with zero restarts; both protected AI
+mission units stayed inactive in user and system scopes. Post-state Windows
+and WSL counters each reported 8209 MiB used, 15953 MiB free, 2 percent
+utilization and 34 C. Counters are sampled separately and grant no future
+GPU reservation. No workload was stopped or restarted.
+
+Source syntax, local documentation links, recorded hash/count/byte comparisons
+and whitespace checks passed. No new native gradient-prefix execution, solver
+iteration, policy training or learned skill was produced. Next: implement and
+test the separately fenced native prefix owner/adapter/receiver described above,
+then rebind prerequisites at its exact launch source and recheck admission.
+This documentation-only evidence closeout changes source identity; do not relabel
+the source-bound CPU reports as having run at a later commit.

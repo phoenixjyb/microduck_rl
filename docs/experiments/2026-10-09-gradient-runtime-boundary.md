@@ -102,3 +102,64 @@ boundary banks. Reproduce all arithmetic/write-set checks after complete byte
 authentication, with external same-invocation retirement and fresh resource,
 cache, tool, protected-workload and lease evidence. No native attempt may bypass
 the still-pending initialization/transitive-runtime authentication boundary.
+
+## Retained paired CPU closeout
+
+Execution source `d9763cf65fcc401eaf1e2264f11951bc964e915c`, tree
+`4abeeb7bd5505b616f0ac9002cb86fb9ae5d211c`: all 994 committed plain-file
+blobs matched before and after both checks. This section is a later document
+closeout, not tests relabeled at a newer source commit.
+
+All 1199 cases across the declared 24 files passed with zero failures, errors
+or skips on both hosts, including the 72 new cases. Mac used 24 serial isolated
+per-file CPU processes with unchanged 120-second per-file bounds and Nice 10,
+168.54 seconds total. WSL used one aggregate suite, 112.95 seconds. Independent
+verification matches the exact case multiset; it does not claim identical
+process partition, operating system or Python patch version.
+
+WSL unit `microduck-gradient-runtime-cpu-d9763cf65fcc.service`, invocation
+`30b76b216e7241008966fd35adb40d0b`, retired successfully with MainPID 0,
+ExecMainStatus 0, no restarts, empty ControlGroup and its original cgroup absent.
+The retained oneshot service is active/exited, not a running CPU/GPU process.
+Caps remained 300-second start / 10-second stop, 4 GiB, 200% CPU, 64 tasks,
+Nice 10, 16 MiB file, no core, control-group kill and no restart. Peak sampled
+tasks were 14, with every `pids.events` sample `max 0`; MemoryPeak was
+1737793536 bytes. CUDA stayed hidden and all four pre-import thread limits were 1.
+
+Whole frozen runtime bindings matched before and after. FilmBrain observatory
+PID 521 and video-playground PID 298048 stayed active with zero restarts.
+Both protected AI mission services stayed inactive in both system and user
+scopes. The independent checker also validates the retained runtime declaration
+against the unchanged predecessor's literal source/library/tool pins.
+
+Artifacts are retained on both hosts under `artifacts/tools/gradient-runtime-boundary/`.
+Independent Mac verification authenticates 54 inventoried files / 4291235 bytes,
+the closeout and four helper sources, all source leaves, exact case multiset,
+service caps and same-invocation retirement. Its copied paired receipt is
+byte-matched on WSL. All six qualification flags and native admission remain false.
+
+At 13:49 Asia/Shanghai, sequential Windows and WSL samples showed 8259/8249 MiB
+used, 15903/15913 MiB free, 35 C and 2% utilization; a Windows 3D engine was
+active. These are not simultaneous samples, proof of an idle GPU, process
+attribution, exclusive lease or reservation for a later native attempt.
+
+Pre-commit development runs exposed a test-only class-name cleanup bug and
+an overly strict builtin-origin assumption (`open` belongs to `_io`). The
+working JUnit records remain locally retained outside the accepted source-bound
+inventory. Both were corrected before the accepted commit; no installed source,
+package, driver or unrelated process was changed. A read-only Luna review also
+prompted same-object builtin-shadow and public Kernel-alias coverage, plus
+explicit positive tests preserving the source-equivalent-object limitation.
+The final review found no correctness blocker within this selected scope.
+
+The initial SSH banner timeout and GitHub connection reset were retried after
+read-only connectivity checks; no network service was restarted. The feature
+source was pushed to the fork and fast-forwarded on WSL without rewriting history.
+
+| Evidence | SHA256 |
+| --- | --- |
+| `d9763cf65fcc-mac-tests.xml` | `3728cf645d0fad9c8f2b306befa26f5e4320e1b52cca1ac5628eb75f2c128290` |
+| `d9763cf65fcc-wsl-tests.xml` | `1d1ac95585e0ecc724cf0239eea0920c6a1ae649c4bf12c92ec7f22a6cd29cc2` |
+| `d9763cf65fcc-wsl-report.json` | `ce098c539a034dfc283eeabc9522a782d9ff9ab7631a7da8ca0bbaf4257a9c2c` |
+| `d9763cf65fcc-wsl-closeout.json` | `e9061afaa42315f611a90ab951904a6fc809292503384bdf672578443959ffdf` |
+| `d9763cf65fcc-paired-check.json` | `b77bdb1872a8666462a6222fe7b583322970830ed47be71adb7caa93f5e92847` |

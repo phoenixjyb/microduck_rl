@@ -45,7 +45,7 @@ COLLECTION_DECISION = "ada-unconstrained-duck-forward-collected-pending-receptio
 def selected_profile(probe):
     from types import SimpleNamespace
     profile = SimpleNamespace(**globals()) if probe is None else probe
-    need(profile.MODULE in (MODULE, "mjlab_microduck.ada_duck_contact"), "closed bounded diagnostic profile")
+    need(profile.MODULE in (MODULE, "mjlab_microduck.ada_duck_contact", "mjlab_microduck.ada_measured_gpu_boundary"), "closed bounded diagnostic profile")
     need(profile.BOUNDS == BOUNDS and profile.FLAGS == FLAGS, "unchanged diagnostic bounds and authority")
     return profile
 
@@ -258,7 +258,7 @@ def child(source, fd, *, probe=None):
 
 
 def owned_service(source, *, prefix="microduck-ada-duck-forward-"):
-    need(prefix in ("microduck-ada-duck-forward-", "microduck-ada-duck-contact-"), "closed diagnostic unit prefix")
+    need(prefix in ("microduck-ada-duck-forward-", "microduck-ada-duck-contact-", "microduck-ada-measured-boundary-"), "closed diagnostic unit prefix")
     unit = prefix + source[:12] + ".service"
     keys = ("MainPID", "ActiveState", "RuntimeMaxUSec", "MemoryMax", "CPUQuotaPerSecUSec",
             "TasksMax", "Nice", "KillMode", "LimitFSIZE", "Restart", "TimeoutStopUSec")

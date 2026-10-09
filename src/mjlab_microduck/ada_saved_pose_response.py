@@ -42,7 +42,7 @@ SERVICE_ENV = dict(CUDA_VISIBLE_DEVICES="", OMP_NUM_THREADS="1", MKL_NUM_THREADS
                    OPENBLAS_NUM_THREADS="1", NUMEXPR_NUM_THREADS="1")
 
 
-def topology_guard(native, model, data):
+def topology_guard(native, model, data, *, device_kind="cpu"):
     """Reject unsupported paths before any fixture physics or callbacks."""
     import numpy as np
     need(all(getattr(native, k) == 0 and getattr(model, k) == 0
@@ -61,9 +61,12 @@ def topology_guard(native, model, data):
     for k, tail in (("act", (0,)), ("eq_active", (0,)), ("mocap_pos", (0, 3)), ("mocap_quat", (0, 4))):
         value = getattr(data, k).numpy()
         need(value.shape == (2,) + tail and value.nbytes == 0, "explicit empty unsupported state: " + k)
-    need(data.qpos.device.is_cpu and not data.qpos.device.is_cuda
+    need(device_kind in ("cpu", "cuda") and
+         ((device_kind == "cpu" and data.qpos.device.is_cpu and not data.qpos.device.is_cuda) or
+          (device_kind == "cuda" and data.qpos.device.is_cuda and not data.qpos.device.is_cpu
+           and data.qpos.device.arch == 89 and data.qpos.device.ordinal == 0))
          and model.opt.run_collision_detection is True and model.opt.graph_conditional is True,
-         "CPU-only default collision and solver dispatch")
+         "explicit CPU or Ada default collision and solver dispatch")
     return saved.dispatch_guard(native, model, data)
 
 

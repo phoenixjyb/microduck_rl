@@ -3,9 +3,10 @@
 Base `7ca75aca57613cc803a42f62362d61a67fb9ec58`, exact branch
 `feat/athletics-obstacle-curriculum`. This follows the exactly received
 [saved prepared-pose response](2026-10-10-ada-saved-pose-solver-response.md).
-The present change implements **import-inert packet primitives and synthetic
-tests only**. There is no executable launcher, GPU capture or identical-bank
-CPU solve in this change. Simulator/PPO admission remains closed. Libraries,
+The first change implemented **import-inert packet primitives and synthetic
+tests only**. Subsequent sections separately predeclare allocation and measured
+capture arms; no identical-bank CPU solve is authorized by their launchers.
+Simulator/PPO admission remains closed. Libraries,
 driver, plant, motor inputs, solver options and existing gates stay frozen.
 
 ## Why a new measurement is necessary
@@ -74,7 +75,7 @@ not just active solver slices. No RMS/BLAS reduction, tolerance, solver tuning
 or admission inference. Identical inputs do not imply identical CPU/GPU kernel
 execution; retain that distinction explicitly.
 
-## Current implementation boundary
+## Initial primitives implementation boundary
 
 `ada_measured_boundary_packet.py` implements complete portable static binding,
 new measured pose-reference checking, stage-order composition, exact complete
@@ -82,12 +83,15 @@ CPU Data restore and full solver-bank comparison. It imports no NumPy/Torch/
 Warp/MuJoCo runtime at module import and has no CLI or runtime allocator.
 Mocks exercise the runtime helper contracts without executing physics.
 
-The present primitives are **not sufficient execution authority**. Still needed:
-closed source-bound CPU/GPU runners, complete model/runtime/topology bindings,
+The primitives alone are **not sufficient execution authority**. At this initial
+stage the following remained needed: closed source-bound CPU/GPU runners, complete model/runtime/topology bindings,
 strict retained packet receiver, cache/device/source provenance, resource and
 service receipts, watchdog/lease and foreign-workload guards, independent
-review, and an exact-source predeclaration for each launch. No hidden third
-GPU profile has been added to the existing two-profile supervisor.
+review, and an exact-source predeclaration for each launch. At the primitives
+stage no third GPU profile had been added to the two-profile supervisor.
+The later allocation and GPU predeclaration sections below supersede that
+source-only status only for their respective bounded arms; the CPU identical-
+bank solver launcher remains unimplemented at this revision.
 
 Future GPU diagnostic must inherit the existing single-Duck advisory lease,
 owner/child/service deadlines and GPU occupancy/temperature limits. Preserve
@@ -277,6 +281,83 @@ The fresh private CPU cache remains only on native to avoid duplicate storage.
 No Duck GPU process or active CPU process remains from these units. Protected
 mission services stayed inactive in both scopes and Dino remained the sole
 GPU compute owner. No fixture dynamics or solver control was executed. The
-next source gate is the closed supervised **new measured GPU boundary capture**,
+next execution gate, after its source/review/native-contract checks, is the closed supervised **new measured GPU boundary capture**,
 followed separately by a same-GPU-before-solve-bank CPU solver-only control.
 The allocation/static result does not reopen simulator/PPO admission.
+
+## Closed new GPU measured-boundary arm predeclaration
+
+From clean base33ccaac, `ada_measured_gpu_boundary.py` adds an explicit **third
+closed diagnostic profile** to the existing stdlib supervisor. The old two
+profiles retain identical bounds, flags and behavior. The shared topology guard
+still defaults to CPU-only; only this reviewed runner explicitly selects Ada
+cuda:0/arch89/ordinal0, then checks every actual461 array's device separately.
+The named third profile/unit prefix is closed, not arbitrary plug-in authority.
+
+Require the retained CPU allocation JSON and NPZ exact hashes above and full
+portable reception before construction. Allocate one fresh matched plant,
+put_model and make_data on selected Ada, with all six explicit Data capacities.
+Allocation performs its one internal native kinematics; execute the verified
+wheel helper once to expand only two motor fields, copy their exact retained
+bytes and the original seven state fields. Do not supply old poses, recompute
+BAM, invoke native fixture forward, ordinary public forward or integration.
+Before fixture physics, bind all347 model array bytes/layouts and the complete
+actual static manifest. Require exact **8180631a...fcf78e** CPU/GPU static
+equality; do not omit/normalize/rewrite backend differences on failure.
+
+Then execute one new Warp fixture kinematics followed by the already tested
+frozen stage sequence through one solve. Retain five114-field raw banks plus
+separate full statics, canonical expanded layout and ordered descriptive
+analysis. The eleven actual before-collision poses are this new run's reference
+and must remain byte-exact at all later boundaries; they are not a recovered
+historical GPU pose bundle. Check original seven inputs, complete model bytes,
+all statics, actual pointers/device/layout, absent callbacks and default options
+at every boundary. Check contact counters/candidates immediately after collision,
+bounded fourteen-friction-row/dim3 construction, no early solve, candidate
+stability and the unchanged six-output solver write fence. Stop before
+acceleration sensors. CPU identical-bank control is **not** executed here.
+
+The receiver independently authenticates every retained file, separate child
+and launch receipt, source tree/modules/lock, frozen wheel source audits and
+expansion helper, actual service PID/invocation/caps, exact known advisory lease,
+protected service and foreign-owner receipts, complete telemetry/cap checks,
+all570 arrays, layout/finiteness/state/pose/contact/write fences, full static
+schema/equality and recomputed ordered analysis. Private cache bytes and
+already-held CUDA ModuleExec source/options metadata are retained separately;
+never trigger extra build/load/hash calls or infer loaded binary bytes,
+executed-kernel identity, launch count, simulator admission or training permission.
+
+All source/mock checks, independent review, exact committed push, clean native
+fast-forward and matching native CPU contract checks must pass **before** one
+GPU measurement launch. Use unit `microduck-ada-measured-boundary-<source12>.service`
+with180s/6G, owner150s/child120s and20s owner closeout reserve, CPUQuota200%,
+Tasks64/Nice10/LimitFSIZE16M/LimitCORE0/Restart=no/KillMode=control-group/
+TimeoutStopSec10/Type=exec/RemainAfterExit=yes. Parent literalCUDAempty/thread
+pools1; child inherits only the existing held lease, CUDA0/disabled CUDA cache,
+five fresh private cache directories and64MiB Torch allocator budget. The
+unchanged shared GPU gates remain≥10240MiB free,≤12288MiB total used,
+≤2048MiB aggregate growth, temperature<65C and utilization≤85%. Recheck foreign
+PID1592/DINO and predeclared lease device66306/inode11419619/empty/owned regular
+file before launch. Both protected services remain inactive in both scopes.
+On demand, capacity, source, service, lease, telemetry or child failure, kill
+only the owned child and diagnose retained evidence read-only; never loosen
+guards, stop DINO, reinstall libraries/drivers, or restore protected services.
+
+Unique fresh evidence root is `artifacts/evaluations/ada-measured-boundary-<source12>`;
+retain launch.json, child.log, child.json, measured-stages.npz, measured-statics.json,
+measured-layout.json, measured-analysis.json and report.json. Cache stays native;
+portable packet is copied to Mac and received independently. Launch only before
+22:50 UTC with safe deadline margin. After success, a separately reviewed/source-
+bound CPU-only solver control may restore the authentic **new GPU** before-solve
+bank. No PPO, raw perception, physical motion or learned-skill claims arise here.
+
+Source preparation: owner nine-file CPU-hidden suite passed593 cases with one
+explicitly deselected actual-physics test; zero failures/errors/skips. It covers
+the seven existing allocation/boundary/source suites, new measured-profile
+synthetics and unchanged supervisor cleanup contracts. Whitespace checks pass.
+Independent Luna final read-only review passed188 focused cases in9.19s and
+found no material source/test blocker after the direct pre-physics347-model-
+hash comparison and documentation status corrections. Neither review nor the
+source/mock suite ran allocation, simulator physics, GPU work or services.
+Execution-source SHA and matching committed-source/native JUnit receipts will
+be resolved and retained before any launch; dirty-source execution is forbidden.

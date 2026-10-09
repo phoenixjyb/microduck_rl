@@ -1317,3 +1317,61 @@ CPUQuota200%/TasksMax64/Nice10/LimitCORE0/Restart=no/KillMode=control-group/
 TimeoutStop10s limits, five literal CUDA-empty/thread1 assignments, protected
 services/DINO preservation and22:50UTC launch cutoff apply. No new native,
 Warp, GPU, optimizer or integration call occurs. All admission flags stayfalse.
+
+### Complete native row-family packet execution
+
+Execution source c9b37b5496fc4b809c65fb832263c78f3f17bbdd was committed,
+pushed and clean-fast-forwarded to native before encoding. Its committed
+14-file contract suite passed964 cases on both hosts, with the same one
+actual-physics test deselected. Complete classname/name multisets match and
+there are zero failures/errors/skips. Mac JUnit elapsed69.782s; native pytest
+7.31s, unit7.902789s. Exact retained test/service leaves:
+
+| Leaf | Bytes | SHA256 |
+| --- | ---: | --- |
+| c9b37b54-mac-tests.xml | 133864 | f4e816eb593f736303b4e7290ca04b39e4dfacbeac6fd10c57cb93ba200f9bff |
+| c9b37b54-linux-tests.xml | 133869 | 8c4c6da725bf34c9fe60b4c884a55a98ef67ce22593ff8d522171546e046c0b9 |
+| c9b37b54-contracts-service.json | 5337 | 521e05893097ef30828ef118232ab155ecd36661093680669e87605d61d7f207 |
+| c9b37b54-packet-service.json | 5285 | 4abfec7f0b63ad67407c586f3e4eabf3556c6584c4c3f804738a1f3fe1e20f73 |
+
+The120s/2GiB native pure encoding unit completed successfully in4.917796s,
+invocationd690f4ae36614f85a4ac73c58f776063, exit0/PID0/empty cgroup. Its
+receipt binds source/argv/resource/environment/journal and unchanged
+DINO1592/946MiB plus four inactive protected service scopes. GPU43C/0%,
+961MiB used/15232MiB free; no Duck GPU process, lease change, service restart,
+100.98/FilmBrain change or physics call. The read-only service helper
+`retain_native_family_service.py` SHA256
+e02faa15707e4da0f99eae339e442c2d5e2feba046edb6cc5d77497ee22e4ba8
+is retained with these receipts.
+
+Both host packets completely recompute all114 leaves, layouts and descriptors.
+They agree exactly except the explicit payload **basename**. Both NPZs are
+byte-identical35838B, SHA256
+9a885cd219762de5345139438cb7f3b7e9581bbcbecefaa3f386bb9272023285.
+Mac report `c9b37b54-mac-native-family.json`84848B SHA256
+547173200dc303189fc63c9658177bbe8b49b4f393e4e966ab8a474d9c6c1998;
+native `c9b37b54-linux-native-family.json`84850B SHA256
+585d728f420cc1ef7bc4a9bcf3ab9d9b3682cfeb8c8f96d97b4d0df26b6bfcb2.
+All31 declared overrides are materialized, but only23 actually differ in
+bytes from the authentic GPU before-solve bank; eight declared overrides
+happen to be byte-equal. Every one of the83 held leaves stays byte-exact.
+Counts remain native_ncon0/4 (description only), ne/nl0/0,nf14/14,nefc14/30,
+and actual global nacon4. Four own linked rigid contact slots cover native
+rows14..29; no GPU physical point was paired or discarded by a matching rule.
+
+Fresh portable receivers on both hosts recomputed the same native packet
+without importing a simulator runtime or making physics/device calls. Their
+identical790B receipts `c9b37b54-{mac,linux}-family-reception.json` have SHA256
+576154bed0ed49ae2722f5be4e2721e9334484f26a4772a7051d008f5ffe6007.
+Receiver helper `receive_native_family.py` SHA256
+9bd5af086f67d69045663c8316cc22fce8a825db4d0507cb45f67ab2ebbb10ed
+and all reports/NPZs/JUnits/service receipts are durable on both hosts.
+Independent post-execution review recomputed both packets and verified all
+114 leaves, both964-case inventories, terminal receipts and helper hashes;
+it found no blocker for this packet-only interpretation.
+This closes only pure packet preparation. No solver, native phase replay,
+machine-code read-set, single-cause, simulator/training or physical admission
+is established. The next meaningful bounded experiment is a separately
+reviewed **one-call CPU solver-only joint row-family intervention**, holding
+the authentic GPU mass/force/warmstart context and all Model/statics fixed;
+do not claim it as a full native solver replay or launch PPO from this packet.

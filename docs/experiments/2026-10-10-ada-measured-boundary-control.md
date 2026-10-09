@@ -1740,3 +1740,42 @@ andc3f85477feb1aa1b266ad2a6a6250b1e61923a6402398d046092bb5dcc7b18ce;
 their exact-unit quoted-argv parser reuses immutable2f6270e4, and optimized
 Python is refused before evidence access. The contracts unit selects all17
 files in the declared order and expects1160 cases plus one physics deselection.
+
+### Native phase preflight result at8382487e
+
+Exact execution source8382487e5dea6142d9300e617781cfa20b3d7b62 was pushed and
+clean-fast-forwarded into native. Source bundle SHA256
+552a8f05b249a49f25340f8716e8c80edeb034220dcd97bc5c7278a98c43b296.
+Committed Mac/native17-file suites passed1160 plus one physics deselection in
+15.96s/8.95s, with identical ordered testcase IDs and no failure/error/skip.
+JUnit SHA256s are8771b7d3fee2bb645b4f8903b464ca3dc2abef615c75c7e8a1fcb56a856f9b90
+(Mac159782B) and2f0344e9f0c28625451b31d5854d35e06ed51d82fceca940efaf0758d3cce235
+(native159787B).
+
+The contracts unit `microduck-native-phase-contracts-8382487e.service` finished
+exit0 in9.554214s, invocation61aeeadf2c84449b886490e1be6ec524; its10051B terminal
+receipt SHA256 isdf807273ad323a57240f1969b8ba28c46d82bdf773e2f5f4fdc308f687f400d3.
+The pure plan unit `microduck-native-phase-plan-8382487e.service` finished exit0
+in5.197887s, invocationb4608dde534b499cb35054034e02f376; its7058B terminal receipt
+SHA256 is774d0d6e96141f4f562b5872a3a87757949831546a271484cd9fc9cd3cd49908.
+Both have PID0/empty cgroup, the exact declared argv/limits/env/transient units,
+four protected scopes inactive and unchanged DINO1592/946MiB.
+
+Both168336B `8382487e-{mac,linux}-native-phase-plan.json` reports are identical,
+SHA2561c1980250956120ad9589b706bf71053e8d72fd14d03ac2fea0819f7856eeb85.
+They bind954 logical native Model array descriptors, seven input-state fields,
+the full native payload descriptor hash and both full current MJBs; this does
+not claim a complete native Data snapshot or historical model identity.
+Both469B `8382487e-{mac,linux}-native-phase-reception.json` receipts are identical,
+SHA256d857bf2cc9ecc039fd8e1c85d952f0003f3f99a3275c03db2c213c2322193880.
+Fresh independent review regenerated the entire plan and raw references with
+no Torch/Warp/MuJoCo/MuJoCoWarp imports, checked all manifests/guards, test case
+identities, exact source/helper hashes and both terminal units. No blocker.
+
+All evidence is retained in the existing tools directory on both hosts.
+Decision remains `source-bound-native-phase-plan-not-executed-or-admitted`:
+no Model/Data allocation, native phase/collision/construction/solver call,
+integration or optimizer step occurred. The prospective solver distinction is
+explicit, while `execution_ready=false` and all admission flags remain false.
+Next prepare/test a closed before/after projection contract before implementing
+or launching the separately reviewed real native phase collector.

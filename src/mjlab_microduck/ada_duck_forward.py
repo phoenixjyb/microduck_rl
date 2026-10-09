@@ -36,6 +36,18 @@ WIDTHS = dict(qpos=21, qvel=20, time=1, qacc_warmstart=20, ctrl=14,
 FLAGS = host.FLAGS
 BOUNDS = dict(host.BOUNDS, owner_closeout_reserve_seconds=20)
 need = host.need
+PAYLOAD_MAX = 2 * 1024**2
+CHILD_JSON_LIMIT = 65536
+FILES = ("launch.json", "child.log", "child.json", "cpu-fields.npz", "gpu-fields.npz")
+COLLECTION_DECISION = "ada-unconstrained-duck-forward-collected-pending-reception-not-training"
+
+
+def selected_profile(probe):
+    from types import SimpleNamespace
+    profile = SimpleNamespace(**globals()) if probe is None else probe
+    need(profile.MODULE in (MODULE, "mjlab_microduck.ada_duck_contact"), "closed bounded diagnostic profile")
+    need(profile.BOUNDS == BOUNDS and profile.FLAGS == FLAGS, "unchanged diagnostic bounds and authority")
+    return profile
 
 
 def directory(source):
@@ -214,12 +226,13 @@ def receive_payloads(root, value):
     return dict(payloads_verified=True, residuals_recomputed=True, flags=FLAGS)
 
 
-def child(source, fd):
-    identity(source)
+def child(source, fd, *, probe=None):
+    profile = selected_profile(probe)
+    profile.identity(source)
     host.lease_identity(fd)
     fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     need(os.environ.get("CUDA_VISIBLE_DEVICES") == "0" and os.environ.get("CUDA_CACHE_DISABLE") == "1", "fresh capped Ada child")
-    root = directory(source)
+    root = profile.directory(source)
     for key in host.CACHES:
         need(Path(os.environ.get(key, "")).resolve() == root / "private-cache" / key.lower(), "private cache binding")
     import torch
@@ -237,15 +250,16 @@ def child(source, fd):
     wp.init()
     device = wp.get_device("cuda:0")
     need(device.arch == 89 and device.ordinal == 0 and device.is_cuda, "actual Warp Ada binding")
-    result = dict(specification=specification(), gpu_uuid=actual_uuid, name=props.name,
+    result = dict(specification=profile.specification(), gpu_uuid=actual_uuid, name=props.name,
                   capability=[8, 9], torch_cuda=torch.version.cuda, warp_arch=device.arch,
-                  warp_precompiled_headers=wp.config.use_precompiled_headers, **physics(root))
-    validate_child(result)
+                  warp_precompiled_headers=wp.config.use_precompiled_headers, **profile.physics(root))
+    profile.validate_child(result)
     host.write_json(root / "child.json", result)
 
 
-def owned_service(source):
-    unit = "microduck-ada-duck-forward-" + source[:12] + ".service"
+def owned_service(source, *, prefix="microduck-ada-duck-forward-"):
+    need(prefix in ("microduck-ada-duck-forward-", "microduck-ada-duck-contact-"), "closed diagnostic unit prefix")
+    unit = prefix + source[:12] + ".service"
     keys = ("MainPID", "ActiveState", "RuntimeMaxUSec", "MemoryMax", "CPUQuotaPerSecUSec",
             "TasksMax", "Nice", "KillMode", "LimitFSIZE", "Restart", "TimeoutStopUSec")
     values = dict(line.split("=", 1) for line in host.read("systemctl", "--user", "show", unit,
@@ -256,15 +270,16 @@ def owned_service(source):
     return dict(unit=unit, invocation=os.environ["INVOCATION_ID"], properties=values)
 
 
-def supervise(source):
+def supervise(source, *, probe=None):
+    profile = selected_profile(probe)
     started = time.monotonic()
     host.READ_DEADLINE = started + BOUNDS["owner_seconds"]
     need(os.environ.get("CUDA_VISIBLE_DEVICES") == "" and not {"torch", "warp", "mujoco", "mujoco_warp"}.intersection(sys.modules),
          "fresh CPU-only owner")
-    inputs, service, services = identity(source), owned_service(source), host.service_snapshot()
-    root = directory(source)
+    inputs, service, services = profile.identity(source), profile.owned_service(source), host.service_snapshot()
+    root = profile.directory(source)
     root.mkdir(mode=0o700, exist_ok=False)
-    report = dict(specification=specification(), source=inputs, service=service, bounds=BOUNDS,
+    report = dict(specification=profile.specification(), source=inputs, service=service, bounds=BOUNDS,
                   decision="failed", telemetry=[], child_exit=None, services_before=services)
     proc = watchdog = fd = None
     expired = threading.Event()
@@ -282,10 +297,10 @@ def supervise(source):
             cache = root / "private-cache" / key.lower()
             cache.mkdir(parents=True, exist_ok=False)
             env[key] = str(cache)
-        host.write_json(root / "launch.json", dict(specification=specification(), source=inputs,
+        host.write_json(root / "launch.json", dict(specification=profile.specification(), source=inputs,
                         bounds=BOUNDS, baseline=baseline, lease=lease, foreign=foreign))
         with (root / "child.log").open("xb") as log:
-            proc = subprocess.Popen([sys.executable, "-m", MODULE, "--source", source,
+            proc = subprocess.Popen([sys.executable, "-m", profile.MODULE, "--source", source,
                 "--child", "--lease-fd", str(fd)], env=env, pass_fds=(fd,), stdout=log, stderr=subprocess.STDOUT)
             host.READ_DEADLINE = min(host.READ_DEADLINE - BOUNDS["owner_closeout_reserve_seconds"],
                                      time.monotonic() + BOUNDS["child_seconds"])
@@ -313,16 +328,16 @@ def supervise(source):
         post = host.telemetry()
         report["telemetry"].append(post)
         host.capacity(post, baseline)
-        need(identity(source) == inputs and host.service_snapshot() == services
+        need(profile.identity(source) == inputs and host.service_snapshot() == services
              and host.foreign_processes() == foreign and host.lease_identity(fd) == lease, "post-exit bindings")
-        need((root / "child.json").stat().st_size <= 65536, "bounded child receipt")
+        need((root / "child.json").stat().st_size <= profile.CHILD_JSON_LIMIT, "bounded child receipt")
         result = json.loads((root / "child.json").read_bytes())
-        validate_child(result)
+        profile.validate_child(result)
         for item in result["payloads"]:
             raw = (root / item["file"]).read_bytes()
-            need(len(raw) == item["bytes"] <= 2 * 1024**2 and sha256(raw).hexdigest() == item["sha256"], "paired field byte binding")
+            need(len(raw) == item["bytes"] <= profile.PAYLOAD_MAX and sha256(raw).hexdigest() == item["sha256"], "paired field byte binding")
         need(time.monotonic() < host.READ_DEADLINE, "owner closeout deadline")
-        report.update(decision="ada-unconstrained-duck-forward-collected-pending-reception-not-training", child=result,
+        report.update(decision=profile.COLLECTION_DECISION, child=result,
                       services_unchanged=True, foreign_unchanged=True, lease_unchanged=True)
     except Exception as error:
         report["error"] = str(error)
@@ -341,8 +356,7 @@ def supervise(source):
         if fd is not None:
             os.close(fd)
         report.update(elapsed_seconds=time.monotonic() - started, child_exit=None if proc is None else proc.returncode)
-        report["files"] = {name: sha256((root / name).read_bytes()).hexdigest() for name in
-                           ("launch.json", "child.log", "child.json", "cpu-fields.npz", "gpu-fields.npz") if (root / name).is_file()}
+        report["files"] = {name: sha256((root / name).read_bytes()).hexdigest() for name in profile.FILES if (root / name).is_file()}
         host.write_json(root / "report.json", report)
         host.READ_DEADLINE = None
 

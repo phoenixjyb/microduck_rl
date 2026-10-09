@@ -1464,3 +1464,96 @@ Terminal helpers require canonical source-prefix destinations and the exact
 ordered15-file test argv/JUnit destination or exact solver argv, not only
 command fragments. Helpers are retained with raw source hashes alongside
 the execution evidence; these receipts do not promote the diagnostic scope.
+
+### Native-family hybrid solver execution and reception
+
+Execution source baab71808c2bca04892c4b61907e675408cbb0d6 was committed,
+pushed, verified at the fork and clean-fast-forwarded to native before any
+real solve. The incremental source bundle SHA256 is
+3df303b918fdc47b846f9de56365974cf6a7d0a07509d01547bca4a1e860fc07.
+Committed15-file contracts passed1042 on both hosts with one actual-physics
+test deselected; all1042 classname/name identities match and there are zero
+failures/errors/skips. Mac JUnit54.930s/native8.678s (pytest55.10s/8.71s).
+Native contract unit9.308973s, invocation460cfab632f7441ca4230ee09daed3f2,
+exit0/PID0/empty cgroup. Exact retained leaves on both hosts:
+
+| Leaf | Bytes | SHA256 |
+| --- | ---: | --- |
+| baab7180-mac-tests.xml | 144105 | f97993c555c51501c2cdc4c1a178097b09d5beb5cc43a8838ba243497818e3de |
+| baab7180-linux-tests.xml | 144110 | 0f4d6a3e195c4f1dc76a57819d50b6af99e44bd5576efcf6b5cc952a86a957d4 |
+| baab7180-contracts-service.json | 9466 | 3c70063a6a9498a192318e75ad201fbcb0b77227b85100c097806c4184f4913f |
+| baab7180-linux-native-family-solver.json | 146380 | bdc34b3f800187145eca2e0078644f6c44ba3bc009883e77e6bcd04e13d3825a |
+| baab7180-linux-native-family-solver.npz | 472546 | a3b37560f7185a6cdfb4b23d9148353c069d5330f8812e9967840b3121e547cd |
+| baab7180-solver-service.json | 13219 | d6e77795402eb83b51b3e95964811336187d125a1c91a6a18a5e5a46b89465d3 |
+| baab7180-linux-family-solver-reception.json | 37675 | b3fe6e0483bdfc8dad48ebc6875715ee1a313ee9dd7b264534498d3fcfc92479 |
+| baab7180-mac-family-solver-reception.json | 37676 | ceb743fe155a1fc68565cc4a70eaa466a7136d3f49c6fd7d4226b51e48dbae02 |
+
+The original terminal helper rejected its contracts receipt before writing
+output: systemd `show ExecStart` flattens argv without quotes, while the
+launch's `-k` value is one argument containing a space. Read-only `systemctl
+cat` showed the correct retained quoted unit and all1042 tests had passed.
+No source/service/test command was changed or restarted. Preserve original
+helper SHA3d908a64401649069be237f579b101485dc9af003fcaa8c2f0b68acb25954f05;
+new helper `retain_native_family_solver_service_v2.py` SHA256
+2f6270e44751de29619438377eb52c5efcf241ad0450d635d6c86a95ae4b0b34
+binds exact transient FragmentPath/Transient, reset-plus-single quoted
+ExecStart parsed against the complete expected argv, flattened display and
+full retained unit text/hash. Its synthetic success and three malformed-argv
+refusals passed; independent helper review found no blocker. Both terminal
+and receiver helpers explicitly reject optimized Python without relying on
+assert (both `python -O` probes refused before evidence access).
+Receiver helper SHA8636b647092904887fc017646be0dbffe26889d50549808055131635c63dcbd8.
+
+The one-call CPU solver unit completed successfully in19.042561s, invocation
+e07742a63f8a4528b58d9b54b1c16923, exit0/PID0/empty cgroup. Warp printed its
+expected no-visible-CUDA-device initialization warning with CUDA hidden;
+enumerated devices and all10 retained passive executables were CPU-only,
+Torch CUDA remained uninitialized, and no Duck GPU process was created.
+All347 Model arrays,184 statics,114 restored input leaves, actual layouts,
+pointer bindings and post-solve fences passed. All six permitted outputs
+changed from the restored pre-solve bank; no other leaf changed.
+Counts remained ne/nl0/0,nf14/14,nefc14/30,nacon4,ncollision4;
+solver_niter1/4 matches both post-solve references. The fresh native CPU cache
+contains30 files totaling479232B, individually byte-bound on native. Mac
+checks all report/payload/reference bytes and cache metadata, but does not
+claim native cache-file inspection. The two complete reception JSONs differ
+only in that explicit `private_cache_actual_bytes_checked` boolean.
+
+Full allocated-output observations (hybrid minus each differing-input
+reference; no point matching, force/state row pairing or tolerance gate):
+
+| Output | Max abs vs measured GPU | Max abs vs original-GPU-bank CPU |
+| --- | ---: | ---: |
+| qacc | 2.6640543937683105 | 2.664053797721863 |
+| qfrc_constraint | 0.3180689811706543 | 0.3180685043334961 |
+| efc.Ma | 0.3180685043334961 | 0.3180685043334961 |
+| efc.force | 0.6017815750092268 | 0.6017815731465816 |
+| efc.state | 2 | 2 |
+| solver_niter | 0 (byte-equal) | 0 (byte-equal) |
+
+Against the complete **current native F64** generalized result, hybrid F32
+qacc max absolute difference is2.4373025519796076e-6; world0/world1 maxima
+2.4373025519796076e-6/2.3734929035512664e-6. qfrc_constraint max is
+4.425324231505101e-7; world0/world1 maxima
+3.857108815878065e-9/4.425324231505101e-7. This is an observed reduction
+relative to the large original constraint-family discrepancy, not a selected
+admission tolerance. Independent fresh-process review regenerated all228
+leaves, restore/comparisons/counters/flags and descriptor/data hashes with no
+runtime imports; JUnit/receipts/helpers also passed independent checks.
+Four protected service scopes stayed inactive and the sole GPU owner was
+unchanged DINO1592/946MiB (GPU43C/0%,961MiB used/15232MiB free).
+The advisory lease inode was not changed; unrelated services and100.98/
+FilmBrain remained untouched.
+
+Interpretation: this complete native-family input intervention, while holding
+the measured surrounding context, produces a near-native generalized result;
+the earlier CPU/Ada same-input control was also close. Constraint-family
+construction is therefore the next diagnostic target for this fixture.
+This does **not** isolate contact count, contact manifold, J, regularization,
+reference acceleration, precision or any one cause, prove native before-solve
+identity, or qualify compiled kernels/the simulator/PPO/hardware. Keep all
+admission flags false and do not launch training from this observation.
+Next inspect/redeclare a bounded **own-manifold constraint-recipe audit**:
+retain each generator's own contacts/rows, compare complete source-bound
+regularization/reference-acceleration recipes without physical point pairing,
+and do not invent a row-matched single-input swap or loosen the existing gates.

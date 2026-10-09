@@ -113,13 +113,17 @@ def test_constructor_refuses_nonoriginal_or_nonfresh_frontend(setup, mutation):
     assert not setup.events
 
 
-@pytest.mark.parametrize("mutation", ("caller-object", "types", "runtime-class", "kernel-object", "kernel-code",
+@pytest.mark.parametrize("mutation", ("caller-object", "equal-caller-code-clone", "types", "runtime-class", "kernel-object", "kernel-code",
     "cache", "cache-object", "failed-object", "failed", "options", "config", "compile-entry", "load-entry",
     "symbol", "tape", "device", "artifact", "extra-file", "metadata", "generated-source"))
 def test_postcompile_mutation_never_loads(setup, mutation):
     p = setup.make()
     p.compile()
     if mutation == "caller-object": setup.solver._update_gradient = FunctionType(p.caller.__code__, setup.solver.__dict__)
+    elif mutation == "equal-caller-code-clone":
+        clone = p.caller.__code__.replace()
+        assert clone == p.caller.__code__ and clone is not p.caller.__code__
+        p.caller.__code__ = clone
     elif mutation == "types": setup.solver.types = NS()
     elif mutation == "runtime-class": setup.context.Module = NS()
     elif mutation == "kernel-object": setattr(setup.solver, ex.adapter.NAMES[1], NS())

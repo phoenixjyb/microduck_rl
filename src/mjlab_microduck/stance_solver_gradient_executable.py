@@ -94,7 +94,7 @@ def identify_kernels(solver, wp, context):
 
 class GradientModuleExecutable:
     """One fresh compile and explicit load of the two original gradient entries."""
-    __slots__ = ("solver", "caller", "types", "context_types", "wp", "context", "device", "directory", "role", "kernels", "module", "graph_guard",
+    __slots__ = ("solver", "caller", "caller_code", "types", "context_types", "wp", "context", "device", "directory", "role", "kernels", "module", "graph_guard",
                  "entries", "symbols", "functions", "codes", "adjoints", "module_hash", "options",
                  "config", "kernel_options", "cache", "baseline", "failures", "failed_baseline",
                  "device_identity", "binary_path", "meta_path", "source_path", "generated", "artifact",
@@ -112,6 +112,7 @@ class GradientModuleExecutable:
         kernels = identify_kernels(solver, wp, context)
         role = "gradient"
         self.solver, self.caller, self.types = solver, solver._update_gradient, solver.types
+        self.caller_code = self.caller.__code__
         self.context_types = (context.Kernel, context.Module, context.ModuleExec, context.ModuleBuilder)
         graph_guard = self._frontend
         need(type(directory) is type(Path()) and directory.is_absolute() and directory.name == "compiled-" + role
@@ -155,7 +156,8 @@ class GradientModuleExecutable:
         self.check(fresh=True)
 
     def _frontend(self):
-        need(self.solver._update_gradient is self.caller and self.solver.types is self.types
+        need(self.solver._update_gradient is self.caller and self.caller.__code__ is self.caller_code
+             and self.solver.types is self.types
              and all(actual is held for actual, held in zip(
                  (self.context.Kernel, self.context.Module, self.context.ModuleExec, self.context.ModuleBuilder),
                  self.context_types)), "held gradient caller/types and runtime classes")

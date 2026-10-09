@@ -140,3 +140,61 @@ inputs, foreign-process guards and false qualification flags remain unchanged.
 A new clean source commit creates a new absent evidence directory and unit;
 never overwrite or relabel the failed first attempt. One capped GPU attempt is
 permitted only after focused tests, reviewed diagnosis and source freeze.
+
+## Retained accepted health-check closeout
+
+Execution source `78e7ceb4b77a5a2ad1a74b5bfafa0da76c249330` passed **137 cases
+across four CPU test files on each host**, zero failures/errors/skips. Mac took
+6.39 seconds pytest time; the capped Linux CPU unit took 5.00 seconds pytest
+time / 6.48 seconds service runtime. Independent post-exit reception matched
+the actual testcase multiset, not merely the aggregate counts. A later doc-only
+commit does not relabel these checks or the GPU execution source.
+
+The sole revised GPU attempt completed in **1.76 seconds**, with all 32 Torch
+and all 32 freshly compiled Warp float32 outputs exactly matching independent
+CPU arithmetic. Torch peak allocated bytes were 1536, not a total GPU footprint.
+Six sampled telemetry records showed peak aggregate used memory 1272 MiB,
+minimum free memory 14922 MiB and peak temperature 47 C. Sampling cannot prove
+the true instantaneous peak or attribute all growth to Duck.
+
+Independent external closeout checked the exact source, source/module bytes,
+all report file hashes and strict child fields; then matched GPU unit invocation
+`0b8a76dee08545da8847b2c154299404` with MainPID 0, exit 0, Result success,
+zero restarts, empty ControlGroup and absent original cgroup. Active/exited is
+a retained completed unit, not a running job. Only Grounding DINO PID 1592 remained
+in compute telemetry; both AI mission services stayed inactive in both scopes.
+At closeout, memory returned to 961 MiB used / 15232 MiB free, 45 C and 0 percent
+utilization. No driver, installed package, simulator, optimizer or policy changed.
+
+Seven complete GPU evidence files, both original/revised test XML pairs, the
+untouched failed attempt, exact retained generated CUDA source, both CPU compiler
+controls/traces and helper bytes are retained on **both Mac and 100.100** under
+`artifacts/tools/ada-runtime-smoke/`. Native original GPU directories remain in
+`artifacts/evaluations/`. These ignored evidence assets are not uploaded into
+Git history. The independent receiver reproduced all seven GPU byte bindings
+after transfer to the Mac. Historical evidence and caches are not merged into
+the new run or promoted into solver machine-code proof.
+
+| Retained evidence | SHA256 |
+| --- | --- |
+| Mac 137-case XML | `c243a83711f4d447166b0012ffded47005070a63989af738d7084b6102aa127b` |
+| Linux 137-case XML | `6b901b7cb839de3a1f00601976ff5ac8c492f7ec90822680637dfb544f107f36` |
+| independent post-exit closeout | `9b2f0bdeeb5575f155762e2d2177fd117bbf551514c32122a978ec0c6a980f14` |
+| accepted GPU owner report | `af457091e415827b8635fa0a313c181eec870e67c6decc5ac99d6e6605e9ca2b` |
+| accepted GPU child | `8e4e6daed3a14ab2fdd18479a53715400e240eba240c694ae792302cf514bf3b` |
+| untouched failed GPU report | `82f8d41e6d04145bffc5e8bd66db11661fcf1db42cb9573b1e480960b8cf05cc` |
+| PCH-on CPU result | `8136fb3248dc0f8ea78a1574b51fcb30045d54a1220869d403993f0c2cbdf64c` |
+| PCH-off CPU result | `a41f84e2c7775951aaea9072fb15244a6d76a711bb1348e54a3818ab44008db8` |
+| PCH-on syscall trace | `246d2eb67e4fa6235792874bfb7d9d611f47c4eb90549263e27a529756c0a128` |
+| PCH-off syscall trace | `52f78b7abb20f4a4fb4f9d2f5ba37f1cfb872e4618659104c4a12a9365fc3dbc` |
+| CPU compiler-control helper | `6ea18250fd5c355484591c364c6a6d89498ae574f18a981dc1cb17feb4623586` |
+| post-exit helper | `47362b222ef84b9ddf83bebe9c21847cdf79a8e118de1b743558e5cda0340aa1` |
+
+Luna's independent read-only review accepted the matched CPU diagnosis and
+limited second attempt; the owner integrated and verified the evidence. The
+only accepted claim is **Ada Torch/Warp toy-kernel runtime health**. Runtime-origin,
+solver, simulator, training, skill and physical qualification remain false.
+The previous solver gates stay closed, and no new Duck behavior or video is
+claimed. Next work is a separately declared Ada-compatible simulator/numerical
+diagnostic; this health receipt is not a PPO launch permit. vLLM is temporarily
+stopped, not disabled; it was not restarted during this work.

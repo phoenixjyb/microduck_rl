@@ -144,3 +144,39 @@ installed primary API and the reviewer corrected this before integration.
 The audit now records and checks the actual source/destination argument lists.
 No runtime library or installed source was changed. Neither source review nor
 these tests authorize solver execution or training.
+
+## Retained installed-source audit execution
+
+Exact source `ef8e522aa72eb2f3f192bcb999ae2f21cdea565b` was pushed and
+fast-forwarded cleanly on native100.100. Both committed-source three-file
+suites passed191 cases, Mac1.72s and native1.54s, with identical complete
+testcase multisets. Both audit JSONs are **byte-identical** and independently
+recomputed from installed source, including the module SHA and closed decision.
+This demonstrates the source-audit packet, not a CPU/GPU runtime or solver result.
+Independent Luna reception matched every installed-source audit field, both
+191-case zero-failure/error/skip XMLs, the module/helper/receipt hashes and
+declared stage/copy/site/manifold boundaries. It used the received packets,
+not direct host/service access; owner separately rehashed all six native files.
+
+Native unit `microduck-ada-solver-stage-audit-ef8e522a.service`, invocation
+`0da9193be29a46c7ad5db376a8704c00`, finished successfully in2.210055s,
+all declared60s/2G limits and literal CPU-hidden/thread1 environment checked.
+MainPID0/status0/Result success, empty ControlGroup, active/exited because
+RemainAfterExit is retained. Grounding DINO PID1592 was the only GPU compute
+owner and all four system/user protected mission states remained inactive.
+No collision, constraint construction, solver, integration or Duck GPU process
+was launched by this audit. No response runner or simulator gate is accepted.
+
+Both hosts retain these files under `artifacts/tools/ada-solver-stage-audit/`:
+
+| Evidence | SHA256 |
+| --- | --- |
+| `ef8e522a-mac-audit.json` and `ef8e522a-linux-audit.json` | `17a1e064e0afa2cc68b2c63a8d66e2842f800c73207d3e54c5c3d2275686f765` |
+| `ef8e522a-mac-tests.xml` | `e19679a249d84510463226dfaff7b20ff4a84763cef844ab2bded280589fbe78` |
+| `ef8e522a-linux-tests.xml` | `b03c340ba6577b072223959ae8f6181b1f25d95ecf6a605669c15c842f466e73` |
+| `ef8e522a-native-service.json` | `28985253a147a8023f8edf1db64978708a1af19bbb12228eab23f455d3ee815d` |
+| read-only `retain_source_audit_services.py` | `6efa1b7a4e9adb06292d6b560aaba7fd676b9efa03bb0d7e1649fc254348bfb9` |
+
+Next implementation is the guarded eleven-pose CPU response runner and its
+closed receiver, with focused tests/review before any separately frozen
+source execution. The scientific/authority boundaries above remain unchanged.

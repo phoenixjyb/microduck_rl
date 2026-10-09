@@ -711,3 +711,26 @@ capture/replay and independent whole-byte CPU closeout. Its maximum 0.56-s windo
 covers only the early training pulse, not the full recovery, hopping or rolling-
 football lesson. Source tests alone admit no new training or native claim. See
 [the rollout declaration](experiments/2026-10-05-cuda64-no-update-rollout.md).
+
+### October10 native simulator diagnosis and next development gate
+
+The renewed development window ends October10 **07:00 Asia/Shanghai**. It
+does not renew old campaign windows or weaken their capability gates. Current
+100.100 diagnostics are retained in the
+[measured-boundary control](experiments/2026-10-10-ada-measured-boundary-control.md).
+The one native-family CPU solver intervention approached the retained native
+response closely, while ordered like-input C/Warp source formulas agreed on all
+48 own contact rows. This targets further contact/constraint-generation and
+native-phase investigation; it does not isolate a single cause or qualify the
+compiled simulator. The unlike native4/Warp8 contacts were not physically paired.
+
+The next native before/after-solve control has a source-bound preflight and a
+closed68-leaf projection per world. Its retrospective compatibility check is
+**post-forward only**, not a newly executed before-solve capture. A mock-tested
+typed getter adapter is preparation for the real collector, not runtime
+qualification. Separately reviewed exact-source native execution, complete
+Model/MJB/state fences and independent whole-packet reception still precede any
+new simulator or learner admission. Libraries, plant, rewards, observations and
+acceptance thresholds were not changed by these diagnostics. Earlier WSL stance,
+recovery and obstacle evidence remains separate and was not re-scored/promoted.
+No new hopping, obstacle, football or physical capability follows from this slice.

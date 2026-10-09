@@ -1828,3 +1828,69 @@ The complete18-file suite passed1352 with one actual-physics deselection in
 tests in0.39s with no cache/bytecode, found no blocker and performed no actual
 analysis or simulator execution. Exact source/commit/native contracts precede
 the separately retained compatibility packet.
+
+### Retained projection compatibility result at60affebc
+
+Exact execution source60affebcfc93859b9fbc1f049f9ceff3951884bd was pushed and
+clean-fast-forwarded into native. Its source bundle SHA256 is
+1f93176f94caf6a25fb4d9623f78bc59327a71249064ef26b70fd3e0ca9597ea.
+Committed Mac/native18-file suites passed1352 plus one physics deselection in
+34.05s/9.20s; all ordered testcase IDs match with no failure/error/skip.
+JUnit SHA256s are1a7743d849a82826679fbe88254df4363f7025f6aa0443f7c0e61c5a44a85838
+(Mac184874B) anda737f442c365c424953eae534a6733c515858b2897cb74103519347968dd1862
+(native184879B).
+
+`microduck-native-projection-contracts-60affebc.service` finished exit0 in
+9.833445s, invocation078e8b1cba594bdb964fd7ebd94542c6; its10498B terminal receipt
+SHA256 isf02dc9b2ab202ba4f7d51d727732f1aac29e28b4ee740a6d5e21b590502705d7.
+`microduck-native-projection-projection-60affebc.service` finished exit0 in
+6.734641s, invocation0e31909050344b8b85bb407076d188ab; its7198B terminal receipt
+SHA256 is98eb30989e4e7b0dfa0749e13c83e13404a3b22e999653175bc7af1167cf13e7.
+Both have exact declared argv/env/caps, PID0/empty cgroup, protected scopes
+inactive and unchanged DINO1592/946MiB.
+
+Both23794B `60affebc-{mac,linux}-native-phase-projection.json` reports match
+byte-for-byte, SHA256c07328abd915676e9e9872b89aa4d3d9edac962994f2166f0c7364a061f40e04.
+Each validates68 retained leaves, world0 raw174024B/world1 raw182296B; complete
+declared counters are ncon/nefc/nf/nJ0/14/14/280 and4/30/14/600. The seven input
+states were independently restored and byte-checked. Both477B whole-reception
+receipts match, SHA256bc9f4107ded21b1af7bf8f65899ab56c5aaf8fe934b2486ee6ff97d7c0a7a639.
+Independent fresh reception regenerated the entire plan/capture/MJB bindings
+and both projections without runtime imports; service/test/helper review found
+no blocker. The separately delivered Linux receipt was byte-checked on Mac.
+All report/reception/JUnit/service/source bytes are retained on both hosts.
+
+Decision is `retained-post-forward-projection-compatible-not-before-solve-capture`.
+These are authentic historical post-forward arrays decoded today, not fresh
+native Data, a before-boundary or a before/after native experiment. No new
+native call, physics, optimizer, GPU lease or training occurred; all admission
+flags remain false. The next source-only slice is a typed getter adapter tested
+on mock objects before a separately declared real native collector.
+
+### Source-only typed getter adapter preparation
+
+`ada_native_phase_getters.py` reads counters before every array, refuses
+coerced bool/float counters or time, requires exact numeric dtype/contiguity
+and explicit canonical/getter alias shapes, then makes owned, byte-preserving
+copies of all68 leaves and invokes the unchanged projection validator. No
+shape is accepted merely because its element count happens to fit. Empty
+contacts, nested warning/solver getters and matrix/frame/H flattening have
+explicit mock coverage. Every projected getter is required; tiny input/output
+changes stay visible in the full comparison.
+
+This adapter imports/calls no simulator and authenticates neither the supplied
+object nor its caller's runtime/phase. Its metadata deliberately attests only
+adapter operations; caller runtime/process/phase is **not attested**. Mock
+objects can satisfy every check. Real installed getter shapes, the full
+Model/MJB fences, absent callbacks, actual phase call order/caps and source-bound
+producer receipt still need their own reviewed real collector. `execution_ready`
+and all admission flags remain false. No real getter snapshot or physics ran.
+Focused86 mock tests passed0.17s. The full19-file pure suite, independent review,
+commit/push/exact native sync and a fresh capped60s/2GiB contracts unit precede
+closeout. Its terminal helper SHA256 is
+292336b64f996e314ef834b1d8061fa3ad6513938eacc42e7947f302c33a2a77;
+py_compile passed, and it permits only the synthetic contracts arm. All19 tests
+plus the one actual-physics exclusion remain explicit in the retained argv.
+The full19-file suite passed1438, one actual-physics case deselected, in11.71s.
+Independent source/document/helper review passed86 mock tests in0.13s without
+cache/bytecode, found no blocker and used no native objects/runtime/physics.

@@ -1894,3 +1894,56 @@ plus the one actual-physics exclusion remain explicit in the retained argv.
 The full19-file suite passed1438, one actual-physics case deselected, in11.71s.
 Independent source/document/helper review passed86 mock tests in0.13s without
 cache/bytecode, found no blocker and used no native objects/runtime/physics.
+
+### Typed getter contracts and scheduled window closeout
+
+Exact source `52329eed7417a5932803aec0ecb5cd3087a79e7e` was pushed to the
+fork feature branch and fast-forwarded into the clean native worktree. The
+incremental source bundle SHA256 is
+`04535cbaa4f231d5ca712c2f55ba975685fd89a1ff12beb422fee8e839f3eba4`.
+Committed-source Mac and native runs each passed1438 tests, with the single
+actual-physics case deselected, in10.22s and9.25s respectively. All1438 ordered
+JUnit case identities match, with zero failures/errors/skips.
+
+Both hosts retain these exact files under
+`artifacts/tools/ada-measured-boundary/`:
+
+- `52329eed-mac-tests.xml`,196481B, SHA256
+  `c1bfa8cbb6d1ade7f4c949d6dd656a987df09895571a8846532bf384b02930c0`;
+- `52329eed-linux-tests.xml`,196486B, SHA256
+  `c991d57ab1972f1143ae3091577f647d45f770b2f50427c5c8621110bf47f753`;
+- `52329eed-getter-contracts-service.json`,10780B, SHA256
+  `d42e6ced572df9a08eb559156bb021be8dd67f6dee45624998ac02273ee51556`.
+- `52329eed-preclose-audit.json`,2347B, SHA256
+  `f91ca6af12674a9600e7ae411eb22db7380bbcb3e98ee3f4f99dde3c6e5b701a`.
+
+The retained `microduck-native-getter-contracts-52329eed.service` receipt binds
+the exact source and19-file argv, CUDA-hidden/thread1 environment, 60s/2GiB,
+CPU200%, Tasks64 and other declared caps. Terminal exit0/PID0/empty cgroup,
+elapsed9.889135s, invocation `b919c58be9fa4e18908afb2c3c2e9ddd`.
+Independent read-only final review confirmed the matching JUnits, complete
+service receipt and explicit mock-only boundary, with no blocker.
+
+At the retained read-only22:45:47UTC pre-closeout audit, source and evidence
+were durable on both hosts. This SSH terminal snapshot is distinct from the
+contracts service receipt. The sole GPU process remained Grounding
+DINO1592/946MiB, GPU43C/0%, and the
+lease remained the same empty regular file (device66306/inode11419619). All
+four protected AI Mission system/user scopes remained inactive. Native RAM
+available25GiB, swap0, disk available239GiB. These are point-in-time readings,
+not future workload guarantees. No running MicroDuck user service or matching
+Python training/evaluation/test process was listed. Native `rg` was unavailable
+in the first read-only inventory; the retained successful retry uses `awk`
+without changing the machine.
+
+Development ends here for the authorized07:00 Asia/Shanghai window; no new
+launches after06:50, and the remaining interval is reserved for read-only
+durability/workload closeout. No continuation or service-restoration authority
+is inferred. There was no real getter capture, new GPU diagnostic or PPO in
+this getter slice. No simulator admission or new learned skill is claimed.
+
+The next independently predeclared slice is a bounded native before/after-solve
+collector: first qualify installed getter layouts, then bind exact phase calls,
+full Model/MJB/state fences, absent callbacks, process/caps and complete packet
+bytes, with independent reception. Only its evidence can decide the next
+simulator comparison; a mock test pass does not authorize training.

@@ -152,3 +152,58 @@ unit retirement; independently receive both reference and transition arm, and
 retain the new response/positive gates. No untested runtime monkeypatch of the
 old collector or receiver. Broader solver-window/plant acceptance and motor
 checks remain before curriculum training.
+
+## Retained CPU preparation closeout
+
+Tested source `383909def6380b910df5331a06b38766014f7287`, tree
+`74e1c37b7cd0a7fe39ff18848426b57ddfb9270f`, was pushed to the fork and
+fast-forwarded by a verified incremental bundle into the clean WSL worktree.
+The exact three-path preparation fence and all committed source bytes were
+checked independently by each CLI. No old protocol or runtime was changed.
+The bounded read-only Luna arithmetic review identified signed-zero edge cases;
+owner integration added explicit sign handling and three regression cases.
+
+All **789 tests in eighteen focused files passed on both Mac and WSL**, with
+CUDA explicitly hidden and zero failures/errors/skips. Mac pytest reported
+92.97 seconds; WSL 61.81 seconds. This is not the full repository suite.
+Retained under `artifacts/tools/efc-transition-preparation/`:
+
+- `383909de-mac-tests.xml`: 928944 bytes, SHA256
+  `dd5fa9d0a9080a3a2aa1d667962068ed2f27b7f44211319fdabfb4466152d578`.
+- `383909de-wsl-tests.xml`: 928948 bytes, SHA256
+  `4d47d4e5b2d9080de3b1358e05ba4a0773b2024578884a5d37ba3553dc9650b3`.
+- `383909de-mac.json` and `383909de-wsl.json`: each 278485 bytes, byte-identical
+  SHA256 `c436e79faafb5b8b33051a5d1377ff29c5f2d34fdc900b4868f3363c6d0e917e`.
+- `383909de-source.bundle`: 16789 bytes, SHA256
+  `339091160046fae91c2ada59361536b6b015d08d98cffcb1642c775094be8d67`.
+
+Each independently received historical arm has 2944 active rows, zero force
+and state bit mismatches, and zero world costs outside the conditional interval.
+Each has **zero force/state transitions**, as expected for the previous native
+capture: 896 quadratic friction and 2048 quadratic unilateral rows. The new
+CPU fixture replaces all 2944 active force/state canaries and changes dense
+output in all 64 worlds, covering five response branches. That fixture and the
+authenticated kernel-body CPU stand-in are not a new native transition capture.
+The CLI decision is `retained-efc-response-model-audited-not-native-transition`;
+`positive_transition_gpu_run` and all six qualification flags remain false.
+
+The CPU-only unit `microduck-efc-prep-cpu-383909de.service`, invocation
+`75ecddff890d434da393f2620c85f16a`, completed successfully. Externally checked
+MainPID=0, ExecMainStatus=0, Result=success, NRestarts=0, empty ControlGroup and
+absent original kernel cgroup. Its retained active/exited state is not a running
+workload. Caps were 180 seconds, 4 GiB memory, 200 percent CPU, Nice=10,
+TasksMax=64, LimitFSIZE=16777216, KillMode=control-group and no restart.
+No Duck user unit remains running; no GPU lease or device kernel was used here.
+
+Fresh runtime verification passed without package/driver changes. Before and
+after CPU validation, FilmBrain observatory PID 521 and video playground PID
+298048 remained active with NRestarts=0; both protected AI mission services
+remained inactive in user and system scopes. At the post-check, Windows and WSL
+both reported GPU UUID `GPU-7d72b360-33bc-2cee-3ff4-a954474011b5`, driver
+595.95, 8151 MiB used / 16011 MiB free, 2 percent utilization and 34 C. These are
+separate point-in-time counters, not simultaneous or future launch admission.
+
+Next is the separately fenced native owner/receiver preparation above. The
+positive force-changing GPU test, broader solver window, plant/motor stability
+and curriculum training are still outstanding. No learned capability is added
+by this preparation.

@@ -459,3 +459,108 @@ agreement. It found no packet blocker and preserved the historical-boundary,
 same-bank CPU-control, training and physical limits. Native cache was not
 queried by that review; the owner's separate native84-file rehash is the
 cache evidence. This closes **diagnostic packet reception only**.
+
+## CPU identical-new-GPU-bank solver-only arm predeclaration
+
+From clean base941133c7, `ada_same_bank_solver.py` adds a separate CPU-hidden
+runner/receiver, not another GPU profile. Pin new GPU execution source
+daebeb6ee97b1ce0c4a665331306bcb78a94204c and exact report hash
+5146e17ace38e5b0e2897cb0a3febf1202b66d9d69b757ac0398e2c581d267de.
+Authenticate and fully receive its eight-file/570-leaf packet before any CPU
+allocation; bind every payload, canonical layout, full static manifest,
+predecessor/model/motor/state input and stage source. This is the new actual
+measured GPU bank, never reconstructed historical inputs.
+
+Allocate one fresh CPU plant/put_model/make_data with unchanged explicit
+capacities. Count its one internal native kinematics separately. Execute the
+verified frozen helper once to expand only two motor fields (two source-inferred
+repeat launches), copy exact retained motor bytes, and bind all347 CPU model
+arrays and all184 scalar/container nodes to the new GPU/CPU allocation packet
+before restore. Require every461 actual Model/Data array on CPU, absent
+callbacks and default unchanged topology/solver/options. No BAM proposal.
+
+Restore **all114** GPU immediately-before-solve Data leaves using the tested
+complete restore helper. Preflight every source/target layout, dtype, stride,
+expanded shape, raw length, finite decoded value, full statics and source
+inventory before the first copy; then prove every actual post-copy byte/layout.
+Retain that complete restored-before bank and a114-field hash receipt. Check
+all model/static/device/pointer bindings before the call. The passive CPU
+inventory before allocation must be empty; immediately before restore and
+after restore it must be only the exactly received repeat executable. This
+checks absence of hidden pre-solver stage kernels, not dynamic launch counts.
+
+Then call the frozen **public solver exactly once**, which source-allocates a
+fresh SolverContext. Restore no persistent internal GPU context. Do not call
+fixture kinematics, collision, construction, pre-solve mass factorization,
+sensor/force/actuation stages, ordinary forward or integration. The solver's
+own unchanged Newton/Hessian factorization and line-search algebra remain part
+of that authorized public solve; the zero pre-solve mass-factorization claim
+does not claim absence of the solver's internal algebra.
+
+After sync, retain all114 CPU after-solve leaves. Recheck full model/static/
+pointer/device/layout bindings and original iteration bounds; reject any write
+outside the unchanged six solver outputs. Compare complete GPU after-solve and
+CPU after-solve outputs on the exact same restored input bank, with full hashes,
+byte equality, differing scalar-element counts and ordered CPU-minus-GPU
+maximum absolute differences. No RMS/BLAS, tolerance, row normalization,
+manifold reconstruction, solver tuning, gate relaxation or admission inference.
+Both228 serialized branches and all114 restore hashes must receive exactly.
+
+Passive post-solve CPU metadata is restricted to11 predeclared Newton/support/
+repeat modules listed in `ALLOWED_MODULES`; collision, construction, sensors,
+passive/force and forward stage modules are excluded. Required repeat/solver
+rows must exist. Bind source/options hash, block dimension, device, metadata and
+false loaded-binary flag to the subset of the exactly received prior CPU
+response at source05216efe9d33a80d7a839eaa20b7a57ea05dbe86, JSON hash
+af380438ef6da87e1e77f7eefcb5cdc1da8724fab757a8b9d2836c2f0a8386e9 and NPZ hash
+b3c52c1463863389ba8161ac9fca0bd080b020e01b48920405904024c183dc34.
+Current opaque handles remain opaque; positive hook counts may be lower than
+that full-stage response, never higher and never treated as launch counts.
+No build/load/hash calls may be triggered just to inspect provenance. Exact
+native private cache hashes are retained separately, not loaded-code identity.
+
+Before launch require focused tests, independent source review, committed push,
+clean native fast-forward and matching CPU contract tests. Use
+`microduck-ada-same-bank-solver-<source8>.service` with the existing180s/6G CPU
+response caps: Type=exec/RemainAfterExit=yes/CPUQuota200%/Tasks64/Nice10/
+LimitFSIZE16M/LimitCORE0/Restart=no/KillMode=control-group/TimeoutStopSec10 and
+exactly five environment entries, CUDA_VISIBLE_DEVICES empty/four thread pools1.
+The closed CLI checks actual source-bound PID/invocation/caps, clean exact
+native machine/venv/source, frozen six distributions including BAM1.0.1,
+pre/post installed stage/helper/source hashes and unchanged protected services
+and Dino owner. Fresh private CPU cache uses actual `use_precompiled_headers=False`;
+all enumerated Warp devices CPU/Torch CUDA uninitialized before and after.
+No GPU allocation is permitted. Launch only before22:50 UTC, preserving the
+ten-minute closeout reserve. Diagnose any failure read-only before changes.
+
+Closed input is native `artifacts/evaluations/ada-measured-boundary-daebeb6ee97b`.
+Fresh unique outputs under `artifacts/tools/ada-measured-boundary/` are
+`<source8>-linux-same-bank-solver.json`, matching NPZ, and absent private
+`<source8>-cpu-same-bank-cache`. Native receiver must rehash every cache leaf;
+portable Mac receiver must authenticate full new GPU references, all228 branch
+leaves, restored actual-bank receipt, model/statics/layout/source/caps/counters,
+both complete solver fences and recompute every comparison. Retain terminal
+service/exit and copied evidence separately. No PPO, learned-skill promotion,
+raw perception, physical motion or protected-service restoration is authorized.
+All original simulator/solver/physical qualification flags stay false even if
+the two solver branches numerically agree.
+
+Independent source review found the initial portable receiver did not require
+its own checkout to be the execution revision. Before any launch, add a portable
+clean exact HEAD/feature-branch gate and directly compare the current receiver
+module bytes to that revision's blob, with negative tests for wrong HEAD,
+branch, dirt, module bytes and malformed source. Full receipt must run in a
+fresh process at the clean execution revision before editing closeout docs;
+later historical reproduction must use that exact clean revision, not a newer
+checker checkout. Native machine/interpreter checks remain additional runner
+requirements, not portable Mac requirements.
+
+Preparation check after that repair: all ten retained CPU-hidden contract
+modules passed **665 tests**, with the single real-physics test explicitly
+deselected (13.33s). The new solver-control file contributes72 synthetic/source
+tests, not physics acceptance. Independent Luna source review verified the
+repair and bounded restore/one-solve path; its focused289-test suite passed
+without runtime allocation or service operations. No remaining source/mock
+blocker was found. `git diff --check` passed. Commit this predeclaration before
+native tests or runtime launch; successful contracts do not predict solver
+agreement or establish simulator admission.

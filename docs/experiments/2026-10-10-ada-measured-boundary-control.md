@@ -230,3 +230,53 @@ The earlier negative expansion-source test initially aliased its expected dict;
 the fixture was corrected with deepcopy before final passing tests. No runtime
 probe has run yet. Native contract suite uses the existing60s/2G limits and
 unique source8 artifacts; the actual allocation arm separately uses180s/6G.
+
+## Retained actual CPU allocation/static packet
+
+Execution source `03a8be9209597b158468ed2901089ba9358ced3b` was pushed and
+clean-fast-forwarded on native100.100 before launch. Committed-source seven-file
+tests passed473/473 on Mac (3.34s) and native (3.17s); complete testcase multisets
+match with zero failures/errors/skips. Test service invocation
+`bac7a27bf38842d7bde3ddfbc68774e0` succeeded in3.732743s under60s/2G caps.
+
+CPU allocation unit `microduck-ada-model-probe-03a8be92.service`, invocation
+`5fb279ea08154a81ac1a644f2359167d`, succeeded in5.934013s under every declared
+180s/6G cap. Its terminal state is MainPID0/status0/Result success, active/exited,
+empty ControlGroup. Actual source/schema/byte checks succeeded: all347 model
+arrays,114 Data arrays,461 complete static array paths and184 static/container
+nodes. Static manifest SHA256 is
+`8180631aae0b6d04130f140737c79cef65349b2b38ca9227134d637718fcf78e`.
+All collision/EFC/solver counters are zero. The only held CPU executable is the
+predeclared repeat kernel with matching source/options hash/metadata, not an
+unexpected dynamics module. Its three private cache files total5122 bytes.
+Loaded binary bytes remain unbound; the two repeat launches remain source
+inference, not an instrumented runtime count.
+
+Native exact receiver with **every cache file rehashed** passed, and portable
+Mac reception passed independently with no Warp/Torch/MuJoCo runtime imports.
+Independent Luna artifact review also passed portable source/schema/all114-leaf/
+461-path/184-node reception, exact473-case XML comparison, helper/service hashes,
+and every recorded cap/exit. It did not query native/cache state; the owner
+performed that separate read-only native cache check. Actual runtime scalar
+values are retained measurements checked against a fresh walk during execution;
+portable reception does not independently remeasure them.
+
+Both hosts retain these files under `artifacts/tools/ada-measured-boundary/`.
+The fresh private CPU cache remains only on native to avoid duplicate storage.
+
+| Evidence | SHA256 |
+| --- | --- |
+| `03a8be92-linux-model-probe.json` (98821 bytes) | `469558cbbf19d11c4b7c2d14619dac6ceecba089d02dabbbbb3a6083fcb25eb1` |
+| `03a8be92-linux-model-probe.npz` (232864 bytes) | `d997420e6449b4f57848bc7393d1a512d22d3ae262232c7879e1ab240989c80c` |
+| `03a8be92-mac-tests.xml` | `c0f9d16ee817a62596f25b1a229f1f4759a6d4345e11cf9d0cfc42316c085bfa` |
+| `03a8be92-linux-tests.xml` | `649750cfd1fc99e39232ffc9921999ac50e16b04f580b0c534858cfb000a9a2d` |
+| `03a8be92-contract-service.json` | `9eb10612d1101ec25ae2dd39a6e994ecb25509572d3a2b9f7f66bdd40f45720b` |
+| `03a8be92-native-services.json` | `e7343fe8e0a84ded8ba19a56bfbd6de55d0bd6cac0b257a78668648b054925b9` |
+| read-only `retain_model_probe_services.py` | `f8aa0a4a0024984c3fdde56e165bf7b2bb9b4a3d47fb1ddb19dd833dd0dbd263` |
+
+No Duck GPU process or active CPU process remains from these units. Protected
+mission services stayed inactive in both scopes and Dino remained the sole
+GPU compute owner. No fixture dynamics or solver control was executed. The
+next source gate is the closed supervised **new measured GPU boundary capture**,
+followed separately by a same-GPU-before-solve-bank CPU solver-only control.
+The allocation/static result does not reopen simulator/PPO admission.

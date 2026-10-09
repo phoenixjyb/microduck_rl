@@ -219,6 +219,14 @@ def test_whole_warp_inventory_and_symlink_rejection(tmp_path):
     with pytest.raises(ValueError):observer.warp_inventory(link)
 
 
+def test_entered_source_alias_resolves_without_admitting_synthetic_paths(tmp_path):
+    source=tmp_path/'source.py';source.write_bytes(b'pass\n')
+    alias=tmp_path/'alias.py';alias.symlink_to(source)
+    assert observer.entered_path(str(alias))==source
+    for filename in ('<string>','source.py',str(tmp_path/'missing.py'),None):
+        with pytest.raises(ValueError):observer.entered_path(filename)
+
+
 def test_inert_import_new_source_fence_and_cpu_test_declaration(tmp_path):
     assert len(observer.OWN)==3 and observer.BASE=='20c00062c7d81dd4185cdb61e25a3a2efc68faca'
     assert len(observer.TESTS)==27 and observer.TESTS[:-1]==observer.probe.TESTS

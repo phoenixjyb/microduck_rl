@@ -22,6 +22,9 @@ sources without executing them, recursively collect nested code objects and
 compare each entered code object to that graph before the callee's first
 bytecode. Require canonical module globals, installed source paths and held
 module identity. Whole Warp source bytes are checked again before and after.
+Resolve absolute entered-code filenames to that same installed file, permitting
+WSL's retained shared-venv alias without reinstalling or weakening the whole-tree
+byte pin. Reject synthetic, relative and missing code filenames.
 
 For direct Python callees leaving Warp, require a closed standard-library
 module allowlist and code equivalence to the current installed source. Record

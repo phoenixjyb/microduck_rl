@@ -81,6 +81,15 @@ def code_graph(raw, filename):
     return tuple(out)
 
 
+def entered_path(filename):
+    """Resolve an absolute code path, including the retained shared-venv alias."""
+    need(type(filename) is str and Path(filename).is_absolute(), "absolute entered code path")
+    try:
+        return Path(filename).resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("resolvable entered code path") from exc
+
+
 class BootstrapObserver(probe.dispatch._Sealed):
     """Trusted main-thread integrity observer, not a hostile-process sandbox."""
     __slots__ = ("binding", "method", "method_code", "root", "leaves", "sources", "graphs",
@@ -127,7 +136,7 @@ class BootstrapObserver(probe.dispatch._Sealed):
         filename = frame.f_code.co_filename
         if warp:
             need(path.is_relative_to(self.root) and path.suffix == ".py"
-                 and filename == str(path), "entered Warp canonical source path")
+                 and entered_path(filename) == path, "entered Warp canonical source path")
             rel = str(path.relative_to(self.root))
             need(rel in self.sources, "entered Warp source belongs to literal whole tree")
             raw, anchor = self.sources[rel], self.leaves[rel]
@@ -135,7 +144,7 @@ class BootstrapObserver(probe.dispatch._Sealed):
             stdlib = Path(sysconfig.get_path("stdlib")).resolve(strict=True)
             need(name in EXTERNAL and path.is_relative_to(stdlib) and path.suffix == ".py"
                  and "site-packages" not in path.parts
-                 and (filename.startswith("<frozen ") or filename == str(path)),
+                 and (filename.startswith("<frozen ") or entered_path(filename) == path),
                  "direct external callee is installed standard-library Python")
             raw = read_plain(path)
             anchor = dict(bytes=len(raw), sha256=sha256(raw).hexdigest())

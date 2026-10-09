@@ -564,3 +564,93 @@ without runtime allocation or service operations. No remaining source/mock
 blocker was found. `git diff --check` passed. Commit this predeclaration before
 native tests or runtime launch; successful contracts do not predict solver
 agreement or establish simulator admission.
+
+## Retained CPU identical-bank solver result
+
+Executed clean source d75ef0cde0be3198e2f0372c4d5f9fe0aa17825d after fork push
+and verified native fast-forward. Committed-source suites passed665 cases on
+both hosts (Mac33.61s, native5.45s), identical testcase multisets and no
+failure/error/skip; the sole actual-physics test remained explicitly deselected.
+Native contract unit invocation bd0dd5055d384581ac7bdd9ce223fe56 completed in
+6.012610s under60s/2G caps, with successful exit/MainPID0/empty control group.
+These are contract checks, not runtime admission.
+
+Then `microduck-ada-same-bank-solver-d75ef0cd.service`, invocation
+0a812a9c49414ead9f91b4a6d195d29c, completed in **16.883411s**, exit0/Resultsuccess/
+MainPID0/empty control group under the exact predeclared180s/6G CPU caps and
+five-entry hidden-CUDA/single-thread environment. Source/machine/venv/versions,
+four protected-service scope states and sole foreign Dino PID1592 stayed bound.
+Terminal GPU occupancy remained961MiB used/15232MiB free,45C/0%; no Duck CUDA
+allocation occurred. The expected hidden-CUDA Warp startup error100 did not
+prevent CPU execution; actual runtime device enumeration and all461 actual
+array devices remained CPU, with Torch CUDA uninitialized.
+
+All114 actual restored-before leaves equal the authenticated NEW GPU
+before-solve bank byte-for-byte, with all114 restore hashes. Both complete
+114-field branches received (228 leaves; full canonical allocated capacities,
+including padded slots). Model347/static184/device461/pointer bindings and
+complete fences passed. The sole public solve changed exactly the six permitted
+Data outputs in both arms; no other Data field changed. Counters remain
+nacon8/ncollision4, nf[14,14], nefc[14,46], ne/nl[0,0], solver_niter[1,4].
+
+| Complete solver output | Max absolute CPU minus GPU | Differing scalar elements | Byte equal |
+| --- | ---: | ---: | --- |
+| efc/Ma | 1.4901161193847656e-8 | 24 | no |
+| efc/force | 7.450580596923828e-8 | 48 | no |
+| efc/state | 0 | 0 | yes |
+| qacc | 1.9073486328125e-6 | 39 | no |
+| qfrc_constraint | 4.76837158203125e-7 | 31 | no |
+| solver_niter | 0 | 0 | yes |
+
+These ordered full-buffer differences use the frozen comparison convention;
+they are not a tolerance pass. In this single two-world fixture, CPU versus GPU
+Warp solve on the identical new bank produces much smaller differences than
+the retained native-MuJoCo versus Warp full-forward discrepancy. That narrows
+the next investigation toward upstream state/contact/constraint construction;
+it does not establish exclusive causation, general repeatability, correctness
+of either solve, native solver equivalence or acceptance of contact behavior.
+No library/plant/solver tuning, row normalization or gate change was made.
+
+Native fresh-process receiver rehashed all30 private cache files (479216B),
+separate from ten held CPU ModuleExec rows. The pre-solve inventory was exactly
+the retained repeat row; post-solve metadata stayed within the eleven-module
+predeclared whitelist (support was not loaded). All source/options/meta rows
+passed the prior exact CPU provenance reference; hook counts are not launch
+counts and loaded binary identity remains unbound. Full pure portable receipt
+passed on Mac at the clean execution revision in a fresh process without
+Warp/Torch/MuJoCo imports. Independent Luna re-received the same full packet,
+hashes, counters, fences, comparison, service limits/terminal state and test
+inventories and found no blocker. That review did not rehash native cache;
+the owner's separate native check is the cache evidence.
+
+Exact retained files under `artifacts/tools/ada-measured-boundary/`, copied to
+both hosts (private CPU cache stays native):
+
+- d75ef0cd-linux-same-bank-solver.json (143694B):
+  b0287a679ad297dfb40a71a6c03a2e99a3227d298da109edcdde3b9e131c0339
+- d75ef0cd-linux-same-bank-solver.npz (472546B):
+  8193be85083cb50e031a3fa95238daa3d6f7eeb2fa36f60c93e5074e3406cb40
+- d75ef0cd-mac-tests.xml:
+  f5b0b22c594ddf31209a774af3b73897136090632b1732a423fd9b79199f12d6
+- d75ef0cd-linux-tests.xml:
+  a185dec764fd609d18acb9c2153a136ed332005010266e37ef72d3eba031448f
+- d75ef0cd-contract-service.json (3625B):
+  7e7e40dd75ee0c87fe906e74786d399d82b9031416fae5e209b17222ada4e24a
+- d75ef0cd-solver-service.json (10584B):
+  3ad868c73bc37fa599a0fd292fd562a8a582cdddca8177900a75c98628103f50
+- retain_same_bank_solver_service.py:
+  91d9dd085f0cc05a3584554211d5a32be479185a41137f823e0d5f8853d6fb07
+- d75ef0cd.bundle, verified incremental source bundle from941133c7:
+  67c295e3b61a4a52cd05e3b2fc77430c72ec8f318cd126c3ed329ca2b3d6a923
+
+Decision remains **complete-new-ada-bank-cpu-solver-control-collected-not-admission**.
+This closes the separately predeclared same-bank diagnostic, not the historical
+live GPU boundary. Original solver/simulator/training/physical flags remain
+false. Next bounded work is a source-backed upstream discrepancy diagnosis and
+an evidence-justified predeclaration, not PPO, video or hardware motion.
+
+Closeout documentation check verified all eight new artifact hashes against
+local bytes and identical native copies, the existing relative Markdown link,
+and whitespace. No runtime/source code changed after the665-case tested
+execution revision. Commit/push this retained result separately from that
+immutable execution source.

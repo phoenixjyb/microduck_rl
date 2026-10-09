@@ -1078,3 +1078,121 @@ protocol, own-row linkage, exact comparisons, storage caps,90s/6GiB/128MiB
 user-service limits and false qualification flags remain unchanged. Re-test,
 independent review, commit/push and clean exact native synchronization precede
 the third attempt. Preserve both earlier failed units and their evidence.
+
+### Successful current native capture and complete portable reception
+
+Execution revision f8540785a4ff5ee96d8186962c1934a9a15c0bb7 passed843 pure
+cases on both hosts (Mac17.96s, native6.72s; the same actual-physics case
+deselected). All843 classname/name multisets match with zero failures/errors/
+skips. Independent source review passed90 focused cases in2.03s and found no
+blocker. Native contracts receipt4984B SHA256
+b66c59fdc3482cdf152c54fba7edc52e310b484c14d8d697b441a3a94d6bbd71;
+Mac JUnit116191B SHA256
+072074d6dd71bdd67b3174dcfc021fce877e1db3c106058d0fad7b76e24f5226;
+native JUnit116196B SHA256
+8d52ccc99763192451d9fcdf13533f4a62527b438f58c648a843de5f0a6ed2ce.
+
+The third unique capture unit completed with exit0 after10.869572s,
+invocation9768630dcbe94ffc92e6ea3d52327ca4, PID0 and empty cgroup. Actual
+service receipt8173B SHA256
+88b7ccce8a79b326cc8b032224bcf4c4d0ac14fbab5c5ad099d76408e521607e
+binds the exact argv, clean execution source,90s/6GiB/128MiB limits, literal
+CPU-only environment, full journal and four inactive protected scopes.
+No Warp array/kernel/ModuleExec or Entity/BAM runtime call occurred. Exactly
+two native forwards and four included-contact force decodes ran; integration
+and optimizer counts remain0. Static BAM parameter construction was allowed.
+DINO remained PID1592/946MiB; final GPU45C,0%,961MiB used. No service restart,
+lease replacement,100.98/FilmBrain change or physical motion occurred.
+
+Both current model numeric/scalar fences and complete MJB before/after byte
+fences match. All20 output fields and all24 historical active-bank leaves match
+by dtype, shape and raw bytes, as do the original six counter fields. Seven
+restored states are unchanged, both warning sums0 and all computed arrays
+finite. Native ncon0/4,nefc14/30,nf14/14,niter1/4; dense nJ280/600,nisland1/1.
+These results reproduce the historical **outputs**, not an unavailable
+historical complete Model, compiled-device identity, common physical contact
+points or training admission.
+
+Complete leaves retained under `artifacts/tools/ada-measured-boundary/` on
+both hosts (prefix `f8540785-linux-native-constraint`):
+
+| Leaf | Bytes | SHA256 |
+| --- | ---: | --- |
+| .json | 134653 | 52d76742ab534af2434d4dd698124f485c15a3e2ff3ee6e7171e93d5485961f4 |
+| .npz | 33205295 | 35792c896118d7ebd62f0e5356e116c520ec004b0c254abd184c85c565afe950 |
+| -world0.mjb | 80760771 | 1522cace1c5582f1364145396791683d9c4127be880d3df4bf42ca63d9de9a58 |
+| -world1.mjb | 80760771 | a95db5076919780704e7b3d4fd0f9566c6974f5891af7e34dbdb5f512c453be7 |
+
+Stored619 numeric leaves total81125319B; logical1094-leaf two-world namespace
+161884190B includes shared aliases, not another physical copy. Distinct MJBs
+remain independent. Fresh portable receivers on both hosts imported no
+MuJoCo/Warp/Torch runtime and made no native/GPU call, verified every complete
+leaf, and produced identical1644B receipts, SHA256
+91007ebdd68bd3175781cf635fce3cf68aed4c37d1a5ffaa3b67731788f830a1.
+The ignored exclusive-write receiver helper SHA256 is
+35a4ffa45a794e113cdc6bab33ed8129fa886a80eedf0cd9924e1c2303320da9;
+service helper v3 SHA256
+4076adc38a2653529b4621f4f3d31848b2b6e88c4668fac6edaa5af9b8dc73a1.
+An early Mac receive, attempted while SCP was still writing the NPZ, correctly
+refused `plain bounded full capture bank`; it wrote no receipt. Complete
+post-transfer reception passed; no contract was loosened to bypass that refusal.
+
+The next bounded step is a separately tested, source-bound **pure arithmetic**
+comparison using this complete current capture and the already measured GPU
+bank. Keep both backends' own contact slots/manifolds; native4 versus Warp8
+does not become point correspondence or a row-normalization prescription.
+No further Model/forward/solver/GPU call or PPO follows the capture alone.
+
+## Current native row-recipe arithmetic predeclaration
+
+The next immutable source contains `ada_native_constraint_recipe.py` and its
+pure tests. Use only the complete current f854 capture (report SHA above), the
+exact authenticated original eleven-file packet and the measured daeb GPU
+packet. No Model/Data, physics, Warp runtime, solver or device is allocated.
+This control is separate from the earlier GPU-only recipe; preserve that
+earlier source/result and its native-input-unavailable limitation.
+
+The native scalar recipe is independently checked against the public
+[MuJoCo3.10.0 constraint source](https://raw.githubusercontent.com/google-deepmind/mujoco/28009f9105cd92784b7b0b30c0605a5e29107a77/src/engine/engine_core_constraint.c).
+Git tag3.10.0 resolved to commit28009f9105cd92784b7b0b30c0605a5e29107a77.
+Retain the exact102904B source as
+`mujoco-28009f91-engine-core-constraint.c`, SHA256
+71bcfcc6e3518846ee3b65e6835b14565aacf4027ea3c522b26498ea9ccc58cd.
+This is a source-level arithmetic reference, not proof that a particular
+loaded wheel binary was compiled from it or that Python emulates native SIMD
+or Warp FP32 fusion/rounding. Existing numeric headers/installed Warp sources
+remain byte/RECORD-bound independently.
+
+Cover all44 native EFC rows exactly once:28 DOF-friction rows with their own
+dof IDs, captured Model inverse weights/reference/impedance/frictionloss and
+zero position/margin;16 rigid isotropic dim3 pyramidal contact rows linked to
+their own four included contact slots. Derive velocity by ordered J*qvel over
+the captured J and unchanged saved qvel. Native contact inputs are captured
+geometry/body mapping, inverse weights, friction, reference, impedance,
+distance and inclusion margin. Native R/D/KBIP/aref/final solver state are
+comparison outputs, **never recipe inputs**. Keep direct negative-reference
+motor-friction and positive contact-reference branches, REFSAFE, native
+impedance derivative, contact regularization and post-impedance adjusted diagA
+distinct. Unsupported row types/branches/layouts fail closed.
+
+Retain numeric differences and exact FP64 byte disagreements for every row;
+these are descriptions, not new acceptance tolerances. Native data is a
+post-forward capture, not a newly replayed before-solve stage. Keep measured
+GPU32 contact rows/eight contact slots separate, with its existing source
+recipe and before/after construction-input byte fences. Do not pair physical
+points, normalize row counts, mask active states or reconstruct an actual
+solver Hessian. Eight selected current native Model arrays have explicit
+cast-to-measured-dtype byte descriptors after all347 historical Model arrays
+are bound to the actual GPU bank; those descriptors do not prove full models
+or physical contact inputs equal. All previous qualification flags stay false.
+
+Before arithmetic execution: focused/full CPU tests, independent review,
+commit/push and exact-clean native synchronization. Both hosts use a fresh
+source-prefix JSON output≤256KiB and complete deterministic recomputation.
+The native contracts unit is60s/2GiB/16MiB; the pure arithmetic unit is
+120s/2GiB/16MiB. Both are retained CPU-only user units with Type=exec,
+RemainAfterExit=yes, CPUQuota200%, TasksMax64, Nice10, LimitCORE0, Restart=no,
+KillMode=control-group and TimeoutStop10s. Five literal CUDA-empty/thread1
+environment assignments, inactive protected services, unchanged DINO, no GPU
+lease entry and the22:50UTC launch cutoff remain mandatory. No physical
+motion, policy training, installed-library/plant/gate change or raw perception.

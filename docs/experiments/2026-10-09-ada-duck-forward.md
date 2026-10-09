@@ -88,3 +88,80 @@ mandatory full-array reception, strict placement/counter fields, observed stop
 timeout and closeout reserve. Authenticated NPZ bytes are decoded from the same
 in-memory bytes that were hashed, not a reopened path. Focused tests also cover
 foreign/service drift, admission refusal, child failure and owned-only cleanup.
+
+## Retained execution and reception
+
+Execution source `d04747c7f6a3c9029e3276f6eeee1c9ec3c5a20f` passed **192
+cases across five focused CPU test files on each host**, zero failures, errors
+or skips. Mac pytest time was 25.96 seconds; Linux 41.23 seconds, in a capped
+CUDA-hidden service. Actual testcase multisets and the complete XML bytes match
+the independently retained closeout bindings. These are CPU checks, not CUDA
+training acceptance.
+
+The single capped GPU collection completed in **37.40 seconds**, including fresh
+MuJoCo-Warp compilation. Two worlds and all 20 fields were finite. All seven
+state/control/applied-force fields stayed byte-identical on each backend, and
+their CPU/GPU comparison residuals were zero. Both CPU and GPU counters confirmed
+the predeclared empty-contact, empty-friction, empty-constraint baseline.
+The actual compiled native selected-fields SHA remained
+`6a4e7578da3b0f4ffd1f710c8d3cffe9d99330d7ee05aa08eee668d922b7f63f`.
+The stock forward compiled solver modules as well; empty active constraints do
+not imply no solver code was compiled or touched, and do not qualify its behavior.
+
+The 72 sampled telemetry rows showed peak aggregate usage 1262 MiB, minimum free
+14932 MiB and peak temperature 51 C. This is sampled usage, not a true peak or
+exclusive reservation. Grounding DINO PID 1592 remained present; mission services
+remained inactive. GPU memory returned to 961 MiB used / 15232 MiB free.
+
+| Field | Maximum absolute CPU-double/GPU-float difference | Float32 bit mismatches, both worlds |
+| --- | ---: | ---: |
+| `xpos` | `1.1213985913471891e-08` m | 40 / 96 |
+| `subtree_com` | `1.7975138266734803e-08` m | 78 / 96 |
+| `ximat` | `1.7022679843492483e-07` dimensionless | 224 / 288 |
+| `qfrc_bias` | `4.756721674326059e-07`, mixed generalized units | 24 / 40 |
+| `qacc`, `qacc_smooth` | `2.179735020035878e-06`, mixed acceleration units | 40 / 40 each |
+
+These differences are descriptive, **not a bit-exact pass or a relaxed physics
+tolerance**. The retained complete arrays also include every other declared
+field and residual. No inference about constraint solving, long rollouts,
+locomotion, hopping or hardware follows from this fixed unconstrained state.
+
+GPU invocation `f3061a4c1ac74be3bdb87f47723ea2b0` retired with MainPID 0,
+exit 0, Result success, no restarts, empty ControlGroup and absent original cgroup.
+The separate 90-second-capped CPU receiver invocation
+`951ee2938d5641ee81885dcba9b3ff8e` independently reloaded and recomputed both
+full NPZs, matched a fresh same-host plant, matched both 192-case XMLs, and retained
+its own observed resource caps. It also retired successfully with MainPID 0 and
+empty ControlGroup. A second Mac reception reproduced every full-file hash and
+every residual row; it deliberately did not assert Mac/native plant bit equality.
+
+The six core GPU files total **89377 bytes** and are retained both natively under
+`artifacts/evaluations/ada-duck-forward-d04747c7f6a3/` and on Mac under
+`artifacts/tools/ada-duck-forward/ada-duck-forward-d04747c7f6a3/`. Both test XMLs,
+receiver source and closeout are retained under `artifacts/tools/ada-duck-forward/`
+on both hosts. Private compiled caches remain on native only, avoiding duplicate
+cache storage. These ignored assets are not added to Git history.
+Independent Luna reception also reproduced all payload, report and XML bindings;
+the owner reviewed that result before accepting retention, not simulator admission.
+
+| Evidence | SHA256 |
+| --- | --- |
+| GPU report | `5cefad1522a59495483cf0af9139a30200e0e21e3eb8e1a66ac0617e1e729c06` |
+| Child receipt | `da1d30a1ac2ebc312ad458ffea9431f0795b5d57e9270a80729656b2977cfcfc` |
+| Native-double full fields | `d29ad756325b9f5cd67443e235c50bf3bbf997bf7dbb8ef00bf8a06ab3b23c12` |
+| Ada-float32 full fields | `d5fa5dfea7c33d517bd4acb55e1b8966b0789525be448e288a1f69935e0d1db4` |
+| Independent native closeout | `e99efd21d877417a12dc987283b64dca447a6faa399fe2b2cd5ad979b3e316e4` |
+| Mac 192-case XML | `ce1cc75d8a1f2daae078cbc8163a665bd4bb513ac1510f477b4f736b8e707407` |
+| Linux 192-case XML | `18d5ecd6512bb88419ee9e8f605f00363299ea8c419e804bbd096a6295e07fc1` |
+| Receiver source | `bc9b1db3c5a66cd64a99048538dd263f60ad73b76790f2a948d73217fd73b127` |
+
+## Next numerical gate
+
+This baseline establishes retained execution of a real model's unconstrained
+forward on Ada, not simulator qualification. Next predeclare a similarly bounded
+forward-only **motor-friction/contact** fixture, with genuine zero-error BAM
+preparation, complete input binding and active-constraint/contact correspondence.
+Keep integration and policy work separate. Do not reuse the old Blackwell origin
+collector or change its guards to treat this Ada result as solver admission.
+The old full-rollout numerical failure is still unresolved; no PPO, video, new
+skill promotion or physical motion is authorized by this collection.

@@ -896,3 +896,86 @@ grounding and media services remain preserved. Source/runtime code has not
 changed after the753-case execution revision. Retain this documentation commit
 separately from the clean immutable execution source; do not reinterpret a
 future wrong-HEAD receipt refusal as a reason to loosen its source contract.
+
+## Current native full-forward input capture predeclaration (before execution)
+
+The preceding GPU-only arithmetic recipe does not reconstruct the historical
+native Model, contact parameters or native solver KBIP inputs. The next bounded
+control captures **current native** parameters at the exact seven retained
+float32 states, widened to float64 in the same way as the original native arm.
+It cannot retroactively authenticate an unavailable historical complete Model
+or establish that public output equality makes all inputs physically equivalent.
+
+Execution source will be the clean feature-branch commit containing
+`ada_native_constraint_capture.py`, its tests, this predeclaration and
+`ada_native_constraint_schema.json`. The frozen public class getter inventory
+was obtained by importing MuJoCo without constructing a Model/Data or invoking
+physics:627 entries (474 arrays,3 byte strings,106 integers,10 floats,31 methods,
+3 nested objects); schema42029B SHA256
+12ee7d544b19c4d4c6fa8308e39c5611f317ba17693c056d337348c6292626ff.
+Methods are not invoked, stat/vis are explicitly excluded from reflection, and
+the **complete current serialized MJB** is retained independently. Schema names,
+types, scalar/exclusion inventories and both-world nonmotor byte equality are
+checked; this is not a claim that introspection alone proves historical identity.
+
+Only the exact Linux machine0c79e415429b4933a400159bfa79a34d, checkout
+`/home/converge/work/microduck_rl-athletics-obstacle-curriculum`, branch
+`feat/athletics-obstacle-curriculum`, frozen source-root Python3.12.12 venv,
+unchanged five package versions, BAM1.0.1 and driver595.91.07 are in scope.
+The GPU remains shared with Grounding DINO PID1592; this arm exposes no CUDA
+device and does not enter or replace the existing advisory GPU lock.
+Both system/user scopes of the two protected mission services must stay inactive.
+No changes to100.98, FilmBrain, the XML/assets, installed libraries or gates.
+
+One retained **CPU-only user service** will use a unique source-prefix output,
+`RuntimeMaxSec=90`, `MemoryMax=6G`, `CPUQuota=200%`, `TasksMax=64`, `Nice=10`,
+`LimitFSIZE=64M`, `LimitCORE=0`, `Restart=no`, `RemainAfterExit=yes`,
+`KillMode=control-group`, `TimeoutStopSec=10`. Its five literal environment
+assignments are `CUDA_VISIBLE_DEVICES=` and OMP/MKL/OPENBLAS/NUMEXPR threads1.
+Run only after exact committed source synchronization, focused pure contracts,
+independent review and a fresh host/workload check, before22:50UTC.
+
+Construction is two `build_entity().compile()` calls with a static selected
+plant/assets binding; **never** describe/reference/place_on_floor. Only recorded
+motor frictionloss/damping fields are installed, from the authenticated original
+motor bank, and seven saved states are restored. Exactly two public `mj_forward`
+calls perform native collision, constraint construction and solving; **zero
+integration** does not mean zero solver work. A fresh process installs
+fail-closed Warp concrete-array, launch/load/Module.load guards before dynamic
+plant imports, and rejects Entity/mjlab BAM runtime initialize/compute paths.
+Static actuator/BAM parameter constructors and their imports are explicitly
+allowed. No Warp runtime arrays, kernels, BAM torque proposal, optimizer,
+reset/placement, GPU allocation or policy execution are permitted. All eight
+native global callbacks must be absent and no Warp ModuleExec may be held.
+
+Retain all public numeric top-level Model/Option fields, native full MJB
+before/after byte fences, all contact fields (including current post-constraint
+mu/H), all public EFC construction/solver vectors selected in the protocol,
+dense-J metadata, KBIP and diagA (not a fictional diagApprox), all4000 solver
+statistic slots, counters, warnings, seven states and all20 original output
+fields. Contact/EFC IDs are own-run slots only, not cross-backend point IDs.
+`mj_contactForce` is called only for included contacts (bounded≤256 total);
+uninstantiated contacts retain explicitly labelled zero-force markers.
+Actual contacts/rows may differ from historical0/4 and14/30; bounded structural
+differences, warnings, nonfinite computed values and exact-byte disagreements
+are retained as diagnostic failure signals, not tolerated or discarded.
+Model infinity sentinels remain raw; NaNs/unknown types, overflow, model-fence
+drift, hidden runtime calls or authority/resource violations stop the arm.
+
+Each world is capped at128 contacts and512 EFC rows. Public model arrays include
+native mesh BVHs absent from the old Warp array inventory: the authenticated
+old model input alone is14808415B before NPZ headers. Therefore this arm uses
+one compressed numeric NPZ (raw arrays<144MiB, compressed file<64MiB), each
+MJB<64MiB, report≤256KiB, and a192MiB ceiling for the three large retained
+leaves. Reception bounds complete ZIP expanded byte counts before decoding;
+compression changes storage only, never dtype, order or raw numeric hashes.
+Mac available capacity was76516728KiB before this source revision. Writes are
+exclusive/fsynced and never overwrite historical or failed evidence. Source,
+schema, native four headers/Linux extension/shared library and wheel RECORD are
+bound by bytes. Installed-file provenance is **not** loaded-machine-code identity.
+The portable receiver creates no native Model/Data or physics calls: it binds
+all raw bytes/layouts, fixed inventories, model option/scalar exclusions, own
+contact/EFC linkage, current versus historical fields/active rows/counters and
+failure signals. Retain receipt/service/evidence hashes and commit the closeout.
+All existing qualification/training/learned-skill/physical flags remain false;
+no PPO, Locked/H2 promotion, video or physical motion follows this capture alone.

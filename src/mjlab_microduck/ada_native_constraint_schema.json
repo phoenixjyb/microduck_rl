@@ -1,0 +1,2357 @@
+{
+  "model/B_colind": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/B_rowadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/B_rownnz": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/D_colind": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/D_diag": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/D_rowadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/D_rownnz": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/M_colind": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/M_rowadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/M_rownnz": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator": {
+    "kind": "method"
+  },
+  "model/actuator_acc0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_actadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_actearly": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/actuator_actlimited": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/actuator_actnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_actrange": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_armature": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_biasprm": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_biastype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_cranklength": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_ctrllimited": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/actuator_ctrlrange": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_damping": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_dampingpoly": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_delay": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_dynprm": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_dyntype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_forcelimited": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/actuator_forcerange": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_gainprm": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_gaintype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_gear": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_group": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_history": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_historyadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_length0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_lengthrange": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/actuator_plugin": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_trnid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_trntype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/actuator_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/bind": {
+    "kind": "method"
+  },
+  "model/bind_scalar": {
+    "kind": "method"
+  },
+  "model/body": {
+    "kind": "method"
+  },
+  "model/body_bvhadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_bvhnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_conaffinity": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_contype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_dofadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_dofnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_geomadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_geomnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_gravcomp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_inertia": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_invweight0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_ipos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_iquat": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_jntadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_jntnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_margin": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_mass": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_mocapid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_parentid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_plugin": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_pos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_quat": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_rootid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_sameframe": {
+    "dtype": "uint8",
+    "kind": "array"
+  },
+  "model/body_simple": {
+    "dtype": "uint8",
+    "kind": "array"
+  },
+  "model/body_subtreemass": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_treeid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/body_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/body_weldid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/bvh_aabb": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/bvh_child": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/bvh_depth": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/bvh_nodeid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/cam": {
+    "kind": "method"
+  },
+  "model/cam_bodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/cam_fovy": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/cam_intrinsic": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/cam_ipd": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/cam_mat0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/cam_mode": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/cam_output": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/cam_pos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/cam_pos0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/cam_poscom0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/cam_projection": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/cam_quat": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/cam_resolution": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/cam_sensorsize": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/cam_targetbodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/cam_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/camera": {
+    "kind": "method"
+  },
+  "model/dof_M0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_Madr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/dof_armature": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_bodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/dof_damping": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_dampingpoly": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_frictionloss": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_invweight0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_jntid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/dof_length": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_parentid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/dof_simplenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/dof_solimp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_solref": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/dof_treeid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/eq": {
+    "kind": "method"
+  },
+  "model/eq_active0": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/eq_data": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/eq_obj1id": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/eq_obj2id": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/eq_objtype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/eq_solimp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/eq_solref": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/eq_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/equality": {
+    "kind": "method"
+  },
+  "model/exclude": {
+    "kind": "method"
+  },
+  "model/exclude_signature": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_activelayers": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_bending": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_bendingadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_bvhadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_bvhnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_cellnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_centered": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/flex_conaffinity": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_condim": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_contype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_damping": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_dim": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_edge": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_edgeadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_edgedamping": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_edgeequality": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_edgeflap": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_edgenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_edgestiffness": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_elem": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_elemadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_elemdataadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_elemedge": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_elemedgeadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_elemlayer": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_elemnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_elemtexcoord": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_evpair": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_evpairadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_evpairnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_flatskin": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/flex_friction": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_gap": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_group": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_internal": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/flex_interp": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_margin": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_matid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_node": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_node0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_nodeadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_nodebodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_nodenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_passive": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_priority": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_radius": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_rgba": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/flex_rigid": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/flex_selfcollide": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_shell": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_shelldataadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_shellnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_size": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_solimp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_solmix": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_solref": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_stiffness": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_stiffnessadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_texcoord": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/flex_texcoordadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_vert": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_vert0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_vertadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_vertbodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_vertedge": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_vertedgeadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_vertedgenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flex_vertmetric": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flex_vertnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flexedge_J_colind": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flexedge_J_rowadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flexedge_J_rownnz": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flexedge_invweight0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flexedge_length0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/flexedge_rigid": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/flexvert_J_colind": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flexvert_J_rowadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/flexvert_J_rownnz": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/from_binary_path": {
+    "kind": "method"
+  },
+  "model/from_xml_path": {
+    "kind": "method"
+  },
+  "model/from_xml_string": {
+    "kind": "method"
+  },
+  "model/geom": {
+    "kind": "method"
+  },
+  "model/geom_aabb": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_bodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_conaffinity": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_condim": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_contype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_dataid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_fluid": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_friction": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_gap": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_group": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_margin": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_matid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_plugin": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_pos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_priority": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_quat": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_rbound": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_rgba": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/geom_sameframe": {
+    "dtype": "uint8",
+    "kind": "array"
+  },
+  "model/geom_size": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_solimp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_solmix": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_solref": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/geom_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/geom_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/hfield": {
+    "kind": "method"
+  },
+  "model/hfield_adr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/hfield_data": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/hfield_ncol": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/hfield_nrow": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/hfield_pathadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/hfield_size": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt": {
+    "kind": "method"
+  },
+  "model/jnt_actfrclimited": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/jnt_actfrcrange": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_actgravcomp": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/jnt_actuatorid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/jnt_axis": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_bodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/jnt_dofadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/jnt_group": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/jnt_limited": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/jnt_margin": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_pos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_qposadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/jnt_range": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_solimp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_solref": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_stiffness": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_stiffnesspoly": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/jnt_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/jnt_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/joint": {
+    "kind": "method"
+  },
+  "model/key": {
+    "kind": "method"
+  },
+  "model/key_act": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/key_ctrl": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/key_mpos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/key_mquat": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/key_qpos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/key_qvel": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/key_time": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/keyframe": {
+    "kind": "method"
+  },
+  "model/light": {
+    "kind": "method"
+  },
+  "model/light_active": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/light_ambient": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_attenuation": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_bodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/light_bulbradius": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_castshadow": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/light_cutoff": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_diffuse": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_dir": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/light_dir0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/light_exponent": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_intensity": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_mode": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/light_pos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/light_pos0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/light_poscom0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/light_range": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_specular": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/light_targetbodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/light_texid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/light_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mapD2M": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mapM2D": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mapM2M": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mat": {
+    "kind": "method"
+  },
+  "model/mat_emission": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_metallic": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_reflectance": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_rgba": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_roughness": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_shininess": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_specular": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_texid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mat_texrepeat": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mat_texuniform": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/material": {
+    "kind": "method"
+  },
+  "model/mesh": {
+    "kind": "method"
+  },
+  "model/mesh_bvhadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_bvhnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_face": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_faceadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_facenormal": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_facenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_facetexcoord": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_graph": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_graphadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_normal": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mesh_normaladr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_normalnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_octadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_octnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_pathadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polyadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polymap": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polymapadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polymapnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polynormal": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/mesh_polynum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polyvert": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polyvertadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_polyvertnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_pos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/mesh_quat": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/mesh_scale": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/mesh_texcoord": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mesh_texcoordadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_texcoordnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_vert": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/mesh_vertadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/mesh_vertnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/nB": {
+    "kind": "int"
+  },
+  "model/nC": {
+    "kind": "int"
+  },
+  "model/nD": {
+    "kind": "int"
+  },
+  "model/nJfe": {
+    "kind": "int"
+  },
+  "model/nJfv": {
+    "kind": "int"
+  },
+  "model/nJmom": {
+    "kind": "int"
+  },
+  "model/nJten": {
+    "kind": "int"
+  },
+  "model/nM": {
+    "kind": "int"
+  },
+  "model/na": {
+    "kind": "int"
+  },
+  "model/name_actuatoradr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_bodyadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_camadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_eqadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_excludeadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_flexadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_geomadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_hfieldadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_jntadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_keyadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_lightadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_matadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_meshadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_numericadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_pairadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_pluginadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_sensoradr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_siteadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_skinadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_tendonadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_texadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_textadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/name_tupleadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/names": {
+    "kind": "bytes"
+  },
+  "model/names_map": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/narena": {
+    "kind": "int"
+  },
+  "model/nbody": {
+    "kind": "int"
+  },
+  "model/nbuffer": {
+    "kind": "int"
+  },
+  "model/nbvh": {
+    "kind": "int"
+  },
+  "model/nbvhdynamic": {
+    "kind": "int"
+  },
+  "model/nbvhstatic": {
+    "kind": "int"
+  },
+  "model/ncam": {
+    "kind": "int"
+  },
+  "model/nconmax": {
+    "kind": "int"
+  },
+  "model/nemax": {
+    "kind": "int"
+  },
+  "model/neq": {
+    "kind": "int"
+  },
+  "model/nexclude": {
+    "kind": "int"
+  },
+  "model/nflex": {
+    "kind": "int"
+  },
+  "model/nflexbending": {
+    "kind": "int"
+  },
+  "model/nflexedge": {
+    "kind": "int"
+  },
+  "model/nflexelem": {
+    "kind": "int"
+  },
+  "model/nflexelemdata": {
+    "kind": "int"
+  },
+  "model/nflexelemedge": {
+    "kind": "int"
+  },
+  "model/nflexevpair": {
+    "kind": "int"
+  },
+  "model/nflexnode": {
+    "kind": "int"
+  },
+  "model/nflexshelldata": {
+    "kind": "int"
+  },
+  "model/nflexstiffness": {
+    "kind": "int"
+  },
+  "model/nflextexcoord": {
+    "kind": "int"
+  },
+  "model/nflexvert": {
+    "kind": "int"
+  },
+  "model/ngeom": {
+    "kind": "int"
+  },
+  "model/ngravcomp": {
+    "kind": "int"
+  },
+  "model/nhfield": {
+    "kind": "int"
+  },
+  "model/nhfielddata": {
+    "kind": "int"
+  },
+  "model/nhistory": {
+    "kind": "int"
+  },
+  "model/njmax": {
+    "kind": "int"
+  },
+  "model/njnt": {
+    "kind": "int"
+  },
+  "model/nkey": {
+    "kind": "int"
+  },
+  "model/nlight": {
+    "kind": "int"
+  },
+  "model/nmat": {
+    "kind": "int"
+  },
+  "model/nmesh": {
+    "kind": "int"
+  },
+  "model/nmeshface": {
+    "kind": "int"
+  },
+  "model/nmeshgraph": {
+    "kind": "int"
+  },
+  "model/nmeshnormal": {
+    "kind": "int"
+  },
+  "model/nmeshpoly": {
+    "kind": "int"
+  },
+  "model/nmeshpolymap": {
+    "kind": "int"
+  },
+  "model/nmeshpolyvert": {
+    "kind": "int"
+  },
+  "model/nmeshtexcoord": {
+    "kind": "int"
+  },
+  "model/nmeshvert": {
+    "kind": "int"
+  },
+  "model/nmocap": {
+    "kind": "int"
+  },
+  "model/nnames": {
+    "kind": "int"
+  },
+  "model/nnames_map": {
+    "kind": "int"
+  },
+  "model/nnumeric": {
+    "kind": "int"
+  },
+  "model/nnumericdata": {
+    "kind": "int"
+  },
+  "model/noct": {
+    "kind": "int"
+  },
+  "model/npair": {
+    "kind": "int"
+  },
+  "model/npaths": {
+    "kind": "int"
+  },
+  "model/nplugin": {
+    "kind": "int"
+  },
+  "model/npluginattr": {
+    "kind": "int"
+  },
+  "model/npluginstate": {
+    "kind": "int"
+  },
+  "model/nq": {
+    "kind": "int"
+  },
+  "model/nsensor": {
+    "kind": "int"
+  },
+  "model/nsensordata": {
+    "kind": "int"
+  },
+  "model/nsite": {
+    "kind": "int"
+  },
+  "model/nskin": {
+    "kind": "int"
+  },
+  "model/nskinbone": {
+    "kind": "int"
+  },
+  "model/nskinbonevert": {
+    "kind": "int"
+  },
+  "model/nskinface": {
+    "kind": "int"
+  },
+  "model/nskintexvert": {
+    "kind": "int"
+  },
+  "model/nskinvert": {
+    "kind": "int"
+  },
+  "model/ntendon": {
+    "kind": "int"
+  },
+  "model/ntex": {
+    "kind": "int"
+  },
+  "model/ntexdata": {
+    "kind": "int"
+  },
+  "model/ntext": {
+    "kind": "int"
+  },
+  "model/ntextdata": {
+    "kind": "int"
+  },
+  "model/ntree": {
+    "kind": "int"
+  },
+  "model/ntuple": {
+    "kind": "int"
+  },
+  "model/ntupledata": {
+    "kind": "int"
+  },
+  "model/nu": {
+    "kind": "int"
+  },
+  "model/numeric": {
+    "kind": "method"
+  },
+  "model/numeric_adr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/numeric_data": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/numeric_size": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/nuser_actuator": {
+    "kind": "int"
+  },
+  "model/nuser_body": {
+    "kind": "int"
+  },
+  "model/nuser_cam": {
+    "kind": "int"
+  },
+  "model/nuser_geom": {
+    "kind": "int"
+  },
+  "model/nuser_jnt": {
+    "kind": "int"
+  },
+  "model/nuser_sensor": {
+    "kind": "int"
+  },
+  "model/nuser_site": {
+    "kind": "int"
+  },
+  "model/nuser_tendon": {
+    "kind": "int"
+  },
+  "model/nuserdata": {
+    "kind": "int"
+  },
+  "model/nv": {
+    "kind": "int"
+  },
+  "model/nwrap": {
+    "kind": "int"
+  },
+  "model/oct_aabb": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/oct_child": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/oct_coeff": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/oct_depth": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/opt": {
+    "kind": "nested"
+  },
+  "model/pair": {
+    "kind": "method"
+  },
+  "model/pair_dim": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/pair_friction": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/pair_gap": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/pair_geom1": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/pair_geom2": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/pair_margin": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/pair_signature": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/pair_solimp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/pair_solref": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/pair_solreffriction": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/paths": {
+    "kind": "bytes"
+  },
+  "model/plugin": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/plugin_attr": {
+    "dtype": "int8",
+    "kind": "array"
+  },
+  "model/plugin_attradr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/plugin_stateadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/plugin_statenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/qpos0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/qpos_spring": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/sensor": {
+    "kind": "method"
+  },
+  "model/sensor_adr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_cutoff": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/sensor_datatype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_delay": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/sensor_dim": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_history": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_historyadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_interval": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/sensor_intprm": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_needstage": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_noise": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/sensor_objid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_objtype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_plugin": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_refid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_reftype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/sensor_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/signature": {
+    "kind": "int"
+  },
+  "model/site": {
+    "kind": "method"
+  },
+  "model/site_bodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/site_group": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/site_matid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/site_pos": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/site_quat": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/site_rgba": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/site_sameframe": {
+    "dtype": "uint8",
+    "kind": "array"
+  },
+  "model/site_size": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/site_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/site_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/skin": {
+    "kind": "method"
+  },
+  "model/skin_boneadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_bonebindpos": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/skin_bonebindquat": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/skin_bonebodyid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_bonenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_bonevertadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_bonevertid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_bonevertnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_bonevertweight": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/skin_face": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_faceadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_facenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_group": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_inflate": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/skin_matid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_pathadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_rgba": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/skin_texcoord": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/skin_texcoordadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_vert": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/skin_vertadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/skin_vertnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/stat": {
+    "kind": "nested"
+  },
+  "model/ten_J_colind": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/ten_J_rowadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/ten_J_rownnz": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon": {
+    "kind": "method"
+  },
+  "model/tendon_actfrclimited": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/tendon_actfrcrange": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_actuatorid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon_adr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon_armature": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_damping": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_dampingpoly": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_frictionloss": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_group": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon_invweight0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_length0": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_lengthspring": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_limited": {
+    "dtype": "bool",
+    "kind": "array"
+  },
+  "model/tendon_margin": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_matid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon_num": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon_range": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_rgba": {
+    "dtype": "float32",
+    "kind": "array"
+  },
+  "model/tendon_solimp_fri": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_solimp_lim": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_solref_fri": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_solref_lim": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_stiffness": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_stiffnesspoly": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_treeid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon_treenum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tendon_user": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tendon_width": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tex": {
+    "kind": "method"
+  },
+  "model/tex_adr": {
+    "dtype": "int64",
+    "kind": "array"
+  },
+  "model/tex_colorspace": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tex_data": {
+    "dtype": "uint8",
+    "kind": "array"
+  },
+  "model/tex_height": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tex_nchannel": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tex_pathadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tex_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tex_width": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/text_adr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/text_data": {
+    "kind": "bytes"
+  },
+  "model/text_size": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/texture": {
+    "kind": "method"
+  },
+  "model/tree_bodyadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tree_bodynum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tree_dofadr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tree_dofnum": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tree_sleep_policy": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tuple": {
+    "kind": "method"
+  },
+  "model/tuple_adr": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tuple_objid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tuple_objprm": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/tuple_objtype": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/tuple_size": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/vis": {
+    "kind": "nested"
+  },
+  "model/wrap_objid": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "model/wrap_prm": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "model/wrap_type": {
+    "dtype": "int32",
+    "kind": "array"
+  },
+  "option/ccd_iterations": {
+    "kind": "int"
+  },
+  "option/ccd_tolerance": {
+    "kind": "float"
+  },
+  "option/cone": {
+    "kind": "int"
+  },
+  "option/density": {
+    "kind": "float"
+  },
+  "option/disableactuator": {
+    "kind": "int"
+  },
+  "option/disableflags": {
+    "kind": "int"
+  },
+  "option/enableflags": {
+    "kind": "int"
+  },
+  "option/gravity": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "option/impratio": {
+    "kind": "float"
+  },
+  "option/integrator": {
+    "kind": "int"
+  },
+  "option/iterations": {
+    "kind": "int"
+  },
+  "option/jacobian": {
+    "kind": "int"
+  },
+  "option/ls_iterations": {
+    "kind": "int"
+  },
+  "option/ls_tolerance": {
+    "kind": "float"
+  },
+  "option/magnetic": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "option/noslip_iterations": {
+    "kind": "int"
+  },
+  "option/noslip_tolerance": {
+    "kind": "float"
+  },
+  "option/o_friction": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "option/o_margin": {
+    "kind": "float"
+  },
+  "option/o_solimp": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "option/o_solref": {
+    "dtype": "float64",
+    "kind": "array"
+  },
+  "option/sdf_initpoints": {
+    "kind": "int"
+  },
+  "option/sdf_iterations": {
+    "kind": "int"
+  },
+  "option/sleep_tolerance": {
+    "kind": "float"
+  },
+  "option/solver": {
+    "kind": "int"
+  },
+  "option/timestep": {
+    "kind": "float"
+  },
+  "option/tolerance": {
+    "kind": "float"
+  },
+  "option/viscosity": {
+    "kind": "float"
+  },
+  "option/wind": {
+    "dtype": "float64",
+    "kind": "array"
+  }
+}

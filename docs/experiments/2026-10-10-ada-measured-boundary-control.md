@@ -1557,3 +1557,73 @@ Next inspect/redeclare a bounded **own-manifold constraint-recipe audit**:
 retain each generator's own contacts/rows, compare complete source-bound
 regularization/reference-acceleration recipes without physical point pairing,
 and do not invent a row-matched single-input swap or loosen the existing gates.
+
+### Predeclared own-manifold like-input scalar recipe algebra
+
+Purpose: distinguish the two **source algebra recipes on declared like
+inputs** from differences in generated contact geometry/J/counts. This is
+pure arithmetic, not another runtime intervention, and does not replace
+actual native or Warp constraint construction. Keep own native16 contact
+rows (four contacts) and own measured GPU32 rows (eight contacts) separate.
+Cover every respective own slot/address once, retaining complete six
+comparable captured scalars (D,aref,vel,pos,margin,frictionloss), captured-dtype
+scalar hashes (JSON scalar recast to its declared dtype), declared inputs,
+both source recipes and differences. Do not
+pair physical points, normalize by counts, discard contacts or compare force/
+state as physically corresponding rows. This arm does not cross-compare
+the56 DOF-friction rows; native full44-row C validation remains separate.
+
+Restrict to captured positive-standard-solref, power2, isotropic rigid dim3
+pyramidal contacts, with frozen no-override/REFSAFE branch. Source recipes
+are ordered Python F64: existing RECORD-bound Warp `_efc_contact_update`/
+`_efc_row` algebra and exact3.10.0 upstream C functions already bound by the
+ec81 report. On native own F64 inputs use its actual captured impratio and
+explicit `1/sqrt(impratio)` for hypothetical Warp source algebra. On GPU
+own F32 inputs widen values and explicitly derive hypothetical C
+`impratio=1/(invsqrt*invsqrt)` from the actual stored Model ratio. Retain the
+conversion convention and ratio reconstruction difference on every row.
+This is **not** an actual native option on the GPU-contact arm, ABI/parameter
+byte identity, FP32 rounding/fusion emulation or compiled-code agreement.
+
+Bind ec81 report SHA674c6d7779bad3daef7c54aa761745d26df03cf44051753811f3dfcaf05490ae,
+its unchanged historical module and complete independently regenerated
+recipe descriptors. Reauthenticate native full capture/C-source and measured
+GPU packets; bind all347 Model arrays before decoding numeric inputs.
+The accepted baab hybrid report SHAbdc34b3f800187145eca2e0078644f6c44ba3bc009883e77e6bcd04e13d3825a
+and unchanged execution module are motivation-only anchors; no new computed
+result is inferred from a partial solver packet. Existing strict live
+receivers stay untouched. New pure reception requires current exact-clean
+execution source and recomputes every output descriptor, row, input conversion,
+captured scalar hash and arithmetic result.
+
+No equality tolerance or admission decision is introduced: retain all
+differences even if zero. Synthetic tests deliberately show flat-zero-width
+source branches can disagree (C averages impedance; Warp clamps width and
+saturates), and mismatched ratio inputs yield differences. Those tests
+demonstrate why ordinary-case agreement cannot be promoted to equivalence
+outside the observed domain. Direct/negative-reference and other contact
+types are excluded, not silently admitted. The deterministic decision is
+`own-manifold-like-input-source-algebra-not-compiled-construction-or-admission`.
+All runtime/new physics/optimizer/integration counts remain zero; every
+solver/simulator/training/physical/binary/cause flag stays false.
+
+Before actual arithmetic: focused/full16-file pure tests, independent source
+review, exact-source commit/push/native clean fast-forward and native
+contracts. Native contracts60s/2GiB and algebra120s/2GiB, source-prefix fresh
+JSON≤256KiB under the retained tools dir; inherited16MiB file cap and all
+Typeexec/RemainAfterExityes/CPUQuota200%/TasksMax64/Nice10/LimitCORE0/
+Restartno/KillModecontrol-group/TimeoutStop10s/five literal CPU-hidden/thread1
+assignments apply. Retain exact transient argv/resource/env/terminal receipt
+and pure complete receptions/reports on both hosts. DINO and four inactive
+protected scopes remain untouched; no lease mutation, GPU workload, training,
+physical motion or raw perception. Launch before22:50UTC, close out by23:00.
+Initial focused synthetic suite passed76 in3.81s, with no real analysis or
+simulator execution; source inspection confirmed the retained own address
+partitions independently, without cross-generator point matching.
+The complete16-file pure suite passed1118 with one actual-physics case
+deselected in58.20s; independent focused review passed76 in1.06s and found
+no source/semantic blocker. Independent predeclaration/helper spotcheck also
+passed. Terminal and receiver helper SHA256s are respectively
+96b987ba2b984b358e3545231eacf7eff196ce6f9a66b67211356557bb4f72b4
+and26a64f8895502302ff9a584905703715305eca02f369e873d1f78eb5f7f02725;
+terminal parsing reuses the immutable2f6270e4 v2 quoted-argv reader.

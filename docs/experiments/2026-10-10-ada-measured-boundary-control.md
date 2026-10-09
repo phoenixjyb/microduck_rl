@@ -1031,3 +1031,50 @@ Current native free disk250757680KiB and Mac free76516728KiB comfortably
 exceed this bounded retained evidence budget. No installed library, plant,
 acceptance threshold, GPU lease or old artifact is changed. Re-test/review,
 commit/push and exact-clean native synchronization precede the second attempt.
+
+### Seven-slot native warning-layout diagnosis and bounded correction
+
+Shared-storage execution revision d88ebba68cb6e4005396c4ad2d8bd6e93a1f7090
+passed837 pure cases on both hosts (Mac57.92s, native6.66s; one actual-physics
+test deselected), with identical837 classname/name multisets and zero
+failures/errors/skips. Native contracts invocation and terminal service are
+retained independently in `d88ebba6-contracts-service.json` (4985B), SHA256
+387fc45f542d4b88345dd325103f19eb4f76e8420f406ef8ebbe743008cb3550.
+Mac JUnit115267B SHA256
+ffeef2c4d7f544d53254ebdef9e72ecf104d5048a82062e4c9b7c3c859fb398a;
+native JUnit115272B SHA256
+c970e44ecd771cb07bdb33f2c8b6548bca1f383502705b62d8a913c011f0bc56.
+
+The second capture invocation cc680ea7ef14491bb9879c19d11ab707 exited1
+after6.260802s, with the declared90s/6GiB/128MiB limits, PID0 and empty
+cgroup. Exact error: `ValueError: all solver/warning counter layouts`.
+Both world compilations report MJB80760771B and public numeric80759191B.
+Unlike the first size-guard stop, source control flow shows this stop occurs
+after both public native forwards and complete model fences, while checking
+the summary, **before any output leaves are written**. Preserve this failed
+source/unit/journal separately; no partial JSON/NPZ/MJB exists at its prefix.
+
+Read-only diagnosis inspected the installed frozen three headers and imported
+only the warning enum (no Model/Data/physics). MuJoCo3.10.0 defines exactly
+seven warning entries, with contiguous IDs0..6 and mjNWARNING=7. The code and
+synthetic fixture incorrectly assumed eight. Header solver dimensions remain
+mjNISLAND=20 and mjNSOLVER=200. This is a diagnosed checker layout bug; it is
+not a NaN/fall/physics failure or proof that the underlying solve is accepted.
+Receipt `d88ebba6-layout-failure-service.json` (127800B), SHA256
+04b3f9a45b1db5e72df89684e371a529bafbd73b2695a1b055b9093710bc50e5,
+retains the full terminal service, absent output paths, three header bytes/
+hashes, enum, four inactive protected scopes and unchanged DINO1592/946MiB.
+The read-only remote search command encountered unavailable rg and exited127;
+the separate header/enum receipt succeeded without installing anything.
+
+The next new immutable source/unit/output prefix corrects only the warning
+array schema to7, checks the exact ordered warning declaration and20/200
+dimensions against the already pinned installed headers **before any Model**,
+and checks the Python enum before compilation/physics. Wrong layouts now name
+the actual failing field, shape and dtype. Add installed-header tests without
+Model/physics, reject header drift and reject synthetic eight-slot arrays;
+do not pad/truncate actual data. All other states, plant, callbacks, two-forward
+protocol, own-row linkage, exact comparisons, storage caps,90s/6GiB/128MiB
+user-service limits and false qualification flags remain unchanged. Re-test,
+independent review, commit/push and clean exact native synchronization precede
+the third attempt. Preserve both earlier failed units and their evidence.

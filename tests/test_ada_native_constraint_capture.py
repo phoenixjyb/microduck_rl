@@ -127,9 +127,9 @@ def fixture():
         row = dict(ncon=ncon, ne=0, nf=14, nl=0, nefc=nefc, nJ=nefc * 20, nA=0, nisland=0)
         counts.append({k: row[k] for k in ("ncon", "ne", "nf", "nl", "nefc")} | {"solver_niter": w + 1})
         arrays[f"data/{w}/counters"] = np.array([row[k] for k in p.COUNTERS], np.int64)
-        for k in p.DATA[:-1]: arrays[f"data/{w}/{k}"] = np.zeros(8 if k.startswith("warning/") else 20, np.int32)
+        for k in p.DATA[:-1]: arrays[f"data/{w}/{k}"] = np.zeros(p.NWARNING if k.startswith("warning/") else p.NISLAND, np.int32)
         arrays[f"data/{w}/solver_niter"][0] = w + 1
-        for k in p.SOLVER: arrays[f"solver/{w}/{k}"] = np.zeros((20, 200), np.int32 if k.startswith("n") else np.float64)
+        for k in p.SOLVER: arrays[f"solver/{w}/{k}"] = np.zeros((p.NISLAND, p.NSOLVER), np.int32 if k.startswith("n") else np.float64)
         for k in p.EFC:
             width = 20 if k in ("J", "J_colind") else 4 if k == "KBIP" else 1
             integer = k in ("type", "id", "J_rownnz", "J_rowadr", "J_rowsuper", "J_colind", "state")
@@ -206,6 +206,40 @@ def test_scope_does_not_claim_zero_native_solver_or_historical_identity():
     assert "new_solver_calls" not in p.META
     assert all(v is False for v in p.META["flags"].values())
     assert p.META["full_historical_model_identity_established"] is False
+
+
+def header_fixture():
+    from importlib.metadata import distribution
+    dist = distribution("mujoco")
+    assert dist.version == "3.10.0"
+    headers = {}
+    for name in ("mjtype.h", "mjmodel.h", "mjdata.h"):
+        path = "mujoco/include/mujoco/" + name
+        raw = Path(dist.locate_file(path)).read_bytes()
+        assert sha256(raw).hexdigest() == p.NATIVE_FILES[path]
+        headers[name] = raw.decode()
+    return headers
+
+
+def test_frozen_installed_header_statistics_schema_without_model_or_physics():
+    assert p.statistics_header_schema(header_fixture()) == dict(warnings=7, islands=20, solver_iterations=200)
+
+
+@pytest.mark.parametrize("damage", ["warning", "islands", "iterations", "dimension"])
+def test_frozen_header_dimension_drift_fails_before_physics(damage):
+    headers = header_fixture()
+    if damage == "warning": headers["mjtype.h"] = headers["mjtype.h"].replace("mjWARN_BADCTRL", "mjWARN_UNKNOWN")
+    if damage == "islands": headers["mjmodel.h"] = headers["mjmodel.h"].replace("mjNISLAND       20", "mjNISLAND       21")
+    if damage == "iterations": headers["mjmodel.h"] = headers["mjmodel.h"].replace("mjNSOLVER       200", "mjNSOLVER       201")
+    if damage == "dimension": headers["mjdata.h"] = headers["mjdata.h"].replace("warning[mjNWARNING]", "warning[8]")
+    with pytest.raises(ValueError): p.statistics_header_schema(headers)
+
+
+def test_synthetic_eight_slot_warning_layout_is_rejected_not_padded_or_truncated():
+    arrays, report, banks = fixture()
+    arrays["data/1/warning/number"] = np.zeros(8, np.int32)
+    with pytest.raises(ValueError, match="native statistic layout: warning/number"):
+        p.summarize(arrays, report, banks)
 
 
 def public_model_fixture():

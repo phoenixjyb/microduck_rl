@@ -14,6 +14,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import zipfile
 
@@ -49,6 +50,9 @@ BANK_RAW_MAX = 96 * 1024**2
 LEAF_MAX = 64 * 1024**2
 MJB_MAX = 128 * 1024**2
 WORLD_SPECIFIC = ("model/dof_frictionloss", "model/dof_damping")
+WARNING_NAMES = ("mjWARN_INERTIA", "mjWARN_CONTACTFULL", "mjWARN_CNSTRFULL", "mjWARN_BADQPOS",
+                 "mjWARN_BADQVEL", "mjWARN_BADQACC", "mjWARN_BADCTRL")
+NWARNING, NISLAND, NSOLVER = 7, 20, 200
 NATIVE_FILES = {
     "mujoco/_functions.cpython-312-x86_64-linux-gnu.so": "05d8fcc40281e5278b37e8a5acaea736c5bac83ce436b3255ca75fca64184eef",
     "mujoco/include/mujoco/mjdata.h": "e2c7ac8a6011372eb1df4e9a53d63f8ddbc3fb940fd68d906480fe85ad0931d7",
@@ -61,6 +65,23 @@ CONTACT_TAILS = dict(dist=(), pos=(3,), frame=(3, 3), includemargin=(), friction
     solreffriction=(2,), solimp=(5,), dim=(), geom=(2,), flex=(2,), vert=(2,), efc_address=(),
     elem=(2,), exclude=(), mu=(), H=(6, 6))
 CONTACT_INTS = ("dim", "geom", "flex", "vert", "efc_address", "elem", "exclude")
+
+
+def statistics_header_schema(headers):
+    """Frozen header-only layout; never construct Model/Data to discover it."""
+    types = headers["mjtype.h"]
+    block = re.search(r"typedef enum mjtWarning_\s*\{(.*?)\}\s*mjtWarning;", types, re.S)
+    need(block is not None, "native warning enum declaration")
+    names = re.findall(r"\b(mjWARN_[A-Z]+|mjNWARNING)\b", block.group(1))
+    need(names == list(WARNING_NAMES) + ["mjNWARNING"]
+         and re.search(r"mjWARN_INERTIA\s*=\s*0\s*,", block.group(1)) is not None
+         and block.group(1).count("=") == 1, "seven contiguous frozen native warning slots")
+    for name, count in (("mjNISLAND", NISLAND), ("mjNSOLVER", NSOLVER)):
+        need(re.search(r"^#define\s+" + name + r"\s+" + str(count) + r"\s", headers["mjmodel.h"], re.M), "frozen native statistic dimension")
+    for field, dimension in (("solver_niter", "mjNISLAND"), ("solver_nnz", "mjNISLAND"),
+                             ("warning", "mjNWARNING"), ("solver", "mjNISLAND*mjNSOLVER")):
+        need(field + "[" + dimension + "]" in headers["mjdata.h"], "native header statistic array dimension")
+    return dict(warnings=NWARNING, islands=NISLAND, solver_iterations=NSOLVER)
 
 
 def storage_contract():
@@ -175,10 +196,11 @@ def summarize(arrays, report, banks, model_static=None):
             need(value.shape == (ncon,) + CONTACT_TAILS[k] and value.dtype == (np.int32 if k in CONTACT_INTS else np.float64), "every current native contact field layout")
         for k in DATA[:-1]:
             value = arrays[f"data/{w}/{k}"]
-            need(value.shape == ((8,) if k.startswith("warning/") else (20,)) and value.dtype == np.int32, "all solver/warning counter layouts")
+            need(value.shape == ((NWARNING,) if k.startswith("warning/") else (NISLAND,)) and value.dtype == np.int32,
+                 "native statistic layout: " + k + ":" + str(value.shape) + ":" + str(value.dtype))
         for k in SOLVER:
             value = arrays[f"solver/{w}/{k}"]
-            need(value.shape == (20, 200) and value.dtype == (np.int32 if k.startswith("n") else np.float64), "all4000 native solver statistic slots")
+            need(value.shape == (NISLAND, NSOLVER) and value.dtype == (np.int32 if k.startswith("n") else np.float64), "all4000 native solver statistic slots")
         slots = arrays["active/contacts/slot"][arrays["active/contacts/worldid"] == w]
         need(slots.tolist() == list(range(ncon)), "own native slots, not cross-backend identity")
         for k in contact.ROW_FIELDS:
@@ -300,7 +322,7 @@ def native_provenance():
          ("_functions." in str(f) and str(f).endswith(".so")) or
          ("libmujoco.so" in str(f)))]
     need({str(f) for f in selected} == set(NATIVE_FILES), "exact four native headers, extension and shared library")
-    result = {}
+    result, headers = {}, {}
     for item in selected:
         path = Path(dist.locate_file(item))
         need(path.is_file() and not path.is_symlink() and path.stat().st_size < 16 * 1024**2,
@@ -310,6 +332,8 @@ def native_provenance():
              and base64.urlsafe_b64encode(digest).decode().rstrip("=") == item.hash.value,
              "installed native bytes match wheel RECORD")
         result[str(item)] = dict(bytes=len(raw), sha256=digest.hex(), record_sha256_matches=True)
+        if str(item).endswith(("mjdata.h", "mjmodel.h", "mjtype.h")): headers[path.name] = raw.decode()
+    statistics_header_schema(headers)
     return result
 
 
@@ -322,6 +346,9 @@ def capture(report, banks):
     need(not torch.cuda.is_initialized(), "no initialized Torch CUDA")
     need(all(d.is_cpu for d in wp.get_devices()), "CPU-only Warp device inventory")
     callbacks = [n for n in dir(mujoco) if n.startswith("get_mjcb_")]
+    need(tuple(mujoco.mjtWarning.__members__) == WARNING_NAMES + ("mjNWARNING",)
+         and [int(v) for v in mujoco.mjtWarning.__members__.values()] == list(range(NWARNING + 1)),
+         "frozen seven-slot warning enum before any native model/physics")
     need(tuple(callbacks) == CALLBACKS and all(getattr(mujoco, n)() is None for n in callbacks), "exact eight absent native global callback hooks")
     def no_executables():
         need(all(not m.execs for m in context.user_modules.values()), "no held Warp ModuleExec")
@@ -361,7 +388,7 @@ def capture(report, banks):
                 obj, attr = (data.warning, name.split("/")[1]) if "/" in name else (data, name)
                 arrays[f"data/{w}/{name}"] = np.asarray(getattr(obj, attr)).copy()
             for name in SOLVER:
-                arrays[f"solver/{w}/{name}"] = np.asarray(getattr(data.solver, name)).copy().reshape(20, 200)
+                arrays[f"solver/{w}/{name}"] = np.asarray(getattr(data.solver, name)).copy().reshape(NISLAND, NSOLVER)
             models.append(model); datas.append(data)
         arrays.update({"fields/" + k: np.stack([np.asarray(getattr(d, k), dtype=np.float64).reshape(-1) for d in datas]) for k in base.FIELDS})
         arrays.update({"contact/" + k: v.reshape((datas[int(k.split('/')[0])].ncon,) + CONTACT_TAILS[k.split('/')[1]])

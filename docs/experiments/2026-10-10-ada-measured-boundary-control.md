@@ -1686,3 +1686,57 @@ fresh CPU-hidden process, checked both raw report/receipt byte identities,
 all48 row partitions and arithmetic residuals,1118-case test inventories,
 both exact capped terminal units and unchanged protected/DINO scopes. Its
 focused no-cache/no-bytecode suite passed76 in1.90s; no blocker was found.
+
+### Predeclared pure native before-solve phase preflight
+
+Next source: `ada_native_phase_plan.py`, with no simulator import/execution.
+Bind the unchanged f960 source/report and independently regenerate its entire
+48-row packet; reauthenticate the f854 full native capture, two current MJBs,
+all logical public numeric Model arrays and seven F64 input states. Require
+the captured closed model/option domain, including no plugins/activation/
+flex/equality/mocap/userdata, zero enable/disable flags, dense Newton and no-slip0.
+The full627 schema/MJB fences remain prospective runtime requirements, not a
+claim of full native Data coverage or historical-model identity.
+
+Bind the exact3.10 upstream
+[forward source](https://raw.githubusercontent.com/google-deepmind/mujoco/28009f9105cd92784b7b0b30c0605a5e29107a77/src/engine/engine_forward.c),
+64281B, SHA256cba19332e7dc7b110e158cb12c0ff9ff247b1b7e9338b2bbb88cedbf1b9887ed.
+Retain seven lexical function-body hashes and the complete forward-call order;
+this is not a transitive machine-code read-set proof. Proposed explicit calls
+are fwdPosition,sensorPos,fwdVelocity,sensorVel,fwdActuation,fwdAcceleration,
+capture before fwdConstraint, then fwdConstraint and capture again. The zero
+enableflags domain excludes energy/sleep branches; callbacks must be absent.
+No sensorAcc is proposed after the second boundary. Do not claim full sensor
+state or output equality to ordinary forward, or assume inputs survive solve.
+
+The plan retains closed projected20-field/EFC/contact/counter/statistic
+inventories and complete model/state manifests, but executes none of them.
+Future fresh native2-Model/2-Data execution would need separately committed,
+reviewed code, installed provenance, all runtime shape/dtype/byte/bounds guards,
+state/Model/MJB fences and a180s/6GiB supervised cap. This preflight explicitly
+sets `execution_ready=false` and authorizes no runtime launch. No point pairing,
+library/plant/reward/gate change, binary/cause/solver/simulator/training/physical
+admission is established.
+
+Preflight execution itself is pure CPU-hidden, four literal thread1 settings,
+source-prefix fresh JSON≤256KiB, separately committed source before arithmetic,
+fresh full independent reception on both hosts, and a120s/2GiB user unit with
+the existing exact caps/environment/terminal evidence. Focused42 tests passed
+in0.17s. One initial receiver test failed because its mock captured a mutable
+expected dict subsequently mutated by the test; read-only diagnosis confirmed
+the fixture issue and freezing that test reference resolved it without changing
+receiver logic. The real frozen-source lexical check passed; no real retained
+packet analysis or prospective physics execution has occurred yet.
+Independent preexecution review passed42 focused tests in0.11s and the exact
+frozen C lexical audit, with no simulator imports or retained-packet analysis.
+Its clarity correction is explicit: prospective fwdConstraint executes the
+native solver in both worlds; current zero solver calls describe this pure
+preflight only. Internal solver-dispatch counts still require runtime evidence,
+and the prospective whole pipeline is not a solver-only intervention.
+The full17-file suite passed1160, one actual-physics case deselected, in13.33s.
+Terminal/receiver helper SHA256s are respectively
+fbbb19c37552f7289f7a33a872b65cdba9e9c91a0372f22c0883a65eed615e97
+andc3f85477feb1aa1b266ad2a6a6250b1e61923a6402398d046092bb5dcc7b18ce;
+their exact-unit quoted-argv parser reuses immutable2f6270e4, and optimized
+Python is refused before evidence access. The contracts unit selects all17
+files in the declared order and expects1160 cases plus one physics deselection.

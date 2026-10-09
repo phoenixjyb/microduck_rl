@@ -116,3 +116,51 @@ sequentially. After completion, collect external retirement and the complete
 native inventory, receive it independently on WSL and Mac, retain exact hashes
 and document the result. A failed gate is diagnosed read-only before changes.
 Broader solver-window and plant/motor validation still precede curriculum jobs.
+
+## Retained CPU preparation evidence
+
+Tested source `a97d20921e3875eb4e5d85cdd3cca5c8a7913ac1`, tree
+`e50a82f8112517dda1e172d2fd3ce4910da7f0cb`, was committed and pushed before
+the paired checks. The verified incremental bundle fast-forwarded the clean
+exact WSL worktree. Its actual native source-binding function verified all
+980 committed blobs, the new four-path fence and thirteen derived controls;
+this read-only check acquired no GPU lease and imported no CUDA runtime.
+
+**857 tests in nineteen focused files passed on both Mac and WSL**, including
+68 new staging/receiver cases, with CUDA hidden and zero failures/errors/skips.
+Mac pytest reported 115.51 seconds and WSL 69.00 seconds. Not the full suite,
+GPU execution, plant stability or learned-policy evidence. The read-only Luna
+interface/review slice confirmed typed int32 staging and independent-arm gates;
+it prompted closed source-leaf validation and generated-identity size/schema
+guards with reanchored tampering cases. Owner reviewed and integrated the fixes.
+
+Paired XMLs retained on both machines under
+`artifacts/tools/efc-native-preparation/`:
+
+- `a97d2092-mac-tests.xml`: 938689 bytes, SHA256
+  `a6def315bee666371e86797492e48bd71d8c0faf066dc964dd2748fc76ed62aa`.
+- `a97d2092-wsl-tests.xml`: 938692 bytes, SHA256
+  `d308ccdbb9d64817417c598fce0147da97c437ea2823f129088652ebad4ef318`.
+- `a97d2092-source.bundle`: 21302 bytes, SHA256
+  `a8c9852180078fe0c4f41b4f4483a696a7cdee578ef7ab2e4f2a44d6a9de8759`.
+
+The CPU-only unit `microduck-efc-native-prep-cpu-a97d2092.service`, invocation
+`db99f74ea03f43e99ed5ee43b2633153`, retired successfully: MainPID=0,
+ExecMainStatus=0, Result=success, NRestarts=0, empty ControlGroup and absent
+original kernel cgroup. Its active/exited state is retained metadata, not a
+running job. Checked CPU caps were 300 seconds, 4 GiB memory, 200 percent CPU,
+Nice=10, TasksMax=64, LimitFSIZE=16777216, KillMode=control-group, no restart.
+No Duck user unit remains running; the native collector itself has not run.
+
+The initial runtime/source-tree/library/tool verification passed unchanged.
+Before and after validation, FilmBrain observatory PID 521 and video playground
+PID 298048 stayed active with NRestarts=0. Both protected AI mission services
+stayed inactive in user and system scopes; no unrelated service was changed.
+Post-check Windows and WSL each reported the pinned GPU/driver, 8195 MiB used,
+15967 MiB free, 2 percent utilization and 34 C. These are point-in-time separate
+counters, not admission for a future launch.
+
+The native run is still pending. This documentation-only closeout changes
+source identity; regenerate/rebind paired CPU prerequisites at the final launch
+revision, then recheck the fresh runtime, services, existing lease and capacity.
+Never substitute this earlier test source into a later owner's declaration.

@@ -261,10 +261,10 @@ def main(experiment=None):
                     rows = []
                     for seed in base.SEEDS:
                         for index, (speed, yaw) in enumerate(base.CASES):
-                            row = base.evaluate_case(checkpoint, seed, speed, yaw, health)
+                            row = getattr(recipe, "evaluate_case", base.evaluate_case)(checkpoint, seed, speed, yaw, health)
                             base.write_new(output / f"{arm}-s{seed}-c{index}.json", row)
                             rows.append(row)
-                    cases[arm], decisions[arm] = rows, base.decision(rows)
+                    cases[arm], decisions[arm] = rows, getattr(recipe, "decision", base.decision)(rows)
                     hashes[arm] = base.sha256(checkpoint)
                 result = dict(cases=cases, decisions=decisions, checkpoint_sha256=hashes,
                     paired_differences=paired_differences(cases[arms[0]], cases[arms[1]],

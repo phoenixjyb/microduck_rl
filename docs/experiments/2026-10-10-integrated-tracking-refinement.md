@@ -360,3 +360,77 @@ constraint evidence before selecting any learning continuation. Repository
 guidance and independent read-only Luna review favor the existing
 `joint_pos_limit_proximity` penalty on the offending named joint rather than
 target clipping, which would change intentional low-kp overshoot behavior.
+
+### Completed target capture and matched qpos repair predeclaration
+
+The target service completed00:28:30 Asia/Shanghai, Resultsuccess/MainPID0/
+ExecMainStatus0; native focused checks passed56 tests in5.51s. All eight
+seed839 cases completed240 steps without terminals. Receipt copies and case
+aggregates agree, with the original exact checkpoint/source/evaluation bindings.
+Launch SHA256 `7f400046877e0e57326858cccd0d5f20b1a2f2e50d776939bc5fdf8a659327aa`;
+result SHA256 `8d2d18ae78ec17519051589c9c7e5bf2b4429320eeb2334fc32c39a00dce3a93`.
+Native and Mac small copies are in
+`artifacts/evaluations/tracking-target-2f2a910d-20261011`.
+
+Right-hip-yaw idle means: control actual position.429428rad / previous applied
+target.867787rad / generalized constraint torque-.225185Nm; tracking actual
+.434857rad / target1.636049rad / constraint-.602251Nm. Upper configured range
+is.436332rad. Targets were beyond configured range99.2188%/99.5833% of samples;
+max actual positions.484981/.496325rad. This supports persistent commanded
+overshoot and opposing generalized constraints, not an isolated hard-stop
+force measurement or a complete causal account. Both checkpoints stay rejected.
+Target capture peaked1860MiB/55C, then returned to the preserved DINO only;
+protected services remainedinactive. No plant/action/dependency was changed.
+
+Predeclare `integrated-qpos-limit-continuation-v1`, run by
+`python -m mjlab_microduck.integrated_joint_limit_refinement`. Both arms start
+from **control final999**, SHA256
+`b7a6601c479ef6805d4fc68236deff1805e6997bea4286e5b0f69b7b3255deec`,
+iteration999/common step24000, not the rejected high-load tracking checkpoint.
+Strict warm load retains actor/critic/normalizers/Adam and synchronizes Python
+LR with restored Adam; resets iteration/common clock and starts fresh episodes.
+This is an unaccepted exploratory continuation of the new integrated plant,
+not transplantation from an older model or physical qualification.
+
+Matched full arms: seed907,256 worlds,1000 updates,24 steps/update,
+6,144,000 transitions per arm, save cadence250, final999 only for evaluation.
+All inherited commands, randomization, reward weights and frozen source
+curricula stay as in the tracking control (motor cost-1, extra command-error
+weight0). The **sole intervention** is existing `joint_pos_limit_proximity`
+scoped by exact entity name `^right_hip_yaw$`, with.15rad margin. Control weight0;
+treatment-1 initially, -2 after common step6000, -4 after12000 (strict existing
+step boundary). No target clipping, filter, solver or motor parameter change.
+Both arms log the same raw pre-reset position cost, stop proximity and maximum
+overrun, plus existing motor/tracking/NaN/fall metrics. Verify live negative
+weighted cost equals raw cost times actual manager weight, including terminals.
+
+Run64-world5-update smokes at seed887 for **both** arms before training,
+requiring official normalized ONNX CPU61-to14 finite inference. Treatment
+smoke compresses its ramp to updates1/2; run256-world10-update benchmarks at
+seed889 (treatment full-4) and require conservative measured projections fit
+2100s/arm. Preflight service caps360s/RAM8GiB/CPU200%/Tasks64/Nice10 with
+60s CPU checks and independent60s per smoke/benchmark,15s kill grace.
+
+Only after both preflights pass, launch one sequential retained service:
+control then limit then held-out evaluation, no overlap with other Duck jobs.
+Full caps4500s overall,2100s each training child/240s evaluation child,
+RAM8GiB/CPU200%/Tasks64/Nice10/KillModecontrol-group; regular owned GPU lease,
+existing DINO-only shared-host guards and protected-services-inactive checks.
+Repository must be clean at the exact pushed source. Do not change active jobs.
+
+Evaluate the original seeds839/853/857 and four vx/yaw cases,8 worlds/240
+steps,60-step tracking startup exclusion. Keep every original tracking,
+terminal, motor-torque and rated-speed gate; additionally require all14 joints'
+maximum configured-range excursion<=.005rad and right-hip-yaw exposure within
+.05rad of a bound<=1% of all-step samples per case. Bind diagnostic protocol,
+margin, named coverage and step counts. No threshold tuning after seeing results.
+Report original decisions separately alongside stricter combined decisions.
+Qpos improvement alone cannot admit a policy that still fails tracking.
+Stop after retaining this matched result; no automatically chained curriculum,
+obstacles, videos, raw perception, policy publication or physical motion.
+
+Initial focused suite passed95 tests in6.34s with the existing selector warning;
+the one earlier cfg-equality test failure was a test-only integer0 versus
+float0.0 repr mismatch, corrected without changing recipe behavior. Independent
+Luna review found no preflight blocker; its margin-identity hardening suggestion
+was incorporated before execution.

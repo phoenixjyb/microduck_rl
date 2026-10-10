@@ -1947,3 +1947,61 @@ collector: first qualify installed getter layouts, then bind exact phase calls,
 full Model/MJB/state fences, absent callbacks, process/caps and complete packet
 bytes, with independent reception. Only its evidence can decide the next
 simulator comparison; a mock test pass does not authorize training.
+
+### Renewed bounded native phase capture
+
+The next user-requested development slice prepares and executes one CPU-only
+saved-state phase capture, not a GPU policy rollout. The new collector loads
+exactly the two already authenticated f854 MJBs, creates two fresh Data objects,
+restores the seven declared F64 input states, then runs the unchanged six-call
+BEFORE sequence and one `mj_fwdConstraint` per world. It snapshots all 68
+projected numeric leaves immediately before/after the constraint call. No
+`mj_sensorAcc`, forward wrapper, standalone collision call, integration,
+optimizer, Warp/Torch import or GPU workload is permitted. The public stages
+include the constraint solver; Python call records do not establish internal
+native dispatch or loaded machine-code identity.
+
+Before native allocation the entire 838 phase plan and f854 references are
+regenerated/authenticated. Installed MuJoCo bytes must match the frozen wheel
+RECORD/header hashes. Each world has initial, pre-solve and post-solve full
+public Model/Option numeric/static and serialized-MJB byte fences. All eight
+callbacks must remain absent. Restored state getters require exact F64 dtype,
+declared shape and contiguous storage before any physics call. The unchanged
+seven-state invariant is a separate fail-closed domain fence; every EFC and
+solver-output difference is retained, not masked or required equal. This is a
+projection of Data, not its complete inventory, and no historical full-model
+identity is inferred.
+
+The launch will be an exact committed, clean native feature-branch user service
+with CUDA hidden, four thread counts set to 1, Type=exec, RemainAfterExit=yes,
+RuntimeMaxSec=180s, MemoryMax=6GiB, CPUQuota=200%, TasksMax=64, Nice=10,
+LimitFSIZE=16MiB, LimitCORE=0, Restart=no, KillMode=control-group and
+TimeoutStopSec=10s. Output is a fresh source-prefix JSON (less than 256KiB) and
+compressed 272-leaf NPZ (less than 4MiB), retained on both machines. A separate
+fresh pure receiver must authenticate the full payload and independently
+recompute all per-world projections/differences and exact input/source bindings.
+Terminal service argv, environment, caps, status, invocation and journal are
+retained separately. Existing DINO and unrelated workloads are preserved; all
+four AI Mission system/user service scopes stay inactive. No GPU lease is
+requested. Any layout/fence/runtime failure is diagnosed read-only before a
+revised attempt; outputs are never overwritten.
+The portable receiver recomputes the complete numerical packet and source/input
+bindings, including the phase-plan module; installed file sizes must also match
+the authenticated predecessor provenance. Environmental telemetry and foreign
+process observations remain producer-attested point-in-time readings, not
+independently re-observed by the pure receiver or simulator admission evidence.
+The separately retained service transcript supplies the delivery boundary.
+
+This renewed slice has no overnight continuation attached. It stops at the
+numerical capture evidence: simulator, solver, training and physical acceptance
+flags remain false. The moving-corner teacher remains unwired; this capture
+cannot be presented as learned corner navigation.
+
+The new collector/getter/projection/phase-plan/preceding-capture five-file
+synthetic contract suite passed 437 tests in 1.89s; `py_compile` and
+`git diff --check` passed. Tests cover exact two-world stage/boundary order,
+all 272 owned payload leaves, callback refusal, forbidden public calls and
+guard restoration on partial setup failure, Model/MJB mutations, same-size
+wrong input layouts before physics, every seven-state mutation failing closed,
+and full portable receiver recomputation/tamper refusal. These are mocks only;
+the actual installed getter and capture result are recorded separately below.

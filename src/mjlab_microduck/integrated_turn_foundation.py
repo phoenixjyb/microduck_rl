@@ -230,7 +230,38 @@ def training(output, mode, health, *, recipe=None, initialize=None,
         env.close()
 
 
-def evaluate_case(checkpoint, seed, speed, yaw, health):
+def response_diagnostics(velocities, motors, positions, limits, names, yaw, *, startup=60):
+    """Descriptive signed response; never changes the admission predicate."""
+    require(velocities.ndim == motors.ndim-1 == positions.ndim == 3,
+            "diagnostic trajectory ranks")
+    steps, worlds, joints = positions.shape
+    require(velocities.shape == (steps, worlds, 2) and motors.shape == (steps, worlds, joints, 2)
+            and limits.shape == (worlds, joints, 2) and len(names) == len(set(names)) == joints
+            and finite_tree((velocities, motors, positions, limits)), "finite diagnostic identity/layout")
+    require(bool((limits[..., 1] > limits[..., 0]).all()), "finite ordered hard joint bounds")
+    settled = velocities[startup:]
+    force = motors[..., 0]
+    distance = torch.minimum(positions-limits[..., 0], limits[..., 1]-positions)
+    return dict(protocol="signed-body-response-and-joint-load-v1", joint_columns=list(names),
+        steps=steps, startup_steps=startup, settled_steps=len(settled),
+        mean_body_vx_per_world=settled[..., 0].mean(0).tolist() if len(settled) else None,
+        mean_body_yaw_per_world=settled[..., 1].mean(0).tolist() if len(settled) else None,
+        mean_abs_body_yaw_per_world=settled[..., 1].abs().mean(0).tolist() if len(settled) else None,
+        yaw_correct_sign_fraction_per_world=(settled[..., 1]*yaw > 0).double().mean(0).tolist()
+            if len(settled) and yaw != 0 else None,
+        abs_force_p99_nm_by_joint=torch.quantile(force.abs().flatten(0, 1), .99, dim=0).tolist(),
+        mean_signed_force_nm_by_joint=force.mean((0, 1)).tolist(),
+        soft_limit_fraction_by_joint=(force.abs()/.60 > .70).double().mean((0, 1)).tolist(),
+        hard_stop_margin_rad=.05,
+        hard_stop_proximity_fraction_by_joint=(distance <= .05).double().mean((0, 1)).tolist(),
+        hard_range_violation_fraction_by_joint=(distance < 0).double().mean((0, 1)).tolist(),
+        min_distance_to_hard_stop_rad_by_joint=distance.amin((0, 1)).tolist(),
+        velocity_and_position_timing="pre-action body-frame state; startup excluded only for response",
+        force_timing="post-decimation pre-reset control-step stream; all steps included",
+        positions_not_synchronous_with_force=True, policy_acceptance=False, physical_motion_authorized=False)
+
+
+def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -257,6 +288,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health):
         env._microduck_motor_step_stream = stream
         phase = torch.zeros(worlds, dtype=torch.long, device=env.device)
         velocities, motor_rows, terminals = [], [], []
+        positions = []
+        limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
         with torch.inference_mode():
             for step in range(steps):
                 if step % 120 == 0:
@@ -269,6 +302,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health):
                 velocity = torch.stack((robot.data.root_link_lin_vel_b[:, 0], robot.data.root_link_ang_vel_b[:, 2]), -1)
                 require(finite_tree(velocity), "finite measured body velocity")
                 velocities.append(velocity.cpu().clone())
+                if diagnostics:
+                    positions.append(robot.data.joint_pos[:, stream.joint_ids].cpu().clone())
                 actions = policy(obs)
                 require(actions.shape == (worlds, 14) and finite_tree(actions), "finite evaluation actions")
                 stream.begin(step, phase)
@@ -283,7 +318,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health):
         f, s = m[..., 0], m[..., 1]
         u = f.abs()/.60
         settled = v[startup:]
-        return dict(seed=seed, speed=speed, yaw=yaw, worlds=worlds, steps=len(v),
+        result = dict(seed=seed, speed=speed, yaw=yaw, worlds=worlds, steps=len(v),
                     complete=len(v) == steps and not terminals, terminal_worlds=terminals,
                     checkpoint_sha256=sha256(checkpoint), torque_p99=float(torch.quantile(u.flatten(), .99)),
                     rated_speed_exceed_fraction=float((s.abs() > RATED_SPEED).double().mean()),
@@ -293,6 +328,10 @@ def evaluate_case(checkpoint, seed, speed, yaw, health):
                     speed_mae=(settled[..., 0]-speed).abs().mean(0).tolist() if len(settled) else None,
                     yaw_mae=(settled[..., 1]-yaw).abs().mean(0).tolist() if len(settled) else None,
                     motor_stream=stream.provenance())
+        if diagnostics:
+            result["response_diagnostics"] = response_diagnostics(v, m, torch.stack(positions).double(),
+                limits.double(), stream.names, yaw, startup=startup)
+        return result
     finally:
         env.close()
 

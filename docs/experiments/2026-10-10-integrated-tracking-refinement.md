@@ -124,3 +124,92 @@ latest6144 transitions hadzero falls/NaN terminations, and motor weight remained
 all four protected service scopes remainedinactive. This is healthy launch
 evidence, not a completed training result or improved tracking claim. Both
 full arms and their unchanged held-out decisions remain pending.
+
+## Completed comparison
+
+The launch snapshot above is superseded: the retained service finished
+2026-10-10 18:54:10 Asia/Shanghai, Resultsuccess/ExecMainStatus0/MainPID0.
+Control/tracking completed1000 updates each in1003.007/588.700s, with
+6,144,000 transitions per arm. All1000 logged update rows per arm werefinite,
+withzero NaN terminations. Final999 payloads werefinite at iteration999/
+common step24000, with17 Adam states at step70000. Training falls in the last
+100 updates were153 control/114 tracking over614,400 transitions each;
+training is stochastic/DR-enabled, not the deterministic held-out protocol.
+Maximum retained GPU temperature was59C control/61C tracking, memory1710MiB.
+
+Both held-out matrices are **foundation-not-ready**. All24 cases completed
+240 steps upright withzero terminals. Control passed12/12 motor-envelope
+cases and2/12 tracking cases; treatment passed6/12 motor and3/12 tracking.
+All9 moving cases failed tracking in each arm. All three treatment idle cases
+failed motor torque (p99 utilization1.06754), and all three positive-yaw cases
+failed motor torque. No treatment case passed the full foundation conditions.
+The control's two full-case passes do not admit a12-case matrix with10 failures.
+
+Case means across three seeds/eight worlds are descriptive, not all-world gates:
+
+| vx / yaw command | Control speed MAE | Tracking speed MAE | Control yaw MAE | Tracking yaw MAE | Control / tracking torque p99 utilization |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 0 / 0 | .00147 | .00187 | .02147 | .02168 | .49171 / 1.06754 |
+| .30 / 0 | .10546 | .11267 | .21792 | .16311 | .57758 / .52046 |
+| .20 / -.20 | .05575 | .05558 | .25407 | .19370 | .49104 / .56983 |
+| .20 / +.20 | .06029 | .05809 | .26553 | .20107 | .54404 / .66399 |
+
+Added error shaping reduced moving yaw MAE about24–25%, but straight speed
+error worsened and idle motor load regressed. Last100-update mean raw command
+cost was.658924 control/.405717 treatment; the actual treatment weighted term
+was-.202859. Lower training cost does not override failed held-out gates or
+demonstrate command-correct turning. Reject this treatment as the next parent.
+
+Exact SHA256 bindings (models remain native, only small result JSONs mirrored):
+
+| Artifact | SHA256 |
+| --- | --- |
+| Control model999 | `b7a6601c479ef6805d4fc68236deff1805e6997bea4286e5b0f69b7b3255deec` |
+| Tracking model999 | `5d03c2241d5291ded5786ed87ec85cd70f8262fcd47954837114e1102dfe6fc9` |
+| Control result | `798ec743caafb85f954775dbda2d1a4c233379483d5e1f191887eb3e7c4132ac` |
+| Tracking result | `933e8626b2da6bd6181e28ae936fa5792fc804f60aa6ec04b2adbc19a9e23a2c` |
+| Evaluation result | `e803f630a02aa6286b4b334334ea6696ada7c458849726f2237af645a29c6af3` |
+
+CPU verification recomputed both decisions and every paired difference;
+all24 standalone case records match aggregate entries, with exact declared
+seed/world/update/parent/final-checkpoint bindings. CUDA-hidden native load
+checked final model/Adam finiteness and clocks. At23:31:10 Asia/Shanghai the
+GPU had15232MiB free/45C, DINO PID1592 only, no Duck process; all four protected
+service scopes remainedinactive. No workload was stopped or restored.
+
+## Response audit declaration before further learning
+
+Run one bounded diagnostic-only replay of the **same two final999 checkpoints**
+and original24 cases through `python -m mjlab_microduck.integrated_response_audit
+--source <exact-clean-commit> --run-id <unique-id>`. Recheck clean source,
+owned GPU lease, same frozen runtime, exact evaluation and checkpoint hashes
+above and the existing DINO/occupancy/protected-service guards. One sequential
+user service, child180s/outer240s, RAM8GiB/CPU200%/Tasks64/Nice10,15s kill
+grace; no learning, MP4, new command distribution, physical motion or next job.
+
+Opt-in evaluator diagnostics record per-world signed body vx/yaw means,
+absolute yaw means and nonzero-command correct-sign fraction after startup60.
+Per-actuator absolute force p99, signed mean force and sampled soft-limit
+fraction include all steps. Joint names/entity-local IDs come from the existing
+direct unit-gear hinge actuator mapping, not array width or raw qpos offsets.
+Hard-stop proximity uses the actual hard joint bounds and fixed.05rad margin,
+with hard-range violation recorded separately. Qpos is sampled pre-action;
+force is the existing post-decimation pre-reset stream, explicitly different
+clocks rather than a purported simultaneous force/position causal test.
+
+Default acceptance rows/decision are unchanged. Replay must match every old
+acceptance field (absolute floating tolerance1e-6; identities/booleans/counts
+exact), and reproduce both rejected decisions. Any mismatch fails the audit;
+do not overwrite or silently replace original evidence. Retain separate JSONs
+and diagnostics with policy/physical acceptancefalse. This diagnoses weak
+steering versus oscillation and the idle torque source before another reward
+or curriculum change; do not promote the rejected tracking arm.
+
+Audit source checks passed77 focused tests in6.58s (existing actuator/site
+warning), plus an8-test audit rerun after tightening numeric replay type checks.
+Syntax, links, whitespace and all retained result hashes passed. Independent
+Luna review found no identity/acceptance confound and required the declared
+external service wrapper before GPU execution: the Python module's guards
+are not a replacement for cgroup/watchdog caps. The run must use that wrapper,
+not an uncapped direct invocation; native CPU checks get a60s timeout inside
+the240s overall service before the180s diagnostic child.

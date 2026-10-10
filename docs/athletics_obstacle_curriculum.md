@@ -746,3 +746,22 @@ the currently unusable in-place pivot. Actor observations and old acceptance
 gates remain unchanged. The code and synthetic tests are not a trained skill;
 an admitted runtime and separately predeclared frozen-base baseline precede any
 learner. Stop/pivot, hopping and ball balancing retain their own gates.
+
+### October10 priority reset: exploratory learning is running again
+
+The owner's later request explicitly prioritizes actual training after the
+source-only diagnostic rounds. A separately declared
+[gentle-turn exploratory pilot](experiments/2026-10-10-exploratory-turn-pilot.md)
+completed10 smoke and128 candidate PPO updates on native100.100, with256 worlds,
+then six paired held-out rollouts. This is real optimizer activity under the
+frozen installed simulator, not completion of the forensic native admission
+above. That forensic closeout is no longer a prerequisite for this separately
+authorized exploratory learning track; physical/accepted-skill gates are unchanged.
+
+The candidate made small forward-tracking gains but failed a per-world left-turn
+yaw nonregression gate and was not promoted. Original policies remain intact.
+The next learning-focused step is a separately bounded longer mirrored-turn
+budget contrast, keeping walking/turning retention checks. No automatic follow-on
+job or new corner, obstacle, hop, football or physical skill is claimed. The old
+07:00 window was not reused; the later renewed request used fresh6/15/6-minute
+smoke/candidate/evaluation process caps and closed all three Duck GPU processes.

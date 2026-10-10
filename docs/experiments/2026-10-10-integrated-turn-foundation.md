@@ -171,3 +171,42 @@ was6024. This establishes actual learning and durable progress, not a usable
 policy. At the next inspected sample,413 updates were complete, still with
 finite losses and zero NaN terminations. Final training/evaluation remained
 pending; no checkpoint selection or follow-on task was changed.
+
+## Completed result, retained before continuation
+
+The retained service finished successfully (MainPID0, Resultsuccess,
+ExecMainStatus0, active/exited). All1500 updates completed in968.202s,
+36,000 control steps and9,216,000 world transitions. Final model/Adam state
+was finite; NaN terminations remainedzero. Final checkpoint1499 SHA256:
+`b4c51e072b4b21c865ab4108c477ed4c27f26a129577e7ad17a14b1e6250dd90`.
+Training result SHA256:
+`516d841541670270fe69e434d9a0d56c1a81d0d60786fe7b97077594bb0cfd0b`.
+Evaluation result SHA256:
+`defc2f0b56a0e044fd779cb3f8c3788338dfa559c030e42d93c1b692ea4f34e9`.
+Small receipts were copied to Mac and their hashes verified; checkpoint bytes
+stay on the native host.
+
+All24 checkpoint/case/seed rows finished240 steps without terminals. Final1499
+was nevertheless `foundation-not-ready`: all12 final cases failed tracking and
+all12 failed the motor envelope. Mean speed/yaw MAE across seeds/worlds:
+
+| Case (m/s,rad/s) | Speed MAE (m/s) | Yaw MAE (rad/s) |
+| --- | ---: | ---: |
+| Idle0/0 | .0577 | .4200 |
+| Straight.30/0 | .1119 | .3953 |
+| Moving.20/-.20 | .0517 | .4717 |
+| Moving.20/+.20 | .0491 | .4481 |
+
+All final cases had torque utilization p99≈1.06754 and zero rated-speed
+exceedance. Thresholds are per world/case, not these aggregated means.
+The final checkpoint reduced tracking errors versus750 descriptively, but
+raised torque p99;750 is not selected as a fallback. Falls declined from15,247
+in the first100 updates to276 in the last100, equal614,400-transition windows.
+This is an evolving-curriculum trend, not causal or physical validation.
+
+Closeout inspection: GPU961MiB/43C, only unchanged DINO1592/946MiB;
+all four protected service scopes inactive. No learner remained. Since the
+foundation did not pass, the originally gated mirrored-turn/new-skill stage
+remainsclosed. The separately declared
+[motor-cost continuation](2026-10-10-integrated-motor-refinement.md) repairs
+the failed locomotion foundation; it does not treat this checkpoint as accepted.

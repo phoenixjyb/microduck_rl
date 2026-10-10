@@ -105,19 +105,22 @@ def validate_commands(command):
                   (command[:, 2].abs() <= .50+1e-6)).all()), "declared moving/idle commands")
 
 
-def training(output, mode, health):
+def training(output, mode, health, *, recipe=None, initialize=None,
+             before_action=None, after_step=None, after_update=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
 
-    cfg, agent = prepare_config(mode)
-    worlds, updates, seed = MODES[mode]
+    cfg, agent = prepare_config(mode) if recipe is None else recipe
+    worlds, updates, seed = cfg.scene.num_envs, agent.max_iterations, agent.seed
     torch.manual_seed(seed)
     started = time.monotonic()
     env = ManagerBasedRlEnv(cfg, device="cuda:0")
     try:
         wrapped = RslRlVecEnvWrapper(env, clip_actions=agent.clip_actions)
         runner = load_runner_cls(TASK)(wrapped, asdict(agent), str(output), "cuda:0")
+        if initialize is not None:
+            initialize(runner, env)
         stream = MotorStepStream.from_robot(env.scene["robot"], worlds, device=env.device,
                                             cost_cfg=MotorStepCostCfg())
         env._microduck_motor_step_stream = stream
@@ -129,6 +132,8 @@ def training(output, mode, health):
 
         def checked_act(obs):
             nonlocal pending
+            if before_action is not None:
+                before_action(env)
             require(pending is None and obs["actor"].shape == (worlds, 61) and finite_tree(obs),
                     "finite actor/critic input and actor order")
             command = env.command_manager.get_command("twist")
@@ -152,6 +157,8 @@ def training(output, mode, health):
             obs, rewards, dones, extras = step(actions)
             require(finite_tree((obs, rewards)), "finite rollout")
             sample = stream.consume(dones.bool())
+            if after_step is not None:
+                after_step(env, sample, extras)
             motor_rows.append(torch.stack((sample.force_nm, sample.speed_rad_s), -1))
             falls += int(env.termination_manager.get_term("fell_over").sum())
             nan_ends += int(env.termination_manager.get_term("nan_state").sum())
@@ -179,6 +186,8 @@ def training(output, mode, health):
                        rated_speed_exceed_fraction=float((speed.abs() > RATED_SPEED).double().mean()),
                        mean_abs_mechanical_power_w=float((force*speed).abs().sum(-1).mean()),
                        thermal_load_proxy=float(utilization.square().mean()), losses=losses)
+            if after_update is not None:
+                row.update(after_update(env))
             require(row["torque_p99"] <= 1.5 and row["rated_speed_exceed_fraction"] <= .10,
                     "gross fresh-policy motor abort guard")
             # Fresh random-policy falls are expected. Admission uses strict

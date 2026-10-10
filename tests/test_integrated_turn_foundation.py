@@ -88,4 +88,5 @@ def test_predeclared_budgets_cases_and_checkpoint_selection():
     assert foundation.MODES == {"smoke": (64, 5, 821), "benchmark": (256, 10, 823),
                                 "foundation": (256, 1500, 827)}
     assert foundation.EVAL_CHECKPOINTS == (750, 1499)
+    assert foundation.FOUNDATION_CAP_SECONDS == 2700
     assert foundation.CASES == ((0., 0.), (.30, 0.), (.20, -.20), (.20, .20))

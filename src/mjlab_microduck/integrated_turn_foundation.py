@@ -34,6 +34,7 @@ MODES = {"smoke": (64, 5, 821), "benchmark": (256, 10, 823), "foundation": (256,
 SEEDS = (839, 853, 857)
 CASES = ((0., 0.), (.30, 0.), (.20, -.20), (.20, .20))
 EVAL_CHECKPOINTS = (750, 1499)
+FOUNDATION_CAP_SECONDS = 2700
 
 
 def require(condition, message):
@@ -336,7 +337,8 @@ def main():
             bench = json.loads((root / "benchmark/result.json").read_text())
             require(bench["source"] == args.source and bench["updates"] == 10 and bench["worlds"] == 256
                     and bench["status"] == "training-complete-not-accepted", "same-source256 benchmark")
-            require(bench["elapsed_s"]*150*1.5 < 1740, "measured1500 update budget fits1800s cap")
+            require(bench["elapsed_s"]*150*1.5 < FOUNDATION_CAP_SECONDS-60,
+                    "measured1500 update budget fits declared cap")
         output.mkdir(parents=True, exist_ok=False)
         runtime = {name: metadata.version(name) for name in
                    ("torch", "warp-lang", "mujoco", "mujoco-warp", "mjlab", "better-actuator-models")}

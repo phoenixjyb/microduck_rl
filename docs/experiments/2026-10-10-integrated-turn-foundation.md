@@ -31,10 +31,10 @@ Sequential independent fresh starts, never from each other's checkpoints:
 | --- | ---: | ---: | ---: | ---: |
 | Smoke | 64 | 821 | 5 | 180s |
 | Timing benchmark | 256 | 823 | 10 | 180s |
-| Foundation | 256 | 827 | 1500 | 1800s |
+| Foundation | 256 | 827 | 1500 | 2700s |
 
 Foundation requires both same-source prior successes and measured benchmark
-wall time ×150×1.5 <1740s. Refuse the launch otherwise; no implicit budget
+wall time ×150×1.5 <2640s. Refuse the launch otherwise; no implicit budget
 extension. Save initial weights, every250th iteration and final1499 atomically
 with file and directory fsync. This is9,216,000 foundation transitions, not a
 guarantee that a small-world budget learns a usable gait. A curriculum stage at
@@ -98,3 +98,16 @@ whitespace checks passed. Independent read-only review confirmed actor-command
 ordering, metric-before-reset timing and checkpoint indices. Coverage names use
 yaw signs instead of assuming hardware left/right. Hard runtime bounds are
 external systemd user-service properties, to be checked live at launch.
+
+## Timing revision before foundation execution
+
+Initial source `8154e54e3de06bd6df7e3dbe6e218fb1af4e68d4` passed52 native CPU
+tests in6.18s. Its64-world smoke completed5 updates in5.544s; its256-world
+benchmark completed10 in9.703s. Both had finite final model/Adam state and
+nonzero actual idle, straight and both signed-yaw coverage. Benchmark projection
+9.703×150×1.5≈2183s exceeds the originally declared1740s admission ceiling.
+No foundation ran under that declaration. Before any foundation launch, revise
+only the external cap from1800s to2700s (admission ceiling2640s); retain all
+1500 updates, seeds, rewards, curricula and held-out gates. Commit/push the
+revision and rerun the same-source smoke/benchmark checks. Retain the initial
+timing evidence, rather than overwriting it.

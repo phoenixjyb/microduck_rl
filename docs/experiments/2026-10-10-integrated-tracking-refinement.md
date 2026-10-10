@@ -434,3 +434,57 @@ the one earlier cfg-equality test failure was a test-only integer0 versus
 float0.0 repr mismatch, corrected without changing recipe behavior. Independent
 Luna review found no preflight blocker; its margin-identity hardening suggestion
 was incorporated before execution.
+
+### Qpos repair preflight and retained training launch
+
+Exact recipe source `1689e874e73def563a20eed13011f788f30d5449` was tested
+and pushed before the clean native checkout fast-forwarded. The final Mac
+focused suite passed95 tests in6.72s; native CUDA-hidden checks passed95 in5.97s,
+with only the existing actuator/site selector warnings. Syntax, documentation
+links and whitespace checks passed. The independent review performed no edits
+or GPU operations; owner inspected and incorporated its margin identity guard.
+
+`microduck-limit-1689e874-preflight.service` completed Resultsuccess/MainPID0/
+ExecMainStatus0. Both64-world5-update smokes restored the exact control parent,
+all models/normalizers/Adam, clocks0 and Python/Adam LR1e-5, and passed official
+normalized ONNX CPU61-to14 finite inference. Treatment exercised -1/-2/-4
+live weights (boundary updates can contain two stages); control remained0.
+All logged preflight reward/loss/motor/qpos fields werefinite withzero NaN
+terminations; actual negative weighted qpos reward equaled the pre-reset raw
+cost times weight. Benchmark/full mode preserves motor-1 and command-error0.
+
+Ten-update256-world benchmarks took7.665340s control/7.681333s treatment.
+Conservative1000-update projections1149.80/1152.20s fit2040s, leaving60s inside
+each2100s child cap. These are timing/readiness receipts, not evidence that
+the new policy passed numerical gates: training DR still produces falls,
+nonzero torque exposure and occasional rated-speed exceedance in benchmarks.
+
+Small result receipt copies at Mac
+`artifacts/evaluations/qpos-limit-1689e874-20261011-preflight` agree with native
+SHA256; no checkpoint/venv was copied:
+
+| Receipt | SHA256 |
+| --- | --- |
+| Smoke control | `5ed617e69d9330772a0c94aa8d1193e002a2bf521a27063a4e4fc22621f480bb` |
+| Smoke limit | `a71adbfefcc159328c7312ab22d3cf64e57f59c3045fc534733a9ce44af34496` |
+| Benchmark control | `ad018e3f8f63666e2073a8a783d7bd8707f0745fdd23a7580a51f7a79bb3f910` |
+| Benchmark limit | `9fe9c133e429016340ec1562a32849f2b01f28e7ab35bbefbe227910aba91cc3` |
+
+`microduck-limit-1689e874-matched-eval.service` started2026-10-11 00:34:43
+Asia/Shanghai. Live properties confirmed4500s/RAM8GiB/CPU200%/Tasks64/Nice10/
+KillModecontrol-group. Its `set -e` wrapper runs control then limit then the
+stricter held-out evaluation with2100/2100/240s child caps and15s kill grace.
+Native run root is `artifacts/training/qpos-limit-1689e874-20261011` in
+`/home/converge/work/microduck_rl-upstream-20261010`. Stop after this result;
+do not automatically chain another experiment or promote a failed matrix.
+
+At40 control updates/960 steps, all logged metrics werefinite withzero NaN
+terminations and52 training falls across245,760 transitions; motor weight-1,
+command/error and qpos control weights0. Durable model0 exists. Sampled GPU
+occupancy1710MiB/free14484MiB/56C included only Duck PID1078078 and preserved
+DINO PID1592; both protected services remainedinactive in both scopes.
+This is a healthy active-job snapshot, not a completed result or a joint-repair
+claim. Do not alter this checkout or active job while its later phases still
+require source1689e874. Documentation-only follow-up commits may be pushed on
+Mac without advancing the native running checkout. Both full arms and their
+unchanged-plus-range held-out decisions remain pending.

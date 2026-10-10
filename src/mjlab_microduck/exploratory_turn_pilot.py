@@ -23,6 +23,7 @@ from mjlab_microduck.tasks.run import XL330_M288_RATED_NO_LOAD_SPEED_RAD_S as RA
 
 PROTOCOL = "exploratory-gentle-turn-v1"
 GPU = "GPU-f21e0304-3b55-b6eb-4993-946e7ee1f6dd"
+DINO_PID = 1592  # observed for this dated experiment, not a reusable host default
 MODES = {"smoke": (701, 10, 360), "pilot": (709, 128, 900)}
 CASES = ((.30, 0.), (.20, -.20), (.20, .20))
 SERVICES = ("recomo-ai-mission-vllm.service", "recomo-ai-mission-subject-model-worker.service")
@@ -44,10 +45,11 @@ def shared_host():
     for line in read("nvidia-smi", "--query-compute-apps=pid,process_name,used_memory",
                      "--format=csv,noheader,nounits").splitlines():
         pid, name, memory = (x.strip() for x in line.split(",", 2))
-        require(int(pid) == os.getpid() or name ==
-                "/home/converge/Tonghao/VLM/grounding_dino_cpp_dev/build_worker/grounding_dino_cpp_worker",
+        require(int(pid) == os.getpid() or (int(pid) == DINO_PID and name ==
+                "/home/converge/Tonghao/VLM/grounding_dino_cpp_dev/build_worker/grounding_dino_cpp_worker"),
                 "unexpected competing GPU process")
         processes.append(dict(pid=int(pid), name=name, memory_mib=memory))
+    require(sum(p["pid"] == DINO_PID for p in processes) == 1, "retained DINO worker identity/count")
     states = {}
     for namespace in ((), ("--user",)):
         for service in SERVICES:

@@ -26,16 +26,19 @@ same-source smoke and measured 1.5x timing budget. Checkpoint every 10 updates;
 atomic fsync-backed saves. No automatic further run or multi-seed promotion.
 
 Use native100.100 frozen environment without dependency/driver changes. Share
-only with the existing GroundingDINO worker, preserving it and all CPU workloads.
+only with the existing GroundingDINO worker (observed PID1592), preserving it and
+all CPU workloads. A restart/identity change closes this run rather than silently
+replacing the workload whitelist.
 Hold the existing cooperative GPU lock for the process lifetime. Reject another
 compute process, protected AI Mission services in either namespace, GPU >=75 C,
 total GPU usage >6 GiB or free GPU memory <8 GiB. Torch allocator capped at 20%;
 Warp is not covered by that allocator cap, so observe aggregate GPU occupancy.
-Unit limits: CPU 200%, RAM 8 GiB, low priority, 64 tasks, stop all child processes
+Externally enforce user-unit limits: CPU 200%, RAM 8 GiB, low priority, 64 tasks, stop all child processes
 on a hard timeout. Never stop unrelated services to fit the run.
 
 Enable installed NaN guard and reuse finite actor/action/raw manager output,
-return, gradient, optimizer and learned-parameter checks. Existing reward manager
+return, gradient, optimizer-loss and learned-parameter checks. Adam moments are
+not independently finite-checked after each update. Existing reward manager
 may sanitize individual terms: this is not a proof of every raw reward term.
 Reuse pre-reset control-step motor stream and gross training stop gates: fall
 fraction >0.50 per update, torque utilization p99 >0.85, rated-speed exceedance

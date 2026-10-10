@@ -114,3 +114,13 @@ def test_shared_gpu_guard_is_nonmutating_and_retains_dino(monkeypatch):
     assert report["processes"][0]["pid"] == 1592
     assert len(report["protected_services"]) == 4
     assert all("stop" not in call and "start" not in call for call in calls)
+
+
+def test_same_executable_new_worker_is_not_silently_whitelisted(monkeypatch):
+    def fake(*args):
+        if "--query-gpu=uuid,memory.used,memory.free,temperature.gpu" in args:
+            return pilot.GPU + ", 1000, 15000, 44"
+        return "1593, /home/converge/Tonghao/VLM/grounding_dino_cpp_dev/build_worker/grounding_dino_cpp_worker, 946"
+    monkeypatch.setattr(pilot, "read", fake)
+    with pytest.raises(ValueError, match="competing GPU process"):
+        pilot.shared_host()

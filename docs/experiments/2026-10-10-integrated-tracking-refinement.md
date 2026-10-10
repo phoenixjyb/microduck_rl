@@ -249,3 +249,91 @@ The follow-up capture/diff changes passed78 focused CPU tests in6.72s, with
 the same existing selector warning. Strict replay tolerance remains1e-6;
 the partial observational modes are explicitly not full replay verification
 or acceptance and preserve the old rejected matrix.
+
+### Completed observational diagnosis
+
+Source `31a5fb6aebf746d354cbfc87b17bfc5db0b49034` was pushed before the
+clean, idle native checkout fast-forwarded. The sequential retained service
+`microduck-response-31a5fb6a-diagnosis.service` ran from23:50:53 to23:52:19
+Asia/Shanghai, Resultsuccess/ExecMainStatus0/MainPID0. Its live wrapper had
+240s/RAM8GiB/CPU200%/Tasks64/Nice10/KillModecontrol-group; native CPU checks
+passed83 tests in5.54s with the existing selector warning. Both fresh child
+processes completed their eight declared cases, each8 worlds/240 steps, with
+zero terminals and zero rated-speed exceedance. These are partial descriptive
+replays, **not an accepted policy or a full strict-replay pass**.
+
+Small retained JSONs were mirrored without copying models. Native and Mac
+launch/result SHA256 values agree; every standalone case equals its aggregate
+entry, with source, original evaluation and two checkpoint identities intact.
+
+| Receipt | SHA256 |
+| --- | --- |
+| Default launch | `20217939bb370a70e189d7124b4782ed7a80019f41ef18b4ed8c094d35201a45` |
+| Default result | `e97379fa76b945e4e08d9a74fecb59dc9d20bc6118e2293bf980f653163a5c04` |
+| Diagnostic launch | `15b5d836798b50d77cf1ba879ef1b1c1a090297583f6932f8771a874b9b08b32` |
+| Diagnostic result | `9f94a08c6ccc642ef34f5f2e718166c595d1ae8d58ecb3382fcf74cfcac94657` |
+
+Artifacts remain under native `artifacts/evaluations/` in
+`tracking-replay-default-31a5fb6a-20261010` and
+`tracking-replay-diagnostic-31a5fb6a-20261010`; the Mac has matching small copies.
+The original failed strict audit is retained separately and not overwritten.
+
+Default/diagnostic replays had154/156 original scalar fields outside1e-6,
+respectively, all numerical: no differing identities, types, completion,
+terminal lists, or rated-speed exceedance. Maximum absolute yaw-MAE deviations
+from original were.0268083/.0184502rad/s. Default-versus-diagnostic also differs
+in every case. Thus added qpos telemetry is **not necessary** for observed
+drift. This is consistent with the installed simulator's nondeterminism warning,
+not a proof of the precise mechanism or permission to widen replay tolerance.
+Original foundation-not-ready decisions remain authoritative; both new results
+explicitly retain replay_verifiedfalse and policy_acceptancefalse.
+
+Instrumented seed839 means across eight worlds, after60 startup steps:
+
+| Command vx/yaw | Control signed vx | Tracking signed vx | Control signed yaw / absolute yaw | Tracking signed yaw / absolute yaw |
+| --- | ---: | ---: | ---: | ---: |
+| 0 / 0 | .000218 | .000024 | .00582 / .01506 | .00677 / .01548 |
+| .30 / 0 | .19712 | .19125 | -.01140 / .20467 | .04203 / .16413 |
+| .20 / -.20 | .14542 | .14676 | -.06423 / .20692 | -.05190 / .13002 |
+| .20 / +.20 | .14063 | .14319 | .05309 / .23201 | .12852 / .20751 |
+
+Treatment negative-turn correct-sign fraction was.63611 versus control.61181;
+positive-turn fraction.72569 versus.61181. The negative-turn error improvement
+mostly accompanies reduced angular oscillation, not stronger mean commanded
+turning; positive-turn signed response improved, but motor and tracking gates
+still failed. One seed/four commands cannot establish generalization.
+
+The idle load regression localizes to `right_hip_yaw`: treatment per-joint
+absolute torque p99=.640524Nm, signed mean=.605716Nm, soft-limit exposure
+95.8854%, versus control.349149Nm/.227990Nm/.1042%. Treatment idle pooled
+torque utilization remains1.067539, reproducing the original motor failure.
+Both arms spend substantial samples beyond that joint's configured range:
+control idle96.875%, treatment idle97.5%; maximum excursion beyond the nearest
+bound.048876/.059993rad. It is the only joint with sampled range violations
+in these eight cases. Qpos and force have different sampling clocks; these
+statistics localize a problem, not a synchronous force/constraint causal proof.
+
+Read-only native CPU entity/compiled-model inspection verified all14 unit-gear
+actuator targets against entity joint identities. `right_hip_yaw` is entity
+joint9, compiled joint10, qpos address16; range[-.523598775598297,
+.43633231299858416]rad, limited1. Installed EntityData reads qpos by its joint
+address mapping, and Entity initializes limits from corresponding compiled
+joint ranges. The action configuration has scale1/default-position offset and
+no explicit action clip. This rules out a simple column-name swap but does not
+establish why the solver/policy exceeds the range. MuJoCo constraints are not
+physical hard-stop qualification; do not claim physical safety from this audit.
+
+Next bounded diagnostic should capture the named joint's requested target,
+actual position, configured limits and constraint response before changing the
+policy/plant. If persistent out-of-range targets are confirmed, predeclare a
+small matched joint-target-safety continuation from the **control** parent,
+with existing motor/tracking gates plus explicit range-exposure checks. Do not
+promote the rejected treatment, silently clamp the evaluator, or expand the
+speed/obstacle curriculum until the joint issue is understood. No further GPU
+job was launched in this diagnosis.
+
+Peak retained default/diagnostic GPU occupancy1692/1860MiB, temperature55/58C.
+After completion the GPU returned to961MiB used/15232MiB free/50C with only
+preserved DINO PID1592. Both protected services remainedinactive in user and
+system scopes. No unrelated workload, dependency, driver, physical robot or
+100.98 NX workload was changed.

@@ -54,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", required=True)
     parser.add_argument("--run-id", required=True)
-    parser.add_argument("--case-diagnosis", choices=("default", "diagnostic"),
+    parser.add_argument("--case-diagnosis", choices=("default", "diagnostic", "targets"),
                         help="capture seed839's eight cases without claiming an exact full replay")
     args = parser.parse_args()
     base.require(re.fullmatch(r"[a-z0-9-]{1,64}", args.run_id), "safe unique audit id")
@@ -102,8 +102,10 @@ def main():
                 declared = prior["cases"][arm][:4] if args.case_diagnosis else prior["cases"][arm]
                 for index, old in enumerate(declared):
                     row = base.evaluate_case(INPUT / arm / "model_999.pt", old["seed"], old["speed"], old["yaw"], health,
-                                             diagnostics=args.case_diagnosis != "default")
-                    acceptance = {k: v for k, v in row.items() if k != "response_diagnostics"}
+                                             diagnostics=args.case_diagnosis != "default",
+                                             target_diagnostics=args.case_diagnosis == "targets")
+                    acceptance = {k: v for k, v in row.items()
+                                  if k not in ("response_diagnostics", "joint_target_diagnostics")}
                     # Preserve numerical failure evidence BEFORE the strict check.
                     base.write_new(output / f"{arm}-s{old['seed']}-c{index%4}.json", row)
                     diff = replay_differences(acceptance, old)

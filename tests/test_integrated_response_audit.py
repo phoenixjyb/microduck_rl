@@ -84,3 +84,27 @@ def test_replay_diff_explains_failed_numerics_without_loosening_tolerance():
     assert audit.replay_differences(retained, retained) == []
     assert audit.replay_differences(dict(complete=1), dict(complete=True)) == [
         dict(field="complete", retained=True, observed=1)]
+
+
+def test_target_diagnostics_keep_requested_overshoot_and_constraint_sign():
+    _, _, q, lim = samples()
+    targets = q + .2
+    constraints = -q
+    row = base.joint_target_diagnostics(q, targets, constraints, lim, ("left", "right"))
+    assert row["target_outside_configured_range_fraction"] == pytest.approx([1/3, 1/3])
+    assert row["previous_applied_target_rad"]["maximum"] == pytest.approx([1.3, 1.19])
+    assert row["position_rad"]["maximum"] == pytest.approx([1.1, .99])
+    assert row["generalized_constraint_force_nm"]["minimum"] == pytest.approx([-1.1, -.99])
+    assert row["constraint_includes_contacts_and_limits"] and not row["hard_stop_force_isolated"]
+    assert not row["policy_acceptance"] and not row["physical_motion_authorized"]
+
+
+@pytest.mark.parametrize("fault", ["shape", "nan", "names", "bounds"])
+def test_target_capture_fails_closed_on_bad_identity_or_values(fault):
+    _, _, q, lim = samples()
+    t, c, names = q.clone(), q.clone(), ("left", "right")
+    if fault == "shape": t = t[..., :1]
+    if fault == "nan": c[0, 0, 0] = float("nan")
+    if fault == "names": names = ("left", "left")
+    if fault == "bounds": lim[0, 0, 1] = -1.
+    with pytest.raises(ValueError): base.joint_target_diagnostics(q, t, c, lim, names)

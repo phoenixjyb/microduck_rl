@@ -337,3 +337,26 @@ After completion the GPU returned to961MiB used/15232MiB free/50C with only
 preserved DINO PID1592. Both protected services remainedinactive in user and
 system scopes. No unrelated workload, dependency, driver, physical robot or
 100.98 NX workload was changed.
+
+### October11 target/constraint capture declaration
+
+Before changing the recipe, add opt-in `--case-diagnosis targets` to the existing
+bounded audit. Replay only seed839's four commands for both exact final999
+policies above, eight cases,8 worlds/240 steps each. Retain unchanged original
+gate evidence, replay_verifiedfalse, no policy admission or learning. Capture
+actual entity joint-position target buffers at the next pre-action boundary
+(previous applied target, including encoder-bias correction), the named joint
+position, configured limits, and generalized constraint torque via entity
+joint DoF addresses. Generalized constraints include contacts and limits and
+have solver integration lag: do not label them isolated hard-stop forces or
+claim synchronous physical causality. No extra forward(), action processing,
+target clipping, RNG draw, reward or plant change is permitted.
+
+Use the same regular owned lease/DINO identity/protected-service guards and
+frozen runtime. Run one sequential retained user service with240s outer cap,
+60s CUDA-hidden focused tests and150s GPU child timeout,15s kill grace,
+RAM8GiB/CPU200%/Tasks64/Nice10/KillModecontrol-group. Inspect the target and
+constraint evidence before selecting any learning continuation. Repository
+guidance and independent read-only Luna review favor the existing
+`joint_pos_limit_proximity` penalty on the offending named joint rather than
+target clipping, which would change intentional low-kp overshoot behavior.

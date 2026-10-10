@@ -261,11 +261,38 @@ def response_diagnostics(velocities, motors, positions, limits, names, yaw, *, s
         positions_not_synchronous_with_force=True, policy_acceptance=False, physical_motion_authorized=False)
 
 
-def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False):
+def joint_target_diagnostics(positions, targets, constraints, limits, names):
+    """Previous applied targets and generalized constraint loads; no clipping.
+
+    All samples are at the next pre-action boundary. Constraint force is the
+    last derived physics value, not a simultaneous hard-stop force sensor.
+    """
+    require(positions.ndim == 3 and positions.shape == targets.shape == constraints.shape
+            and limits.shape == (*positions.shape[1:], 2)
+            and len(names) == len(set(names)) == positions.shape[-1]
+            and finite_tree((positions, targets, constraints, limits))
+            and bool((limits[..., 1] > limits[..., 0]).all()), "finite target diagnostic layout")
+    def stats(values):
+        return dict(mean=values.mean((0, 1)).tolist(), minimum=values.amin((0, 1)).tolist(),
+                    maximum=values.amax((0, 1)).tolist())
+    distance = torch.minimum(targets-limits[..., 0], limits[..., 1]-targets)
+    return dict(protocol="previous-applied-joint-target-v1", joint_columns=list(names),
+        position_rad=stats(positions), previous_applied_target_rad=stats(targets),
+        target_outside_configured_range_fraction=(distance < 0).double().mean((0, 1)).tolist(),
+        generalized_constraint_force_nm=stats(constraints),
+        constraint_abs_p99_nm=torch.quantile(constraints.abs().flatten(0, 1), .99, dim=0).tolist(),
+        configured_limits_rad=limits.tolist(),
+        timing="pre-action state and previous applied target; constraint force has solver integration lag",
+        constraint_includes_contacts_and_limits=True, hard_stop_force_isolated=False,
+        policy_acceptance=False, physical_motion_authorized=False)
+
+
+def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 
+    require(not target_diagnostics or diagnostics, "target capture requires position diagnostics")
     worlds, steps, startup = 8, 240, 60
     torch.manual_seed(seed)
     cfg, agent = load_env_cfg(TASK, play=True), load_rl_cfg(TASK)
@@ -288,7 +315,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False):
         env._microduck_motor_step_stream = stream
         phase = torch.zeros(worlds, dtype=torch.long, device=env.device)
         velocities, motor_rows, terminals = [], [], []
-        positions = []
+        positions, targets, constraints = [], [], []
         limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
         with torch.inference_mode():
             for step in range(steps):
@@ -304,6 +331,10 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False):
                 velocities.append(velocity.cpu().clone())
                 if diagnostics:
                     positions.append(robot.data.joint_pos[:, stream.joint_ids].cpu().clone())
+                if target_diagnostics:
+                    targets.append(robot.data.joint_pos_target[:, stream.joint_ids].cpu().clone())
+                    dofs = robot.data.indexing.joint_v_adr[list(stream.joint_ids)]
+                    constraints.append(robot.data.data.qfrc_constraint[:, dofs].cpu().clone())
                 actions = policy(obs)
                 require(actions.shape == (worlds, 14) and finite_tree(actions), "finite evaluation actions")
                 stream.begin(step, phase)
@@ -331,6 +362,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False):
         if diagnostics:
             result["response_diagnostics"] = response_diagnostics(v, m, torch.stack(positions).double(),
                 limits.double(), stream.names, yaw, startup=startup)
+        if target_diagnostics:
+            result["joint_target_diagnostics"] = joint_target_diagnostics(torch.stack(positions).double(),
+                torch.stack(targets).double(), torch.stack(constraints).double(), limits.double(), stream.names)
         return result
     finally:
         env.close()

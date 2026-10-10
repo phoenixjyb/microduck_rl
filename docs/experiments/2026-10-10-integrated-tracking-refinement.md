@@ -644,3 +644,47 @@ Independent read-only Luna review found no fail-open path. Its wrong-NVML-name
 and self-PID coverage suggestions were incorporated. The focused Mac suite
 passed123 tests in5.50s; whitespace checks passed. Native CPU and GPU preflight
 evidence remains pending for this exact updated source.
+
+### Recovered native preflight and bounded continuation launch
+
+Exact reviewed source `be487638129a9894d6cc77d87b4d0cdfc06c446c` was pushed,
+then fast-forwarded into the clean inactive native checkout. Its read-only host
+guard passed with explicit DINO PID2021. The retained preflight service
+`microduck-safe-track-be487638-preflight.service` completed07:52:18,
+Resultsuccess/ExecMainStatus0/MainPID0. Native CUDA-hidden tests passed123 in5.51s.
+
+Both64-world5-update smokes and256-world10-update benchmarks verified exact
+repaired parent bytes, restored models/normalizers/Adam, fresh clocks0,
+Python/Adam LR1e-5, finite saved state and exact update/common-step counters.
+All30 update rows werefinite withzero NaN terminations. Actual pre-reset
+motor/qpos/command weighted costs were checked live; motor stayed-1 and
+qpos-4, while treatment smoke exercised-.125/-.25/-.5 and benchmark-.5.
+Both official normalized ONNX exports passed CPU finite61-to14 inference.
+
+Benchmarks took7.465244s control/7.472858s treatment; conservative1000-update
+projections1119.79/1120.93s are inside2040s, leaving60s in each2100s cap.
+Health receipts peaked1710MiB aggregate/57C. Randomized benchmark falls10/8
+and nonzero motor exposure are training observations, not held-out acceptance.
+Small JSON copies under Mac
+`artifacts/evaluations/safe-tracking-be487638-20261011-preflight` match native
+hashes; no checkpoint/venv duplication was needed.
+
+| Receipt | SHA256 |
+| --- | --- |
+| Smoke control | `777184819a6d1458f28c6844f1e35769ceaf12d4f175d96c01af50ee670c0fbe` |
+| Smoke tracking | `743c0165f69c4531aa5bb293f734ec7bded2ecf444e35070fa2f4bd2dea80a19` |
+| Benchmark control | `0fff4de0b1dd46216a65d574578f4833de96b3e7bc5ac4206c663cf6098b01b1` |
+| Benchmark tracking | `10b865cce942021ab9bf5bea601063db42bc414c28991706ac1d3cff931852db` |
+
+`microduck-safe-track-be487638-matched-eval.service` started07:53:14
+Asia/Shanghai. Live properties confirm4500s/RAM8GiB/CPU200%/Tasks64/Nice10/
+KillModecontrol-group. Its fail-on-error wrapper runs control then tracking
+then the stricter held-out matrix, with2100/2100/240s child caps and15s grace.
+Run root: `artifacts/training/safe-tracking-be487638-20261011` in native
+`/home/converge/work/microduck_rl-upstream-20261010`. Both arms retain seed919,
+256 worlds and1000 updates; only treatment tracking pressure differs.
+
+Do not advance or alter the running native checkout. A documentation-only
+follow-up on Mac does not change its pinned source. Full arm completion,
+durable final999 hashes and the24-case held-out comparison are stillpending.
+No automatically chained new skill, video, publication or physical motion.

@@ -75,3 +75,12 @@ def test_only_the_two_declared_final_checkpoints_are_audited():
     assert tuple(audit.CHECKPOINTS) == ("control", "tracking")
     assert len(audit.EVALUATION_SHA) == 64 and all(len(v) == 64 for v in audit.CHECKPOINTS.values())
     assert audit.INPUT_SOURCE == "6dbc0613c7fd55f081bf4cebea292b9acec8a61e"
+
+
+def test_replay_diff_explains_failed_numerics_without_loosening_tolerance():
+    retained = dict(seed=839, speed_mae=[.1, .2], complete=True)
+    observed = dict(seed=839, speed_mae=[.1, .20002], complete=True)
+    assert audit.replay_differences(observed, retained) == [dict(field="speed_mae[1]", retained=.2, observed=.20002)]
+    assert audit.replay_differences(retained, retained) == []
+    assert audit.replay_differences(dict(complete=1), dict(complete=True)) == [
+        dict(field="complete", retained=True, observed=1)]

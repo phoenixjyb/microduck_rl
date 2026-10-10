@@ -39,10 +39,23 @@ def equal_replay(left, right):
     return type(left) is type(right) and left == right
 
 
+def replay_differences(left, right, path=""):
+    if equal_replay(left, right):
+        return []
+    if isinstance(left, dict) and isinstance(right, dict) and left.keys() == right.keys():
+        return [d for key in right for d in replay_differences(left[key], right[key], f"{path}.{key}".lstrip("."))]
+    if isinstance(left, list) and isinstance(right, list) and len(left) == len(right):
+        return [d for i, (a, b) in enumerate(zip(left, right, strict=True))
+                for d in replay_differences(a, b, f"{path}[{i}]")]
+    return [dict(field=path, retained=right, observed=left)]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", required=True)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--case-diagnosis", choices=("default", "diagnostic"),
+                        help="capture seed839's eight cases without claiming an exact full replay")
     args = parser.parse_args()
     base.require(re.fullmatch(r"[a-z0-9-]{1,64}", args.run_id), "safe unique audit id")
     def git(*argv):
@@ -71,7 +84,8 @@ def main():
         output.mkdir(parents=True, exist_ok=False)
         base.write_new(output / "launch.json", dict(protocol=PROTOCOL, source=args.source, host=host,
             runtime=runtime, input_source=INPUT_SOURCE, evaluation_sha256=EVALUATION_SHA,
-            checkpoint_sha256=CHECKPOINTS, policy_acceptance=False, physical_motion_authorized=False))
+            checkpoint_sha256=CHECKPOINTS, case_diagnosis=args.case_diagnosis,
+            policy_acceptance=False, physical_motion_authorized=False))
         def health():
             sample = shared_host()
             with (output / "health.jsonl").open("a") as log:
@@ -82,20 +96,29 @@ def main():
         from mjlab.utils.torch import configure_torch_backends
         configure_torch_backends()
         try:
-            cases = {}
+            cases, comparisons = {}, {}
             for arm in CHECKPOINTS:
                 rows = []
-                for index, old in enumerate(prior["cases"][arm]):
-                    row = base.evaluate_case(INPUT / arm / "model_999.pt", old["seed"], old["speed"], old["yaw"], health, diagnostics=True)
+                declared = prior["cases"][arm][:4] if args.case_diagnosis else prior["cases"][arm]
+                for index, old in enumerate(declared):
+                    row = base.evaluate_case(INPUT / arm / "model_999.pt", old["seed"], old["speed"], old["yaw"], health,
+                                             diagnostics=args.case_diagnosis != "default")
                     acceptance = {k: v for k, v in row.items() if k != "response_diagnostics"}
-                    base.require(equal_replay(acceptance, old), "diagnostic replay differs from original acceptance evidence")
+                    # Preserve numerical failure evidence BEFORE the strict check.
                     base.write_new(output / f"{arm}-s{old['seed']}-c{index%4}.json", row)
+                    diff = replay_differences(acceptance, old)
+                    comparisons[f"{arm}-{index}"] = diff
+                    base.write_new(output / f"{arm}-s{old['seed']}-c{index%4}-comparison.json", dict(differences=diff))
+                    if not args.case_diagnosis:
+                        base.require(not diff, "diagnostic replay differs from original acceptance evidence")
                     rows.append(row)
-                base.require(base.decision(rows) == prior["decisions"][arm], "unchanged replay decision")
+                if not args.case_diagnosis:
+                    base.require(base.decision(rows) == prior["decisions"][arm], "unchanged replay decision")
                 cases[arm] = rows
             base.write_new(output / "result.json", dict(protocol=PROTOCOL, source=args.source,
                 evaluation_sha256=EVALUATION_SHA, checkpoint_sha256=CHECKPOINTS, cases=cases,
-                original_decisions=prior["decisions"], replay_verified=True,
+                original_decisions=prior["decisions"], replay_verified=args.case_diagnosis is None,
+                case_diagnosis=args.case_diagnosis, comparisons=comparisons,
                 decision="diagnostic-only-not-admission", policy_acceptance=False, physical_motion_authorized=False))
             health()
         except Exception as exc:

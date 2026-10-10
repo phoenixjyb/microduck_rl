@@ -213,3 +213,39 @@ external service wrapper before GPU execution: the Python module's guards
 are not a replacement for cgroup/watchdog caps. The run must use that wrapper,
 not an uncapped direct invocation; native CPU checks get a60s timeout inside
 the240s overall service before the180s diagnostic child.
+
+### Strict replay failure and bounded diagnosis declaration
+
+The first audit at source246b2ce2 failed its first comparison with
+`ValueError: diagnostic replay differs from original acceptance evidence`.
+Native CPU checks had passed82 tests in5.59s; the GPU audit stopped, with no
+case admitted and no Duck process left. Original training/evaluation artifacts
+remain unchanged. The original implementation did not persist a mismatched
+row before rejection, so it could not explain the numerical difference. Fix
+that observability defect: retain raw case and field-level comparison before
+the existing strict check, **without widening1e-6 or changing any gate**.
+
+Installed mjlab1.3 `utils/random.py` seeds Python/NumPy/Warp/Torch but explicitly
+documents that MuJoCo Warp is not fully deterministic. `evaluate_case` seeds
+the environment; the optional joint-position read is a read-only qpos view,
+whose CPU copy adds synchronization but not RNG or simulator-state writes.
+This source evidence suggests replay variability is possible; it does not yet
+establish the observed cause.
+
+Before any full replay retry, run two fresh sequential diagnostic children
+using `--case-diagnosis default` then `--case-diagnosis diagnostic`. Each is
+bounded to the first held-out seed839's four commands for both final policies
+(eight cases,8 worlds,240 steps), same checkpoints/runtime/guard/lease, with
+original-field differences retained rather than asserted as exact-replay success.
+Default mode collects no new telemetry; diagnostic mode adds it. Both explicitly
+set replay_verifiedfalse and diagnostic-only-not-admission. Preserve original
+rejected decisions; partial seed coverage cannot override them. No full-matrix
+retry or new learning job follows. Use one240s service with60s CPU checks and
+independent75s default/diagnostic child timeouts,15s grace and the same resource
+caps. Retain failures and compare default-versus-diagnostic drift before inferring
+a cause or choosing a curriculum change.
+
+The follow-up capture/diff changes passed78 focused CPU tests in6.72s, with
+the same existing selector warning. Strict replay tolerance remains1e-6;
+the partial observational modes are explicitly not full replay verification
+or acceptance and preserve the old rejected matrix.

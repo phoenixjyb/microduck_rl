@@ -2005,3 +2005,56 @@ guard restoration on partial setup failure, Model/MJB mutations, same-size
 wrong input layouts before physics, every seven-state mutation failing closed,
 and full portable receiver recomputation/tamper refusal. These are mocks only;
 the actual installed getter and capture result are recorded separately below.
+
+### c376c66c execution: rejected before Data or physics
+
+Source `c376c66c2e50d3ec15f11f7c3e2ddd322a6e760a` was pushed and delivered
+by clean fast-forward to native 100.100. Source-bundle SHA256:
+`ab26f4c102d67e60b97ebe6dd3c4cef9caff1624934baee3e7205b790169f403`.
+Committed Mac/native five-file suites passed 437 tests in 3.40s/1.37s,
+with identical ordered test IDs and zero failures/errors/skips. Both hosts retain
+these exact files under `artifacts/tools/ada-measured-boundary/`:
+
+- `c376c66c-mac-phase-tests.xml`, 60115B, SHA256
+  `38ba661d653b2455fafa20517fae6779cf6f6ffac6d9c15e77b41f2764d07764`;
+- `c376c66c-linux-phase-tests.xml`, 60121B, SHA256
+  `4288ea02cbe7bb7c0b9e4098bb067756628a73358e4fac2956fb9fe2cad0b3fc`;
+- `c376c66c-phase-service-evidence.json`, 28668B, SHA256
+  `99d7634acedfcc0e4443881a67d2ac9c7788cfea2b6bc284330e637b6f114978`.
+
+The CPU contracts unit finished exit0 in 1.535735s, invocation
+`aba8319644c542d69a905f9b696b8638`. The native phase capture unit finished
+exit1 in 3.766219s, invocation `6bc70e5552b742b0ac2c2d4ce362147d`:
+`ValueError: full public Model/Option fence` at the initial fence immediately
+after loading world0 MJB. This is before `MjData`, the BEFORE stages or a solve.
+There is no output JSON/NPZ and no successful before/after packet. Do not claim
+installed getter qualification, comparison reception or solver execution.
+
+A separate capped read-only load diagnosis used the same exact committed
+receiver/provenance routines, loaded both authenticated MJBs, and created no
+Data or physics calls. It finished exit0 in 1.165597s, invocation
+`bae83ff27f4948fba8fce8da0d364a34`. In both worlds **every numeric array matched**
+the retained capture, and exclusions matched. The sole scalar difference was
+`model/signature`: retained compilation value `8703288809412338781`, loaded
+value `0`. The installed hash-bound `mjmodel.h` lines 897-898 identify this
+field as a compilation signature shared with the compiling mjSpec. The
+[frozen upstream I/O source](https://github.com/google-deepmind/mujoco/blob/28009f9105cd92784b7b0b30c0605a5e29107a77/src/engine/engine_io.c)
+was inspected read-only: it zero-initializes Model and serializes the declared
+size fields/options/statistics/arrays. This is source-level context, not loaded
+machine-code identity or permission to mutate/suppress a signature mismatch.
+
+All three units are terminal with PID0/empty cgroups. Exact quoted argv,
+environment and caps were checked against the retained unit definitions; the
+diagnosis code is retained verbatim in the evidence JSON. All four protected
+AI Mission scopes remained inactive. DINO1592/946MiB remained the only GPU
+process; unrelated CPU services were preserved. No GPU job or lease, policy
+update, library change, integration or physical motion was performed.
+
+The strict fence remains intact. The next bounded source revision must explicitly
+distinguish a compiled Model descriptor from an MJB-loaded current descriptor,
+or reproduce the original compiled descriptor from source. Do not overwrite
+`signature`, remove it from inventory, or silently grant loaded models historical
+identity. A reviewed loaded-identity contract must retain the exact difference
+and still fence all current 627 public fields and full MJB bytes at each phase,
+before a new source-prefix capture attempt. GPU simulator and training gates,
+and the unwired moving-corner skill, remain unchanged.

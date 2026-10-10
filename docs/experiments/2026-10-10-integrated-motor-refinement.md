@@ -142,3 +142,84 @@ the current Duck process746MiB and unchanged DINO1592/946MiB. All four
 protected service scopes remainedinactive. Training and both held-out decisions
 are pending; control is not penalized for motor load by design. Do not infer
 motor-aware improvement before its own arm and the fixed evaluations finish.
+
+## Completed comparison and recovery
+
+The pending launch snapshot above is superseded by the completed receipts.
+After SSH access returned, the retained service reported Resultsuccess,
+ExecMainStatus0, MainPID0 and NRestarts0, finishing at2026-10-10 13:06:46
+Asia/Shanghai. Active/exited is the retained service state, not a running
+learner. Both arms completed1000 updates/24000 steps/6,144,000 transitions
+each (12,288,000 total), in572.618s control and569.611s motor. No new training
+or GPU evaluation was launched during recovery.
+
+Both final999 checkpoints match their result receipts, contain finite payloads
+and17 Adam states at step50000, and retain iteration999/common step24000.
+All1000 update rows per arm are finite, with zero NaN terminations. Training
+falls were not zero: the last100 updates recorded151 control and145 motor
+falls over614,400 transitions per arm. Maximum retained GPU temperature was
+60C control/59C motor, with aggregate memory no higher than2852MiB.
+
+The unchanged deterministic decision is **foundation-not-ready for both arms**.
+All24 held-out cases completed240 steps with zero terminals and zero rated-speed
+exceedance. Motor-envelope cases passed0/12 control versus9/12 treatment;
+all three treatment failures were straight.30m/s cases (torque p99 utilization
+.62247–.64967, above.60). Tracking failed11/12 control and12/12 treatment.
+The control's one tracking pass was seed857 idle, which still failed motors.
+No case admits the next skill stage.
+
+Descriptive means below aggregate the three evaluation seeds/eight worlds;
+acceptance uses every world, not these means. Control torque p99 utilization
+was1.06754 in every case. Startup exclusion applies only to tracking.
+
+| Command vx / yaw | Control speed MAE | Motor speed MAE | Control yaw MAE | Motor yaw MAE | Motor torque p99 utilization |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 0 / 0 | .00524 | .00866 | .03756 | .07584 | .54855 |
+| .30 / 0 | .10754 | .10651 | .24885 | .33083 | .63615 |
+| .20 / -.20 | .04916 | .06371 | .28636 | .27345 | .56163 |
+| .20 / +.20 | .06063 | .06171 | .27879 | .34107 | .55832 |
+
+Across the12 matched cases, mean squared-torque thermal proxy decreased
+from.101950 to.033041 (67.6%), and sampled soft-limit exposure from.071081
+to.001916 (97.3%). These are control-step simulation proxies, not measured
+hardware temperature or substep peaks. Power did not uniformly improve, and
+yaw tracking worsened for idle, straight and positive-yaw case means. This
+supports motor-load reduction in this single-seed diagnostic, not successful
+turn learning or robust multi-seed causal proof.
+
+### Durable evidence
+
+Native checkpoints and exports remain under
+`/home/converge/work/microduck_rl-upstream-20261010/artifacts/training/motor-refinement-4da92898-20261010`.
+Only224KiB of receipts/evaluation JSONs were mirrored on Mac under
+`artifacts/evaluations/motor-refinement-4da92898-20261010`; no large checkpoint
+was duplicated. Exact SHA256 bindings:
+
+| Artifact | SHA256 |
+| --- | --- |
+| Control model999 | `a233d4b95bfc786c9e28a161e353a646d339868bc13718e898c71460c90e83a6` |
+| Motor model999 | `ee6d0f69e34fd73c34f3b1f307a2d4bde85f73d1ed81a53cba07ca5899091fc1` |
+| Control result | `e3132ab1c3938276d8183ed9b5c5362d912464693849ff087d4f2fd452cfc41e` |
+| Motor result | `6c3caf5b2809b0bea12bc6233e0ceec1274d3e1f6795c09ef0816be1600cb589` |
+| Evaluation result | `49a9662ba01a8b3b56477b62070225a98e0d3cde48452b4b636babeeed961a65` |
+
+Recovery checks bound both arms to exact executed source4da92898, parent
+SHA256, seed863 and declared counts. Every evaluation row binds to its arm's
+final checkpoint. All24 standalone case JSONs equal their aggregate entries;
+CPU recomputation of both decisions and all paired differences exactly matches
+the retained report. Mac receipt hashes match native bytes. CUDA-hidden native
+checkpoint inspection verified saved model/Adam finiteness. Documentation-only
+closeout does not require retraining or a dependency change.
+
+At2026-10-10 17:55:31 Asia/Shanghai,100.100 was reachable, with no Duck GPU
+process,47C GPU temperature and15232MiB free. Only the preserved GroundingDINO
+worker PID1592 used946MiB (961MiB aggregate). All four protected AI Mission
+service scopes remainedinactive. The access outage did not lose the experiment;
+no outage cause or reboot is inferred.100.98 and the team's NX workload remain
+untouched.
+
+Stop here as declared. The next recommendation is a separately predeclared,
+matched commanded-turning/speed-tracking refinement that retains motor pressure
+and these gates, with focused tests and bounded smoke before another full run.
+No new skill job follows automatically; obstacles, hopping, football balance,
+video admission, raw perception and physical motion remain outside this result.

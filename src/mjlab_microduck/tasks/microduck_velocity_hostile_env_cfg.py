@@ -47,7 +47,7 @@ from mjlab.terrains.terrain_generator import TerrainGeneratorCfg
 
 from mjlab_microduck.tasks import mdp as microduck_mdp
 from mjlab_microduck.tasks.hostile_terrains import hostile_subterrains, hostile_subterrains_v2
-from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
+from mjlab_microduck.tasks.athletics_velocity_env_cfg import (
     MicroduckRlCfg,
     make_microduck_velocity_env_cfg,
 )

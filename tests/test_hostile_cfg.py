@@ -19,7 +19,7 @@ from mjlab_microduck.tasks.microduck_velocity_hostile_env_cfg import (
     make_hostile_terrains_cfg,
     make_microduck_velocity_hostile_env_cfg,
 )
-from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
+from mjlab_microduck.tasks.athletics_velocity_env_cfg import (
     make_microduck_velocity_env_cfg,
 )
 

@@ -40,7 +40,7 @@ from mjlab.envs import ManagerBasedRlEnvCfg
 from mjlab.managers import RewardTermCfg
 
 from mjlab_microduck.tasks import mdp as microduck_mdp
-from mjlab_microduck.tasks.microduck_velocity_env_cfg import MicroduckRlCfg
+from mjlab_microduck.tasks.athletics_velocity_env_cfg import MicroduckRlCfg
 
 SENSOR_NAME = "feet_ground_contact"
 

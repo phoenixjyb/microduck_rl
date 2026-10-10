@@ -36,7 +36,7 @@ from mjlab_microduck.tasks.motor_aware import (
     MOTOR_OVER_LIMIT_GAIN,
     MOTOR_SOFT_LIMIT_FRACTION,
 )
-from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
+from mjlab_microduck.tasks.athletics_velocity_env_cfg import (
     make_microduck_velocity_env_cfg,
 )
 

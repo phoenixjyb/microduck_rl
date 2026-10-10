@@ -365,8 +365,8 @@ def make_hop_variant(
     # GroundPickPhaseCommandCfg actually accepts instead of forwarding all of
     # them verbatim.
     #
-    # `rel_turn_in_place_envs` is the one field we know is safe to drop: it is
-    # only ever read by VelocityCommandCommandOnly._resample_command, and
+    # `rel_turn_in_place_envs` and `turn_in_place_min_frac` are safe to drop:
+    # both are only read by VelocityCommandCommandOnly._resample_command, and
     # GroundPickPhaseCommand's own _resample_command override is a no-op
     # `pass` -- nothing in the built command ever looks at it. Any OTHER
     # dropped field is unproven and must fail loudly rather than vanish
@@ -375,7 +375,7 @@ def make_hop_variant(
     command = cfg.commands["twist"]
     valid_fields = {f.name for f in dataclasses.fields(microduck_mdp.GroundPickPhaseCommandCfg)}
     dropped = set(vars(command)) - valid_fields
-    _KNOWN_INERT_DROPS = {"rel_turn_in_place_envs"}
+    _KNOWN_INERT_DROPS = {"rel_turn_in_place_envs", "turn_in_place_min_frac"}
     unexpected_drops = dropped - _KNOWN_INERT_DROPS
     if unexpected_drops:
         raise ValueError(

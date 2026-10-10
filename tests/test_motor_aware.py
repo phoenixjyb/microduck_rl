@@ -3,7 +3,7 @@
 import torch
 
 from mjlab_microduck.tasks import mdp as microduck_mdp
-from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
+from mjlab_microduck.tasks.athletics_velocity_env_cfg import (
     make_microduck_velocity_env_cfg,
 )
 from mjlab_microduck.tasks.motor_aware import (

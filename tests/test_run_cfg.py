@@ -2,7 +2,7 @@
 
 import pytest
 
-from mjlab_microduck.tasks.microduck_velocity_env_cfg import (
+from mjlab_microduck.tasks.athletics_velocity_env_cfg import (
     make_microduck_velocity_env_cfg,
 )
 from mjlab_microduck.tasks.run import (
@@ -135,7 +135,7 @@ def test_angular_range_held_constant(run_cfg):
 
 def test_run_rl_cfg_has_its_own_experiment_name():
     # Baseline and sprung runs must not share a wandb grouping.
-    from mjlab_microduck.tasks.microduck_velocity_env_cfg import MicroduckRlCfg
+    from mjlab_microduck.tasks.athletics_velocity_env_cfg import MicroduckRlCfg
     from mjlab_microduck.tasks.run import MicroduckRunRlCfg
 
     assert MicroduckRunRlCfg.experiment_name != MicroduckRlCfg.experiment_name
@@ -161,7 +161,7 @@ def test_run_rl_cfg_does_not_share_nested_cfgs_with_velocity():
     # and the Phase 3 escape hatch (swapping the policy distribution via
     # actor.distribution_cfg["class_name"]) would silently mutate the Velocity
     # task too — destroying the experimental control this baseline provides.
-    from mjlab_microduck.tasks.microduck_velocity_env_cfg import MicroduckRlCfg
+    from mjlab_microduck.tasks.athletics_velocity_env_cfg import MicroduckRlCfg
     from mjlab_microduck.tasks.run import MicroduckRunRlCfg
 
     assert MicroduckRunRlCfg.actor is not MicroduckRlCfg.actor
@@ -178,7 +178,7 @@ def test_run_rl_cfg_does_not_share_nested_cfgs_with_velocity():
 def test_run_rl_cfg_hyperparameters_match_velocity():
     # Distinct objects, identical values — Phase 1 changes the task, not the
     # learner.
-    from mjlab_microduck.tasks.microduck_velocity_env_cfg import MicroduckRlCfg
+    from mjlab_microduck.tasks.athletics_velocity_env_cfg import MicroduckRlCfg
     from mjlab_microduck.tasks.run import MicroduckRunRlCfg
 
     for name in ("actor", "critic"):

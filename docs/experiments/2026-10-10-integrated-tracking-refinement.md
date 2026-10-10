@@ -488,3 +488,117 @@ claim. Do not alter this checkout or active job while its later phases still
 require source1689e874. Documentation-only follow-up commits may be pushed on
 Mac without advancing the native running checkout. Both full arms and their
 unchanged-plus-range held-out decisions remain pending.
+
+### Completed qpos repair comparison
+
+The launch snapshot is superseded. The retained matched service completed
+2026-10-11 00:56:16 Asia/Shanghai, Resultsuccess/ExecMainStatus0/MainPID0.
+Both arms finished1000 updates/24000 common steps/6,144,000 transitions,
+in591.924902s control/585.985689s limit. All1000 logged rows per arm werefinite
+withzero NaN terminations. CUDA-hidden native verification checked exact source,
+seed/world/update/parent bindings, durable final999 bytes, finite model/Adam,
+iteration999/common step24000 and17 optimizer states at Adam step90000.
+Retained training health peaked1710MiB/60C for each arm.
+
+Recomputed stricter and original decisions exactly match the retained aggregate;
+all24 standalone case records equal aggregate entries and every paired delta
+recomputes. Both overall decisions remain **foundation-not-ready**. All24 cases
+completed240 steps withzero terminals andzero rated-speed exceedance. Control
+passed9/12 motor cases and0/12 joint-range cases; limit passed12/12 motor and
+12/12 joint-range cases. The only limit-arm failures are tracking in all nine
+moving cases. Its three idle cases pass all combined numerical gates, which
+does not admit the twelve-case matrix or qualify physical motion.
+
+| Command vx/yaw | Control / limit speed MAE | Control / limit yaw MAE | Control / limit torque p99 utilization | Control / limit right-hip stop fraction |
+| --- | ---: | ---: | ---: | ---: |
+| 0 / 0 | .001060 / .001268 | .011682 / .009030 | .871514 / .233140 | .975000 / 0 |
+| .30 / 0 | .111252 / .116308 | .208235 / .334012 | .501551 / .491571 | .970660 / 0 |
+| .20 / -.20 | .060630 / .063556 | .207591 / .296008 | .486962 / .503170 | .973090 / 0 |
+| .20 / +.20 | .062183 / .066582 | .243385 / .321521 | .505547 / .493308 | .973090 / 0 |
+
+Means above are descriptive across three seeds/eight worlds, not replacements
+for per-world tracking gates. The treatment removes the measured stop-pushing
+behavior in this held-out matrix and reduces idle torque utilization73.25%,
+but moving yaw error worsens. Across all twelve cases, mean soft-limit exposure
+is.009818 control/.000747 limit, mechanical-power proxy1.126896/1.008303W,
+and thermal-load proxy.033940/.022179. These are sampled simulator proxies,
+not physical temperatures or power guarantees. During randomized training,
+last100-update falls were124/169, so do not generalize the upright held-out
+result into improved stability under every disturbance.
+
+Last100-update mean right-hip stop exposure was.886340 control/.003483 limit;
+raw qpos proximity cost.138297/.001863 and motor cost.075128/.066108.
+Original checkpoints/results remain native; only small JSON evidence was
+mirrored to Mac `artifacts/evaluations/qpos-limit-1689e874-20261011`.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Control final999 | `2be067c8e2fdcad4bab72b9fa8df5aaac088e0afd8f5ac473219e6dd89eef1f8` |
+| Limit final999 | `212a567984014f90054cbd7137e7560d8c76a00496a3ca15958407b9de746e6b` |
+| Control result | `a530b6af3df55246806f39636e7624090e17420f3205b9b153c0aefea2fd4c3b` |
+| Limit result | `2526605628932202107f5100899dfbd88f7afc540b3663d3c0f8e196b675b9b8` |
+| Held-out result | `c54468f4fc18c8cd1a72af4c44554f7e8927dab41ef710f3c41d74995c61772b` |
+
+### Range-retaining tracking continuation predeclaration
+
+Prepare `integrated-range-retaining-tracking-continuation-v1` in
+`integrated_safe_tracking_refinement.py`, with no GPU execution yet. Both arms
+warm-load the **limit final999** bytes above, actor/critic/normalizers/Adam
+retained, Python LR synchronized to Adam, fresh episodes and reset clocks0.
+This parent is allowed only as an exploratory range/motor-repaired baseline;
+its full foundation gate is still rejected. No policy promotion is implied.
+
+Both arms keep joint-limit weight-4/.15rad margin, motor weight-1, unchanged
+action/plant/commands/DR and frozen source curricula. Sole treatment difference:
+extra body-twist tracking cost weight-.125 initially, -.25 after6000 steps,
+-.5 after12000 steps (existing strict stage boundary); control0 throughout.
+Matched seed919/256 worlds/1000 updates/24 steps/update, save cadence250;
+evaluate final999 only. Small tracking stages test whether error pressure can
+recover moving command response without reintroducing the measured stop hack.
+Do not broaden speed/obstacles or alter the numerical thresholds.
+
+After GPU recovery, require fresh64-world5-update smokes for both arms at
+seed911, treatment stages compressed to updates1/2, official normalized ONNX
+CPU61-to14 finite inference;256-world10-update benchmarks at seed913 with
+treatment full-.5 and conservative measured projections inside2100s/arm.
+Same360s preflight wrapper/60s CPU and individual GPU children,8GiB RAM,
+CPU200%/Tasks64/Nice10/KillModecontrol-group/15s grace. Only after preflight
+passes use one4500s retained sequential service, control/track2100s each and
+evaluation240s, with exact clean pushed source and owned GPU lease.
+
+Evaluation/decision reuse the **stricter qpos repair recipe** unchanged:
+seeds839/853/857, four command cases,8 worlds/240 steps, startup60 for tracking,
+all original motor/tracking/terminal gates plus5mrad maximum range excursion
+for all14 joints and<=1% right-hip exposure within.05rad of configured bounds.
+Both arms capture/validate pre-reset raw and actual weighted motor/qpos/command
+costs. Stop after retaining that matrix; no automatically chained skill,
+raw perception, publication, video or physical motion.
+
+Independent read-only Luna review found no recipe/inheritance/gate blocker.
+Its additional live-observer boundary-test suggestion was incorporated for
+both control and tracking at steps0/6000/6001/12000/12001 before execution.
+
+### New native GPU driver blocker, diagnosed read-only
+
+At07:14 Asia/Shanghai, `nvidia-smi` fails with
+`Failed to initialize NVML: Driver/library version mismatch` / library595.99.
+Kernel journal gives exact client595.99.02 versus loaded module595.91.07.
+`/proc/driver/nvidia/version` and `/sys/module/nvidia/version` agree on595.91.07;
+NVML symlink points to libnvidia-ml.so.595.99.02. `modinfo` reports replacement
+module595.99.02, and DKMS reports it installed for running kernel6.8.0-138.
+
+APT history records `/usr/bin/unattended-upgrade` at06:14:56–06:15:35 upgrading
+the NVIDIA driver/libraries/DKMS from595.91.07 to595.99.02. Host last booted
+October9 19:35:05. Thus the automatic update changed disk components after
+the Duck job completed, while the old module remains loaded. This is separate
+from training/evaluation failure: those results finished over five hours earlier.
+
+No Duck training/evaluation process remains. DINO PID1592 is still running;
+both protected services are currentlyinactive, but the system units areenabled
+and could restart on reboot. Current GPU occupancy cannot be certified because
+NVML fails. Do not bypass shared-host checks, launch CUDA, unload modules,
+stop DINO, change packages or reboot under this diagnosis. A coordinated reboot
+requires explicit confirmation of its impact on unrelated workloads; after it,
+recheck module/library agreement, protected-service state and actual occupancy
+before native preflight. 100.98/NX remains out of scope. The next recipe is
+CPU-prepared only; no replacement GPU job was launched.

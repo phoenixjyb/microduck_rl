@@ -93,3 +93,70 @@ On Mac, with CUDA hidden and the retained venv on PATH:
 The runtime and framework source integrations are clean fast-forwards pushed
 to their forks' integration branches; no Rust build, framework installation,
 daemon deployment or physical verification was performed.
+
+## Native completion
+
+Exact merged source: `0b368ceff28d32f1f486761b730c102fe8f8e909`, clean
+detached worktree `/home/converge/work/microduck_rl-upstream-20261010`.
+The original native research checkout stayed clean at `3b32468f`; no checkpoint
+or dependency was overwritten.
+
+The first capped CPU service reached its180s limit. Read-only inspection before
+retry showed64 threads (the TasksMax ceiling), only12.270s accumulated CPU and
+no other GPU workload beyond the preserved DINO worker. Thread exhaustion was
+suspected, not established from a stack trace. The exact same source and test
+selection, with OMP_NUM_THREADS/MKL_NUM_THREADS/OPENBLAS_NUM_THREADS all1,
+passed196 tests with1 architecture skip in7.94s. Retain the initial timeout
+journal as an operational failure, not a simulator or test assertion failure.
+Subsequent smoke launch also used those three thread limits.
+
+The GPU service `microduck-upstream-0b368cef-smoke.service` completed successfully
+(Result=success, ExecMainStatus=0, MainPID=0). RemainAfterExit retains the unit
+as active/exited; it is **not an active training process**. Live retained
+properties confirm RuntimeMaxSec600, MemoryMax8589934592, CPUQuota200%,
+TasksMax64, Nice10 and KillMode=control-group.
+
+| Task | PPO updates | Worlds × control steps | Wall time including setup | Terminations |
+| --- | ---: | ---: | ---: | ---: |
+| Upstream walking | 5 | 64 ×120 | 5.506s | 193 |
+| Motor-aware Run | 5 | 64 ×120 | 4.245s | 195 |
+
+Together these are15,360 environment transitions. Both final model_4.pt files
+and saved optimizer states were finite and nonempty; rollout actor/action
+shapes were61/14 and rewards finite. The frequent terminations are expected
+from fresh random policies and **do not establish stable locomotion**. The
+motor-aware journal also reports torque utilization p99≈1.0675 and soft-limit
+exposure≈0.3392 on the displayed final metric, so these disposable checkpoints
+are not accepted motor-safe policies.
+
+Runtime remained Torch2.9.1, Warp1.12.0, MuJoCo3.10.0,
+MuJoCo-Warp3.8.1, mjlab1.3.0 and BAM1.0.1. No environment or driver sync.
+Initial host sample:961MiB,43C. Last in-process sample:1608MiB,50C,
+including644MiB attributed to the smoke process. Post-exit sample:961MiB,45C,
+DINO1592/946MiB only. These are samples, not continuous peak telemetry.
+All four protected user/system service scopes remained inactive at the sampled
+checks. No unrelated service was stopped or restarted.
+
+Full checkpoints, TensorBoard logs and JSON remain in the native worktree's
+`artifacts/training/upstream-0b368cef-smoke`. Only small result/JUnit evidence is
+mirrored on Mac in `artifacts/evaluations/upstream-0b368cef`; hashes match:
+
+| Artifact | SHA256 |
+| --- | --- |
+| result.json | `0d4051262531e7e64c66d41f532f1b28451f3f9ff334389f908901f74797675b` |
+| Walking model_4.pt | `70ab2361780c84617e1e12c4b475293fb2e1a55181bce78d5f169ccaf99facc0` |
+| Motor-aware model_4.pt | `32324c38ed20aa53507c62f9433517597e257570339675bbdad355393c9649e9` |
+| Native CPU JUnit | `21e18885840ef2b50f827adaabe605a3ab54bbe187024441d9ea132a955daae7` |
+
+Playback reset regressions passed3 tests (7 with the wheel-glide suite).
+Additional obstacle reward/hop revision checks passed21 tests; obstacle
+observation/entity/scene-adapter/hop-gate checks passed38 (overlapping suites,
+not additional unique totals). The final finite-tree integration test also
+checks actual TensorDict observations, not just plain dictionaries.
+
+Disposition: upstream source integration is ready for review and short learning
+experiments. No new learned skill is promoted. The next substantive training
+experiment should use the upstream yaw/dead-zone findings with paired straight
+and left/right-turn evaluation, retaining the baseline and motor/stability
+nonregression gates. It requires a separate declaration; no longer run was
+started from this smoke.

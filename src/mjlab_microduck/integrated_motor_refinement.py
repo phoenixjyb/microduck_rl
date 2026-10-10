@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import stat
 import subprocess
+import sys
 import time
 
 import torch
@@ -97,11 +98,12 @@ def equal_tree(left, right):
     return left == right
 
 
-def warm_load(runner, env, parent=PARENT):
-    base.require(base.sha256(parent) == PARENT_SHA, "exact new-plant parent bytes")
+def warm_load(runner, env, parent=PARENT, *, parent_sha=PARENT_SHA,
+              parent_iteration=1499, parent_steps=36000):
+    base.require(base.sha256(parent) == parent_sha, "exact new-plant parent bytes")
     payload = torch.load(parent, map_location="cpu", weights_only=False)
-    base.require(base.finite_tree(payload) and payload["iter"] == 1499 and
-                 payload["infos"]["env_state"]["common_step_counter"] == 36000, "finite parent state")
+    base.require(base.finite_tree(payload) and payload["iter"] == parent_iteration and
+                 payload["infos"]["env_state"]["common_step_counter"] == parent_steps, "finite parent state")
     previous = os.environ.get("MICRODUCK_WARM_START")
     os.environ["MICRODUCK_WARM_START"] = "1"
     try:
@@ -121,7 +123,7 @@ def warm_load(runner, env, parent=PARENT):
     # Fresh episodes, not resumed simulator state. Config is pinned before init.
     env.reset()
     base.require(env.common_step_counter == 0, "fresh warm-start episodes")
-    return dict(parent_sha256=PARENT_SHA, restored_models_normalizers_adam=True,
+    return dict(parent_sha256=parent_sha, restored_models_normalizers_adam=True,
                 iteration=0, common_step_counter=0, learning_rate=runner.alg.learning_rate)
 
 
@@ -164,7 +166,7 @@ def onnx_check(path):
     return dict(path=str(path), sha256=base.sha256(path), input=[1, 61], output=[1, 14], finite=True)
 
 
-def paired_differences(control, motor):
+def paired_differences(control, motor, *, label="motor_minus_control"):
     base.require(len(control) == len(motor) == len(base.SEEDS)*len(base.CASES), "complete paired matrix")
     differences = []
     for left, right in zip(control, motor, strict=True):
@@ -178,13 +180,16 @@ def paired_differences(control, motor):
             # A partial/fallen case is not made comparable by resampling it.
             delta[key+"_mean"] = (sum(right[key])-sum(left[key]))/8 if left["complete"] and right["complete"] else None
         differences.append(dict(seed=identity[0], speed=identity[1], yaw=identity[2],
-                                both_complete=left["complete"] and right["complete"], motor_minus_control=delta))
+                                both_complete=left["complete"] and right["complete"], **{label: delta}))
     return differences
 
 
-def main():
+def main(experiment=None):
+    # Share the bounded two-arm harness; the original recipe is the default.
+    recipe = sys.modules[__name__] if experiment is None else experiment
+    arms = getattr(recipe, "ARMS", ("control", "motor"))
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=(*MODES, "evaluate"))
+    parser.add_argument("mode", choices=(*recipe.MODES, "evaluate"))
     parser.add_argument("--source", required=True)
     parser.add_argument("--run-id", required=True)
     args = parser.parse_args()
@@ -205,28 +210,32 @@ def main():
             arm = args.mode.split("-")[1]
             receipt = json.loads((root / f"smoke-{arm}/result.json").read_text())
             base.require(receipt["source"] == args.source and receipt["updates"] == 5 and
-                         receipt["worlds"] == 64 and receipt["status"] == "training-complete-not-accepted"
+                         receipt["worlds"] == 64 and receipt["protocol"] == recipe.PROTOCOL
+                         and receipt["status"] == "training-complete-not-accepted"
                          and receipt["onnx"]["finite"] and
                          base.sha256(receipt["onnx"]["path"]) == receipt["onnx"]["sha256"], "same-arm ONNX smoke before benchmark")
-        if args.mode in ("control", "motor"):
-            for arm in ("control", "motor"):
+        if args.mode in arms:
+            for arm in arms:
                 for phase, worlds, updates in (("smoke", 64, 5), ("benchmark", 256, 10)):
                     receipt = json.loads((root / f"{phase}-{arm}/result.json").read_text())
                     base.require(receipt["source"] == args.source and receipt["worlds"] == worlds and
-                                 receipt["updates"] == updates and receipt["warm_start"]["parent_sha256"] == PARENT_SHA
+                                 receipt["protocol"] == recipe.PROTOCOL and receipt["updates"] == updates
+                                 and receipt["warm_start"]["parent_sha256"] == recipe.PARENT_SHA
                                  and receipt["status"] == "training-complete-not-accepted", "both same-source preflights")
                     if phase == "smoke":
                         base.require(receipt["onnx"]["finite"] and base.sha256(receipt["onnx"]["path"]) == receipt["onnx"]["sha256"], "durable ONNX smoke")
                     else:
-                        base.require(receipt["elapsed_s"]*100*1.5 < CAP_SECONDS-60, "measured continuation fits cap")
-            if args.mode == "motor":
+                        base.require(receipt["elapsed_s"]*100*1.5 < recipe.CAP_SECONDS-60, "measured continuation fits cap")
+            if args.mode == arms[1]:
                 control = json.loads((root / "control/result.json").read_text())
                 base.require(control["source"] == args.source and control["updates"] == 1000 and
+                             control["protocol"] == recipe.PROTOCOL and
+                             control["warm_start"]["parent_sha256"] == recipe.PARENT_SHA and
                              control["status"] == "training-complete-not-accepted" and
                              base.sha256(root / "control/model_999.pt") == control["checkpoint_sha256"], "control completes before motor arm")
         output.mkdir(parents=True, exist_ok=False)
-        base.write_new(output / "launch.json", dict(protocol=PROTOCOL, source=args.source, mode=args.mode,
-            host=host, parent=str(PARENT), parent_sha256=PARENT_SHA, runtime={n: metadata.version(n) for n in
+        base.write_new(output / "launch.json", dict(protocol=recipe.PROTOCOL, source=args.source, mode=args.mode,
+            host=host, parent=str(recipe.PARENT), parent_sha256=recipe.PARENT_SHA, runtime={n: metadata.version(n) for n in
                 ("torch", "warp-lang", "mujoco", "mujoco-warp", "mjlab", "better-actuator-models")},
             policy_acceptance=False, physical_motion_authorized=False))
         def health():
@@ -241,12 +250,13 @@ def main():
         try:
             if args.mode == "evaluate":
                 cases, decisions, hashes = {}, {}, {}
-                for arm in ("control", "motor"):
+                for arm in arms:
                     trained = json.loads((root / arm / "result.json").read_text())
                     checkpoint = root / arm / "model_999.pt"
                     base.require(trained["source"] == args.source and trained["updates"] == 1000 and
+                                 trained["protocol"] == recipe.PROTOCOL and
                                  trained["status"] == "training-complete-not-accepted" and
-                                 trained["warm_start"]["parent_sha256"] == PARENT_SHA and
+                                 trained["warm_start"]["parent_sha256"] == recipe.PARENT_SHA and
                                  base.sha256(checkpoint) == trained["checkpoint_sha256"], "complete matched arm")
                     rows = []
                     for seed in base.SEEDS:
@@ -257,21 +267,22 @@ def main():
                     cases[arm], decisions[arm] = rows, base.decision(rows)
                     hashes[arm] = base.sha256(checkpoint)
                 result = dict(cases=cases, decisions=decisions, checkpoint_sha256=hashes,
-                    paired_differences=paired_differences(cases["control"], cases["motor"]),
+                    paired_differences=paired_differences(cases[arms[0]], cases[arms[1]],
+                        label=arms[1]+"_minus_control"),
                     selection="both final999 only; unchanged held-out protocol", policy_acceptance=False,
                     simulator_qualified=False, physical_motion_authorized=False)
             else:
-                observer, restored = MotorObserver(args.mode), {}
+                observer, restored = recipe.MotorObserver(args.mode), {}
                 def initialize(runner, env):
-                    restored.update(warm_load(runner, env))
+                    restored.update(recipe.warm_load(runner, env))
                     base.write_new(output / "warm-start.json", restored)
-                result = base.training(output, args.mode, health, recipe=prepare_config(args.mode),
+                result = base.training(output, args.mode, health, recipe=recipe.prepare_config(args.mode),
                     initialize=initialize, before_action=observer.before,
                     after_step=observer.step, after_update=observer.update)
                 result["warm_start"] = restored
                 if args.mode.startswith("smoke"):
                     result["onnx"] = onnx_check(output / f"{args.mode}.onnx")
-            base.write_new(output / "result.json", dict(protocol=PROTOCOL, source=args.source, **result))
+            base.write_new(output / "result.json", dict(protocol=recipe.PROTOCOL, source=args.source, **result))
             health()
         except Exception as exc:
             base.write_new(output / "failure.json", dict(type=type(exc).__name__, error=str(exc), source=args.source))

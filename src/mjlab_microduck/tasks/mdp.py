@@ -4065,6 +4065,27 @@ def planar_stillness(
     return torch.exp(-(body_vel**2) / vel_std**2)
 
 
+def body_twist_tracking_cost(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Unclipped planar/yaw command-error cost, not an absolute motion tax.
+
+    Residuals are normalized by fixed references of 1 m/s and 1 rad/s.
+    Use a negative weight. Ignore vertical and roll/pitch gait motion. Fail
+    on nonfinite raw values rather than letting reward sanitization hide them.
+    """
+    asset: Entity = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    planar = command[:, :2] - asset.data.root_link_lin_vel_b[:, :2]
+    yaw = command[:, 2] - asset.data.root_link_ang_vel_b[:, 2]
+    cost = planar.square().sum(dim=1) + yaw.square()
+    if not bool(torch.isfinite(cost).all()):
+        raise FloatingPointError("nonfinite raw body twist tracking cost")
+    return cost
+
+
 def bounded_planar_velocity_cost(
     env: ManagerBasedRlEnv,
     asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,

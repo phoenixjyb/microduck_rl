@@ -101,9 +101,12 @@ def test_missing_and_nonfinite_matrix_rejected():
 
 
 def test_shared_gpu_guard_is_nonmutating_and_retains_dino(monkeypatch):
+    monkeypatch.delenv("MICRODUCK_RETAINED_DINO_PID", raising=False)
     calls = []
     def fake(*args):
         calls.append(args)
+        if args[0] == "readlink": return pilot.DINO_EXE
+        if args[0] == "stat": return str(pilot.os.getuid())
         if "--query-gpu=uuid,memory.used,memory.free,temperature.gpu" in args:
             return pilot.GPU + ", 1000, 15000, 44"
         if "--query-compute-apps=pid,process_name,used_memory" in args:
@@ -117,10 +120,52 @@ def test_shared_gpu_guard_is_nonmutating_and_retains_dino(monkeypatch):
 
 
 def test_same_executable_new_worker_is_not_silently_whitelisted(monkeypatch):
+    monkeypatch.delenv("MICRODUCK_RETAINED_DINO_PID", raising=False)
     def fake(*args):
+        if args[0] == "readlink": return pilot.DINO_EXE
+        if args[0] == "stat": return str(pilot.os.getuid())
         if "--query-gpu=uuid,memory.used,memory.free,temperature.gpu" in args:
             return pilot.GPU + ", 1000, 15000, 44"
         return "1593, /home/converge/Tonghao/VLM/grounding_dino_cpp_dev/build_worker/grounding_dino_cpp_worker, 946"
     monkeypatch.setattr(pilot, "read", fake)
     with pytest.raises(ValueError, match="competing GPU process"):
+        pilot.shared_host()
+
+
+@pytest.mark.parametrize("fault", [None, "executable", "owner", "name", "competitor", "duplicate", "missing", "service", "budget", "temperature", "gpu"])
+def test_explicit_reboot_worker_binding_remains_fail_closed(monkeypatch, fault):
+    monkeypatch.setenv("MICRODUCK_RETAINED_DINO_PID", "2021")
+    def fake(*args):
+        if args[0] == "readlink": return "/wrong" if fault == "executable" else pilot.DINO_EXE
+        if args[0] == "stat": return str(pilot.os.getuid()+1 if fault == "owner" else pilot.os.getuid())
+        if "--query-gpu=uuid,memory.used,memory.free,temperature.gpu" in args:
+            gpu = "foreign" if fault == "gpu" else pilot.GPU
+            return gpu + (", 7000, 9000, 44" if fault == "budget" else
+                          ", 1000, 15000, 75" if fault == "temperature" else ", 1000, 15000, 44")
+        if "--query-compute-apps=pid,process_name,used_memory" in args:
+            row = f"2021, {pilot.DINO_EXE}, 946"
+            if fault == "name": row = "2021, /foreign, 946"
+            if fault == "competitor": row += "\n9000, /foreign, 100"
+            if fault == "duplicate": row += "\n" + row
+            return "" if fault == "missing" else row
+        return "active" if fault == "service" else "inactive"
+    monkeypatch.setattr(pilot, "read", fake)
+    if fault is None:
+        assert pilot.shared_host()["retained_dino_pid"] == 2021
+    else:
+        with pytest.raises(ValueError): pilot.shared_host()
+
+
+@pytest.mark.parametrize("value", ["", "0", "-1", "02021", "2021.0", "2021\n", "auto"])
+def test_invalid_worker_binding_rejected_before_host_queries(monkeypatch, value):
+    monkeypatch.setenv("MICRODUCK_RETAINED_DINO_PID", value)
+    monkeypatch.setattr(pilot, "read", lambda *args: pytest.fail("must not query malformed PID"))
+    with pytest.raises(ValueError, match="canonical retained DINO PID"):
+        pilot.shared_host()
+
+
+def test_duck_cannot_be_its_own_retained_worker(monkeypatch):
+    monkeypatch.setenv("MICRODUCK_RETAINED_DINO_PID", str(pilot.os.getpid()))
+    monkeypatch.setattr(pilot, "read", lambda *args: pytest.fail("must not query self PID"))
+    with pytest.raises(ValueError, match="not the Duck process"):
         pilot.shared_host()

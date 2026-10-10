@@ -613,3 +613,34 @@ remained. No GPU smoke/benchmark/training/export of this new stage has run;
 CPU success does not clear the NVML mismatch or qualify a new learned policy.
 Driver/library recovery, workload coordination and fresh GPU preflights are
 the remaining launch gates. No reboot or service/driver mutation was performed.
+
+### Owner reboot and explicit shared-worker rebinding
+
+The preceding blocker snapshot is superseded. The owner rebooted100.100;
+live SSH reports boot2026-10-11 07:46:44 Asia/Shanghai. Loaded NVIDIA module,
+on-disk module and NVML now agree on595.99.02. No package/driver modification
+was performed by this task. The protected user vLLM service restarted and
+allocated9692MiB. Under the existing Duck reservation authorization, only the
+two named user mission services were stopped; both user/system scopes now
+reportinactive. DINO was preserved, not restarted or stopped.
+
+The retained DINO worker now has PID2021, confirmed by NVML's exact executable
+name, `/proc/2021/exe` and UID1000. Preflight must explicitly bind
+`MICRODUCK_RETAINED_DINO_PID=2021`. The default remains the original dated PID;
+there is no runtime process-name discovery or permissive competitor whitelist.
+Every health check verifies canonical PID, exact executable and same owner,
+exact NVML worker count, no GPU process other than that worker/own PID, GPU UUID,
+6GiB aggregate cap,8GiB minimum free,<75C, and all four protected scopesinactive.
+A worker restart fails closed and needs a new verified binding. PID is an
+operational binding only; recipe, parent bytes, policy/plant and gates are unchanged.
+
+The post-stop NVML check reports961MiB used/15232MiB free/45C, DINO946MiB only.
+Retained limit parent and held-out aggregate hashes match the completed results
+above. CPU validation and independent guard review precede clean pushed source,
+native checks, fresh GPU smokes/benchmarks and any bounded matched continuation.
+This recovery is not learned-policy acceptance or physical qualification.
+
+Independent read-only Luna review found no fail-open path. Its wrong-NVML-name
+and self-PID coverage suggestions were incorporated. The focused Mac suite
+passed123 tests in5.50s; whitespace checks passed. Native CPU and GPU preflight
+evidence remains pending for this exact updated source.

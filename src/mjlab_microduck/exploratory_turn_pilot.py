@@ -24,6 +24,7 @@ from mjlab_microduck.tasks.run import XL330_M288_RATED_NO_LOAD_SPEED_RAD_S as RA
 PROTOCOL = "exploratory-gentle-turn-v1"
 GPU = "GPU-f21e0304-3b55-b6eb-4993-946e7ee1f6dd"
 DINO_PID = 1592  # observed for this dated experiment, not a reusable host default
+DINO_EXE = "/home/converge/Tonghao/VLM/grounding_dino_cpp_dev/build_worker/grounding_dino_cpp_worker"
 MODES = {"smoke": (701, 10, 360), "pilot": (709, 128, 900)}
 CASES = ((.30, 0.), (.20, -.20), (.20, .20))
 SERVICES = ("recomo-ai-mission-vllm.service", "recomo-ai-mission-subject-model-worker.service")
@@ -36,6 +37,15 @@ def read(*args):
 
 def shared_host():
     """Observe shared occupancy; never stop the retained DINO worker."""
+    # Reboots change PIDs. An operator may pin a newly verified worker, but
+    # never discover/whitelist arbitrary processes by name at runtime.
+    pinned = os.environ.get("MICRODUCK_RETAINED_DINO_PID", str(DINO_PID))
+    require(re.fullmatch(r"[1-9][0-9]*", pinned) is not None, "canonical retained DINO PID")
+    dino_pid = int(pinned)
+    require(dino_pid != os.getpid(), "DINO is not the Duck process")
+    require(read("readlink", f"/proc/{dino_pid}/exe") == DINO_EXE and
+            read("stat", "-c", "%u", f"/proc/{dino_pid}") == str(os.getuid()),
+            "retained DINO executable/owner identity")
     row = read("nvidia-smi", "--query-gpu=uuid,memory.used,memory.free,temperature.gpu",
                "--format=csv,noheader,nounits").split(",")
     require(len(row) == 4 and row[0].strip() == GPU, "exact native GPU")
@@ -45,11 +55,10 @@ def shared_host():
     for line in read("nvidia-smi", "--query-compute-apps=pid,process_name,used_memory",
                      "--format=csv,noheader,nounits").splitlines():
         pid, name, memory = (x.strip() for x in line.split(",", 2))
-        require(int(pid) == os.getpid() or (int(pid) == DINO_PID and name ==
-                "/home/converge/Tonghao/VLM/grounding_dino_cpp_dev/build_worker/grounding_dino_cpp_worker"),
+        require(int(pid) == os.getpid() or (int(pid) == dino_pid and name == DINO_EXE),
                 "unexpected competing GPU process")
         processes.append(dict(pid=int(pid), name=name, memory_mib=memory))
-    require(sum(p["pid"] == DINO_PID for p in processes) == 1, "retained DINO worker identity/count")
+    require(sum(p["pid"] == dino_pid for p in processes) == 1, "retained DINO worker identity/count")
     states = {}
     for namespace in ((), ("--user",)):
         for service in SERVICES:
@@ -57,7 +66,7 @@ def shared_host():
             states[key] = read("systemctl", *namespace, "show", service, "-p", "ActiveState", "--value")
             require(states[key] == "inactive", "protected service active: " + key)
     return dict(memory_used_mib=used, memory_free_mib=free, temperature_c=temperature,
-                processes=processes, protected_services=states)
+                processes=processes, protected_services=states, retained_dino_pid=dino_pid)
 
 
 def prepare_config(mode):

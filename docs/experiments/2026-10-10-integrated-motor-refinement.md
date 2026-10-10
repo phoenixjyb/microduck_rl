@@ -83,3 +83,62 @@ Report both decisions and same-case differences; single training seed is a
 diagnostic, not statistically robust causal proof. A stationary policy cannot
 pass the moving-speed goal. Stop after retaining the comparison; no new skill
 job follows automatically. Policy/simulator/physical acceptance remainsfalse.
+
+## Tested source, preflights and retained launch
+
+Executed source `4da928983af61f9b509a579a553cc7c1904abe28` was committed and
+pushed before GPU execution. Native integration checkout is clean/detached at
+that exact source; historical research checkout remains clean on
+`feat/athletics-obstacle-curriculum` at`3b32468fd4d1bfc417dd4aa048834c2bddd98ef7`.
+Independent read-only review identified the unpersisted PPO Python LR hazard;
+the loader now synchronizes it with the exactly restored Adam state. Review
+also prompted explicit smoke-before-benchmark/control-before-motor guards and
+retained same-case deltas. No worker edited the implementation.
+
+Focused Mac tests passed63 checks before the final paired-report addition;
+the final refinement-only rerun passed12 tests. Native exact-source checks
+passed64 tests in5.44s, with one existing actuator/site selector warning.
+Syntax, whitespace and relative experiment-link checks passed. No dependencies
+were installed or changed. HTTPS push failed authentication; the already
+authenticated GitHub SSH route successfully pushed the exact integration
+branch, without changing credentials or configured remotes.
+
+Retained preflight unit `microduck-motor-4da92898-preflight.service` finished
+Resultsuccess/ExecMainStatus0/MainPID0 (active/exited, not a running job).
+Both64-world smokes completed5 updates and exact-parent restoration. Both
+official normalized ONNX exports passed CPU61→14 finite inference. A warning
+on the *initial pre-learning* save concerned the logger not yet having
+`logger_type`; final trained exports existed and passed the mandatory check.
+It did not silently waive an export gate. The compressed motor smoke observed
+every declared weight and negative weighted reward when active, including
+approximately-.17317 at weight-1. Both parent Adam rates were2.25e-5 and
+both restored learning clocks werezero.
+
+256-world control/motor benchmarks completed10 updates in7.374844/7.356516s.
+Conservative projections are1106.23/1103.48s, below2040s. Models/Adam and
+losses were finite, with zero NaN terminations. These are admission smokes,
+not motor-envelope or learned-skill acceptance. All four preflight result
+receipts were copied to Mac; hashes match native bytes:
+
+| Receipt | SHA256 |
+| --- | --- |
+| Smoke control | `f764eca1e07c3def886e5289db53ed39a1eb5fc0a8c86dc33b5bcbd1c40ec884` |
+| Smoke motor | `bdc8a004d9758318daa218289b003f9558f19171813dc07e66068687d659c935` |
+| Benchmark control | `2bc7ffd82d86566eb6e4b5fd8233b9591081d2592f6bd26e7296a816f30025e9` |
+| Benchmark motor | `cbfd0603e4cdfd2a1fc566171163e901d0c61385d0f86db455006e614f5c5f65` |
+
+Matched service `microduck-motor-4da92898-matched-eval.service` started
+2026-10-10 12:45:49 Asia/Shanghai. Live ExecStart verified sequential
+control→motor→evaluate with `set -e`, independent GNU timeouts2100/2100/180s
+and15s kill grace. Live service properties confirm overall4500s, RAM8GiB,
+CPU200%, TasksMax64, Nice10 and KillModecontrol-group. No subsequent job
+follows evaluation. Data stay under native
+`artifacts/training/motor-refinement-4da92898-20261010`.
+
+At46 control updates/1104 steps, losses remainedfinite, no NaN termination,
+zero falls in the latest6144 transitions, torque utilization p99≈1.06754,
+soft-limit exposure≈.0850. Latest retained health showed GPU1710MiB/54C,
+the current Duck process746MiB and unchanged DINO1592/946MiB. All four
+protected service scopes remainedinactive. Training and both held-out decisions
+are pending; control is not penalized for motor load by design. Do not infer
+motor-aware improvement before its own arm and the fixed evaluations finish.

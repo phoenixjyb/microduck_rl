@@ -148,6 +148,19 @@ mirrored on Mac in `artifacts/evaluations/upstream-0b368cef`; hashes match:
 | Motor-aware model_4.pt | `32324c38ed20aa53507c62f9433517597e257570339675bbdad355393c9649e9` |
 | Native CPU JUnit | `21e18885840ef2b50f827adaabe605a3ab54bbe187024441d9ea132a955daae7` |
 
+Both saved smoke checkpoints also passed the official CPU-only ONNX export
+path (`mjlab_microduck.export.run_export`) and ONNX Runtime inference:
+input shape `[1, 61]`, output shape `[1, 14]`, and finite output. The retained
+`microduck-upstream-0b368cef-export.service` journal records both
+`ONNX_SMOKE_OK` results; the service completed with exit status0 in7.001s.
+CUDA was hidden and no GPU workload was started for this check. The exports
+remain beside their native checkpoints; no policy was deployed.
+
+| Export | SHA256 |
+| --- | --- |
+| Walking task-0/policy.onnx | `66cf17ef8b2b0a517c5c726aa25eeca1878279e8c9d793fe9841794861bbd5e0` |
+| Motor-aware task-1/policy.onnx | `eaa9efb1cb61cd48765b2aeecdd863ab28471fd2a2cac48e930d1bf1062ef275` |
+
 Playback reset regressions passed3 tests (7 with the wheel-glide suite).
 Additional obstacle reward/hop revision checks passed21 tests; obstacle
 observation/entity/scene-adapter/hop-gate checks passed38 (overlapping suites,

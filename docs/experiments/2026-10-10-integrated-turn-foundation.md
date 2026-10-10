@@ -111,3 +111,63 @@ only the external cap from1800s to2700s (admission ceiling2640s); retain all
 1500 updates, seeds, rewards, curricula and held-out gates. Commit/push the
 revision and rerun the same-source smoke/benchmark checks. Retain the initial
 timing evidence, rather than overwriting it.
+
+## Retained launch, training/evaluation still pending
+
+Executed source: `791f27c4cbd19b93ca04778890664cda55afc772`, clean detached
+native integration worktree. Native focused checks again passed52 tests in6.09s.
+The revised-source smoke and benchmark passed; benchmark wall time9.698s gives
+a conservative2182s projection, within the revised2640s admission ceiling.
+Both official runner-generated ONNX exports passed CPU-only ONNX Runtime
+shape61→14 and finite-inference checks. No environment was synced or changed.
+
+Retained run: `artifacts/training/turn-foundation-791f27c4-20261010` in
+`/home/converge/work/microduck_rl-upstream-20261010`. The user service
+`microduck-turn-791f27c4-foundation-eval.service` started at2026-10-10
+11:27:37 Asia/Shanghai. Live properties confirm RAM8GiB, CPU200%, TasksMax64,
+Nice10, KillMode=control-group and an overall3000s cap. Its explicit GNU
+timeout children independently enforce2700s foundation and180s evaluation
+(15s kill grace). Evaluation runs sequentially only after successful complete
+training; no further training or publication follows. RemainAfterExit retains
+the terminal service evidence; active/exited later is not a running learner.
+
+Launch sample:57 updates, finite losses, no NaN terminations; GPU1710MiB/57C,
+Duck746MiB alongside unchanged DINO1592/946MiB. At240 updates/5760 control
+steps (1,474,560 transitions), losses remained finite, no NaN terminations,
+106 falls in the last6144 transitions, torque utilization p99≈1.0675 and
+soft-limit exposure≈0.2834. These fresh stochastic rollouts do not meet the
+held-out motor/stability gates. Do not infer learned competence from an
+increasing aggregate reward. All four protected service scopes were inactive
+at the sampled checks. Existing baseline/checkpoints and unrelated workloads
+were untouched; no physical motion is authorized.
+
+Only small preflight/launch receipts are mirrored on Mac under
+`artifacts/evaluations/turn-foundation-791f27c4-20261010`; native/Mac hashes match:
+
+| Receipt | SHA256 |
+| --- | --- |
+| Smoke result | `3f884f995838b98d1ca19e2dce36f067259a954969b691c7be6ed568c38e8b37` |
+| Benchmark result | `e60a38d70b75f4ebe2251cd5aa8c865c771a0945d39fc27cdb03c1937227345d` |
+| Foundation launch | `76b593751e9cffcb76cde2aa41429d0a98ffe18679539edf6c2702e9dc3f8830` |
+
+Operational note: an initial launcher used `--wait` on a retained CPU unit;
+CPU tests finished but the wait did not advance to its next phase. Read-only
+service inspection established MainPID0/active-exited and no GPU job. Only
+the owner's local SSH wait process was terminated; the finished unit stayed
+retained. Subsequent phases were launched individually with successful
+terminal-state checks. No unrelated process or service was stopped.
+
+Handoff: inspect this exact retained service, `foundation/result.json` and
+`evaluate/result.json` before declaring completion or advancing. The only
+readiness decision is final1499 under the predeclared matrix; training and
+numerical acceptance are pending at this launch record.
+
+Durable checkpoint250 was independently loaded on CPU while training continued:
+SHA256 `f16e4396389029f2b6b7ca0a53b49989e7ff74a32df486abddb1742a7537a037`.
+Full saved model/Adam payload was finite; all eight actor and eight critic MLP
+tensors differed from the fresh initial checkpoint. All17 Adam entries had
+advanced5020 steps (251 updates×5 epochs×4 minibatches), and saved common step
+was6024. This establishes actual learning and durable progress, not a usable
+policy. At the next inspected sample,413 updates were complete, still with
+finite losses and zero NaN terminations. Final training/evaluation remained
+pending; no checkpoint selection or follow-on task was changed.

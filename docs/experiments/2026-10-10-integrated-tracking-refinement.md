@@ -602,3 +602,14 @@ requires explicit confirmation of its impact on unrelated workloads; after it,
 recheck module/library agreement, protected-service state and actual occupancy
 before native preflight. 100.98/NX remains out of scope. The next recipe is
 CPU-prepared only; no replacement GPU job was launched.
+
+Range-retaining tracking source `5715a15636728e7b0a179df556a3ffb2cda4df7e`
+passed102 focused Mac tests in6.68s, syntax/link/hash/whitespace checks, and was
+pushed before the clean, inactive native checkout fast-forwarded. The bounded
+CUDA-hidden native service `microduck-safe-track-5715a156-cpu.service`
+completed07:19:43 Asia/Shanghai, Resultsuccess/ExecMainStatus0/MainPID0,
+with102 tests passing in6.02s. Only the existing actuator/site selector warnings
+remained. No GPU smoke/benchmark/training/export of this new stage has run;
+CPU success does not clear the NVML mismatch or qualify a new learned policy.
+Driver/library recovery, workload coordination and fresh GPU preflights are
+the remaining launch gates. No reboot or service/driver mutation was performed.

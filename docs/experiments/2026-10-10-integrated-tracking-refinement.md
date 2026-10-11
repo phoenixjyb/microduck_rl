@@ -3722,3 +3722,15 @@ params/noise/scale/delay flags were checked against the factory. Config parity,
 real CPU DelayBuffer immutability, complete census and malformed drift checks
 pass. Native CPU qualification and a future GPU smoke remain separate; no
 fresh-arm learner, checkpoint, performance or physical result exists yet.
+
+Native CPU qualification subsequently passed at source
+`c1771ed67c92329e713097d9d71b0522876d42b5`:1182 passed/3 historical-artifact
+skips/45 existing warnings in32.76s, CUDA hidden. The original c81 parent bytes,
+both prepared run configs and preserved inherited observer mode were checked;
+the separate qualification asserted CUDA uninitialized. At06:56 Beijing,
+no Duck GPU process/service is running, DINO2021 remains alone at969MiB/48C,
+and all four protected scopes remain inactive. No new job is started for the
+remaining window. This qualifies preparation only: the fresh-buffer-bypass
+GPU smoke, measured paired benchmarks and full held-out evaluation remain
+future execution gates under fresh authority. All previous checkpoints and
+hashed rejected matrices are retained unchanged.

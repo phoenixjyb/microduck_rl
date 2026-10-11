@@ -35,7 +35,7 @@ def make_case(speed=0.0, yaw=0.0):
             "settled_steps": 180,
             "mean_body_vx_per_world": means_vx,
             "mean_body_yaw_per_world": means_yaw,
-            "mean_abs_body_yaw_per_world": [abs(value) + .01 for value in means_yaw],
+            "mean_abs_body_yaw_per_world": yaw_mae[:] if yaw == 0 else [abs(value) + .01 for value in means_yaw],
             "yaw_correct_sign_fraction_per_world": None if yaw == 0 else [.75] * 8,
             "abs_force_p99_nm_by_joint": [.1, .2],
             "mean_signed_force_nm_by_joint": [0., 0.],
@@ -172,6 +172,15 @@ def test_tolerance_is_tiny_descriptive_roundoff_only():
     assert result["summary_validation_tolerance_is_acceptance_threshold"] is False
     row["yaw_mae"][0] = .1 - 2e-6
     with pytest.raises(ValueError):
+        summarize_case(row)
+
+
+@pytest.mark.parametrize("yaw", [0., -.2, .2])
+def test_mae_triangle_upper_bound_and_zero_command_identity(yaw):
+    row = make_case(yaw=yaw)
+    summarize_case(row)
+    row["yaw_mae"][0] = abs(yaw) + row["response_diagnostics"]["mean_abs_body_yaw_per_world"][0] + .01
+    with pytest.raises(ValueError, match="yaw_mae exceeds"):
         summarize_case(row)
 
 

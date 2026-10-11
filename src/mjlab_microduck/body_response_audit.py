@@ -76,8 +76,8 @@ def summarize_case(row: Any) -> dict[str, Any]:
     """Validate and summarize one complete, retained 8-world evaluation case.
 
     Jensen gaps here mean only ``mean absolute residual - absolute mean
-    residual``. They do not identify temporal variation, oscillation, or its
-    cause.
+    residual``. They do not reconstruct temporal ordering, oscillation
+    frequency, or its cause.
     """
     _require(isinstance(row, dict), "case row must be an object")
     _require(row.get("complete") is True, "case must be a complete first episode")
@@ -160,6 +160,8 @@ def summarize_case(row: Any) -> dict[str, Any]:
                  f"world {index} mean absolute yaw is below absolute mean yaw")
         _require(mean_abs_yaw[index] <= abs(yaw) + yaw_mae[index] + SUMMARY_TOLERANCE,
                  f"world {index} mean absolute yaw exceeds command plus yaw_mae")
+        _require(yaw_mae[index] <= abs(yaw) + mean_abs_yaw[index] + SUMMARY_TOLERANCE,
+                 f"world {index} yaw_mae exceeds command plus mean absolute yaw")
 
         speed_bias = mean_vx[index] - speed
         speed_lower_bound = abs(speed_bias)
@@ -197,7 +199,7 @@ def summarize_case(row: Any) -> dict[str, Any]:
         "worlds": worlds,
         "interpretation_limit": (
             "Jensen gaps are absolute residual beyond constant mean bias; they do not identify "
-            "temporal variation, oscillation, or its cause."
+            "temporal ordering, oscillation frequency, or its cause."
         ),
     }
 

@@ -1664,3 +1664,10 @@ KL-budget held-out case files audited successfully. Focused suite now391
 passed (49 new auditor tests), with the same three existing selector warnings.
 Training source remains frozen at `ea24a14a`; these CPU-only source/doc changes
 are not deployed into the active worktree.
+Additional owner review added the complementary triangle bound
+`MAE<=abs(command)+mean(abs(rate))`; with the existing reverse bound, zero-yaw
+cases must reproduce `MAE=mean(abs(rate))` within descriptive roundoff. Three
+new zero/negative/positive-command regression cases passed; suite394 passed,
+and all24 actual retained cases passed the stronger audit. Wording clarifies
+that summaries cannot reconstruct temporal ordering or oscillation frequency,
+rather than denying that nonzero residual variation exists.

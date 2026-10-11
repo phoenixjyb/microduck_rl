@@ -148,3 +148,24 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
     assert trace["actor_command"] == trace["command"]
     assert trace["checkpoint_sha256"] == default["checkpoint_sha256"]
     assert trace["policy_acceptance"] is trace["physical_motion_authorized"] is False
+    from mjlab_microduck.body_yaw_trace import summarize_trace
+    audit = summarize_trace(default, trace)
+    assert audit["worlds"][0]["body_yaw_mae"] == pytest.approx(default["yaw_mae"][0])
+
+    # A terminal episode retains its short raw trace but cannot be summarized
+    # as a complete held-out case or have startup/terminal samples hidden.
+    step = Wrapped.step
+
+    def terminating_step(self, actions):
+        obs, rewards, dones, extras = step(self, actions)
+        if self.env.count == 61:
+            dones[0] = True
+        return obs, rewards, dones, extras
+
+    monkeypatch.setattr(Wrapped, "step", terminating_step)
+    short = base.evaluate_case(checkpoint, 839, .2, -.2, lambda: None, diagnostics=True, yaw_trace=True)
+    assert short["steps"] == short["body_yaw_trace"]["steps"] == 61
+    assert short["complete"] is False and short["terminal_worlds"] == [0]
+    assert len(short["body_yaw_trace"]["angular_b"]) == 61
+    with pytest.raises(ValueError, match="case must be complete"):
+        summarize_trace(short, short["body_yaw_trace"])

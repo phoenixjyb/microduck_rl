@@ -1851,3 +1851,7 @@ observed divergence, not proof of its unique cause. Preserve the completed
 experiment and every-world gates, do not change drivers/runtime/determinism
 mid-run, and regard single-pair reward deltas as preliminary descriptive
 evidence requiring independent training-seed confirmation before promotion.
+The capture integration regression additionally feeds a complete traced mock
+case through the CPU auditor and proves that an episode ending at step61
+retains61 raw samples but is rejected as incomplete, rather than hiding a
+terminal or reconstructing a full trace. The focused suite remains491 passed.

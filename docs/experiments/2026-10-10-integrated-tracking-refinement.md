@@ -2436,3 +2436,34 @@ replay; do not replace the original24-case matrix with replay results.
 | Budget receipt | `a18e8b88c74837b468e71f4f3130d266ce1c68fefadbff375e005d5ca622e84e` |
 | Evaluation launch | `3e870b50891b5881f2afcccd14e8b3b769a5af4e7303aeba3da37894f0ee0cc9` |
 | Full24-case aggregate | `5a92030e62a4e3c42a2dba29901b699edb68122df70b0e0939a2e634dced784f` |
+
+### First gait audit stopped: read-only Warp clock conversion correction
+
+Native fast-forwarded only after duration completion/idle verification to
+clean pushed751ba2c4f8d1e0e9b968c036f4b9ace8c47a2734; all721 CUDA-hidden
+focused tests passed in14.51s with the three existing selector warnings.
+The bounded `microduck-gait-yaw-751ba2c4-audit.service` stopped02:48:53
+Beijing time with exit1 and retained `failure.json`: ValueError,
+`finite pre-action gait channel layouts`. No completed diagnostic case or
+new training result. Original duration input bytes/decisions remain intact.
+
+Before editing, ran one bounded60-second, eight-world, pre-action-only
+read-only shape probe under the same lease/allocator/host protections.
+`microduck-gait-yaw-751ba2c4-shape-diagnosis.service` finished02:50:19,
+inactive/Resultsuccess/exit0. All15 other channels are finite tensors in the
+declared layouts. The physics clock alone is mjlab `TorchArray`, shape[8],
+not a torch.Tensor subclass. Installed `mjlab.sim.sim_data.TorchArray`
+implements read indexing by returning its backing tensor; the synthetic
+test fixture had hidden this distinction. No sensor update/reset, policy
+action, physics step, reward or input mutation was used to diagnose it.
+Post-probe GPU is DINO2021 only.
+
+Correct capture to read `robot.data.data.time[:]`, then use the same strict
+layout/finite/clock checks and detached CPU clone. No time synthesis or
+threshold change. A real CPU Warp TorchArray regression verifies successful
+capture, clock immutability and retained-sample nonaliasing. Keep the failed
+launch/health/failure receipts under
+`artifacts/evaluations/gait-yaw-751ba2c4-20261012`. Retry the same predeclared
+eight cases only after tested/pushed clean correction and native CPU tests,
+with a new unique run directory/unit and the same literal original aggregate
+hash. Never erase the failed attempt or interpret it as a policy failure.

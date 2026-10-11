@@ -101,3 +101,20 @@ def test_capture_never_steps_sensor_or_updates_air_timers():
     sample = capture.capture(env, robot, obs)
     assert sample["current_contact_time"].eq(.02).all()
     assert all(torch.equal(value, before[key]) for key, value in vars(state).items())
+
+
+def test_real_warp_clock_proxy_is_read_as_tensor_without_mutation_or_aliasing():
+    import warp as wp
+    from mjlab.sim.sim_data import TorchArray
+    env, robot, obs = fixture()
+    clock = TorchArray(wp.array([float(i) * .02 for i in range(8)],
+                                dtype=wp.float32, device="cpu"))
+    assert not isinstance(clock, torch.Tensor)
+    robot.data.data.time = clock
+    before = clock[:].clone()
+    sample = capture.capture(env, robot, obs)
+    assert isinstance(sample["physics_time"], torch.Tensor)
+    assert torch.equal(sample["physics_time"], before)
+    assert torch.equal(clock[:], before)
+    clock[:].fill_(99.)
+    assert torch.equal(sample["physics_time"], before)

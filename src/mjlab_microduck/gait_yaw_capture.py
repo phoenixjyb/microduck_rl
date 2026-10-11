@@ -40,7 +40,9 @@ def capture(env, robot, actor_obs):
     values = {
         **base.body_yaw_trace_sample(robot, command, actor_obs[:, 48:51]),
         "episode_length": env.episode_length_buf,
-        "physics_time": robot.data.data.time,
+        # mjlab exposes Warp data through TorchArray, not a Tensor subclass.
+        # Read indexing yields its tensor view without writing or stepping.
+        "physics_time": robot.data.data.time[:],
         "contact_found": contact.found,
         "contact_force_w": contact.force,
         "current_air_time": contact.current_air_time,

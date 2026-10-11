@@ -1268,3 +1268,112 @@ variance.5 and durable model0. Health1717MiB/61C, retained DINO2021 preserved,
 all four protected service scopes inactive. Treatment stage transitions,
 final999 and both held-out decisions remain pending. Do not infer tracking
 improvement or policy acceptance from successful training completion alone.
+
+### Completed independent yaw-precision round: rejected
+
+The retained4447fe64 sequential job completed both1000-update arms and the
+unchanged24-case held-out matrix successfully. Verified every predeclared
+checkpoint's finite model/Adam state, exact iteration/common steps, final
+hashes, all2000 finite update records, source/runtime/parent identity and
+deterministic decisions plus paired differences. Precision consumed exactly
+6001/6000/11999 steps at variances.5/.25/.1; control consumed24000 at.5.
+No NaN terminations. Both arms completed all12 first-episode cases (240 steps
+each), with12/12 motor and12/12 range passes, but all9 moving tracking cases
+failed;3 idle cases passed. Neither final is accepted or promoted.
+
+| Command vx/yaw | Speed MAE control / precision | Yaw MAE control / precision | Speed-passing worlds control / precision | Yaw-passing worlds control / precision |
+| --- | ---: | ---: | ---: | ---: |
+| 0 / 0 | .000661 / .000992 | .005764 / .008282 | 24 / 24 | 24 / 24 |
+| .30 / 0 | .103182 / .088993 | .144889 / .175695 | 8 / 17 | 1 / 0 |
+| .20 / -.20 | .047972 / .045664 | .170735 / .203119 | 24 / 24 | 0 / 0 |
+| .20 / +.20 | .047543 / .039449 | .154009 / .166543 | 24 / 24 | 1 / 0 |
+
+Means describe24 worlds across three seeds; admission still requires every
+world to pass, not a group mean. Precision improves some speed measures but
+worsens yaw MAE in every command group. Straight mean absolute per-world yaw
+bias is.052144/.076836rad/s, negative-arc.097264/.128602, positive-arc
+.051473/.049878. Mean bias is not instantaneous MAE: the remaining error also
+contains within-window variation, without establishing oscillation frequency
+or physical impossibility. Last100 training falls64/74; training mean yaw
+squared error.260109/.273815 and roll/pitch squared rate.480017/.629578.
+Do not repeat width tightening or attribute the difference to a proven cause.
+
+Control/precision elapsed605.665524/609.786538s; health peaks1717MiB/61C
+during training and2859MiB/59C during evaluation. Host returned to DINO-only
+969MiB/47C; protected services remain inactive. Only small retained JSONs were
+copied to Mac; models remain in the native run directory.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Control final999 | `3e0b01bce31f8b73a535fa44bbfe92ce522908c03916269ad6ae203432b6249a` |
+| Precision final999 | `34cce22e654be94145f97c5a12dfc6e6a374be78c375b3d1d5c68e651d7952dd` |
+| Control receipt | `2357ab458a83d0ef86b625c426c6fcb5e5b6c467bd228a4e1d136cc7ba9400bc` |
+| Precision receipt | `fafc207916b6376e2354050f31d6742719495a27fc43c2f028e36c93593f6e6b` |
+| Evaluation launch | `1ac127fb4b8809343bce432ef45d4ae866ed3a7124563a093a0260a326d3c96c` |
+| Evaluation aggregate | `b273231f8a57734a5ea020e379bf0d8c6e977b720ce272cdefe2fdb89e8f98f2` |
+
+Read-only optimizer diagnosis: each retained TensorBoard arm has1000 ordered
+end-of-update LR values. Control/precision end at1e-5, minimum1e-5,
+maximum7.59375e-5, means1.618125e-5/1.631812e-5, with723/726 floor-valued
+updates. Mean action standard deviations.171065/.169839. These are update
+endpoints, not every minibatch's LR. The inherited floor is not permanent:
+installed rsl_rl_lib5.0.1 adapts at each minibatch, reducing LR when KL>.02
+and increasing it when0<KL<.005 under desired_kl.01. No retained KL trace
+exists, so neither inherited LR nor batch size is established as the cause.
+Independent source review confirms the adaptive controller and warm-restore
+path. Avoid a one-time LR reset that may immediately be undone by adaptation.
+
+### Predeclared matched adaptive-KL-budget continuation
+
+Implement `integrated-adaptive-kl-budget-v1` in
+`mjlab_microduck.integrated_kl_budget_refinement`. Test one factor:
+desired_kl.01 control versus.02 treatment (`klbudget`); retain adaptive
+schedule, its1e-5 floor/1e-2 ceiling, five epochs/four minibatches (20 optimizer
+steps/update), restored Adam moments and identical inherited starting LR.
+This asks whether a less restrictive adaptive controller improves measured
+tracking; it is not a proven diagnosis or permission to force larger updates.
+
+Both arms warm-start the exact rejected yaw-control final999 SHA above,
+restoring actor/critic/normalizers/Adam and restarting counters/episodes at0.
+Keep yaw variance.5, roll/pitch variance.5 and angular weight2 fixed, together
+with motor-1, right-hip qpos-4/margin.15, twist-.5, forward0, action-rate-.8,
+commands, plant/DR, unfiltered/unclipped actions and61D/14D contract. Full
+arms use seed1009,256 environments,1000 updates, cadence250/final999 only.
+All held-out seeds, commands, timing, tracking/motor/range gates and first-
+episode rules above remain unchanged. Do not promote an unqualified final.
+
+Instrument the actor instance's existing bound KL function in both arms,
+calling it once and returning its exact original tensor. Retain detached raw
+min/mean/max and pre-adaptation LR without RNG, optimizer, reward or global
+PPO-code writes; transfer summaries only after the update. Require reviewed
+rsl_rl_lib5.0.1, exactly20 calls/update, fixed live target/schedule/epoch/batch
+configuration, finite raw telemetry and matching algorithm/Adam group LR.
+Retain per-minibatch mean KL and pre-LR arrays, threshold counts, raw extrema
+and post-update LR; consume each update's samples and reject stale/missing
+coverage. This is observation, not a new KL clamp or early-stop mechanism.
+Starting LR is explicitly checked against the known parent's1e-5. Pre-LR
+means before that minibatch's KL-controller branch, not its optimizer step;
+applied LR is labeled inferred from the next pre-LR or final post-update LR
+under the reviewed single-GPU PPO implementation. Independent review found
+no blocker and prompted this starting-value/timing hardening.
+
+Focused Mac suite passed214 tests in7.78s with three existing warnings;
+whitespace checks passed. Tests cover unchanged matched configs, exact parent
+binding, return-tensor/gradient/RNG preservation, strict threshold counts,
+complete rollout/update integration, bad runtime/live config/Adam LR and
+missing/extra/nonfinite telemetry rejection. Before training require a clean
+reviewed pushed source, native CUDA-hidden suite, both64-world/5-update smokes
+seed991 with normalized ONNX61-to14 inference, then both256-world/10-update
+benchmarks seed997; elapsed times150 must each fit2040s. Reuse360s preflight
+and4500s sequential training/evaluation service caps,2100/2100/240s child
+caps,15s grace and all existing host/lease/DINO/protected-service guards.
+
+Campaign authority ends2026-10-12 07:00 Beijing time. Check the absolute
+deadline before launch and every sequential child; require its full remaining
+cap plus grace to fit. At cutoff, start no new work and preserve durable
+checkpoints; stop only a still-running campaign-owned Duck service if needed,
+never DINO or unrelated jobs. Do not restore protected services without an
+explicit request. No driver/package changes, new raw perception, publication
+or physical motion. GPU preflight and KL-budget outcomes are pending.
+After review hardening, the complete focused suite passed215 tests in8.12s,
+with the same three existing warnings, and whitespace checks passed again.

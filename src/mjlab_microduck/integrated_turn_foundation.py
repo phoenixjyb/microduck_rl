@@ -301,12 +301,13 @@ def body_yaw_trace_sample(robot, command, actor_command):
 
 
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
-                  angular_diagnostics=False, yaw_trace=False):
+                  angular_diagnostics=False, yaw_trace=False, gait_trace=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 
     require(not target_diagnostics or diagnostics, "target capture requires position diagnostics")
+    require(not gait_trace or yaw_trace, "gait capture requires unchanged body-yaw trace")
     worlds, steps, startup = 8, 240, 60
     torch.manual_seed(seed)
     cfg, agent = load_env_cfg(TASK, play=True), load_rl_cfg(TASK)
@@ -336,6 +337,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         positions, targets, constraints = [], [], []
         angular_samples = []
         yaw_samples = []
+        gait_samples = []
         limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
         with torch.inference_mode():
             for step in range(steps):
@@ -351,6 +353,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 velocities.append(velocity.cpu().clone())
                 if yaw_trace:
                     yaw_samples.append(body_yaw_trace_sample(robot, command, obs["actor"][:, 48:51]))
+                if gait_trace:
+                    from mjlab_microduck import gait_yaw_capture
+                    gait_samples.append(gait_yaw_capture.capture(env, robot, obs["actor"]))
                 if diagnostics:
                     positions.append(robot.data.joint_pos[:, stream.joint_ids].cpu().clone())
                 if target_diagnostics:
@@ -401,6 +406,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 policy_acceptance=False, physical_motion_authorized=False,
                 **{key: torch.stack([sample[key] for sample in yaw_samples]).double().tolist()
                    for key in ("command", "actor_command", "quat_wxyz", "angular_b", "angular_w")})
+        if gait_trace:
+            from mjlab_microduck import gait_yaw_capture
+            result["gait_yaw_trace"] = gait_yaw_capture.trace(gait_samples, result["checkpoint_sha256"])
         return result
     finally:
         env.close()

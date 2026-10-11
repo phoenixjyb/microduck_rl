@@ -2292,3 +2292,40 @@ evaluation. Training progress is not acceptance.
 | smoke-budget | `dbe58b272a5b2225225eb97dfb2bf80636f76b8b0d018e0e1318fa5f58f0bb65` |
 | benchmark-control | `b7d34588e8d7766e23861c4a3c8725e583324a805c60627b76367a9b84035a64` |
 | benchmark-budget | `df9845b8069c39397116ce4ff761c2604290c45a838c117616cdade28a8df5c3` |
+
+### Read-only aligned gait/head diagnostics prepared locally
+
+While the duration service runs at frozen7a9c37da, add optional
+`gait_trace=False` capture to the existing evaluator. This does not deploy or
+change the active source. Retain pre-action commands, body/world angular rates
+and quaternion, integer episode counter and batched physics time, named
+left/right contact counts and world-frame net force, cached air/contact timers,
+named foot-site world velocities, four named head joint offsets/velocities and
+the exact actor/manager head commands. Read sensor data without calling sensor
+update/reset; clone live views before policy/step. No RNG, reward, action,
+command, plant, normalizer, filtering or observation change.
+
+The stdlib-only offline summary validates complete8-world/240-step traces,
+fixed commands/seed/checkpoint/timing, nonnegative integral contact counts
+(the real sensor stores floats), reset-free clocks and the existing unit-quat/
+body-world rotation/MAE arithmetic. Exclude the same60 startup steps; report
+per-world no/one/two-contact fractions, sampled double-flight and timer
+disagreement fractions, contact-masked foot-site horizontal-speed proxies,
+contact-conditioned yaw MAE and within-world head-qdot/yaw residual correlation.
+Pooled statistics remain explicitly labelled: they can include between-world
+covariance and do not replace within-world evidence. Foot-site speed is not
+exact contact-patch slip; sampled flight is not substep-resolved flight duration.
+Correlations do not prove that head motion or flight causes yaw errors.
+
+Partial terminal traces remain raw failure evidence and cannot be summarized
+as completed cases. Tests compare original evaluator evidence with capture on
+and off, verify pre-action clocks0..239, detach/nonaliasing/RNG preservation,
+real cached-sensor timer immutability, named interleaved selectors, malformed
+channels and an across-world correlation-confounding example. Independent
+read-only API/XML review finds no mismatch.696 focused CPU tests pass locally
+in47.30s (three existing selector warnings); whitespace check passes. Native
+diagnostic execution is not yet authorized by a complete predeclared input
+bundle: wait for both duration finals and all24 unchanged held-out cases,
+verify their bytes/decisions and idle GPU, then pin a bounded diagnostic if
+the numerical evidence warrants one. No new reward intervention is inferred
+from training logs or these synthetic tests.

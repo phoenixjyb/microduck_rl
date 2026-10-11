@@ -67,15 +67,36 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
 
     closed = []
 
+    class Scene(dict):
+        pass
+
     class Env:
         def __init__(self, cfg, device):
             self.num_envs, self.device, self.step_dt = 8, "cpu", .02
             robot, self.command = robot_and_command()
             robot.data.root_link_lin_vel_b = torch.zeros(8, 3)
             robot.data.joint_pos = torch.zeros(8, 14)
+            robot.data.default_joint_pos = torch.zeros(8, 14)
+            robot.data.joint_vel = torch.zeros(8, 14)
+            robot.data.site_lin_vel_w = torch.zeros(8, 2, 3)
+            robot.data.data = SimpleNamespace(time=torch.zeros(8, dtype=torch.float64))
+            from mjlab_microduck import gait_yaw_capture as gait
+            robot.find_sites = lambda *a, **kw: ([0, 1], list(gait.SITES))
+            robot.find_joints = lambda *a, **kw: ([5, 6, 7, 8], list(gait.HEAD_JOINTS))
             robot.data.joint_pos_limits = torch.tensor([-1., 1.]).repeat(8, 14, 1)
-            self.scene = {"robot": robot}
-            self.command_manager = SimpleNamespace(get_command=lambda _: self.command)
+            self.scene = Scene(robot=robot)
+            cfg = SimpleNamespace(name="feet_ground_contact", num_slots=1, fields=("found", "force"),
+                reduce="netforce", track_air_time=True, history_length=0,
+                primary=SimpleNamespace(entity="robot", mode="geom"),
+                secondary=SimpleNamespace(entity=None, mode="body", pattern="terrain"))
+            contact = SimpleNamespace(found=torch.ones(8, 2), force=torch.ones(8, 2, 3),
+                current_air_time=torch.zeros(8, 2), current_contact_time=torch.ones(8, 2)*.02)
+            self.scene.sensors = {"feet_ground_contact": SimpleNamespace(cfg=cfg, data=contact,
+                _slots=[SimpleNamespace(primary_name=name, field_name=field)
+                        for name in gait.CONTACTS for field in ("found", "force")])}
+            self.episode_length_buf = torch.zeros(8, dtype=torch.long)
+            self.command_manager = SimpleNamespace(get_command=lambda name:
+                self.command if name == "twist" else torch.zeros(8, 4))
             self.count = 0
 
         def close(self):
@@ -92,7 +113,9 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
 
         def step(self, actions):
             self.env.count += 1
+            self.env.episode_length_buf += 1
             data = self.env.scene["robot"].data
+            data.data.time.fill_(self.env.count * .02)
             data.root_link_lin_vel_b[:, 0] = self.env.count / 1000
             data.root_link_ang_vel_b[:, 2] = self.env.count / 1000
             data.root_link_ang_vel_w.copy_(data.root_link_ang_vel_b)
@@ -152,6 +175,24 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
     audit = summarize_trace(default, trace)
     assert audit["worlds"][0]["body_yaw_mae"] == pytest.approx(default["yaw_mae"][0])
 
+    with pytest.raises(ValueError, match="requires unchanged body-yaw"):
+        base.evaluate_case(checkpoint, 839, .2, -.2, lambda: None, gait_trace=True)
+    gait_case = base.evaluate_case(checkpoint, 839, .2, -.2, lambda: None,
+                                   diagnostics=True, yaw_trace=True, gait_trace=True)
+    gait_trace = gait_case.pop("gait_yaw_trace")
+    gait_body_trace = gait_case.pop("body_yaw_trace")
+    assert gait_case == default and gait_body_trace == trace
+    assert closed == [240, 240, 240]
+    assert gait_trace["episode_length"][0] == [0]*8
+    assert gait_trace["episode_length"][-1] == [239]*8
+    assert type(gait_trace["episode_length"][0][0]) is int
+    assert gait_trace["physics_time"][-1] == pytest.approx([4.78]*8)
+    assert type(gait_trace["contact_found"][0][0][0]) is float
+    from mjlab_microduck.gait_yaw_trace import summarize_trace as summarize_gait
+    gait_summary = summarize_gait(gait_case, gait_trace)
+    assert gait_summary["recomputed_yaw_mae_per_world"] == pytest.approx(default["yaw_mae"])
+    assert gait_summary["contact_pattern_count_per_world"]["two-contacts"] == [180]*8
+
     # A terminal episode retains its short raw trace but cannot be summarized
     # as a complete held-out case or have startup/terminal samples hidden.
     step = Wrapped.step
@@ -169,3 +210,10 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
     assert len(short["body_yaw_trace"]["angular_b"]) == 61
     with pytest.raises(ValueError, match="case must be complete"):
         summarize_trace(short, short["body_yaw_trace"])
+
+    short_gait = base.evaluate_case(checkpoint, 839, .2, -.2, lambda: None,
+                                    diagnostics=True, yaw_trace=True, gait_trace=True)
+    assert short_gait["steps"] == short_gait["gait_yaw_trace"]["steps"] == 61
+    assert short_gait["gait_yaw_trace"]["episode_length"][-1] == [60]*8
+    with pytest.raises(ValueError, match="complete terminal-free"):
+        summarize_gait(short_gait, short_gait["gait_yaw_trace"])

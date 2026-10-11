@@ -924,3 +924,43 @@ duplicating models: the declared parent is intentionally absent from Mac but
 exists in the native training checkout, with the exact604700b0… digest above
 verified again. Native source is clean, previous service inactive/success,
 GPU DINO-only969MiB/51C/free15225MiB, all protected scopes inactive.
+
+### Turning-range preflight and retained launch
+
+Exact source `2b75ab0272e6728af6b4124b8e8942b614d57cb5` was committed/pushed
+before the clean inactive native checkout fast-forwarded. Retained service
+`microduck-turn-range-2b75ab02-preflight.service` completed inactive/dead,
+Resultsuccess/ExecMainStatus0/MainPID0. Native CUDA-hidden focused tests
+passed154 in14.99s. Both smokes/benchmarks verified exact parent/checkpoint
+bytes, finite restored models/normalizers/Adam, warm clocks0, final iteration
+and common-step counters, all30 finite updates with zero NaNs, actual fixed
+weighted rewards, manager-owned monotonic yaw range, observed commands within
+live bounds, and exact per-update/cumulative stage exposure. Smoke exposure
+was control120 at±.50; curriculum25/24/71 at±.05/±.10/±.20. Both official
+normalized ONNX exports passed finite CPU61-to14 inference.
+
+Ten-update256-world benchmarks took9.010299/8.973171s, projecting conservatively
+to1351.54/1345.98s per1000 updates, below2040s. Total GPU sampled peaks were
+1717MiB/60C. Benchmark training falls6/2 are not held-out acceptance. Small
+receipt copies at Mac
+`artifacts/evaluations/turn-range-2b75ab02-20261011-preflight` agree with
+native hashes; no duplicate weights or environment were copied.
+
+| Receipt | Verified SHA256 |
+| --- | --- |
+| Smoke control | `0cf3e5cc4a2c881866a97cd31287b2604af95ff667c8ca7e0e8c4811fd7bb2d2` |
+| Smoke curriculum | `847a0419c3a3d5f2d3d4d7c355eeb6fe0e0f27d91228d8a6e44cd6e9c3df9987` |
+| Benchmark control | `3ec64ad5d437e0c3caeec0d54528beb3c170fdbb7881a578e295f10744f53725` |
+| Benchmark curriculum | `95c7fe349432dfbeedd7750a51cd0d7cca7827e826c97333b208bc49ffb8694b` |
+
+`microduck-turn-range-2b75ab02-matched-eval.service` started2026-10-11
+14:58:22 Beijing time. Live properties confirm4500s/RAM8GiB/CPU200%/Tasks64/
+Nice10/KillModecontrol-group, sequential control then curriculum then unchanged
+held-out evaluation, with2100/2100/240s children and15s grace. Native retained
+root: `artifacts/training/turn-range-2b75ab02-20261011` in
+`/home/converge/work/microduck_rl-upstream-20261010`.
+Launch sampling confirms only DINO2021 and the owned Duck Python process,
+1649MiB total/55C, protected services inactive in all four scopes, clean exact
+source2b75ab02. Keep the active native checkout pinned; this documentation-only
+follow-up does not advance it. Full training, final999 hashes and numerical
+comparison are pending. No policy promotion or chained new skill/motion.

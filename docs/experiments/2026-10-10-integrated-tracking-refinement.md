@@ -2467,3 +2467,94 @@ launch/health/failure receipts under
 eight cases only after tested/pushed clean correction and native CPU tests,
 with a new unique run directory/unit and the same literal original aggregate
 hash. Never erase the failed attempt or interpret it as a policy failure.
+
+### Corrected gait replay verified: no reward-mechanism conclusion
+
+Clock correction source618d2305c4de8ea4d0705759eb1059a02518616e was clean,
+pushed and tested:722 focused CPU tests locally12.75s/native14.44s, three
+existing warnings. New `microduck-gait-yaw-618d2305-audit.service` completed
+before02:54 Beijing, inactive/dead/MainPID0/Resultsuccess/exit0. Every one
+of the eight declared cases completes240 steps/8 worlds with zero terminals.
+Verified raw/summary/result SHA bindings, shared body/gait samples exactly,
+fixed commands/head-command parity, reset-free episode/physics clocks,
+quaternion/angular frames and recomputed yaw MAE. Both offline summaries
+recompute exactly. All eight replay results differ from original retained
+cases; retain those differences and do not replace the original decisions.
+
+Across all11,520 settled world-samples, no sampled no-contact/double-flight
+frames or air-timer disagreement. Idle has two contacts throughout. Moving
+cases have one contact95.76–96.74% and two contacts3.26–4.24%; named foot-site
+contact-masked horizontal-speed means.0107–.0161m/s. Two-contact yaw MAE
+is larger(.1355–.2573 versus.0977–.1279 in one-contact samples), but it covers
+only a small gait-phase subset. These are sampled contact/site-speed proxies,
+not evidence of precise flight duration, contact-patch slip or causality.
+
+All head commands are zero. Moving mean absolute head-yaw velocity1.34–1.77
+rad/s co-occurs with the gait, but within-world residual/qdot correlations
+are mostly modest/sign-inconsistent: world0 is negative in each moving
+case, many others modestly positive, with mixed signs in some worlds.
+This selected-seed replay provides no uniform head-motion causal finding.
+Do not freeze the head, tighten tracking, change airtime/slip rewards or
+substitute filtered yaw based on this diagnostic.
+
+19 raw/summary/launch/result/health files hash-match native under Mac
+`artifacts/evaluations/gait-yaw-618d2305-20261012`, plus copied manifest.
+Diagnostic peaks1699MiB/57C, protected scopes inactive; GPU returns to DINO
+only. Failed first attempt's three files also hash-match native and remain
+retained separately. No policy acceptance, simulation qualification or motion.
+
+| Corrected diagnostic artifact | SHA256 |
+| --- | --- |
+| Launch | `f4f0988f462e8bfcf1889a5819a02ba0d3329192a72ecacc934fcfb2efd561bd` |
+| Eight-case result | `ecd91c3501e9ffab21d95574170ac744ca1e682c1501ecbc0f373b5d2a713c18` |
+
+### Predeclared fixed-recipe rollout-batch comparison
+
+Next candidate is `integrated-rollout-batch-continuation-v1`, not another
+reward coefficient search. Two matched arms: control256 worlds and batch1024
+worlds, each1000 additional updates from the same c81b parent above, full
+actor/critic/normalizer/Adam restoration at LR5.0625e-05 and reset counters.
+Seed1087 both arms,24 steps/update, five PPO epochs/four minibatches,
+adaptive KL.01, cadence250 plus final999. Exactly6.144M/24.576M additional
+transitions and20,000 optimizer minibatches each. Select both final999 only;
+retain the same ordered24-case admission matrix and all per-world speed,
+body-yaw, idle, motor, range, stability and terminal gates. No replay result,
+intermediate checkpoint or relaxed threshold replaces admission.
+
+Only rollout world count differs. Signed additive angular weight2/widths.5,
+zero-weight EMA diagnostics, motor−1, named right-yaw proximity−4/.15margin,
+twist−.5/forward0/action-rate−.8, head/body objectives, sampler, plant/DR,
+collapsed curricula,61 actor/14 unclipped/unfiltered actions remain unchanged.
+World count changes batch/minibatch size, environment/RNG topology and
+normalizer/Adam trajectories, so this is not a pure causal more-data test.
+The1024×1000 arm matches transition count of rejected256×4000, not optimizer
+updates or trajectories. Neither capacity nor better tracking is presumed.
+
+Declare exact `TRAINING_WORLDS={control:256,batch:1024}` opt-in; legacy
+recipes remain256-only. Both five-update smokes use64 worlds/seed1073;
+each ten-update benchmark uses its actual full arm world count/seed1079.
+Before any full launch verify all four same-source exact receipts, restored
+initial/checkpoint/Adam state, finite updates/motor/KL/dwell, both normalized
+ONNX61->14 CPU checks and health. Projection remains benchmark elapsed×150;
+must fit control2040s and batch4440s. A256-world benchmark cannot authorize
+1024-world training. No projection from free VRAM or canonical4096 runs.
+
+Keep existing20% allocator,6144MiB-total/8192MiB-free/<75C and DINO2021-only
+shared-host lease/ownership guards,8GiB RAM/CPU200%/tasks64/nice10. Preflight
+one retained sequential service≤600s,15s grace/control-group kill. Full run
+one retained sequential service≤6900s, childcaps2100/4500/240s with15s grace;
+require6915s remaining before07:00 at launch and per-phase remaining-budget
+checks. Control precedes batch; evaluation runs only after both complete.
+Do not change source while active. If measured capacity, finite/motor guards,
+receipt identity or deadline fails, retain failure and diagnose read-only;
+do not raise resource limits, alter driver/runtime or overlap GPU jobs.
+No video, new skill promotion, raw perception, physical motion or protected
+service restoration is authorized by this exploratory comparison.
+
+Preparation verification:748 focused CPU tests pass locally in13.91s with
+the same three existing selector warnings; whitespace check passes. Config
+parity checks normalize only declared world counts/run tags, and shared
+harness regressions reject absent/ambiguous/reversed/unbounded world plans,
+wrong full-world counts and a256-world treatment benchmark. Independent
+read-only integration review finds no blocker. Native capacity and full
+training remain gated, not established by CPU tests.

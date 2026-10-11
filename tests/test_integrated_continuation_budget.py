@@ -152,3 +152,51 @@ def test_preflight_contract_rejects_wrong_declaration(spec):
     recipe.MODES["smoke-budget"] = spec
     with pytest.raises(ValueError): refinement.preflight_contract(recipe, "smoke", "budget")
 
+
+def batch_recipe():
+    recipe = budget_recipe(budget_updates=1000)
+    recipe.TRAINING_WORLDS = {"control": 256, "budget": 1024}
+    recipe.MODES["budget"] = (1024, 1000, 1039)
+    recipe.MODES.update({"smoke-budget": (64, 5, 1049),
+                         "benchmark-budget": (1024, 10, 1051)})
+    return recipe
+
+
+def test_explicit_world_comparison_requires_arm_matched_benchmark():
+    recipe = batch_recipe()
+    assert refinement.training_contract(recipe, "control")["worlds"] == 256
+    assert refinement.training_contract(recipe, "budget")["worlds"] == 1024
+    assert refinement.preflight_contract(recipe, "smoke", "budget")["worlds"] == 64
+    assert refinement.preflight_contract(recipe, "benchmark", "budget")["worlds"] == 1024
+    assert refinement.evaluation_plan(recipe)["selection"] == "both final999 only; unchanged held-out protocol"
+    recipe.MODES["benchmark-budget"] = (256, 10, 1051)
+    with pytest.raises(ValueError, match="preflight mode"):
+        refinement.preflight_contract(recipe, "benchmark", "budget")
+
+
+@pytest.mark.parametrize("declaration", [None, True, {}, {"control": 256},
+    {"control": 256, "budget": 1024, "extra": 256},
+    {"control": 1024, "budget": 256}, {"control": 256, "budget": 512},
+    {"control": 256, "budget": 4096}, {"control": 256, "budget": 1024.0},
+    {"control": 256, "budget": True}])
+def test_world_comparison_rejects_ambiguous_or_unbounded_declarations(declaration):
+    recipe = batch_recipe()
+    recipe.TRAINING_WORLDS = declaration
+    with pytest.raises(ValueError, match="world declaration"):
+        refinement.training_contract(recipe, "budget")
+
+
+@pytest.mark.parametrize("worlds", [256, 64, 4096, True, 1024.0])
+def test_full_world_count_cannot_differ_from_declared_arm(worlds):
+    recipe = batch_recipe()
+    recipe.MODES["budget"] = (worlds, 1000, 1039)
+    with pytest.raises(ValueError, match="world count matches"):
+        refinement.training_contract(recipe, "budget")
+
+
+def test_legacy_recipe_cannot_silently_enable_larger_world_count():
+    recipe = budget_recipe()
+    recipe.MODES["budget"] = (1024, 1000, 1039)
+    with pytest.raises(ValueError, match="exactly 256"):
+        refinement.training_contract(recipe, "budget")
+

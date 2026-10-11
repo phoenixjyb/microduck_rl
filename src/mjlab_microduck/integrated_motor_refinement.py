@@ -52,8 +52,19 @@ def training_contract(recipe, arm):
     base.require(isinstance(mode, tuple) and len(mode) == 3,
                  "training mode is a worlds/updates/seed triple")
     worlds, updates, seed = mode
-    base.require(type(worlds) is int and worlds == 256,
-                 "continuation uses exactly 256 worlds")
+    declared_worlds = getattr(recipe, "TRAINING_WORLDS", _MISSING)
+    if declared_worlds is _MISSING:
+        base.require(type(worlds) is int and worlds == 256,
+                     "continuation uses exactly 256 worlds")
+    else:
+        base.require(isinstance(declared_worlds, Mapping)
+                     and set(declared_worlds) == set(arms)
+                     and all(type(value) is int for value in declared_worlds.values())
+                     and declared_worlds[arms[0]] == 256
+                     and declared_worlds[arms[1]] == 1024,
+                     "explicit exact matched 256/1024 world declaration")
+        base.require(type(worlds) is int and worlds == declared_worlds[arm],
+                     "continuation world count matches declared arm")
     base.require(type(updates) is int and 0 < updates <= MAX_CONTINUATION_UPDATES,
                  "continuation updates are a bounded positive integer")
     base.require(type(seed) is int, "continuation seed is an integer")
@@ -89,11 +100,11 @@ def evaluation_plan(recipe):
 
 def preflight_contract(recipe, phase, arm):
     """Pin smoke/benchmark identity as strictly as the eventual training arm."""
-    training_contract(recipe, arm)
+    training = training_contract(recipe, arm)
     base.require(phase in ("smoke", "benchmark"), "declared preflight phase")
     mode = f"{phase}-{arm}"
     spec = recipe.MODES.get(mode)
-    worlds, updates = (64, 5) if phase == "smoke" else (256, 10)
+    worlds, updates = (64, 5) if phase == "smoke" else (training["worlds"], 10)
     base.require(isinstance(spec, tuple) and len(spec) == 3
                  and type(spec[0]) is int and spec[0] == worlds
                  and type(spec[1]) is int and spec[1] == updates
@@ -320,7 +331,7 @@ def main(experiment=None):
         if args.mode in arms:
             for arm in arms:
                 contract = training_contract(recipe, arm)
-                for phase, worlds, updates in (("smoke", 64, 5), ("benchmark", 256, 10)):
+                for phase in ("smoke", "benchmark"):
                     preflight = preflight_contract(recipe, phase, arm)
                     receipt = json.loads((root / f"{phase}-{arm}/result.json").read_text())
                     validate_training_receipt(receipt, recipe, args.source, preflight,

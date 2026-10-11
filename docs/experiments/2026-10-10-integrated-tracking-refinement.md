@@ -1544,3 +1544,63 @@ Gaussian saturation; preserve both kernel widths, weight, optimizer and all
 other contracts/gates. Independent read-only review confirms these semantics
 and requires treatment-aware pre-reset actual reward checks, not clipping
 negative values or reusing the old positive-only observer unchanged.
+
+### Predeclared matched angular-decoupling continuation
+
+Implement `integrated-angular-decoupling-v1` in
+`mjlab_microduck.integrated_angular_decoupling_refinement`, with
+`mdp.decoupled_body_angular_tracking` as the treatment-only callable.
+Control keeps the current product Gaussian `2ab`; treatment is
+`2(a+b-1)` with the explicit signed semantics above. Both keep yaw and
+roll/pitch variances.5 and term weight2; zero-error maximum and axis-error
+curves at the other axis's zero error match exactly. Do not silently replace
+the treatment with a normalized sum (which halves each axis's derivative),
+remove roll/pitch shaping, clip its negatives, or call this a gradient-only
+intervention. Reward-manager source inspection confirms signed weighted
+values are summed rather than positively clipped; the term rejects invalid
+raw state/exponents before the manager's NaN sanitization. Keep the same
+finite combined-exponent validity domain as control.
+
+Both arms use the exact unaccepted current KL-control final999 as initialization:
+`artifacts/training/kl-budget-a9a70f0e-20261011/control/model_999.pt`, SHA
+`3ee173730a78fae605e561a3d40024b8e66d3b0a0be09262a6322fa819fe3df4`.
+Restore actor/critic/normalizers/Adam exactly, including initial LR1e-5;
+restart counters/episodes at0. Using it as a shared parent is not policy
+promotion. Preserve adaptive desired_kl.01, four minibatches/five epochs,
+existing optimizer capture/audit, motor-1, named right-yaw qpos-4/margin.15,
+twist-.5, forward0, action-rate-.8, plant/DR/commands and unfiltered/unclipped
+61D actor/14D actions. Only the angular reward callable differs between arms.
+
+Predeclared modes: paired64-world/5-update smokes seed1013; paired256-world/
+10-update benchmarks seed1017; paired256-world/1000-update training seed1019,
+cadence250/final999 only. Evaluate final999 from both arms on the same24
+held-out cases (seeds839/853/857; four commands;8 worlds;240 steps; startup60),
+with the unchanged every-world tracking, motor, named range and first-episode
+gates. No post-hoc checkpoint selection, gate widening, skill/physical
+acceptance, MP4 or publication from an unqualified outcome.
+
+The observer must validate the actual pre-reset weighted angular reward
+against the appropriate product/signed formula every step, including terminal
+worlds; retain raw yaw and roll/pitch squared errors, signed reward mean,
+negative-sample fraction, fixed kernel/weight identity and all20 optimizer
+minibatches/update. Stale/missing/nonfinite/mismatched snapshots or learner
+state fail closed. Positive-only checks from the old precision treatment
+are deliberately not applied to the signed arm. Tests must establish matched
+config/optimizer parity, formula and boundary/axis equivalence, raw failure
+guards, real signed negative samples and24-step auto-reset-safe reward capture.
+
+Before GPU work require reviewed tested/pushed clean source and the native
+CUDA-hidden focused suite, both normalized ONNX61-to14 smokes and both measured
+benchmarks; benchmark elapsed x150 must fit2040s. Retain360s preflight and
+4500s sequential service caps;2100/2100/240s training/evaluation children,
+15s grace, one owned GPU lease, literal arguments/PYTHONPATH (no systemd shell
+variable expansion pitfall), exact DINO2021/GPU identity and all protected
+service/occupancy/temperature guards. Require the full remaining caps/grace
+budget before launch/every child to fit2026-10-12 07:00 Beijing time
+(epoch1791759600). Preserve unrelated workloads. No raw perception, runtime/
+driver/package change, policy publication or physical motion. Stop initiating
+work at the cutoff; do not restore protected services without explicit request.
+Implementation review and the Mac CUDA-hidden focused suite passed:342 tests,
+including29 new reward-form/config/observer checks, with three existing actuator
+selector warnings. No acceptance gate changed. Native preflight and the new
+matched outcome are pending.

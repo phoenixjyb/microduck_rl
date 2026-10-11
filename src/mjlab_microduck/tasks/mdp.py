@@ -4145,6 +4145,34 @@ def factorized_body_angular_tracking(
     return torch.exp(-exponent)
 
 
+def decoupled_body_angular_tracking(
+    env: ManagerBasedRlEnv,
+    yaw_variance: float = .5,
+    roll_pitch_variance: float = .5,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Signed angular reward with independent yaw and roll/pitch kernels.
+
+    Return a+b-1, where a and b are the two error-group Gaussians. Compared
+    with a*b, this preserves the zero-error maximum and each axis's curve
+    when the other axis is error-free. It removes cross-axis derivative
+    attenuation while penalizing simultaneous errors more strongly: the
+    difference is -(1-a)*(1-b). Range is [-1, 1]; use a positive weight and
+    never clip its negative values. This is an experimental reward-form
+    change, not an established improvement or a physical acceptance claim.
+    """
+    if not all(math.isfinite(v) and v > 0 for v in (yaw_variance, roll_pitch_variance)):
+        raise ValueError("angular tracking variances must be finite and positive")
+    yaw_sq, xy_sq = body_angular_tracking_errors(env, command_name, asset_cfg)
+    yaw_exponent = yaw_sq/yaw_variance
+    xy_exponent = xy_sq/roll_pitch_variance
+    # Match the product control's raw-state/exponent validity domain.
+    if not bool(torch.isfinite(yaw_exponent + xy_exponent).all()):
+        raise FloatingPointError("nonfinite raw decoupled angular exponent")
+    return torch.exp(-yaw_exponent) + torch.exp(-xy_exponent) - 1.
+
+
 def bounded_planar_velocity_cost(
     env: ManagerBasedRlEnv,
     asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,

@@ -1067,8 +1067,8 @@ Native CUDA-hidden focused suite passed167 in15.96s before launch at exact
 source `1958523b27047288a4d3b1e1c9c65a2557c84759`. Retained service
 `microduck-angular-reward-1958523b-audit.service` enforced240s wall cap,
 RAM8GiB/CPU200%/Tasks64/Nice10/KillModecontrol-group and completed successfully
-with MainPID0/ExecMainStatus0/inactive state. All eight seed839 cases completed
-Service completion timestamp was2026-10-11 16:03:41 Beijing time.
+with MainPID0/ExecMainStatus0/inactive state at2026-10-11 16:03:41 Beijing
+time. All eight seed839 cases completed
 240 steps with finite pre-reset raw state and actual full XYZ weighted reward
 verified every step. Health peaks1867MiB/60C. GPU returned to DINO-only969MiB,
 all four protected service scopes inactive. Native/Mac small retained files:

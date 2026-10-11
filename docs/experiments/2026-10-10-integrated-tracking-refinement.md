@@ -2985,3 +2985,69 @@ motion, raw perception, observation expansion, service restoration or skill
 promotion. Next bounded hypothesis is explicit neutral-head command exposure,
 not a posture-prior relaxation: read-only audit found no distinct turn-induced
 hip-yaw posture penalty sufficient to justify weakening that prior.
+
+### Predeclared explicit neutral-head exposure comparison
+
+`integrated-neutral-head-exposure-continuation-v1` changes only
+`head_pose.zero_command_prob`:control0 versus neutral.25. Exact four-axis
+zero means HOME-relative command, not a missing offset or a frozen head.
+Both head tracking and EMA bias rewards continue to operate on the measured
+servo view minus HOME minus command, with weights2/2 and tracking std.5.
+Keep head ranges±(.39,.39,.49,.11)rad and resampling2–5s; the nonzero
+head tasks still occupy75% of draws. Keep body-pose sampler, all objectives,
+motor−1/right-yaw proximity−4/.15rad, plant/DR,61actor/14raw outputs,
+unfiltered/unclipped BAM, signed angular2/.5/.5, optimizer and original
+held-out gates unchanged. Old EMA yaw-cost weight0; no yaw-L1 term.
+
+Hypothesis: explicit neutral-head exposure better covers the exact HOME-head
+command used in the held-out body tracking protocol. Continuous support
+already includes neighborhoods of HOME; this is not proof of an out-of-
+distribution failure or of causal head interference. Adding the zero atom
+also adds RNG draws per resampling and changes the mixture's second moment,
+normalization, reward opportunities and Adam trajectory. Equal seeds do not
+give identical simulated trajectories. Do not interpret an improvement as
+an isolated mechanical head effect or remove the head task as a shortcut.
+
+Both arms restore the original c81b parent, not the rejected yaw-L1 policy:
+`c81bfae742f9caa815a2896cd894d38ee4d069f3237c000086df2ba0c458ecae`,
+initial Adam LR5.0625e-05, fresh episodes/counters0. Smokes64×5 seed1103;
+benchmarks256×10 seed1109; full256×1000 seed1117 for both arms. Identical
+24steps/update,5epochs×4minibatches/adaptive KL.01, cadence250+final999;
+6.144M transitions/20,000 optimizer minibatches per full arm.
+
+Same observer in both arms reads already-cached raw61D actor command slots
+48:51/51:55/55:61 and verifies them against twist/head/body commands before
+each action. It must not recompute noisy observations, commands or rewards,
+consume RNG, or advance EMA state. Record exact-zero/nonzero head dwell crossed
+with each existing twist bin; count new sampled head segments with the public
+command counter plus episode reset (including zero→zero resamples). Consume
+pre-action counts after the action even when termination/reset/resampling
+changes the next command. Require complete24-step/cumulative counts; actual
+finite preflight must show zero control HOME segments and both zero/nonzero
+treatment segments. Do not demand exactly25% in a finite sample.
+
+Compare both final999 only in the original ordered24cases:seeds839/853/857,
+commands0/0,.3/0,.2/±.2,8worlds×240steps,startup60; unchanged per-world
+speed/yaw, no-terminal, motor and range criteria. Retain all command tasks
+in training; the existing evaluation fixes HOME head/body in both arms.
+No intermediate selection or changed thresholds after viewing results.
+
+Reuse one sequential preflight≤600s with four children≤120s, then only
+after receipt/ONNX/finite/capacity checks one sequential full service≤4500s,
+children2100/2100/240s,15s grace/control-group stop. Both measured benchmarks
+×150 must be<2040s; require4515s until07:00 Beijing time on2026-10-12 at
+full launch and recheck each child. Preserve DINO2021, shared exactGPU lease,
+20%allocator,≤6144MiB total/≥8192MiB free/<75C guard, RAM8G/CPU200%/tasks64/
+nice10, four protected AI scopes inactive. Freeze source during GPU work;
+diagnose failures read-only. No skill promotion/video/physical motion/raw
+perception/actor expansion/protected-service restoration. If this fails,
+retain it as a rejected sampler diagnostic; no automatic dose search.
+
+Preparation: main regression run1000 passed/34 existing warnings in46.07s;
+the completed cache/counter/reset supplement separately passed19 focused tests
+in22.85s. It checks unchanged actor/commands/RNG, two complete24-step updates,
+zero→zero resampling/reset segment counts, missing/duplicate/skipped snapshots,
+and the actual inherited reward/20-KL update path. Whitespace check passes.
+Read-only review confirmed pinned mjlab1.3's cache/counter APIs and command
+layout, without a launch blocker. Native tests, smoke/export and capacity
+remain mandatory before full training.

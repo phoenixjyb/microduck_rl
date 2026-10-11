@@ -1471,3 +1471,76 @@ Preflight input SHA256 (native/Mac bytes equal):
 This proves measured controller activity in short preflights, not improved
 held-out tracking. Native training remains pinned at `a9a70f0e`; this offline
 audit addition does not modify or reload that running service.
+
+### Completed KL-budget round: rejected — 2026-10-11 23:30 Beijing time
+
+Both1000-update arms and all24 held-out cases completed. Read-only checks
+verified all ten finite model/Adam checkpoints at0/250/500/750/999, exact
+source/runtime/parent/warm counters, all2000 finite update records and40,000
+minibatch KL/LR transitions, retained case hashes, deterministic decisions
+and paired differences. Both arms completed12/12 first-episode cases at240
+steps with no terminals or rated-speed exceedance,12/12 motor and12/12 range
+passes. Both fail all9 moving tracking cases;3 idle cases pass. Neither final
+is accepted/promoted. Do not increase the KL budget further or select another
+checkpoint after seeing this matrix.
+
+| Command vx/yaw | Speed MAE control / klbudget | Yaw MAE control / klbudget | Speed-passing worlds control / klbudget | Yaw-passing worlds control / klbudget |
+| --- | ---: | ---: | ---: | ---: |
+| 0 / 0 | .000597 / .000640 | .004987 / .006426 | 24 / 24 | 24 / 24 |
+| .30 / 0 | .098683 / .110138 | .149003 / .184245 | 14 / 5 | 0 / 0 |
+| .20 / -.20 | .046320 / .049198 | .168188 / .211608 | 24 / 24 | 0 / 0 |
+| .20 / +.20 | .038612 / .045034 | .165566 / .194422 | 24 / 24 | 0 / 0 |
+
+Each group summarizes24 worlds over three held-out seeds; group means are
+not admission. Max pooled torque-p99 utilization across cases is.490732
+control/.518420 treatment (gate.60). Larger KL changes the optimizer as
+intended, but worsens yaw and speed MAE in every group in this matched round.
+
+| Optimizer / training diagnostic | Control | klbudget |
+| --- | ---: | ---: |
+| Applied optimizer minibatches at LR floor | 5966 / 20000 (29.83%) | 612 / 20000 (3.06%) |
+| Updates ending at LR floor | 641 / 1000 | 81 / 1000 |
+| High-KL branches | 6023 / 20000 | 3306 / 20000 |
+| Mean minibatch KL | .014930 | .027890 |
+| Max applied LR | .000170859375 | .000576650391 |
+| Last100 training falls | 67 | 171 |
+| Last100 mean yaw squared error | .252722 | .488374 |
+| Last100 mean roll/pitch squared rate | .458997 | .821942 |
+| Last100 mean motor cost | .053406 | .073254 |
+| Last100 mean power W | 2.351799 | 2.876324 |
+| Last100 mean thermal proxy | .052698 | .071441 |
+| Last100 soft-limit fraction | .006937 | .015429 |
+
+This rejects the proposed larger budget, not all optimizer explanations or
+the physical feasibility of turning. Control training was not permanently
+stuck at the LR floor. Preserve desired_kl.01 for the next matched test.
+Elapsed605.254399/619.383518s; training health1717MiB/61C, evaluation2789MiB/
+59C. Service ended at23:28:53 (manager consumption journal retained), is
+inactive/MainPID0, and all expected successful receipts exist. Host returned
+to DINO-only969MiB/50C; all protected scopes remain inactive. Small hash-
+matched JSON/JSONL copies are in
+`artifacts/evaluations/kl-budget-a9a70f0e-20261011/`; no models copied to Mac.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Control final999 | `3ee173730a78fae605e561a3d40024b8e66d3b0a0be09262a6322fa819fe3df4` |
+| klbudget final999 | `9bfff0f2dcf520b6266c07fd68d7b80beb5b91482ed993cf47236c852d6a6cdd` |
+| Control receipt | `8ac3f6f9c382f10d019c48cb0e18ceb1b5adeceda5d6e7fd5c1ba0150aa981cb` |
+| klbudget receipt | `d021623863ee1d7003e7eefb3964c961ccdc217d2b519c06de6c51cf7a3204f7` |
+| Control update stream | `a99fb74b3acea7b1e4d76e6163f47d98cefe626b908ee3bebd728d93abcd5985` |
+| klbudget update stream | `1172470161c07f919e6951fbf324b6f879dc0ee08d7692aac837f7e39a8eff38` |
+| Evaluation launch | `b968e1f5d476c7ab79ac45f377c292c367d9e79094403219ceaa66d5dce34025` |
+| Evaluation aggregate | `5b4f755e6be5eead82f4ce0290d59a13f0a8f246e3618d85ea7f0112c6fd2dad` |
+
+Next bounded hypothesis, subject to implementation/tests/predeclaration:
+compare the current angular reward `2ab` against `2(a+b-1)`, where
+`a=exp(-yaw_sq/.5)` and `b=exp(-roll_pitch_sq/.5)`. Both equal2 at zero error
+and exactly match when either error group is zero. The treatment removes
+cross-axis attenuation of each analytic derivative but also deliberately
+penalizes simultaneous errors more: treatment minus control is
+`-2(1-a)(1-b)` and the treatment can be negative (range[-2,2]). This is one
+reward-form change, not a pure gradient-only intervention or proof of
+Gaussian saturation; preserve both kernel widths, weight, optimizer and all
+other contracts/gates. Independent read-only review confirms these semantics
+and requires treatment-aware pre-reset actual reward checks, not clipping
+negative values or reusing the old positive-only observer unchanged.

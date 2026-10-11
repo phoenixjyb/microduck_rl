@@ -1634,3 +1634,33 @@ nice10; exact DINO2021 retained. Control1000 then decoupled1000 then unchanged
 Small preflight receipts/update streams copied under Mac
 `artifacts/evaluations/angular-decoupling-ea24a14a-20261011-preflight`; models
 remain native only. Full training/evaluation and numerical decision pending.
+
+Read-only response review while training runs found no source-level body/world
+frame or global yaw-sign mismatch: fixed body commands are checked against the
+actor command slice and measured body root-link rates. Previous KL-control
+turn means were-.1455/+.1390rad/s for commands-.2/+.2, with correct-sign
+fractions.780/.777, not a global sign reversal. At straight.3m/s, pooled
+mean yaw was-.002706rad/s, mean per-world absolute bias.029950rad/s, yet
+mean yaw MAE.149003rad/s. The resulting mean Jensen gap.119053rad/s shows
+substantial absolute residual beyond constant mean bias. It does not establish
+oscillation frequency, tilt, contact or motor causality from aggregate data.
+Gross motor-envelope saturation is not apparent in retained summaries;
+body-z rate is not identical to world-vertical heading rate during tilt.
+Do not silently substitute world-frame yaw or relax the existing body-frame
+gate. A future diagnostic replay would need aligned orientation/rate/action/
+target/contact trajectories to isolate those mechanisms; none launched here.
+
+Added CPU-only `mjlab_microduck.body_response_audit`: validates complete
+8-world/240-step retained cases, exact60/180 diagnostic window and body-frame/
+pre-action timing, named joint layouts, finite non-boolean numeric summaries,
+sign fractions and Jensen/triangle consistency. Reports per-world signed speed/
+yaw bias, absolute-bias lower bound, original MAE and exact residual Jensen
+gap, preserving tiny negative roundoff rather than clipping it. The1e-6
+summary arithmetic tolerance is not an acceptance threshold. Hash-bound CLI
+prints deterministic JSON without loading torch/mjlab or writing files;
+diagnostic-only, no policy/physical claim. Owner review tightened sampling/
+acceptance identity and actual tolerance-boundary tests. All24 retained
+KL-budget held-out case files audited successfully. Focused suite now391
+passed (49 new auditor tests), with the same three existing selector warnings.
+Training source remains frozen at `ea24a14a`; these CPU-only source/doc changes
+are not deployed into the active worktree.

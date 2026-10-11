@@ -4123,6 +4123,140 @@ def body_angular_tracking_errors(
     return yaw_sq, xy_sq
 
 
+def body_yaw_bias_cost(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    tau_s: float = 1.0,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Positive L1 cost of the one-second EMA body-yaw-rate command residual.
+
+    This prices persistent yaw-rate bias, not instantaneous motion or action
+    changes. It is normalized by the fixed 1 rad/s reference. The reward term
+    should use a negative weight. Per-world episode resets and command-yaw
+    changes clear history; a second call at the same common step is an
+    idempotent read for post-reward metrics and never advances the EMA again.
+    """
+    if isinstance(tau_s, bool) or not isinstance(tau_s, (int, float)):
+        raise ValueError("tau_s must be a finite positive number")
+    try:
+        tau_s = float(tau_s)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("tau_s must be a finite positive number") from exc
+    if not math.isfinite(tau_s) or tau_s <= 0:
+        raise ValueError("tau_s must be a finite positive number")
+    if not isinstance(command_name, str) or not command_name:
+        raise ValueError("command_name must be a nonempty string")
+    asset_name = getattr(asset_cfg, "name", None)
+    if not isinstance(asset_name, str) or not asset_name:
+        raise ValueError("asset_cfg.name must be a nonempty string")
+    step_dt = getattr(env, "step_dt", None)
+    if isinstance(step_dt, bool) or not isinstance(step_dt, (int, float)):
+        raise ValueError("env.step_dt must be a finite positive number")
+    try:
+        step_dt = float(step_dt)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("env.step_dt must be a finite positive number") from exc
+    if not math.isfinite(step_dt) or step_dt <= 0:
+        raise ValueError("env.step_dt must be a finite positive number")
+    step = getattr(env, "common_step_counter", None)
+    if type(step) is not int or step < 0:
+        raise ValueError("env.common_step_counter must be a nonnegative integer")
+
+    command = env.command_manager.get_command(command_name)
+    angular = env.scene[asset_name].data.root_link_ang_vel_b
+    episode_length = getattr(env, "episode_length_buf", None)
+    if not isinstance(command, torch.Tensor) or not isinstance(angular, torch.Tensor):
+        raise TypeError("yaw-bias command and body angular velocity must be tensors")
+    if command.ndim != 2 or command.shape[1] != 3:
+        raise ValueError("yaw-bias command must have shape (worlds, 3)")
+    if angular.ndim != 2 or angular.shape != command.shape:
+        raise ValueError("body angular velocity must match command shape (worlds, 3)")
+    if (not isinstance(episode_length, torch.Tensor) or episode_length.ndim != 1
+            or episode_length.shape[0] != command.shape[0]
+            or episode_length.dtype == torch.bool or torch.is_floating_point(episode_length)):
+        raise ValueError("episode_length_buf must be an integer vector matching worlds")
+    num_envs = getattr(env, "num_envs", command.shape[0])
+    if type(num_envs) is not int or num_envs != command.shape[0]:
+        raise ValueError("env.num_envs must match yaw-bias tensor worlds")
+    if (command.device != angular.device or command.device != episode_length.device
+            or command.dtype != angular.dtype or not command.is_floating_point()
+            or not angular.is_floating_point()):
+        raise ValueError("yaw-bias tensors must share floating dtype and device")
+    if not bool(torch.isfinite(command).all() & torch.isfinite(angular).all()):
+        raise FloatingPointError("nonfinite yaw-bias command or body angular velocity")
+    if bool((episode_length < 0).any()):
+        raise ValueError("episode_length_buf cannot be negative")
+
+    residual = (command[:, 2] - angular[:, 2]).detach().clone()
+    command_yaw = command[:, 2].detach().clone()
+    if not bool(torch.isfinite(residual).all()):
+        raise FloatingPointError("nonfinite raw body yaw-rate residual")
+
+    signature = (command_name, asset_name, tau_s, step_dt, command.shape,
+                 str(command.device), command.dtype)
+    internal = getattr(env, "_microduck_body_yaw_bias_internal", None)
+    if internal is not None and internal["signature"] != signature:
+        raise ValueError("body yaw-bias state reused with incompatible config or tensor layout")
+
+    if internal is not None and step == internal["step"]:
+        if (not torch.equal(residual, internal["signed_residual"])
+                or not torch.equal(command_yaw, internal["command_yaw"])):
+            raise RuntimeError("body yaw-bias inputs changed within one common step")
+        # Metrics may read the reward state after reward computation. Return a
+        # separate clone so a caller cannot mutate the retained snapshot.
+        _publish_body_yaw_bias_state(env, internal)
+        return internal["cost"].clone()
+
+    rollback = internal is not None and step < internal["step"]
+    if internal is not None and not rollback and step != internal["step"] + 1:
+        raise RuntimeError("body yaw-bias common-step counter skipped forward")
+    alpha = min(1.0, step_dt / tau_s)
+    if internal is None or rollback:
+        ema = torch.zeros_like(residual)
+        previous_command = command_yaw.clone()
+    else:
+        ema = internal["signed_ema"].clone()
+        previous_command = internal["command_yaw"]
+
+    fresh = (episode_length <= 1) | (command_yaw != previous_command)
+    ema[fresh] = 0.0
+    ema = ((1.0 - alpha) * ema + alpha * residual).detach()
+    cost = ema.abs().detach()
+    if not bool(torch.isfinite(ema).all() & torch.isfinite(cost).all()):
+        raise FloatingPointError("nonfinite body yaw-bias EMA cost")
+    internal = {
+        "signature": signature,
+        "step": step,
+        "command_name": command_name,
+        "asset_name": asset_name,
+        "tau_s": tau_s,
+        "step_dt": step_dt,
+        "signed_residual": residual.clone(),
+        "command_yaw": command_yaw.clone(),
+        "signed_ema": ema.clone(),
+        "cost": cost.clone(),
+    }
+    env._microduck_body_yaw_bias_internal = internal
+    _publish_body_yaw_bias_state(env, internal)
+    return cost.clone()
+
+
+def _publish_body_yaw_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None:
+    """Publish an alias-free post-reward snapshot for diagnostics/metrics."""
+    env._microduck_body_yaw_bias_state = {
+        "protocol": "body-yaw-bias-cost-v1",
+        "step": internal["step"],
+        "command_name": internal["command_name"],
+        "asset_name": internal["asset_name"],
+        "tau_s": internal["tau_s"],
+        "step_dt": internal["step_dt"],
+        "signed_residual": internal["signed_residual"].detach().clone(),
+        "signed_ema": internal["signed_ema"].detach().clone(),
+        "cost": internal["cost"].detach().clone(),
+    }
+
+
 def factorized_body_angular_tracking(
     env: ManagerBasedRlEnv,
     yaw_variance: float = .5,

@@ -1982,3 +1982,56 @@ All18 health samples satisfy lease/occupancy/protected-service guards; peak
 | Trace launch | `b2785efba94e9d20bc740ce2d7e315c24c7a9f1ee00a4293491ad5fceb0f634a` |
 | Trace result | `e4686f8e1229dbe8235f97554557eed927887353a23a4bc4bec1f6d81051c175` |
 | Trace health | `bc0559ee0f00c658d062fe516aa6bbbdaa5b06dad9a18a19937a1a28b9a8916c` |
+
+### Predeclared persistent yaw-bias continuation
+
+The trace does not justify a frame correction or a motion-wide smoothness
+increase. Test one reward-only hypothesis instead: persistent signed yaw-rate
+bias is an escapable part of the remaining moving error, and modest pressure
+on its one-second average may reduce it without taxing every gait fluctuation.
+This is not a proven cause or a promised gate pass. Existing head-pose bias
+shaping provides the repository pattern, not evidence of a yaw benefit.
+
+Protocol `integrated-body-yaw-bias-continuation-v1`, arms control/bias. Both
+fork the exact decoupled parent `c81bfae742f9caa815a2896cd894d38ee4d069f3237c000086df2ba0c458ecae`
+at `angular-decoupling-ea24a14a-20261011/decoupled/model_999.pt`, restoring
+actor/critic/normalizers/Adam and initial LR5.062500000000001e-5 exactly.
+Keep signed additive yaw/roll-pitch Gaussians at variance.5/.5 and weight2;
+do not retain the rejected precision schedule. Keep command-error-.5,
+forward-error0, motor-1, named right-hip-yaw qpos-limit-4/margin.15 and
+action-rate-.8, all plant/DR/command distributions, adaptive KL.01/four
+minibatches/five epochs,61D actor and14D unclipped/unfiltered actions.
+
+Only treatment adds weight-.1 on positive `abs(EMA(command_wz - body_wz))`,
+referenced to1rad/s; tau1s, alpha=min(1,step_dt/tau)=.02 at50Hz. Control has
+weight0 and computes the same diagnostic EMA in the post-reward metric.
+No actor/observation/action filtering. Clear each world's accumulated EMA
+on fresh episodes or changed yaw commands; clear all on warm counter reset.
+Repeated reward/metric calls at the same control step advance once, not twice.
+Raw finite-state checks and cloned pre-reset snapshots include terminal worlds;
+validate actual nonpositive weighted activity before reward sanitization can
+hide errors. Retain per-update EMA absolute cost, signed EMA mean, raw residual
+MAE and actual reward mass alongside unchanged angular/optimizer/motor telemetry.
+At sustained0.1rad/s bias the asymptotic unscaled reward rate is-.01, compared
+with-.005 for the current command-error yaw-square component. This small
+coefficient deliberately tests bias pressure, not a new instantaneous penalty
+or dose escalation. No widening of the instantaneous body-yaw gate.
+
+Same-source smoke64 worlds/five updates/seed1031 in both arms with official
+normalized61->14 ONNX CPU checks, then256-world/ten-update/seed1033 benchmarks.
+Verify both completed finite preflights, exact warm-state/LR, same-step EMA
+identity, actual reward activity and measured budget before full training.
+Full matched256 worlds/1000 updates/seed1039 per arm,24 steps/update,
+6,144,000 transitions, checkpoint0/250/500/750/999. Control then bias then
+unchanged final999-only12-case held-out evaluator for each: seeds839/853/857,
+eight worlds,240 steps/startup60, commands0/0,.30/0,.20/-.20,.20/+.20.
+All prior tracking/motor/named-range gates remain exact. Compare all24 cases
+and descriptive signed response; a bias reduction alone is not acceptance,
+and one matched seed pair is not statistical or bitwise causal proof.
+
+Only reviewed/tested/pushed clean source may run. One retained sequential user
+service, existing lease/DINO2021/protected-service guards,20% allocator;
+2100s cap per training arm,240s evaluation,4500s service/15s grace and explicit
+07:00 Beijing budget checks. Stop on a true execution/finite-state failure,
+diagnose read-only before changes. No rejected-policy video, obstacle/physical
+promotion, driver/package changes or unrelated workload modification.

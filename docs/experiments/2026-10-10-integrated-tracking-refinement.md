@@ -3392,3 +3392,77 @@ also passes against the inherited c81b recipe, including original entropy.01
 and head probability0. Live entropy/sampler/cache drift, zero high-bin
 treatment exposure, raw61D slots and unchanged RNG are covered. Whitespace
 checks pass; native CUDA-hidden tests and bounded preflight remain mandatory.
+
+### Low-yaw rehearsal result — rejected, final499 retained (2026-10-12 ~06:21 Beijing)
+
+Exact source `aee0a31e394ad6c81e614f0d2dda4863439b47c0`; native
+`microduck-low-yaw-aee0a31e-matched-eval.service` completed successfully,
+inactive/dead/MainPID0/exit0. The pinned preparation suite passed1087 native
+tests (three old-artifact skips,45 existing warnings), then all30 preflight
+updates and1000 full updates were finite with zero NaN terminations. Both
+500-update arms preserved full Adam/normalizers/initial LR and raw61D→14D
+contracts, and retained0/250/499 checkpoints. Full timings307.053/309.498s.
+
+The sampler change happened: target-band turning dwell20.2598%→40.0348%
+(control400,185/1,975,271; rehearsal773,928/1,933,140). Rehearsal has zero
+high-turn samples; control has993,570. This demonstrates exposure, not skill.
+
+Both arms pass12/12 stability, motor and joint-range cases, but only3/12
+tracking cases (idle): **all nine moving cases fail**. Moving-world speed
+passes56/72→62/72 and yaw passes4/72→15/72. No accepted policy or promotion.
+
+| Command vx/wz | Speed MAE control/rehearsal | Yaw MAE control/rehearsal | Yaw-passing worlds control/rehearsal |
+| --- | --- | --- | --- |
+| 0/0 | .001059/.001312 | .007719/.010869 | 24/24 |
+| .3/0 | .105514/.099785 | .120888/.113905 | 3/8 |
+| .2/−.2 | .044604/.041496 | .140310/.148122 | 0/0 |
+| .2/+.2 | .044382/.044046 | .138729/.122269 | 1/7 |
+
+Values pool three seeds descriptively, not in place of per-world gates.
+Negative-turn signed yaw bias worsens+.070526→+.092516 rad/s; positive-turn
+bias−.014590→−.027333. More modest-turn exposure alone did not solve tracking.
+
+Training falls203/184, last10039/44. Last100 motor cost.049407/.049295,
+thermal proxy.048872/.048695, absolute mechanical power2.251681/2.284089W,
+yaw error squared.173017/.167411. Maximum training right-hip range overrun
+.027176/.025748rad is separate from the passed held-out joint-range gates.
+Peak train1717MiB/61C; evaluation2859MiB/59C. Post-job969MiB/51C,
+DINO2021 alone; all four protected user/system service scopes remain inactive.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Control final499 | `a075cc15c226ff2e86711190f4a0bfc291e43becc0bc40b1d5a4bca6a9c23023` |
+| Rehearsal final499 | `ad79e55a70bef5333bfcfdeee61a8baf985422308e8abd9bbb59566c518eac09` |
+| Evaluation aggregate | `1ee0abfedfebf315b86257eaaccb7ff27d570937217335b5ed20b1ce87eec404` |
+| Evaluation launch | `ecab4ee1a8d75f55248ebb21d15f42012df41df8f8ea887dca920aff8f3d67cb` |
+| Evaluation health | `0737474bedb37942465921a141edfcbdd33cc37969ed6be39a22d24e0747f0dd` |
+
+Retained native run `artifacts/training/low-yaw-aee0a31e-20261012`.
+All57 JSON/JSONL files (4,720,725bytes) copied and independently hash/size
+verified on Mac at `artifacts/evaluations/low-yaw-aee0a31e-20261012`, with
+`verified-manifest.json` binding runtime/checkpoints/receipts/full decisions.
+Weights/normalized ONNX remain native only to avoid duplicate storage.
+These ignored assets are retained locally/native, not claimed uploaded in Git.
+
+Do not adopt this narrowed support, stack it with prior rejected treatments,
+or launch another training-factor search before a timing/observation audit.
+No high-yaw preservation claim, video, new skill admission or physical motion.
+
+### Existing head probe: bias versus variation, not simple under-response
+
+Read-only recomputation from all11 hash-verified head-probe JSON/JSONL files
+separates mean signed error from per-world standard deviation:
+`sqrt(RMS² - signed_bias²)`, then averages eight worlds after startup60.
+
+| Arm / requested head yaw | Actual mean rad | Signed bias rad | Mean per-world residual std rad |
+| --- | --- | --- | --- |
+| Control / −.2 | −.162506 | +.037494 | .148153 |
+| Control / +.2 | +.158329 | −.041671 | .159095 |
+| Consolidate / −.2 | −.131324 | +.068676 | .120358 |
+| Consolidate / +.2 | +.179948 | −.020052 | .117212 |
+
+Thus large instantaneous head MAE cannot be interpreted as only a DC tracking
+bias. Descriptive mean response gain across requests is.802088/.778178; this
+is not an RNG-identical trajectory or mechanical-causality comparison.
+No filtered measurement replaces the original instantaneous body-yaw gate.
+The previously retained head-probe aggregate/hash identity is unchanged.

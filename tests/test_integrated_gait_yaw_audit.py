@@ -150,7 +150,9 @@ def test_input_bundle_rejects_malformed_identity_and_reordered_cases(tmp_path, m
 def test_raw_observation_is_written_before_partial_terminal_summary_rejection(tmp_path):
     original = case_row(839, *audit.base.CASES[0], "c" * 64)
     short = dict(original, complete=False, steps=61, terminal_worlds=[0])
-    observed = {**short, "body_yaw_trace": {"steps": 61}, "gait_yaw_trace": {"steps": 61}}
+    trace = dict(steps=61, **{key: [] for key in
+        ("command", "actor_command", "quat_wxyz", "angular_b", "angular_w")})
+    observed = {**short, "body_yaw_trace": dict(trace), "gait_yaw_trace": dict(trace)}
     with pytest.raises(ValueError, match="complete"):
         audit.retain_case(tmp_path, "control", 0, original, observed, "c" * 64)
     raw_path = tmp_path / "control-s839-c0.json"
@@ -188,7 +190,8 @@ def test_entrypoint_sequence_uses_exact_final_cases_and_persists_raw_before_both
     fake_torch_utils.configure_torch_backends = lambda: None
     monkeypatch.setitem(sys.modules, "mjlab.utils.torch", fake_torch_utils)
     calls = []
-    trace_stub = {"timing": "pre-action"}
+    trace_stub = dict(timing="pre-action", **{key: [] for key in
+        ("command", "actor_command", "quat_wxyz", "angular_b", "angular_w")})
 
     def evaluate(checkpoint, seed, speed, yaw, health, **kwargs):
         arm = Path(checkpoint).parent.name
@@ -232,4 +235,18 @@ def test_entrypoint_sequence_uses_exact_final_cases_and_persists_raw_before_both
         summary_path = output / row["summary_file"]
         assert hashlib.sha256(raw_path.read_bytes()).hexdigest() == row["raw_sha256"]
         assert hashlib.sha256(summary_path.read_bytes()).hexdigest() == row["summary_sha256"]
+
+
+@pytest.mark.parametrize("key", ["command", "actor_command", "quat_wxyz", "angular_b", "angular_w"])
+def test_shared_trace_channel_mismatch_retains_raw_before_rejection(tmp_path, key):
+    original = case_row(839, *audit.base.CASES[0], "c"*64)
+    trace = {name: [[[0.]]] for name in
+             ("command", "actor_command", "quat_wxyz", "angular_b", "angular_w")}
+    gait = {**trace, key: [[[1.]]]}
+    observed = {**original, "body_yaw_trace": trace, "gait_yaw_trace": gait}
+    with pytest.raises(ValueError, match="identical aligned shared"):
+        audit.retain_case(tmp_path, "control", 0, original, observed, "c"*64)
+    raw = json.loads((tmp_path/"control-s839-c0.json").read_text())
+    assert raw["body_yaw_trace"][key] != raw["gait_yaw_trace"][key]
+    assert not (tmp_path/"control-s839-c0-summary.json").exists()
 

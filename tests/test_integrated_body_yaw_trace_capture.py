@@ -182,6 +182,8 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
     gait_trace = gait_case.pop("gait_yaw_trace")
     gait_body_trace = gait_case.pop("body_yaw_trace")
     assert gait_case == default and gait_body_trace == trace
+    assert all(gait_trace[key] == trace[key] for key in
+               ("command", "actor_command", "quat_wxyz", "angular_b", "angular_w"))
     assert closed == [240, 240, 240]
     assert gait_trace["episode_length"][0] == [0]*8
     assert gait_trace["episode_length"][-1] == [239]*8

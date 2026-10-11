@@ -181,6 +181,11 @@ def retain_case(output: Path, arm: str, index: int, original: dict[str, Any],
                                        row.get("checkpoint_sha256"))
                 == (SEED, speed, yaw, checkpoint_sha256),
                 f"{label} declared arm/checkpoint/command identity")
+    require(type(body_trace) is dict and type(gait_trace) is dict
+            and all(key in body_trace and key in gait_trace
+                    and body_trace[key] == gait_trace[key]
+                    for key in ("command", "actor_command", "quat_wxyz", "angular_b", "angular_w")),
+            "body and gait traces have identical aligned shared pre-action samples")
     body_summary = body_yaw_trace.summarize_trace(case, body_trace)
     gait_summary = gait_yaw_trace.summarize_trace(case, gait_trace)
     differences = replay.replay_differences(case, original)

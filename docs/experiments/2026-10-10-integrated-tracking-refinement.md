@@ -2373,3 +2373,10 @@ three existing selector warnings. This includes strict input-bundle/hash/
 receipt/path/order guards and a mocked eight-case entrypoint proving the
 raw-before-both-summaries retention sequence. No simulator or GPU diagnostic
 has run yet, and the active native duration source remains unchanged.
+
+Root integration review added an exact cross-trace identity check for all
+five shared pre-action state channels: matching means are insufficient if
+the body and gait traces are offset or mixed. Mismatches retain raw evidence
+before rejection. Five additional regression cases plus the real optional
+capture fixture cover this alignment.721 focused CPU tests pass in19.38s,
+three existing warnings; no admission threshold or active job changed.

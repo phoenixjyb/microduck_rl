@@ -2633,3 +2633,72 @@ final999-only evaluation. Native source remains frozenb0dedcb3 while active.
 | smoke-batch | `51739deeecaa74aec9b5cc0b7db30709a73cb2b9d3b3569aebf59eb352d9408d` |
 | benchmark-control | `2ce151c728dcf8c55f613b8b2ea4d0d2e68b38d8f432609362329ab360f179a9` |
 | benchmark-batch | `1637dd79376e8ae0c5d3ab5335002655d79f075edc48b61c4f94fe23a1ca0109` |
+
+### Completed rollout-batch comparison: mixed, no accepted foundation
+
+The retained service completed before03:35 Beijing, inactive/dead/MainPID0,
+Resultsuccess/exit0, at exact clean sourceb0dedcb341fa9703ce944bf410918f10099bdf7f.
+Both1000-update arms, all ten cadence/final checkpoints, exact parent
+actor/critic/normalizer/Adam restoration and reset counters verified. All2000
+update rows are finite with zero NaN terminations;40,000 optimizer minibatch
+KL/LR transitions, actual signed angular/zero-weight bias rewards and complete
+command dwell pass the read-only audit. Control/batch elapsed625.514331/
+794.647376s and6.144M/24.576M additional transitions. Neither duration nor
+the optimizer update count changed.
+
+All24 held-out cases complete240 steps/8 worlds without terminal worlds or
+rated-speed exceedance. Both arms pass12/12 motor and12/12 named joint-range
+gates, but fail all nine moving combined-tracking cases; only idle passes.
+Deterministic decisions and paired differences recompute exactly. No accepted
+policy, simulation qualification, obstacle/hop admission or motion.
+
+| Command vx/yaw | Control / batch speed MAE | Control / batch body-yaw MAE | Speed-passing worlds /24 | Yaw-passing worlds /24 |
+| --- | ---: | ---: | ---: | ---: |
+| 0 /0 | .001185 / .001199 | .009355 / .009226 | 24 /24 | 24 /24 |
+| .30 /0 | .110628 / .092580 | .109742 / .108152 | 3 /20 | 5 /6 |
+| .20 /-.20 | .043366 / .035963 | .121730 / .131600 | 24 /24 | 1 /0 |
+| .20 /+.20 | .050295 / .039489 | .119316 / .110876 | 24 /24 | 2 /6 |
+
+These group means are descriptive, not admission. Larger batch improves
+moving speed in each group and moving yaw-passing world count8/72->12/72,
+but negative-turn yaw worsens and still has no passing worlds. Its mean
+signed negative-turn residual grows.050725->.082144rad/s; all24 worlds
+under-track that negative command on average. No broad yaw improvement is
+established and no automatic duration/batch escalation is justified.
+World count also changes minibatch size, RNG topology and normalizer/Adam
+trajectories; this one-seed result is not a pure sample-count causal finding.
+
+Maximum case-level pooled torque p99 utilization.480619/.522800 remains
+below.60; the field is already dimensionless. Last100 update means:
+falls.63/1.00, raw training yaw MAE.302254/.275958, yaw squared error
+.172009/.141083, roll/pitch squared rate.330927/.260384, motor cost
+.047072/.046697, thermal proxy.046622/.046215, soft-limit fraction
+.004619/.004900, right-yaw stop exposure.001032/.000717. Aggregate training
+falls447/1254 cover different transition exposure; do not compare raw counts
+as a held-out stability decision. Lower training error did not yield admission.
+Both signed target-band command bins were substantially exercised.
+
+Training peaks1717MiB/61C and2515MiB/68C; evaluation2859MiB/62C. Post-run
+DINO2021 only969MiB/51C,15,225MiB free; all four protected service scopes
+inactive.37 structured files match native SHA256 and sizes under Mac
+`artifacts/evaluations/rollout-batch-b0dedcb3-20261012`, plus copied manifest;
+weights remain native only. One SFTP control-copy timeout left a partial
+update log/missing warm receipt. Read-only reachability, service and GPU
+checks confirmed the completed job and reachable host; retry only those two
+local regenerable copies, then reverify all37 hashes. No source, service,
+driver, checkpoint or unrelated workload changed for that copy recovery.
+
+The763 focused source tests had passed before launch. Additional Mac
+CPU consumer regression checks pass87 tests in27.71s, and upstream/athletics
+task-separation checks pass5 in5.92s; these do not establish policy behavior.
+Next is the bounded action/joint-response diagnostic, not a guessed reward
+coefficient, seed selection or higher-duration training.
+
+| Artifact | SHA256 |
+| --- | --- |
+| Control final999 | `bdd2f66a64f86fdab6622ec6f945322688d92516fccd759f1b89d8db5378d4ca` |
+| Batch final999 | `26dd8ace189b2ff0c15e252093672986587107fb935e2795ca90f8002373f1b7` |
+| Control receipt | `9408a05802651a33183be0c4a8db3be97fa0784c59c92c145f4d17d8b173cea5` |
+| Batch receipt | `46fa7c2fb584a019c92217cd42f8734a80761c3cba6abd0cc6e11613a92ce149` |
+| Evaluation launch | `55aa097ca53603fcce1f8a24e9e578713b50a36eea83156df89c1f0072231926` |
+| Held-out aggregate | `9a3ab60c7a4f7613bfd371015ce9ab9a59eb15921d5bc56a04d0ba2ea97067e4` |

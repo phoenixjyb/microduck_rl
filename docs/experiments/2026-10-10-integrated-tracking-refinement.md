@@ -2915,7 +2915,7 @@ before every child. Keep DINO2021, exactGPU/shared lease,20%allocator,
 four protected AI scopes inactive. No source changes while a GPU job is
 active. Retain/diagnose failure read-only before changes. No video, skill
 promotion, raw perception, physical motion or protected-service restoration.
-Tests/native capacity and launch evidence will be recorded after verification.
+Tests/native capacity and launch evidence follow below.
 
 Preparation verification:27 new focused tests pass, plus991 local focused
 regressions in25.72s with34 existing actuator/site-selector warnings;
@@ -2925,3 +2925,63 @@ minibatches/dwell and config parity. They caught an inherited telemetry-list
 name collision before GPU use; child lists now use a unique `yaw_l1_` prefix
 and the full-parent-update regression passes. Independent read-only review
 finds no source/harness blocker. Native CPU and simulation remain gated.
+
+### Instantaneous yaw-L1 result: rejected, no promotion
+
+Source `259092c9269fac432fb38fdbd659b0fed3609006`, native exact clean checkout;
+988 native focused tests passed/3 existing artifact-consumer skips,34 existing
+warnings. Both preflight smokes completed with finite normalized ONNX CPU
+exports. Matched256×10 benchmarks took8.1389/8.1334s (×150 projections
+1220.83/1220.01s), below the2040s budget. Preflight service exited0.
+
+`microduck-yaw-l1-259092c9-matched-eval.service` finished successfully at
+04:42 Beijing time on2026-10-12:1000 updates per arm and the unchanged24-case
+final999 matrix. Training took637.677/642.343s; all2030 updates including
+preflight were finite, with complete24-step command dwell and20 raw-KL
+minibatches per update. Actual yaw-L1 reward equalled weight×absolute residual
+including terminal snapshots. Control/yawl1 last100 training means: raw
+yaw-L1.289321/.293698rad/s, weighted reward0/−.146849; squared yaw error
+.155139/.159935; motor cost.047039/.049920; thermal proxy.046587/.049332;
+mechanical power proxy2.140953/2.347165. Falls401/431 overall,32/37 last100;
+last100 right-yaw stop exposure.05355%/.17643%. Maximum stochastic-training
+right-yaw overruns.03484/.04329rad are not held-out range acceptance.
+
+Each arm passed12/12 stability,12/12 motor and12/12 range cases, but only
+3/12 combined tracking cases (all idle); every one of the nine moving cases
+failed. Moving-world yaw passes worsened19/72→12/72 despite better speed.
+Means across three seeds×eight worlds below are descriptive only; admission
+still requires every world within each case to pass the original limits.
+
+| command vx/wz | speed MAE control/yawl1 (m/s) | yaw MAE control/yawl1 (rad/s) | speed passes /24 | yaw passes /24 |
+|---|---|---|---|---|
+|0/0|.001364/.000910|.010786/.007756|24/24|24/24|
+|.3/0|.102991/.094000|.107415/.113639|9/19|13/4|
+|.2/−.2|.042974/.036736|.120724/.118817|24/24|4/0|
+|.2/+.2|.045282/.038512|.129035/.116663|24/24|2/8|
+
+Signed body-minus-command yaw means: idle−.003200/−.001630, straight
+−.006370/−.014063, negative turn+.023406/+.045823, positive turn
+−.074120/−.050000rad/s. Positive-turn improvement is insufficient; do not
+cherry-pick seeds/checkpoints, increase this coefficient or create a video.
+This one training seed does not establish a robust causal effect.
+
+All numerical decisions were recomputed independently from retained per-case
+world errors, motor/range flags and paired differences. Structured evidence:
+[57 byte-verified JSON/JSONL files and manifest](../../artifacts/evaluations/yaw-l1-259092c9-20261012/verified-manifest.json)
+(9,178,859 original bytes). Weights/ONNX remain in the native run directory
+`artifacts/training/yaw-l1-259092c9-20261012`; no duplicate local weights.
+Final999 SHA256: control
+`fe5175d9612a0680541c58a65485b8856bfac0be794c9e68c5b86348cab48954`,
+yawl1 `43a03f90f6e567aa28ea5c46ea0d66f32f5e6c37f30b8a66407b87071a7af59f`.
+Aggregate evaluation SHA256
+`6d3c8ef493625597ccbae8095f7a537ef5c05a2603ce21ce83378b4b6a1aa91d`;
+launch `04a21e66cd05e91691006a21a120ca425b08b5b2fe7317345aac97f5666e6135`;
+health `26b7179785bd5eaea874c0ec27697f168af576603b464084d99cf34a3d513ca8`.
+
+Training peak1717MiB/61C; evaluation peak2859MiB/59C. Service inactive/dead,
+MainPID0,Resultsuccess,exit0; post-run DINO2021 alone946MiB (GPU total969MiB,
+free15225MiB,51C). Four protected AI scopes remain inactive. No physical
+motion, raw perception, observation expansion, service restoration or skill
+promotion. Next bounded hypothesis is explicit neutral-head command exposure,
+not a posture-prior relaxation: read-only audit found no distinct turn-induced
+hip-yaw posture penalty sufficient to justify weakening that prior.

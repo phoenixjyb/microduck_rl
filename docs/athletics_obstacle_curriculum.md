@@ -9,6 +9,37 @@ The curriculum is deliberately sequential. A policy advances only after a
 retained, multi-seed evaluation passes. A later skill must not hide a regression
 in an earlier one.
 
+### October 12: current integrated training line
+
+The current source line is `integration/upstream-2026-10-10`; the retained
+September research tree and policies remain separate. Start with the
+[upstream integration](experiments/2026-10-10-upstream-integration.md) and
+[current training results](experiments/2026-10-10-integrated-tracking-refinement.md),
+not an expired campaign window or an old plant's acceptance receipt.
+
+Actual matched PPO continuations have run, including instantaneous yaw-L1,
+neutral-head exposure, entropy consolidation and low-yaw rehearsal. None has
+cleared the unchanged complete moving-command matrix. The low-yaw comparison
+keeps stability, motor and joint-range gates passing in both arms, but all nine
+moving cases still fail tracking; partial per-world improvements are not policy
+acceptance. Do not stack the rejected treatments or call them newly learned
+turning, obstacle, hopping or football skills.
+
+The next lesson remains integrated straight/left/right command tracking, with
+one explicitly declared training factor, original parent/runtime and complete
+held-out evaluation. The cached angular-observation timing diagnostic and its
+small repeated replay probe are descriptive checks, not new acceptance gates,
+raw perception, a filter or an actor-interface expansion. No further training
+factor is launched in the window ending October12 at07:00 Beijing.
+
+After a foundation candidate passes, qualify stop/start and command transitions,
+then compact externally supplied obstacle geometry with slowdown permitted only
+inside the avoidance segment and speed tracking retained before/after it.
+Keep earlier stabilization and hopping retention checks separate; their legacy
+plant results do not automatically transfer to this source. Rolling-football
+balance still follows its independent plant/support/recovery gates below.
+No physical capability is established by these simulation or repository results.
+
 September8 addition: [football balancing](experiments/2026-09-08-football-balance-curriculum.md)
 is a separate B0–B6 track: plant feasibility, flat stance, fixed-ball support,
 prescribed rolling, free rolling, perturbations and mounting/dismounting with

@@ -3528,3 +3528,93 @@ Tests caught and corrected the summary math import to the pinned
 found and confirmed correction of actual head_command/body_command term
 names; no actor layout is changed. Native CUDA-hidden validation and an
 idle-GPU check are still required before launch.
+### Cached angular-observation timing result: descriptive, not admission
+
+Source `dbb5df4f24c891f2a5b6459336bc36b127988087`, service
+`microduck-obs-timing-dbb5df4f-diagnostic.service`, completed successfully at
+approximately06:32 Beijing October12: inactive/dead, MainPID0, exit0.
+Native CUDA-hidden regression passed1139 tests with3 historical-artifact skips
+and45 existing actuator-selector warnings in32.81s before GPU initialization.
+All eight declared cases completed240 steps without a terminal. The complete
+original24-case decisions and both final499 hashes were authenticated and kept;
+this eight-case diagnostic does not replace that matrix or admit either arm.
+
+Mean of eight per-world settled MAEs; rates are rad/s. These component MAEs
+are not additive and must not be converted into causal contribution percentages.
+
+| Arm / vx,wz | Actor minus current body yaw MAE | Selected minus newest delayed-view MAE | Mounting-view MAE | Fresh-noise MAE | Reward-phase versus next body-view MAE |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Control /0,0 | .016893 | .011230 | .000224 | .015213 | .006615 |
+| Control /.3,0 | .067316 | .059709 | .004098 | .015213 | .043673 |
+| Control /.2,-.2 | .067091 | .058285 | .004767 | .015213 | .043745 |
+| Control /.2,+.2 | .067252 | .059165 | .004623 | .015213 | .045807 |
+| Rehearsal /0,0 | .018311 | .012536 | .000231 | .015213 | .010397 |
+| Rehearsal /.3,0 | .063403 | .055679 | .004552 | .015213 | .042704 |
+| Rehearsal /.2,-.2 | .063055 | .055369 | .005344 | .015213 | .041799 |
+| Rehearsal /.2,+.2 | .063708 | .056114 | .005043 | .015213 | .041715 |
+
+Lag1 occurs49.0972% of settled samples in every case. Actual indexed history,
+bounded noise, unchanged mounting quaternion,20ms physics/common clocks,
+pre-reset reward samples and first-episode identity independently recompute
+from the retained raw trace. The reward-phase difference describes two views
+of body state at the same control boundary; it is not a measured reward error.
+Moving body-yaw MAE remains .108–.148rad/s. No delay, noise, actor-normalizer,
+filter, target or reward was changed; these observations do not excuse a failure.
+
+All eight `original_fields_replay_exact` values are false. Read-only comparison
+shows identical seed/command/worlds/steps/completion/terminal/checkpoint and
+motor-stream provenance, but different numerical dynamics/load summaries.
+Across eight cases, maximum per-world MAE shift is .001587m/s for speed and
+.010634rad/s for yaw; torque-p99 shift at most .00441. Source inspection and
+CPU fixtures show no deliberate RNG consumption or delay advancement in the
+capture, but GPU-to-CPU copies/reductions add synchronization. Ordinary replay
+spread versus an instrumentation-associated effect is unresolved. Do not claim
+an RNG-identical physical replay or causal explanation from this comparison.
+
+Peak1935MiB/57C; post969MiB/50C, DINO2021 alone, all four protected scopes
+inactive. All19 JSON/JSONL files (21,315,338bytes) were independently hash/size
+verified on native and Mac under
+`artifacts/evaluations/obs-timing-dbb5df4f-20261012`; Mac
+`verified-manifest.json` binds exact source, weights, summaries and host evidence.
+Ignored assets are retained, not uploaded in Git; no duplicate weights were copied.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Result | `921d0edda0595878e9f52cd91eefd562161df8a982ea0a6f3e2eff5eff706fa1` |
+| Launch | `522fea006e0915c8512315ca47f9810cd32a50a5c3849f96e429dc6749a21dce` |
+| Health | `93805a43e44dfb052d48a46b88523cbfef786e63bc9fffb41b1d7569aa73db0d` |
+
+### Predeclare one bounded repeated observation replay probe
+
+Before07:00 Beijing, allow one four-case diagnostic only, not another reward,
+sampler or training-factor search. Use the exact control499 checkpoint, seed839,
+command vx=.3/wz=0, eight worlds×240 steps/startup60 in fixed order:
+**baseline, trace, trace, baseline**. Enable the existing angular-reward capture
+in every run; toggle only the optional observation trace. Baseline here means
+angular-diagnostic-only, not the historical uninstrumented evaluator. Preserve
+all existing policy/config/sensor/RNG/step semantics and configure the same
+Torch backend as the earlier runs; do not introduce a deterministic-mode change.
+
+Authenticate the full original24-case matrix and training receipts as before,
+plus the exact completed timing aggregate above. Retain each raw case before
+summaries, including a partial terminal; stop before another case on failure.
+Compare the baseline repeat, trace repeat and both nearest trace/baseline pairs
+using identical identity/provenance and signed scalar/per-world metric deltas.
+No new tolerance, causal test or policy gate: four repeats cannot establish a
+replay distribution, mechanical cause or learned benefit. Preserve the original
+rejected decisions in the result. Do not alter gates or cherry-pick a replay.
+
+Require source-frozen exact clean pushed commit, native CUDA-hidden focused
+regressions, idle-Duck lease/shared-host health, DINO2021 preserved and all four
+protected scopes inactive. One600s service,480s child plus15s grace and615s
+launch deadline reserve; same8GiB/CPU200%/Tasks64/Nice10/20%Torch allocator.
+No overlap, training, policy promotion, video, physical motion or restoration.
+
+Preparation: owner-reviewed new replay-probe tests and adjacent timing fixtures
+pass65 tests in7.78s; the new probe plus evaluator-hook checks pass25 in6.63s.
+The existing1142-test combined regression passes again in28.75s with45 existing
+warnings. These overlapping runs are not summed as a new unique-test count.
+Whitespace checks pass. The independent read-only review found no launch
+blocker; the owner added explicit prior timing-launch runtime/hash and all eight
+raw-case hash checks before committing. Native CPU qualification remains a
+separate required launch gate.

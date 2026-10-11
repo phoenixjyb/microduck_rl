@@ -4086,6 +4086,25 @@ def body_twist_tracking_cost(
     return cost
 
 
+def body_forward_tracking_cost(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Squared body-forward command residual, referenced to 1 m/s.
+
+    Positive raw cost requires a negative weight. This is not an absolute
+    motion penalty: matching nonzero speed costs zero. Other gait/turn axes
+    are deliberately untouched; raw nonfinite values fail closed.
+    """
+    asset: Entity = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    cost = (command[:, 0] - asset.data.root_link_lin_vel_b[:, 0]).square()
+    if not bool(torch.isfinite(cost).all()):
+        raise FloatingPointError("nonfinite raw body forward tracking cost")
+    return cost
+
+
 def bounded_planar_velocity_cost(
     env: ManagerBasedRlEnv,
     asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,

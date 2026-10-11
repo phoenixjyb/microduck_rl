@@ -688,3 +688,101 @@ Do not advance or alter the running native checkout. A documentation-only
 follow-up on Mac does not change its pinned source. Full arm completion,
 durable final999 hashes and the24-case held-out comparison are stillpending.
 No automatically chained new skill, video, publication or physical motion.
+
+### Completed range-retaining tracking comparison
+
+The preceding launch snapshot is superseded. The service completed2026-10-11
+08:14:21 Asia/Shanghai, Resultsuccess/ExecMainStatus0/MainPID0. Control took
+574.331751s and tracking579.717843s; each completed1000 updates/24000 common
+steps/6,144,000 transitions at seed919/256 worlds. CUDA-hidden verification
+checked finite model/Adam, final999 iteration/common-step counters, exact parent
+and result/checkpoint hashes, all1000 finite update rows per arm andzero NaNs.
+Every standalone held-out case equals its aggregate record, both deterministic
+decisions recompute exactly, and all paired differences recompute exactly.
+
+Both arms passed12/12 motor and12/12 range checks. All24 cases wereupright,
+240 steps, zero terminals andzero rated-speed exceedance; right-hip hard-stop
+proximity exposure waszero in every case. Both still fail every moving case's
+combined tracking gate; only their three idle cases pass the full criteria.
+Thus neither checkpoint is an accepted locomotion foundation.
+
+| Command vx/yaw | Control / tracking speed MAE | Control / tracking yaw MAE | Control / tracking torque p99 utilization |
+| --- | ---: | ---: | ---: |
+| 0 / 0 | .001253 / .001077 | .010984 / .011521 | .260426 / .218449 |
+| .30 / 0 | .090479 / .114211 | .249249 / .182633 | .496784 / .475410 |
+| .20 / -.20 | .054618 / .071267 | .252181 / .215522 | .468694 / .421626 |
+| .20 / +.20 | .053086 / .069341 | .267843 / .208965 | .469650 / .426845 |
+
+These are descriptive means, not replacements for per-world gates. The treatment
+improves yaw MAE in each moving command group while increasing forward-speed
+MAE in each group. Seed839's straight-case mean bodyvx is roughly.215 versus
+.189m/s. Reduced turning error alongside slower forward response is consistent
+with a gait trade-off; it does not prove why the policy slowed. The live
+unclipped twist cost combines forward/lateral/yaw squared residuals with1m/s
+and1rad/s references. Its last100 training mean decreased.626766→.447897,
+so optimizing this aggregate does not establish balanced command tracking.
+
+Training last100 falls were120/128; health peaks1710MiB/59C for both. Across
+twelve held-out cases mean mechanical-power proxy1.093368/1.077399W and
+thermal-load proxy.022703/.019899, not physical power/temperature guarantees.
+Only small JSON records were mirrored to Mac
+`artifacts/evaluations/safe-tracking-be487638-20261011`; models remain native.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Control final999 | `b867d289423836c838998a6b1e0dae660a0b8c8af1c8e2e2be1d7e13bd0d1646` |
+| Tracking final999 | `503fb02f0bbddbd3fc886453b20a2c878a91a8c1c985eeddfeec768020c53b39` |
+| Control result | `8fbbe6acebe04f25d9062c53ec290d1b70950e7ae7abe73a26da8d57ebcb4267` |
+| Tracking result | `90b64285278ce6084a26aec2ae0780e5e24eace8b7224217c54b019c42d1459c` |
+| Held-out aggregate | `8ea8d8373c4f419e5a0ef1e47e32ff55d13a8b1a7a29c1c9fc1531d345eb12a7` |
+
+### Forward-specific dose-escalation predeclaration
+
+Under the owner's renewed continuation request, test
+`integrated-forward-retaining-turn-continuation-v1` in
+`integrated_forward_tracking_refinement.py`. This is a bounded next experiment,
+not automatic policy promotion or a new obstacle/hop skill. Both arms load the
+exact tracking final999 above, preserving actor/critic/normalizers/Adam and
+Python/Adam LR, fresh episodes and warm clocks0. The parent is exploratory only:
+motor/range subsets passed, but its full foundation decision is rejected.
+
+Both arms keep qpos-4/.15rad, motor-1, and body-twist-error-.5 fixed. Same plant,
+commands, DR, frozen source curricula, unfiltered actions,61D actor/14 actions
+and learner. Add the same positive forward-only cost term in both configs:
+`(command_vx - root_link_lin_vel_b[:,0])**2`, referenced to1m/s, no clipping or
+absolute-speed tax. It ignores lateral/yaw/vertical/roll/pitch. Raw nonfinite
+residuals fail closed. Control weight0; treatment-.25 initially, -.75 strictly
+after6000 common control steps, -1.5 strictly after12000. Each iteration collects
+24 steps per world; these boundaries are not aggregate world transitions.
+
+Matched seed937/256 worlds/1000 updates, save250, evaluate final999 only.
+This isolates adding one escalation schedule, not individual dose efficacy.
+Do not choose a best intermediate checkpoint or weaken per-world tracking,
+motor, terminal or range/stop gates. The full unchanged evaluator remains
+seeds839/853/857×four commands×eight worlds×240 steps, tracking startup60.
+Check measured yaw/motor/range retention too; fixed shaping is not proof that
+those capabilities will survive. No promotion if the full gate fails.
+
+Before long training require both64-world5-update seed929 smokes, treatment
+stages compressed to updates1/2, official normalized ONNX finite CPU61-to14,
+and both256-world10-update seed931 benchmarks at full treatmentweight-1.5.
+Use the existing360s preflight wrapper/60s CPU and GPU child caps and measured
+1000-update projections below2040s. Only after exact clean pushed source and
+successful receipts may one4500s sequential user service run control then
+forward then evaluation with2100/2100/240s caps and15s grace. Keep GPU lease,
+explicit verified DINO PID2021,6GiB aggregate/8GiBfree/<75C and all protected
+scopesinactive. Preserve unrelated workloads and100.98/NX.
+
+Every rollout captures raw forward residual after reward/before reset, even
+for control's zero-weight term, and verifies actual weighted reward. Log fixed
+motor/qpos/twist costs plus forward cost/weight extrema and exact step counts
+at each weight. The focused Mac suite passed138 tests in7.34s, including raw
+zero/match/under/overshoot/reverse, ignored axes, nonfinite failure, exact
+parent/config parity, strict boundary behavior, and pre-reset weighted reward
+checks after simulated state reset. Native/GPU readiness is stillpending.
+
+Independent read-only Luna review found no harness or measurement blocker.
+Its advancing-clock test suggestion was incorporated: a24-step update beginning
+at6000 records1 old/23 new weight exposures; the12000 boundary similarly splits.
+This fixes the schedule interpretation without changing it or selecting doses.
+The final focused Mac suite passed146 tests in6.10s; whitespace checks passed.

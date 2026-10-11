@@ -823,3 +823,104 @@ in `/home/converge/work/microduck_rl-upstream-20261010`. Keep this running
 checkout at sourcea09a9c0a; documentation-only follow-ups on Mac must not
 advance it. Completion, final999 hashes and numerical comparison arepending.
 Stop after retaining this matrix; no automatically chained new skill or motion.
+
+### Completed forward-pressure comparison
+
+The preceding pending snapshot is superseded. The retained service completed
+2026-10-11 14:18:50 Beijing time, inactive/dead, Resultsuccess,
+ExecMainStatus0/MainPID0. Control/forward took768.434917/799.505250s; each
+completed1000 updates/24000 common steps/6,144,000 transitions at seed937,
+256 worlds. CUDA-hidden verification checked exact source/parent bindings,
+finite final model/Adam, final counters and checkpoint bytes, all1000 finite
+update rows, zero NaNs, fixed shaping and exact staged forward-weight exposure.
+All24 standalone case records match the aggregate, deterministic decisions and
+paired differences recompute exactly. Models/logs remain native; small JSON
+copies are retained on Mac at
+`artifacts/evaluations/forward-tracking-a09a9c0a-20261011`.
+
+Both arms passed12/12 motor and12/12 joint-range checks. Every case completed
+240 steps upright, with zero terminals, rated-speed exceedance and right-hip
+hard-stop proximity exposure. Both failed all nine moving combined-tracking
+cases; only three idle cases passed. Neither checkpoint is an accepted policy.
+
+| Command vx/yaw | Control / forward speed MAE | Control / forward yaw MAE | Control / forward torque p99 utilization |
+| --- | ---: | ---: | ---: |
+| 0 / 0 | .000826 / .000701 | .005513 / .006060 | .175904 / .228581 |
+| .30 / 0 | .106726 / .101061 | .161155 / .179796 | .487335 / .490011 |
+| .20 / -.20 | .061256 / .056040 | .181813 / .208943 | .467975 / .478754 |
+| .20 / +.20 | .055769 / .053954 | .168967 / .208301 | .481793 / .490883 |
+
+These descriptive means do not replace per-world gates. Forward-specific
+pressure slightly reduced speed error but increased yaw error in every moving
+group; do not promote the treatment. Signed mean-yaw bias is smaller than
+instantaneous yaw MAE, consistent with variable response, but this is not a
+frequency analysis or proof of a particular oscillation mechanism. Last100
+training falls120/98 and forward cost.022081/.019292 are training diagnostics,
+not stability acceptance. GPU peaks1717MiB/66C. Held-out mechanical-power
+proxy means1.076198/1.045611W and thermal proxies.021024/.021405 are simulation
+metrics, not hardware power or temperature guarantees.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Control final999 | `604700b0d50ee5f11558cf826a1c50fc4283bae801a80f7d6a8f90dff1a14132` |
+| Forward final999 | `07263b054cc0b69667654fbd389d35f081d701f7aabb818c86b44d302e35ac37` |
+| Control result | `ee1c1868b9ee992c5ff19b9a9298620f00dc5242e3ec5903a631cabc7b779b76` |
+| Forward result | `b40511408a8c634620637cd0ad4a909e77e65918b034cec0eab32677c8e74c71` |
+| Held-out aggregate | `8ff8a273854b42d66cc6707b598264e2286cd8cb309adf797947e1f41f32d4cb` |
+
+### Gentle turning-command curriculum predeclaration
+
+Under the owner's renewed continuation, test
+`integrated-gentle-turn-range-curriculum-v1` in
+`integrated_turn_range_curriculum.py`. Choose the preceding control final999
+as the exact research parent because its moving yaw errors are lower; this
+does not qualify it as an accepted locomotion foundation. Both arms restore
+that exact model/normalizers/Adam and learning rate, fresh episodes/clocks0.
+
+Only yaw-command sampling range differs. Control keeps±.50rad/s throughout;
+treatment begins±.05, expands to±.10 strictly after6000 common control steps,
+and±.20 strictly after12000. With24 steps/update and1000 updates, treatment
+exposure is6001/6000/11999 action steps respectively. Mutate the actual command
+manager's sampling cfg before action, not merely the source env cfg. Expansion
+does not force resampling or rewrite current commands; ordinary3–5s resampling
+continues. Initial range is set before env construction/reset. Log live range,
+actual yaw-command maxima, per-update and cumulative stage counts, and fail
+closed on unexpected range, reverse stage or nonfinite/out-of-bound commands.
+
+Both arms retain motor-1, qpos-4/margin.15rad, twist-cost-.5, forward-cost0,
+vx range(.2,.4), existing idle/straight proportions, source frozen curricula,
+DR, plant, learner, unfiltered actions and61-to14 policy contract. Matched
+seed953/256 worlds/1000 updates, save250, final999 only. This compares the
+whole easier-to-harder curriculum, not independent stage efficacy; final±.20
+does not establish capability across±.50.
+
+The held-out protocol and gates remain unchanged: seeds839/853/857, commands
+0/0, .30/0 and .20/±.20, eight worlds,240 steps, first60 omitted for tracking
+only. Every world must satisfy speed MAE≤.10 (idle≤.03) and yaw MAE≤.10;
+torque p99 utilization≤.60, zero terminals/rated-speed exceedance, all14 joint
+range overruns≤.005rad, and right-yaw .05rad stop-proximity exposure≤1%.
+No best-intermediate selection or gate relaxation.
+
+Before long training require both64-world5-update seed947 smokes (curriculum
+compressed to strict boundaries24/48, exposure25/24/71), official normalized
+finite CPU ONNX61-to14 checks, and both256-world10-update seed949 benchmarks
+(curriculum at final±.20). Require measured conservative1000-update projections
+below2040s and exact clean pushed source. Use the retained360s preflight,
+60s children; then only one4500s sequential user service with2100/2100/240s
+control/curriculum/evaluation children and15s grace. Keep the owned GPU lease,
+verified retained DINO PID2021, aggregate≤6GiB/free≥8GiB/<75C and all four
+protected mission-service scopes inactive. Preserve100.98/NX and unrelated
+workloads. Stop after retaining this matrix; no new skill/video/publication,
+raw perception, physical motion or automatic promotion.
+
+Focused Mac tests passed154 in12.32s (three existing actuator-selector
+warnings), including matched config, exact parent, live-manager mutation,
+unchanged current commands/rewards, strict boundary exposure and fail-closed
+range/nonfinite checks. Whitespace checks passed. GPU preflight is pending.
+
+Independent read-only Luna review approved the design for bounded preflight,
+not policy acceptance. Its artifact-location concern was resolved without
+duplicating models: the declared parent is intentionally absent from Mac but
+exists in the native training checkout, with the exact604700b0… digest above
+verified again. Native source is clean, previous service inactive/success,
+GPU DINO-only969MiB/51C/free15225MiB, all protected scopes inactive.

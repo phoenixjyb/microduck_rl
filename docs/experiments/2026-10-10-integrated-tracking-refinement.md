@@ -1604,3 +1604,33 @@ Implementation review and the Mac CUDA-hidden focused suite passed:342 tests,
 including29 new reward-form/config/observer checks, with three existing actuator
 selector warnings. No acceptance gate changed. Native preflight and the new
 matched outcome are pending.
+
+Native preflight completed at exact training source
+`ea24a14a23e2ea74560ee7c4b69a4308d057af0a`:342 focused tests passed in14.45s
+(three existing selector warnings). All four receipts, checkpoint hashes,
+finite models/Adam, exact parent restore, actual pre-reset signed formulas,
+fixed reward configuration and600 optimizer minibatches verified. Both
+normalized ONNX exports are finite61-to14. Benchmarks took7.699s(control)
+and7.734s(decoupled), giving conservative x150 projections1154.82/1160.10s
+within2040s. Treatment negative-sample fractions were17.109%(smoke) and
+17.762%(benchmark); control had none. Smokes had no falls, benchmarks0/1;
+all had zero NaN terminations. These short training diagnostics are not
+held-out motor/tracking acceptance. Peak host use1717MiB/57C; post-preflight
+DINO-only969MiB/50C and protected services inactive.
+
+| Preflight receipt | SHA256 |
+| --- | --- |
+| smoke-control | `ded2b2989a3be605df35e3ca5510250a5c45ecfbbfc6c63b569d7c5bac62157b` |
+| smoke-decoupled | `47fceb5daa59505d8fdae4c1e71f6dcf620bc9ba7c3e5ab969d44840461729bf` |
+| benchmark-control | `503a2dfc067ce806494dc0014bffe3c7256dfc36f2d871b3feefb101a4db7d7a` |
+| benchmark-decoupled | `ada37c7e5609982aa850a1321adbad840d0e4761c9f402740c8b4e3895e1b6da` |
+
+Launched one sequential retained service
+`microduck-angular-decoupling-ea24a14a-matched-eval.service`, initialMainPID922489,
+under `artifacts/training/angular-decoupling-ea24a14a-20261011`. Live properties
+verified4500s runtime/15s stop/control-group kill/8GiB RAM/200% CPU/64 tasks/
+nice10; exact DINO2021 retained. Control1000 then decoupled1000 then unchanged
+24-case evaluation, with per-child deadline checks and2100/2100/240s caps.
+Small preflight receipts/update streams copied under Mac
+`artifacts/evaluations/angular-decoupling-ea24a14a-20261011-preflight`; models
+remain native only. Full training/evaluation and numerical decision pending.

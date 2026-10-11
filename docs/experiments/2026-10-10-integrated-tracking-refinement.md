@@ -3293,3 +3293,43 @@ evidence/summary tests). Broader Mac regressions pass 1066 in 35.83s with
 default evaluator path, retain partial terminals, authenticate the complete
 input matrix and compare shared gait/body trace channels exactly. Whitespace
 checks pass; native CPU checks and the fresh idle-GPU gate precede launch.
+
+### Completed nonzero-head-yaw diagnostic
+
+Exact pushed source `a4a7582f4dd61fd354699b97b0ca31186acd2d81`; service
+`microduck-head-yaw-a4a7582f-diagnostic.service` completed successfully by06:00 Beijing,
+inactive/dead, MainPID0, exit0. All four cases completed240 first-episode steps
+with no terminals or rated-speed exceedance. This is descriptive response
+evidence only; the entropy matrix's nine failed moving tracking cases remain
+failed. Nonzero-head policy competence is **not** admitted.
+
+| Arm / requested head yaw | Head-yaw MAE rad | Neck-pitch MAE rad | Speed MAE m/s | Body-yaw MAE rad/s |
+| --- | ---: | ---: | ---: | ---: |
+| control / -0.2 | 0.136686 | 0.135549 | 0.107809 | 0.100347 |
+| control / 0.2 | 0.145764 | 0.144500 | 0.101758 | 0.100491 |
+| consolidate / -0.2 | 0.120365 | 0.072750 | 0.095293 | 0.098950 |
+| consolidate / 0.2 | 0.105496 | 0.080012 | 0.094020 | 0.101426 |
+
+The commanded head turn is not tracked closely: pooled head-yaw absolute
+error .1055–.1458rad is substantial relative to the .2rad request. No new
+head-error threshold was introduced. Body-yaw errors remain near .10rad/s,
+and head commands do not demonstrate that mechanical head interference
+caused the locomotion failure. Original zero-head baselines are retained but
+are not RNG-identical replays. All named HOME-relative head measurements,
+float32 commands,61D actor slots,shared gait/body channels and descriptive
+summaries independently validate without policy/sensor/reward recomputation.
+
+Corrected native CPU regression invocation passed1063 tests,three existing
+artifact-dependent skips,45 warnings in32.65s. The initial command mistakenly
+placed new test paths on a new shell line: the inherited1029 tests passed,
+then bash reported `tests/test_head_yaw_evaluator_hook.py: Permission denied`
+(exit126). Read-only inspection identified the newline; no package/driver
+change was made, and the corrected complete command exited0 before GPU launch.
+
+Retained evidence:
+[11 byte-verified JSON/JSONL files and manifest](../../artifacts/evaluations/head-yaw-a4a7582f-20261012/verified-manifest.json),
+19,670,113 original bytes.
+Diagnostic aggregate SHA256 `6efb3d03683e42bb51834d8d44fa9eb29575c1dfb0e7dde3cc402bd9aa4eaf26`; bound original entropy
+aggregate `c6bc3567f4b67a68cfb3edea9b2664bb88100a60c6d4c8d06e5c1630562f6f85`.
+Peak1631MiB/55C; post-GPU DINO2021 alone969MiB/50C and four protected scopes
+inactive. No video, promotion, physical motion or protected-service restoration.

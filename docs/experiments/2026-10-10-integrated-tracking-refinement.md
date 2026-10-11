@@ -3051,3 +3051,68 @@ and the actual inherited reward/20-KL update path. Whitespace check passes.
 Read-only review confirmed pinned mjlab1.3's cache/counter APIs and command
 layout, without a launch blocker. Native tests, smoke/export and capacity
 remain mandatory before full training.
+
+### Neutral-head exposure result: rejected, no promotion
+
+Exact source `1afb163d7e355ec0ca6eaca8b29f65354147c4af`; the native checkout stayed clean
+and frozen. Native CPU regressions passed 1007 tests, with three existing
+artifact-dependent skips and 34 existing warnings. An initial shell invocation
+mistakenly attempted to execute one test filename after the test command;
+the corrected complete suite exited 0 before any GPU job was launched.
+
+Both 64-world smokes passed finite normalized ONNX export checks. Benchmarks
+took 7.9022/8.1720 seconds (control/neutral); conservative full-arm projections
+were 1185.33/1225.80 seconds, both below 2040 seconds. The sequential preflight
+service exited successfully.
+
+`microduck-neutral-head-1afb163d-matched-eval.service` completed successfully
+at approximately 05:21 Beijing time on 2026-10-12. Full arms took
+642.917/655.662 seconds. All 2030 updates including preflight were finite, with
+complete 24-step dwell and 20 audited KL minibatches per update; each full arm
+retained checkpoints 0, 250, 500, 750 and 999. Treatment head exposure was
+24.6492% exact-zero dwell, with 9491 zero and 28930 nonzero sampled segments;
+control had no exact-zero head segments. Cached actor/manager command identity
+and counter/reset segment accounting were verified without recomputing noisy
+observations or advancing command/reward state.
+
+Both arms passed 12/12 stability, motor and range cases, but only 3/12 combined
+tracking cases, all idle. All nine moving cases failed the unchanged per-world
+speed-or-yaw gate. Neutral-head exposure improved speed but did not solve yaw:
+moving-world speed passes rose 51/72 to 67/72, while yaw passes were 17/72 versus
+20/72. Group means below are descriptive, not replacement acceptance criteria.
+
+| Command vx/wz | Speed MAE control/neutral (m/s) | Yaw MAE control/neutral (rad/s) | Speed passes /24 | Yaw passes /24 |
+|---|---|---|---|---|
+| 0.0/0.0 | 0.000985/0.001086 | 0.008536/0.008685 | 24/24 | 24/24 |
+| 0.3/0.0 | 0.112936/0.091025 | 0.105059/0.114779 | 3/19 | 10/10 |
+| 0.2/-0.2 | 0.050786/0.035201 | 0.117977/0.120768 | 24/24 | 2/5 |
+| 0.2/0.2 | 0.057968/0.037736 | 0.116963/0.126014 | 24/24 | 5/5 |
+
+Training falls were 464/450 overall and 41/44 over the last 100 updates.
+Last-100 motor cost was .049247/.049533; thermal proxy .048720/.048998;
+mechanical-power proxy 2.205872/2.258577; squared yaw error .169459/.175341.
+Last-100 right-yaw stop exposure was .27409%/.07682%; maximum stochastic
+training overrun .04509/.03593 rad. These training quantities do not replace
+the independently passed held-out motor/range gates. Equal seeds do not imply
+identical RNG trajectories, and one training seed does not prove robustness.
+
+All 24 case files, numerical decisions and paired differences were independently
+recomputed. Retained evidence:
+[57 byte-verified JSON/JSONL files and verification manifest](../../artifacts/evaluations/neutral-head-1afb163d-20261012/verified-manifest.json),
+11,222,471 original bytes. Checkpoints and ONNX remain in the native
+`artifacts/training/neutral-head-1afb163d-20261012` directory, avoiding duplicate
+local weight storage. Final-999 SHA256s: control
+`477db693c22e700aa737a4e47f06c9cb858d9412184b69fc0ba3f839bc8da9a1`, neutral
+`b1231819f3d33edae3c6d3ccfca446346e63213c1054751c7b65addbc43c5e45`. Aggregate evaluation SHA256:
+`4e875a3fe0d2c8c325055240ddac5a54c055430a0faa8b9cc08d75b32506ca22`; launch
+`239b164e27d1d4a7a46a05ca8eb8d385700015916c6303b666c8ade192968c45`; health
+`1ab5bdaef167609c76bc44e53d5ccaf3e938249f4174b41ecdc580366b59389d`.
+
+Training peaked at 1717 MiB/63C; evaluation peaked at 2859 MiB/60C.
+Service inactive/dead, MainPID 0, result success, exit 0; GPU returned to the
+retained DINO PID 2021 alone. Four protected AI service scopes remained inactive.
+No promotion, video, raw perception, actor expansion, physical motion or
+protected-service restoration. Do not automatically adopt this sampler or
+search a larger zero-command probability. Next bounded hypothesis is matched
+entropy-pressure consolidation from the original parent, not either rejected
+checkpoint.

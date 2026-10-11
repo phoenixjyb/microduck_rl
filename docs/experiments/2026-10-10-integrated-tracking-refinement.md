@@ -1775,4 +1775,42 @@ the implementation and strengthened live schedule-identity/reverse-stage
 guards plus120-action compressed signed pre-reset checks. Focused suite428
 passed with three existing selector warnings, including explicit inherited-LR
 capture/audit/CLI regressions and unchanged older default guards. Native
-preflight is pending; no new GPU work launched from this declaration yet.
+preflight and the bounded matched round are recorded below.
+
+### Independent-kernel precision preflight and launch
+
+Exact pushed source `ecdf2de4e08f1f67013ada69b8831c0c8bf651ad` passed the
+native preflight: both five-update smokes and ten-update benchmarks completed,
+with zero NaN terminations, finite model/Adam state, exact inherited parent LR,
+all600 optimizer minibatch transitions and actual signed reward identities
+verified. Both normalized ONNX smokes retain finite61-to14 outputs. Precision
+smoke exposures are25/24/71 at yaw variances.5/.25/.1; benchmark precision
+uses.1 for all240 actions. Control remains.5. These are execution checks,
+not held-out motor/tracking admission: preflight pooled torque p99 exceeds.60.
+
+The initial preflight wrapper selected347 CPU tests because a generation-time
+substring replacement altered the intended test-list expansion. Read-only
+journal/script inspection identified this selection issue. A separate exact-
+source CUDA-hidden `microduck-decoupled-yaw-ecdf2de4-cpu-full.service` completed
+all428 required tests, three existing selector warnings, in15.04s before full
+training was allowed. No package or active-job changes were made.
+
+| Mode | Measured seconds | Conservative full estimate seconds | Falls | Peak MiB / C | Receipt SHA256 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| smoke-control | 4.698 | n/a | 0 | 1511 /53 | `e31424500ad260c98387f00b0a13c88c21ebf8f0db20666e5a4386214a5bf0e1` |
+| smoke-precision | 4.681 | n/a | 0 | 1511 /54 | `445f0cb3b0d95a0a7a71c02e9e4f94a42d176659b58b18210d88ab16ef462095` |
+| benchmark-control | 7.749 | 1162.296 | 1 | 1717 /56 | `90206da0d6ccd5d47c66d633c03fb41aef48d496390ccf5c529045db2043d002` |
+| benchmark-precision | 7.791 | 1168.708 | 1 | 1717 /57 | `cd59e71606a26b4e76ded382e21a1465b5e413a4029e84ce57ab7ae1af856ae0` |
+
+After exact clean-source/no-output/idle-host checks, launched retained
+`microduck-decoupled-yaw-ecdf2de4-matched-eval.service`, initialMainPID983993,
+under `artifacts/training/decoupled-yaw-ecdf2de4-20261012`. Verified4500s
+runtime/15s grace/control-group kill/8GiB RAM/200% CPU/64 tasks/nice10 and
+literal2100/2100/240s child caps with remaining-budget checks against07:00
+Beijing. DINO2021 alone before launch:969MiB/48C, all protected user/system
+services inactive. Early live control updates are finite; full numerical
+decision remains pending. Native source stays frozen while this service runs.
+All eight small preflight receipt/update files were copied under Mac
+`artifacts/evaluations/decoupled-yaw-ecdf2de4-20261012-preflight`; every SHA256
+matches native. Models remain native only. Documentation commits during the
+run do not change its frozen training/evaluator source.

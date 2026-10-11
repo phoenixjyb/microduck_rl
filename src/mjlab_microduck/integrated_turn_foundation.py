@@ -287,7 +287,8 @@ def joint_target_diagnostics(positions, targets, constraints, limits, names):
         policy_acceptance=False, physical_motion_authorized=False)
 
 
-def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False):
+def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
+                  angular_diagnostics=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -303,6 +304,10 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
     cfg.sim.nan_guard.enabled = True
     fix_velocity_commands(cfg, speed, yaw)
     install_metric(cfg)
+    if angular_diagnostics:
+        from mjlab.managers.metrics_manager import MetricsTermCfg
+        from mjlab_microduck import angular_reward_diagnostics as angular_audit
+        cfg.metrics["microduck_angular_reward_audit"] = MetricsTermCfg(func=angular_audit.capture, per_substep=False)
     env = ManagerBasedRlEnv(cfg, device="cuda:0")
     try:
         require(env.step_dt == .02, "20ms evaluation control step")
@@ -316,6 +321,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         phase = torch.zeros(worlds, dtype=torch.long, device=env.device)
         velocities, motor_rows, terminals = [], [], []
         positions, targets, constraints = [], [], []
+        angular_samples = []
         limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
         with torch.inference_mode():
             for step in range(steps):
@@ -342,6 +348,11 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 require(finite_tree((obs, rewards)), "finite evaluation output")
                 sample = stream.consume(dones.bool())
                 motor_rows.append(torch.stack((sample.force_nm, sample.speed_rad_s), -1).cpu())
+                if angular_diagnostics:
+                    snapshot = env._microduck_angular_reward_snapshot
+                    require(snapshot.shape == (worlds, 5) and finite_tree(snapshot), "captured pre-reset angular reward")
+                    angular_samples.append(snapshot.cpu())
+                    env._microduck_angular_reward_snapshot = None
                 if bool(dones.any()):
                     terminals = dones.nonzero().flatten().tolist()
                     break
@@ -365,6 +376,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         if target_diagnostics:
             result["joint_target_diagnostics"] = joint_target_diagnostics(torch.stack(positions).double(),
                 torch.stack(targets).double(), torch.stack(constraints).double(), limits.double(), stream.names)
+        if angular_diagnostics:
+            result["angular_reward_diagnostics"] = angular_audit.summarize(torch.stack(angular_samples), startup=startup)
         return result
     finally:
         env.close()

@@ -964,3 +964,99 @@ Launch sampling confirms only DINO2021 and the owned Duck Python process,
 source2b75ab02. Keep the active native checkout pinned; this documentation-only
 follow-up does not advance it. Full training, final999 hashes and numerical
 comparison are pending. No policy promotion or chained new skill/motion.
+
+### Completed turning-range comparison
+
+The preceding pending snapshot is superseded. The sequential service completed
+2026-10-11 15:24:59 Beijing time, inactive/dead, Resultsuccess/ExecMainStatus0/
+MainPID0. Control/curriculum completed1000 updates each in722.412282/748.999181s,
+seed953/256 worlds/24000 common steps/6,144,000 transitions per arm. Verification
+checked exact source/parent binding, finite models/normalizers/Adam and final
+iteration999/common-step24000, durable0/250/500/750/999 checkpoints, all2000
+finite update rows with zero NaNs, fixed shaping and command-range schedules.
+Treatment exposure was exactly6001/6000/11999 steps at±.05/±.10/±.20; control
+24000 at±.50. Standalone case JSON agrees with the aggregate, deterministic
+decisions and all paired differences recompute exactly.
+
+Both final checkpoints pass12/12 motor and12/12 range checks, complete all
+240-step cases with zero terminals/rated-speed exceedance, and fail all nine
+moving combined-tracking cases. No policy is promoted. Every moving world's
+yaw MAE exceeds.10; only10/24 control and4/24 curriculum straight worlds pass
+speed MAE≤.10. Every arc world passes the speed subset. Idle24/24 worlds pass
+both tracking components per arm. These are world counts, not case counts.
+
+| Command vx/yaw | Control / curriculum speed MAE | Control / curriculum yaw MAE | Control / curriculum torque p99 utilization |
+| --- | ---: | ---: | ---: |
+| 0 / 0 | .000914 / .000802 | .006869 / .007148 | .176927 / .227674 |
+| .30 / 0 | .103473 / .110957 | .149547 / .174242 | .508729 / .466225 |
+| .20 / -.20 | .049636 / .062895 | .174856 / .216164 | .492962 / .444585 |
+| .20 / +.20 | .052796 / .053704 | .184389 / .177000 | .485657 / .461515 |
+
+Descriptive group means are not relaxed acceptance gates. Curriculum lowers
+motor load but worsens speed error in every moving group, yaw error in straight
+and negative arcs, and only slightly improves positive-arc yaw error. Last100
+training falls62/89 and command costs.316284/.336610 are not held-out stability.
+Health peaks1717MiB/66C, and live post-completion GPU is DINO-only969MiB/48C;
+all four protected service scopes remain inactive. Small JSONs retained on Mac
+at `artifacts/evaluations/turn-range-2b75ab02-20261011`; weights/logs stay native.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Control final999 | `11c20ccc4d0682ab1403013dd5ca3308913ea2fd61a86e1c5bc3fb5408c2b8c2` |
+| Curriculum final999 | `54c1a33894cd0e705d1d23d5e92fb06da015daf604c5d3887a6d68167574eb2f` |
+| Control result | `f063545cecb9547f8312f79296f03ffe422184dd26c5e296c580acc4d1dbfff9` |
+| Curriculum result | `525c3041ddd716dd82aff38330448537576059c6d27a254aa05f80cde3e790d4` |
+| Held-out aggregate | `71bcfbe46ad8919123222067e2a26f9737967e187950838811efff8b08d5bf94` |
+
+### Full-angular reward diagnosis predeclaration
+
+The installed mjlab stock `track_angular_velocity` computes
+`exp(-((command_yaw-body_wz)**2 + body_wx**2 + body_wy**2)/std**2)`.
+It is not yaw-only. Std remains√.5, weight2, and the frozen action-rate weight
+is-.8 (the-.1→-1 schedule's last stage strictly before36000). Tightening the
+Gaussian would also tighten roll/pitch motion pressure, so do not do that
+before measuring its existing response. Independent read-only Luna review
+agrees that an eight-case diagnostic is preferable to another blind std change.
+
+Retained pooled signed yaw responses control/curriculum are-.153149/-.057446
+for-.20, and+.109768/+.200668 for+.20. Per-world mean absolute yaw bias is
+.068489/.142554 negative and.091746/.047540 positive, below the corresponding
+instantaneous MAEs. This indicates asymmetric under-response and within-window
+variation; it does not establish oscillation frequency or a causal remedy.
+
+Predeclare `integrated-angular-reward-audit-v1`: both exact rejected final999
+checkpoints above, seed839 only, four unchanged commands,8 worlds/240 steps,
+startup60. Retain the original full matrix and decisions unchanged. Add only
+an opt-in diagnostic metric to the existing evaluator; do not modify rewards,
+plant, actions, actor61D/14D contract, command timing or gate definitions.
+Capture raw body angular XYZ, current commanded yaw and the actual unscaled
+weighted angular reward after reward computation and before auto-reset; verify
+that reward equals the known full XYZ Gaussian on every step, fail closed on
+nonfinite states/mismatches/stale unconsumed snapshots. This diagnostic timing
+is distinct from admission's pre-action response timing.
+
+After startup summarize per-world RMS roll/pitch, yaw RMS/MAE/bias, actual full
+reward, a same-state yaw-only counterfactual, roll/pitch multiplicative factor,
+full-Gaussian<.1 fraction, yaw-only>.8/full<.1 fraction, and absolute yaw-gradient
+magnitudes for full versus yaw-only forms. Counterfactuals describe these states,
+not the behavior of a newly trained policy. No frequency or physical claim.
+Preserve replay numerical differences at the existing1e-6 tolerance; a changed
+replay cannot silently replace retained acceptance evidence or widen tolerance.
+
+Require exact clean pushed audit source, original aggregate/checkpoint hashes
+and identical frozen runtime, inactive prior service, owned regular GPU lease
+and existing DINO2021/protected-service/memory/temperature guards. Run one
+retained sequential diagnostic user service with240s hard cap/15s grace,
+RAM8GiB/CPU200%/Tasks64/Nice10/KillModecontrol-group. No learning, automatic
+next training, video, perception, publication or physical motion in this audit.
+Retain output hashes and diagnosis before selecting a further experiment.
+
+Focused Mac checks passed167 tests in6.55s, three existing actuator-selector
+warnings; whitespace checks passed. Tests include actual upstream reward
+callable parity with its omitted-asset robot default, raw nonfinite/mismatch
+failure, stale-snapshot rejection, reset-independent capture, exact counterfactual
+decomposition/gradient, short-terminal handling and fixed checkpoint bindings.
+No GPU diagnostic outcome is claimed before the retained replay completes.
+Independent code review found no diagnostic logic blocker. Run only on the
+native checkout holding the exact artifacts; enforce240s wall-clock cap via
+the user-service wrapper (240 simulation steps per case is not that wall cap).

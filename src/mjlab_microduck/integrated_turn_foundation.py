@@ -303,7 +303,7 @@ def body_yaw_trace_sample(robot, command, actor_command):
 
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
                   angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False,
-                  head_yaw_command=None):
+                  head_yaw_command=None, observation_trace=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -312,6 +312,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
     require(not gait_trace or yaw_trace, "gait capture requires unchanged body-yaw trace")
     require(not action_trace or (diagnostics and target_diagnostics and yaw_trace),
             "action capture requires position/target/body-yaw diagnostics")
+    require(not observation_trace or angular_diagnostics,
+            "observation timing capture requires post-reward angular diagnostics")
     if head_yaw_command is not None:
         require(type(head_yaw_command) in (int, float) and math.isfinite(head_yaw_command)
                 and head_yaw_command in (-.2, .2),
@@ -336,6 +338,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         from mjlab.managers.metrics_manager import MetricsTermCfg
         from mjlab_microduck import angular_reward_diagnostics as angular_audit
         cfg.metrics["microduck_angular_reward_audit"] = MetricsTermCfg(func=angular_audit.capture, per_substep=False)
+    if observation_trace:
+        from mjlab_microduck import observation_timing_capture as observation_audit
+        cfg.metrics["microduck_angular_reward_audit"].func = observation_audit.capture_reward
     env = ManagerBasedRlEnv(cfg, device="cuda:0")
     try:
         require(env.step_dt == .02, "20ms evaluation control step")
@@ -359,6 +364,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         yaw_samples = []
         gait_samples = []
         action_samples = []
+        observation_samples = []
         limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
         with torch.inference_mode():
             for step in range(steps):
@@ -395,6 +401,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                     constraints.append(robot.data.data.qfrc_constraint[:, dofs].cpu().clone())
                 if action_trace:
                     action_sample = action_response_capture.capture_state(env, robot, obs["actor"], stream)
+                if observation_trace:
+                    observation_sample = observation_audit.capture_pre(env, robot, obs["actor"])
                 actions = policy(obs)
                 require(actions.shape == (worlds, 14) and finite_tree(actions), "finite evaluation actions")
                 if action_trace:
@@ -409,6 +417,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                     require(snapshot.shape == (worlds, 5) and finite_tree(snapshot), "captured pre-reset angular reward")
                     angular_samples.append(snapshot.cpu())
                     env._microduck_angular_reward_snapshot = None
+                if observation_trace:
+                    observation_samples.append(observation_audit.attach_post(env, observation_sample))
                 if bool(dones.any()):
                     terminals = dones.nonzero().flatten().tolist()
                     break
@@ -434,6 +444,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 torch.stack(targets).double(), torch.stack(constraints).double(), limits.double(), stream.names)
         if angular_diagnostics:
             result["angular_reward_diagnostics"] = angular_audit.summarize(torch.stack(angular_samples), startup=startup)
+        if observation_trace:
+            result["observation_timing_trace"] = observation_audit.serialize(
+                observation_samples, result["checkpoint_sha256"])
         if yaw_trace:
             result["body_yaw_trace"] = dict(protocol="body-yaw-orientation-trace-v1",
                 step_dt=env.step_dt, startup_steps=startup, steps=len(v), worlds=worlds,

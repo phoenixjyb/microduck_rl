@@ -3466,3 +3466,65 @@ bias. Descriptive mean response gain across requests is.802088/.778178; this
 is not an RNG-identical trajectory or mechanical-causality comparison.
 No filtered measurement replaces the original instantaneous body-yaw gate.
 The previously retained head-probe aggregate/hash identity is unchanged.
+
+### Predeclare bounded actor-observation timing diagnostic (before simulation)
+
+After the low-yaw matrix rejection, run no additional reward/sampler training
+factor before07:00 Beijing. Measure the remaining observation-view/timing
+question without changing the61D actor,14D raw actions, rewards, commands,
+plant, sensors, domain randomization, policy or acceptance thresholds.
+
+Use both exact final499 low-yaw checkpoints, seed839, all four original
+commands0/0,.3/0,.2/−.2,.2/+.2, eight worlds×240 steps, startup60: eight
+diagnostic cases, not a new held-out acceptance matrix. Authenticate the
+complete original24-case aggregate SHA256
+`1ee0abfedfebf315b86257eaaccb7ff27d570937217335b5ed20b1ce87eec404`,
+sourceaee0a31e, exact per-case JSON, final499 receipts/weights/runtime,
+recomputed decisions and paired differences before touching the GPU.
+
+The existing play=True factory leaves actor corruption enabled. Its effective
+base_ang_vel term rotates body-frame root angular velocity by an existing
+cached per-run IMU mounting quaternion (up to6deg), adds uniform±.03rad/s
+noise, then serves lag0–1 from a delay buffer refreshed every64 steps.
+It is not a separately sampled head-mounted gyro. Capture already-computed
+raw manager actor slots0:3 before checkpoint observation normalization;
+verify their exact equality to the actual indexed selected history value.
+Read selected/newest history, sampled/effective lag, history length/counter,
+cached mounting quaternion, true body angular XYZ, twist and episode/physics/
+common/sim clocks. Never call observation functions, noise.apply(), delay
+compute(), another policy inference or another physics step in the capture.
+
+Keep post-reward/pre-reset angular reward/body XYZ and clocks via a metrics
+hook. The framework computes these before its final forward(); derived
+angular state may be one5ms physics substep stale. The next actor observation
+is post-forward and possibly post-reset. Align consecutive nonterminal rows
+using actual20ms physics and common/sim clocks; retain the terminal reward
+and prior observation if a world ends, and stop rather than pairing a reset
+observation or stitching another episode. No array-index-only phase claim.
+
+Summarize per-world yaw differences attributable arithmetically to selected
+versus newest history, mounting rotation, fresh bounded noise, and reward
+versus next post-forward body state. Retain raw/partial observations before
+summaries, original acceptance decisions, and whether original common case
+fields replay exactly. This decomposition is descriptive, not causal proof
+that delay/noise caused the tracking failure; it creates no new gate and
+does not excuse or filter away any failed instantaneous body-yaw gate.
+
+Run CPU regressions for real DelayBuffer indexed reads and RNG/buffer/counter
+immutability, effective-layout/config drift, clock/terminal/startup handling,
+bundle identity and one policy/step per frame. Run reviewed native CPU tests
+with CUDA hidden before launching one retained600s service,480s child with15s
+grace and615s deadline reserve. Require fresh idle-Duck GPU, clean exact source,
+native lease,20%allocator, shared-host memory/temperature constraints,
+DINO2021 unchanged and four protected scopes inactive. Freeze source while
+active. No training, promotion, video, physical motion or service restoration.
+
+Preparation: focused capture/bundle tests46 pass; optional evaluator hook plus
+adjacent regressions38 pass. After actual factory-layout and strengthened
+clock/history checks, the combined owner-reviewed suite passes1142 tests
+in29.28s (45 existing actuator-selector warnings); whitespace checks pass.
+Tests caught and corrected the summary math import to the pinned
+`mjlab.utils.lab_api.math` before simulation. A separate read-only review
+found and confirmed correction of actual head_command/body_command term
+names; no actor layout is changed. Native CUDA-hidden validation and an
+idle-GPU check are still required before launch.

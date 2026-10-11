@@ -1121,3 +1121,72 @@ Follow-up adds only an explicit derivative-kind metadata label, not numeric or
 gate changes;46 focused tests passed6.51s and whitespace checks passed. The
 retained1958523b replay and its hashes remain unchanged, not retroactively
 claimed to have run the later metadata label.
+
+### Predeclared independent yaw-precision continuation
+
+Implement `integrated-independent-yaw-precision-v1` in
+`mjlab_microduck.integrated_yaw_precision_refinement`. This replaces the
+candidate-only proposal above with a bounded matched experiment, not a policy
+promotion. Both arms warm-start the rejected turn-range control final999,
+SHA256 `11c20ccc4d0682ab1403013dd5ca3308913ea2fd61a86e1c5bc3fb5408c2b8c2`.
+Restore exact actor, critic, normalizers, Adam and learning rate; reset learning
+iteration/common steps to zero and start fresh simulator episodes.
+
+Both arms use positive angular reward
+`2 * exp(-yaw_error_squared / yaw_variance - roll_pitch_rate_squared / .5)`.
+The control keeps yaw variance `.5`, equivalent to the original full XYZ
+Gaussian. Treatment changes only yaw variance at the following strict action
+clock boundaries; roll/pitch variance `.5` and angular weight `2` stay fixed.
+
+| Treatment common action steps | Yaw variance | Standard deviation rad/s | Exposure steps |
+| --- | ---: | ---: | ---: |
+| 0 through 6000 | .5 | .707107 | 6001 |
+| 6001 through 12000 | .25 | .500000 | 6000 |
+| 12001 through 23999 | .1 | .316228 | 11999 |
+
+This tests one complete schedule, not the isolated efficacy of each dose.
+Each arm uses seed977,256 environments,1000 updates of24 action steps,
+checkpoint cadence250 and final999 only. Preserve the source full +/- .5rad/s
+yaw command distribution, plant/domain randomization, unclipped actions,
+61D actor/14D action contract, learner and fixed motor weight-1, qpos weight-4
+with margin.15, twist cost-.5, forward cost0 and action-rate weight-.8.
+No observation expansion, all-axis width tightening or roll/pitch removal.
+
+Evaluation is the unchanged held-out matrix: seeds839/853/857, commands
+vx/yaw 0/0,.3/0,.2/-.2,.2/+.2,8 environments,240 steps, startup60 omitted
+only from tracking statistics. Every world must satisfy speed MAE<=.1m/s
+(idle<=.03), yaw MAE<=.1rad/s; pooled torque p99 utilization<=.6,
+zero rated-speed exceedance/terminals, all14 joint-range overruns<=.005rad
+and right-hip-yaw near-limit exposure<=1% at .05rad margin. Retain all cases
+and the deterministic unchanged decision; do not select intermediate winners,
+relax gates or silently replace earlier evidence. A passing simulation matrix
+would permit only the next separately reviewed simulation step, not deployment.
+
+Mac focused CPU suite passed195 tests in10.30s with three existing
+actuator-selector warnings; whitespace checks passed. Independent read-only
+review found no blocker for preflight. Tests cover direct installed-upstream
+control parity on1000 random vectors, raw NaN/Inf/overflow rejection, unchanged
+configuration/learner, exact strict curriculum timing, and actual positive
+weighted reward captured post-reward/pre-reset. Live observation must verify
+every reward sample, consume snapshots, and retain per-update and cumulative
+yaw-width exposure plus raw yaw/roll-pitch errors; missing/stale/mismatched
+snapshots or unexpected live parameters fail closed.
+
+Before either full arm: require exact clean pushed source and parent bytes,
+native CUDA-hidden CPU tests, then paired64-world/5-update smokes seed971
+with compressed treatment stage exposures25/24/71 and normalized ONNX
+61-to14 checks. Paired256-world/10-update benchmarks seed973 use the final
+width (.5 control/.1 treatment); each measured elapsed time times150 must
+fit2040s. Retain all four preflight receipts and hashes. One preflight user
+service enforces360s wall cap, each child60s plus15s termination grace.
+
+Only after successful preflight launch one sequential retained user service:
+control then precision then unchanged evaluation, child caps2100/2100/240s,
+service wall cap4500s and15s grace. Use RAM8GiB/CPU200%/Tasks64/Nice10 and
+KillMode control-group. Require the existing owned regular GPU lease, exact
+GPU UUID and retained DINO PID2021/executable, GPU usage<=6144MiB,
+free>=8192MiB, temperature<75C, and both protected AI Mission services
+inactive in user and system scopes. Preserve DINO and unrelated workloads;
+100.98/NX remains out of scope. No automatic new skill, video, perception,
+policy publication, driver/package changes or physical motion. GPU preflight
+and this round's training results remain pending at this predeclaration.

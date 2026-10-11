@@ -4105,6 +4105,46 @@ def body_forward_tracking_cost(
     return cost
 
 
+def body_angular_tracking_errors(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Raw squared yaw residual and roll/pitch rates in the body frame."""
+    command = env.command_manager.get_command(command_name)
+    angular = env.scene[asset_cfg.name].data.root_link_ang_vel_b
+    if (command.shape != angular.shape or angular.ndim != 2 or angular.shape[1] != 3
+            or not bool(torch.isfinite(command).all() & torch.isfinite(angular).all())):
+        raise FloatingPointError("invalid raw body angular tracking state")
+    yaw_sq = (command[:, 2]-angular[:, 2]).square()
+    xy_sq = angular[:, :2].square().sum(-1)
+    if not bool(torch.isfinite(yaw_sq).all() & torch.isfinite(xy_sq).all()):
+        raise FloatingPointError("nonfinite raw body angular tracking errors")
+    return yaw_sq, xy_sq
+
+
+def factorized_body_angular_tracking(
+    env: ManagerBasedRlEnv,
+    yaw_variance: float = .5,
+    roll_pitch_variance: float = .5,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Positive Gaussian with independently specified angular error widths.
+
+    Equal variances reproduce upstream XYZ angular tracking. Narrowing yaw
+    leaves the roll/pitch kernel unchanged; this does not remove gait shaping.
+    Use a positive weight. Raw state errors fail before reward sanitization.
+    """
+    if not all(math.isfinite(v) and v > 0 for v in (yaw_variance, roll_pitch_variance)):
+        raise ValueError("angular tracking variances must be finite and positive")
+    yaw_sq, xy_sq = body_angular_tracking_errors(env, command_name, asset_cfg)
+    exponent = yaw_sq/yaw_variance + xy_sq/roll_pitch_variance
+    if not bool(torch.isfinite(exponent).all()):
+        raise FloatingPointError("nonfinite raw factorized angular exponent")
+    return torch.exp(-exponent)
+
+
 def bounded_planar_velocity_cost(
     env: ManagerBasedRlEnv,
     asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,

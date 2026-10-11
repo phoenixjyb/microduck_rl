@@ -60,6 +60,32 @@ def test_stream_is_constant_retention_across_many_completed_episodes():
     assert observer.next_step == 300 and observer._generation.numel() == 2
 
 
+def test_explicit_1024_world_stream_preserves_costs_resets_and_constant_retention():
+    with pytest.raises(ValueError):
+        MotorStepStream(1024, ("b", "a"), (1, 0), device="cpu", cost_cfg=MotorStepCostCfg())
+    observer = MotorStepStream(1024, ("b", "a"), (1, 0), device="cpu",
+                               cost_cfg=MotorStepCostCfg(), max_envs=1024)
+    values = NS(actuator_force=data().actuator_force[:1].repeat(1024, 1),
+                joint_vel=data().joint_vel[:1].repeat(1024, 1))
+    done = torch.arange(1024) % 2 == 0
+    for step in range(3):
+        observer.begin(step, torch.zeros(1024, dtype=torch.long))
+        observer.capture(values, done)
+        sample = observer.consume(done)
+        assert sample.episode_generation.tolist() == (done.long() * step).tolist()
+        torch.testing.assert_close(sample.joint_cost,
+                                    torch.tensor([[.25, .68]], dtype=torch.float64).repeat(1024, 1))
+        assert observer._phase is None and observer._snapshot is None
+        assert not any(isinstance(v, list) for v in vars(observer).values())
+
+
+@pytest.mark.parametrize("worlds,cap", [(1025, 1024), (4096, 1024), (True, 1024),
+    (1024.0, 1024), (1024, 4096), (1024, 1024.0), (1, True), (1, None), (1, 512)])
+def test_stream_opt_in_does_not_remove_bounded_integer_world_limits(worlds, cap):
+    with pytest.raises(ValueError):
+        MotorStepStream(worlds, ("a",), (0,), device="cpu", cost_cfg=MotorStepCostCfg(), max_envs=cap)
+
+
 @pytest.mark.parametrize("fault", ["skip", "bool-step", "double-begin", "unarmed", "missing", "double-capture",
                                    "terminal-mismatch", "terminal-dtype", "phase", "layout", "double-consume"])
 def test_capture_lifecycle_fails_closed(fault):

@@ -2558,3 +2558,30 @@ harness regressions reject absent/ambiguous/reversed/unbounded world plans,
 wrong full-world counts and a256-world treatment benchmark. Independent
 read-only integration review finds no blocker. Native capacity and full
 training remain gated, not established by CPU tests.
+
+### First rollout-batch preflight stopped at a legacy telemetry bound
+
+Clean pushed b3d837fd92d3514c225c94514086f2b08df04895 passed all748 native
+CUDA-hidden focused tests in14.55s, three existing warnings. Sequential
+`microduck-rollout-batch-b3d837fd-preflight.service` completed both64-world
+smokes and256-world benchmark, then failed02:59:35 Beijing with exit1.
+Retained1024-world failure is ValueError,
+`invalid bounded motor stream layout/configuration`, before any optimizer
+update/full training. Read-only journal/source diagnosis identifies the
+MotorStepStream constructor's256-world ceiling; it is not an OOM or measured
+1024-world timing/capacity result. GPU returned to DINO2021 only969MiB/48C.
+
+Preparation correction: keep MotorStepStream's default256 bound and add an
+explicit integer `max_envs=1024` option, with1024 absolute ceiling. The shared
+trainer opts in only after validating the actual full/preflight mode's exact
+world contract;64-world smokes and all legacy modes retain256. Forward that
+capacity through foundation.training to from_robot/constructor. Preserve
+one-step bounded retention, pre-reset capture/generation lifecycle, cost
+formula and all motor acceptance/resource guards. This raises only the
+explicit telemetry layout capacity required by the already-declared arm;
+20% allocator,6144MiB totalGPU/8192MiB free/<75C and8GiB hostRAM stay fixed.
+CPU regressions exercise1024-world identical costs/repeated resets and reject
+implicit1024,1025/4096, noninteger/boolean/unbounded capacity requests.
+Preserve the failed source/receipts separately. Retry all four preflights at
+one newly tested/pushed source in a new retained run; never combine old/new
+receipts to authorize full training. Numerical recipe/seeds/gates unchanged.

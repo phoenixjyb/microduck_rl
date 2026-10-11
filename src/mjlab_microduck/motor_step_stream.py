@@ -51,8 +51,9 @@ class MotorStepStream:
     on the next step. Manual resets require a new stream at a clean boundary.
     """
 
-    def __init__(self, num_envs, names, joint_ids, *, device, cost_cfg):
-        if (type(num_envs) is not int or not 1 <= num_envs <= 256
+    def __init__(self, num_envs, names, joint_ids, *, device, cost_cfg, max_envs=256):
+        if (type(max_envs) is not int or max_envs not in (256, 1024)
+                or type(num_envs) is not int or not 1 <= num_envs <= max_envs
                 or not 1 <= len(names) <= 64 or len(names) != len(joint_ids)
                 or any(not isinstance(n, str) or not n for n in names)
                 or len(set(names)) != len(names) or len(set(joint_ids)) != len(joint_ids)
@@ -66,9 +67,9 @@ class MotorStepStream:
         self._phase = self._snapshot = None
 
     @classmethod
-    def from_robot(cls, robot, num_envs, *, device, cost_cfg):
+    def from_robot(cls, robot, num_envs, *, device, cost_cfg, max_envs=256):
         names, ids = motor_layout(robot)
-        return cls(num_envs, names, ids, device=device, cost_cfg=cost_cfg)
+        return cls(num_envs, names, ids, device=device, cost_cfg=cost_cfg, max_envs=max_envs)
 
     def begin(self, step, phase):
         if (type(step) is not int or step != self.next_step or self._phase is not None

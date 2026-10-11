@@ -200,3 +200,21 @@ def test_legacy_recipe_cannot_silently_enable_larger_world_count():
     with pytest.raises(ValueError, match="exactly 256"):
         refinement.training_contract(recipe, "budget")
 
+
+def test_motor_stream_capacity_opt_in_requires_validated_actual_mode():
+    recipe = batch_recipe()
+    assert refinement.motor_stream_capacity(recipe, "control") == 256
+    assert refinement.motor_stream_capacity(recipe, "budget") == 1024
+    assert refinement.motor_stream_capacity(recipe, "smoke-budget") == 256
+    assert refinement.motor_stream_capacity(recipe, "benchmark-budget") == 1024
+    assert refinement.motor_stream_capacity(refinement, "motor") == 256
+    recipe.MODES["benchmark-budget"] = (256, 10, 1051)
+    with pytest.raises(ValueError):
+        refinement.motor_stream_capacity(recipe, "benchmark-budget")
+
+
+@pytest.mark.parametrize("mode", ["unknown", "evaluate", None, True])
+def test_motor_stream_capacity_rejects_undeclared_modes(mode):
+    with pytest.raises(ValueError):
+        refinement.motor_stream_capacity(batch_recipe(), mode)
+

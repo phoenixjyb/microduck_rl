@@ -118,6 +118,19 @@ def checkpoint_path(run_root, arm, contract):
     return Path(run_root) / arm / f"model_{contract['final_iteration']}.pt"
 
 
+def motor_stream_capacity(recipe, mode):
+    """Opt in only a validated 1024-world mode; preserve legacy stream bounds."""
+    arms = getattr(recipe, "ARMS", ("control", "motor"))
+    base.require(type(mode) is str and mode in recipe.MODES, "declared motor stream mode")
+    if mode in arms:
+        contract = training_contract(recipe, mode)
+    else:
+        phase, separator, arm = mode.partition("-")
+        base.require(bool(separator), "declared motor stream preflight mode")
+        contract = preflight_contract(recipe, phase, arm)
+    return 1024 if contract["worlds"] == 1024 else 256
+
+
 def validate_training_receipt(receipt, recipe, source, contract, checkpoint):
     """Reject wrong arm/budget/seed receipts before evaluating durable weights."""
     base.require(receipt["source"] == source and receipt["protocol"] == recipe.PROTOCOL
@@ -397,7 +410,8 @@ def main(experiment=None):
                     base.write_new(output / "warm-start.json", restored)
                 result = base.training(output, args.mode, health, recipe=recipe.prepare_config(args.mode),
                     initialize=initialize, before_action=observer.before,
-                    after_step=observer.step, after_update=observer.update)
+                    after_step=observer.step, after_update=observer.update,
+                    motor_stream_max_envs=motor_stream_capacity(recipe, args.mode))
                 result["warm_start"] = restored
                 if args.mode.startswith("smoke"):
                     result["onnx"] = onnx_check(output / f"{args.mode}.onnx")

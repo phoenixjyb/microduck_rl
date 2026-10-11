@@ -106,7 +106,8 @@ def validate_commands(command):
 
 
 def training(output, mode, health, *, recipe=None, initialize=None,
-             before_action=None, after_step=None, after_update=None):
+             before_action=None, after_step=None, after_update=None,
+             motor_stream_max_envs=256):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
@@ -122,7 +123,7 @@ def training(output, mode, health, *, recipe=None, initialize=None,
         if initialize is not None:
             initialize(runner, env)
         stream = MotorStepStream.from_robot(env.scene["robot"], worlds, device=env.device,
-                                            cost_cfg=MotorStepCostCfg())
+                                            cost_cfg=MotorStepCostCfg(), max_envs=motor_stream_max_envs)
         env._microduck_motor_step_stream = stream
         phase = torch.zeros(worlds, dtype=torch.long, device=env.device)
         counters = dict(steps=0, updates=0, idle=0, straight=0, negative_yaw=0, positive_yaw=0)

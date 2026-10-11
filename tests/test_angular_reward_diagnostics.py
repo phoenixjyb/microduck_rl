@@ -26,6 +26,7 @@ def test_actual_reward_capture_survives_reset_and_exposes_xy_suppression():
     row = audit.summarize(saved[None].repeat(3, 1, 1), startup=1)
     d = row["per_world"]
     assert row["settled_steps"] == 2 and not row["policy_acceptance"]
+    assert "not PPO" in row["gradient_kind"]
     assert d["yaw_mae"] == pytest.approx([0., 0., .4, .2])
     assert d["roll_pitch_multiplicative_factor_mean"] == pytest.approx([1., math.exp(-8), 1., 1.])
     assert d["yaw_only_above_point8_full_below_point1_fraction"] == [0., 1., 0., 0.]

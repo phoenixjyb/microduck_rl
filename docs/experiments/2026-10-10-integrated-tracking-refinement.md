@@ -1060,3 +1060,64 @@ No GPU diagnostic outcome is claimed before the retained replay completes.
 Independent code review found no diagnostic logic blocker. Run only on the
 native checkout holding the exact artifacts; enforce240s wall-clock cap via
 the user-service wrapper (240 simulation steps per case is not that wall cap).
+
+### Completed full-angular reward diagnostic
+
+Native CUDA-hidden focused suite passed167 in15.96s before launch at exact
+source `1958523b27047288a4d3b1e1c9c65a2557c84759`. Retained service
+`microduck-angular-reward-1958523b-audit.service` enforced240s wall cap,
+RAM8GiB/CPU200%/Tasks64/Nice10/KillModecontrol-group and completed successfully
+with MainPID0/ExecMainStatus0/inactive state. All eight seed839 cases completed
+Service completion timestamp was2026-10-11 16:03:41 Beijing time.
+240 steps with finite pre-reset raw state and actual full XYZ weighted reward
+verified every step. Health peaks1867MiB/60C. GPU returned to DINO-only969MiB,
+all four protected service scopes inactive. Native/Mac small retained files:
+`artifacts/evaluations/angular-reward-1958523b-20261011`.
+
+| Command vx/yaw | Full angular reward control / curriculum | Same-state yaw-only reward control / curriculum | Mean roll/pitch factor control / curriculum |
+| --- | ---: | ---: | ---: |
+| 0 / 0 | 1.998969 / 1.999143 | 1.999629 / 1.999630 | .999670 / .999757 |
+| .30 / 0 | 1.361723 / 1.357010 | 1.867330 / 1.834556 | .713189 / .708596 |
+| .20 / -.20 | 1.334371 / 1.251998 | 1.840764 / 1.755389 | .709948 / .689130 |
+| .20 / +.20 | 1.314581 / 1.357373 | 1.831684 / 1.835909 | .703706 / .718711 |
+
+These are means of eight per-world180-step post-startup summaries, not paired
+causal evidence. RMS roll/pitch rates were roughly.463–.524rad/s when moving.
+Roll/pitch attenuate the reward by a material amount but do not make it dead:
+full Gaussian<.1 occurs in2.57–7.22% of moving samples; the yaw-only>.8 yet
+full<.1 fraction is only.07–.56%. Analytic absolute reward derivative with
+respect to body yaw rate is roughly61–67% of its same-state yaw-only value.
+This derivative is not a PPO/actor parameter gradient, learning signal proof,
+or prediction that removing roll/pitch shaping improves a trained policy.
+Do not conclude complete Gaussian saturation, or tighten all angular axes.
+
+Replay is explicitly `replay_verified=false`:702 fields exceed the existing
+1e-6 absolute comparison tolerance (547 response diagnostics,64 speed errors,
+64 yaw errors,8 torque p99,8 thermal,7 power,4 soft-limit fractions). Maximum
+absolute differences: speed MAE.005253m/s, yaw MAE.025454rad/s, torque p99
+utilization.010144. All eight cases keep the same pass/fail outcomes: motor and
+range pass, idle tracking passes, every moving case fails tracking. Checkpoint
+bytes, runtime and original aggregate identity are exact. No retained decision
+was overwritten and no tolerance changed. Source inspection confirms the
+added metric only reads state/clones snapshots/returns zeros, without reward,
+commands or RNG writes; this does not establish the cause of replay variation.
+Treat this as a separate diagnostic trajectory, not an exact replay or new
+qualification. The original full matrix remains authoritative.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Audit launch | `5f66d07e67b7ae3ea5b7e76aabda09beff5c8fcb4521bb69b1d0e44d9c7dc3ae` |
+| Audit result | `7bc55fd015aad0d597495e40b43e71ffbfdeb4d4f931f19370e0a4cba8961f17` |
+
+Recommended next bounded experiment: separate yaw precision from roll/pitch
+precision in the existing positive angular tracking Gaussian, leaving its
+roll/pitch kernel, weight, plant, actions, motor/qpos shaping, source command
+distribution and all admission gates fixed. Use a matched unchanged control
+and one predeclared yaw-width schedule; verify exact control equivalence and
+live pre-reset reward activity, then smoke/benchmark before any new long job.
+This is a candidate design, not an implemented recipe or automatic launch.
+Neither rejected final is accepted for a new skill or physical deployment.
+Follow-up adds only an explicit derivative-kind metadata label, not numeric or
+gate changes;46 focused tests passed6.51s and whitespace checks passed. The
+retained1958523b replay and its hashes remain unchanged, not retroactively
+claimed to have run the later metadata label.

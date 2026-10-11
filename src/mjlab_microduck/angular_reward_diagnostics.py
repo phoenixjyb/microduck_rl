@@ -47,6 +47,7 @@ def summarize(samples, *, std=math.sqrt(.5), weight=2., startup=60):
         settled_steps=len(settled), std=std, weight=weight,
         timing="post-reward pre-reset body angular XYZ and current command; not admission timing",
         counterfactual="yaw-only Gaussian on same states; not a trained policy or causal benefit",
+        gradient_kind="absolute analytic reward derivative with respect to body yaw rate; not PPO or policy gradient",
         policy_acceptance=False, physical_motion_authorized=False)
     if not len(settled):
         return {**result, "per_world": None}

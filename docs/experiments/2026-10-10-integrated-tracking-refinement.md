@@ -2380,3 +2380,59 @@ the body and gait traces are offset or mixed. Mismatches retain raw evidence
 before rejection. Five additional regression cases plus the real optional
 capture fixture cover this alignment.721 focused CPU tests pass in19.38s,
 three existing warnings; no admission threshold or active job changed.
+
+### Duration continuation completed: no accepted tracking foundation
+
+`microduck-training-duration-7a9c37da-matched-eval.service` completed before
+02:47 Beijing time on2026-10-12: inactive/dead/MainPID0/Resultsuccess/exit0.
+Native clean source remained frozen7a9c37da throughout. Independently verified
+both exact parent actor/critic/normalizer/Adam restores, reset counters/LR,
+every declared cadence weight and final999/3999, all1000/4000 finite update
+rows,20,000/80,000 adaptive-KL minibatches, exclusive complete command dwell,
+and all24 held-out case files against the final aggregate and decisions.
+Actual yaw-bias reward remained zero throughout; duration was the treatment.
+No NaN terminations. Training elapsed626.402/2557.679s, transitions6.144M/
+24.576M. Training falls417/1481 are aggregate counts over different exposure;
+tail100 mean falls/update.50/.24, not a matched held-out stability improvement.
+
+All24 evaluation cases completed240 steps with zero terminals or rated-speed
+exceedance. Both arms pass12/12 motor cases and12/12 named/all-joint range
+cases; maximum pooled torque utilization.506797/.478202 remains below.60.
+Idle passes all24 worlds per arm. Both arms still fail every one of the nine
+moving-case combined tracking gates: `foundation-not-ready`, no acceptance.
+Moving yaw-passing worlds28/72(control) versus10/72(budget), despite lower
+tail100 training raw-yaw MAE.303053/.279155 and motor-cost.048434/.045713.
+This single-seed continuation does not support automatic duration escalation
+or a convergence claim. Canonical4096-world training is not equivalent to
+this256-world experiment.
+
+| Command vx/yaw | Speed MAE control/budget (m/s) | Body-yaw MAE control/budget (rad/s) | Yaw passing worlds control/budget |
+| --- | ---: | ---: | ---: |
+| 0/0 | .001279/.001377 | .010520/.010290 | 24/24,24/24 |
+| .30/0 | .088456/.095778 | .105627/.119064 | 12/24,6/24 |
+| .20/-.20 | .033051/.036601 | .110472/.136906 | 10/24,1/24 |
+| .20/+.20 | .039538/.039031 | .124510/.122025 | 6/24,3/24 |
+
+Means describe24 worlds across the same three held-out seeds, not relaxed
+per-world gates. Positive/negative training command exposure was substantial:
+target-band action-world counts396274/384974(control negative/positive),
+1569237/1583546(budget); no evidence of missing signed-command training.
+Train peaks1717MiB/62C; evaluation2859MiB/59C. Post-job DINO2021 only969MiB/
+50C,15,225MiB free, and all user/system protected service scopes inactive.
+No policy video, physical motion, raw perception or service restoration.
+
+Retain37 structured small JSON/JSONL files under Mac
+`artifacts/evaluations/training-duration-7a9c37da-20261012`, with a copied
+manifest and native byte-hash verification. Weight files remain native only.
+The predeclared tracking-failure condition for the eight-case gait/head
+diagnostic is met. Pin the following exact full aggregate and finals before
+replay; do not replace the original24-case matrix with replay results.
+
+| Retained artifact | SHA256 |
+| --- | --- |
+| Control final999 | `f9b6ea96b3eebe4f51a24cf5fb6c44523ba8fe9ea608dbbb6078016c41892df3` |
+| Budget final3999 | `381731d397098f41c7a1fae1017d5648dfa7c0de5e51054e934c2ba7ade74437` |
+| Control receipt | `db4cffc44e80993735610d73d17184cfb2bf8e115a484e15b379f255379f7fbc` |
+| Budget receipt | `a18e8b88c74837b468e71f4f3130d266ce1c68fefadbff375e005d5ca622e84e` |
+| Evaluation launch | `3e870b50891b5881f2afcccd14e8b3b769a5af4e7303aeba3da37894f0ee0cc9` |
+| Full24-case aggregate | `5a92030e62a4e3c42a2dba29901b699edb68122df70b0e0939a2e634dced784f` |

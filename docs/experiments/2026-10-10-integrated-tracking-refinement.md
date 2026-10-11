@@ -786,3 +786,40 @@ Its advancing-clock test suggestion was incorporated: a24-step update beginning
 at6000 records1 old/23 new weight exposures; the12000 boundary similarly splits.
 This fixes the schedule interpretation without changing it or selecting doses.
 The final focused Mac suite passed146 tests in6.10s; whitespace checks passed.
+
+### Forward-error preflight and retained launch
+
+Exact recipe source `a09a9c0a065ed4c94b99b34322c4fa9fe8cc8896` was pushed
+before the clean inactive native checkout fast-forwarded. Retained service
+`microduck-forward-track-a09a9c0a-preflight.service` completed with
+Resultsuccess/ExecMainStatus0/MainPID0. Native CUDA-hidden tests passed146 in8.78s.
+Both smokes and benchmarks verified exact parent bytes, restored finite
+model/normalizers/Adam, clocks0, exact saved iteration/common-step counts,
+fixed motor-1/qpos-4/twist-.5, and live pre-reset forward weighted-cost equality.
+All30 update rows werefinite withzero NaNs. Both official normalized ONNX
+exports passed finite CPU61-to14 inference; treatment smoke's120 control steps
+were25 at-.25,24 at-.75 and71 at-1.5, exactly matching the declared strict clock.
+
+Ten-update256-world benchmarks took9.446374s control/9.503735s forward,
+giving conservative1000-update projections1416.96/1425.56s below2040s.
+Sampled total GPU health peaked1717MiB/60C. Randomized benchmark falls5/4
+are not numerical admission. Receipt copies in Mac
+`artifacts/evaluations/forward-tracking-a09a9c0a-20261011-preflight` agree
+with native hashes; trained weights and full logs remain native.
+
+| Receipt | SHA256 |
+| --- | --- |
+| Smoke control | `7c5822153f53836bce37b60ffc4d0824fcde065dfbd52fe1ad1b5c202bbdc036` |
+| Smoke forward | `e20eb56135b3b44e23b0469581c155c48ed06347da2631aeee47e7071f7fa504` |
+| Benchmark control | `69cf42d1b6440595f34482609c52c85722fab883d0db24e873cf49d2aa27144a` |
+| Benchmark forward | `189e63abd69fdde19820a597caaffdb3e65ac3fbcb80785e1bfc30ac2c9d8e32` |
+
+`microduck-forward-track-a09a9c0a-matched-eval.service` started2026-10-11
+13:50:26 Asia/Shanghai. Live properties confirm4500s/RAM8GiB/CPU200%/Tasks64/
+Nice10/KillModecontrol-group. It sequentially runs control then forward then
+the unchanged24-case held-out comparison, with2100/2100/240s children and15s
+grace. Native run root is `artifacts/training/forward-tracking-a09a9c0a-20261011`
+in `/home/converge/work/microduck_rl-upstream-20261010`. Keep this running
+checkout at sourcea09a9c0a; documentation-only follow-ups on Mac must not
+advance it. Completion, final999 hashes and numerical comparison arepending.
+Stop after retaining this matrix; no automatically chained new skill or motion.

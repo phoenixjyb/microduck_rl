@@ -2796,3 +2796,63 @@ The retry preflight must validate the actual native full hashed input bundle
 with CUDA hidden, in addition to synthetic fixture/source-contract tests,
 before starting any simulation. Both final999 contracts, unchanged24-case
 decisions and paired differences remain mandatory.
+
+### Action/joint diagnostic completed: retained, not an exact replay
+
+Corrected source82350d329632a8eba3d2945862bbd6d509098664 passes187 native
+CUDA-hidden tests in20.78s and validates the actual full input bundle before
+simulation: exact aggregate/two checkpoint hashes, contracts999,24 ordered
+cases, unchanged deterministic decisions and paired differences. The new
+`microduck-action-response-82350d32-audit.service` completes inactive/dead,
+Resultsuccess/exit0/MainPID0 within its240s cap, preserving the first failed
+unit/directory. Eight declared cases all complete240 steps without resets.
+Raw/summary hashes, shared body/action channels, action-history/target/clock
+alignment, all offline body/action summaries and full/retained-field replay
+differences recompute exactly. The original24-case rejection is unchanged.
+
+All eight original-field replays differ numerically beyond the1e-6 comparison
+tolerance:75–96 retained metric differences per case. Maximum per-world
+yaw-MAE drift.015407rad/s and speed-MAE drift.002120m/s. Do not call the
+diagnostic an exact replay or substitute its sampled tracking values for the
+original acceptance matrix. This records separate hash-bound observations
+with verified within-run timing/frame arithmetic; it is not proof that adding
+read-only capture establishes simulator determinism.
+
+| Seed839 command vx/yaw | Diagnostic control / batch speed MAE | Diagnostic control / batch yaw MAE |
+| --- | ---: | ---: |
+| 0 /0 | .001136 / .000994 | .008772 / .008008 |
+| .30 /0 | .110615 / .092605 | .099881 / .100804 |
+| .20 /-.20 | .043162 / .036054 | .115021 / .125519 |
+| .20 /+.20 | .050347 / .039231 | .115910 / .107076 |
+
+These means are descriptive only. Settled right-hip-yaw .15rad penalty-margin
+exposure is zero in every sampled world/case; its minimum actual range margin
+across moving cases is.184362rad. Do not weaken its qpos cost on this evidence.
+Right-yaw raw-action std is.0416–.0735rad versus left.0860–.1243rad in moving
+case world-means; right-yaw mean absolute measured speed.1015–.2887rad/s
+versus left.4054–.6361rad/s. Negative-turn raw-action means remain positive
+on both yaw joints:control left.01476/right.13740, batch left.02385/right.16698.
+This motivates checking existing mirrored-learning support, but observations
+from separate episodes do not establish a causal motor limitation or guarantee
+bilateral symmetry of the randomized plant. No head freeze, target clipping,
+new margin dose or raw-perception/actor-input change follows from correlations.
+
+Head-yaw raw std.1944–.2639rad and measured mean absolute qvel1.1611–1.7687
+rad/s persist in moving cases with sign-mixed within-world correlations.
+Generalized constraint signals retain their contact/limit/solver-lag caveats.
+A separate CPU-only hash-bound checkpoint read finds finite14D learned
+Gaussian std parameters:parent.1223–.2098, control.1206–.2042,
+batch.1116–.2027rad. These are distribution parameters, not deterministic
+output saturation or a measured failure of exploration.
+
+Health peak1631MiB/57C; post-run DINO2021 only969MiB/49C/all four protected
+scopes inactive. All19 structured raw/summary/launch/result/health files,
+102,484,271 bytes, match native SHA256/sizes on Mac under
+`artifacts/evaluations/action-response-82350d32-20261012`, with a copied
+manifest. Transfer is compressed in flight; no checkpoint weights duplicated.
+
+| Diagnostic artifact | SHA256 |
+| --- | --- |
+| Launch | `153e731809f347bb10f5ab6dd9ac90ffc90d1a76ff6913b81ec89053d6d53ffd` |
+| Result | `3047fe46fbcdf96f81abe3214423d267dfbed53894f4df5617721a35e155861c` |
+| Health | `509f47b7a262351df2355fd6e7ace89aea06517a6f59cd17615bbd9ad50a0f21` |

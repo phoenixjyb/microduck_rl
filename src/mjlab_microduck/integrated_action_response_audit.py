@@ -30,7 +30,7 @@ CHECKPOINT_SHA256 = {
     "control": "bdd2f66a64f86fdab6622ec6f945322688d92516fccd759f1b89d8db5378d4ca",
     "batch": "26dd8ace189b2ff0c15e252093672986587107fb935e2795ca90f8002373f1b7",
 }
-EVALUATION_SELECTION = "declared final checkpoints only; unchanged held-out protocol"
+EVALUATION_SELECTION = "both final999 only; unchanged held-out protocol"
 
 
 def require(condition: bool, message: str) -> None:
@@ -71,9 +71,12 @@ def validate_input_bundle(prior: Any, evaluation_sha256: str, *, source: str,
     require(prior.get("selection") == EVALUATION_SELECTION,
             "evaluation must select declared final checkpoints only")
     expected_iterations = {arm: motor.training_contract(recipe, arm)["final_iteration"] for arm in ARMS}
-    require(type(prior.get("final_iterations")) is dict
-            and prior["final_iterations"] == expected_iterations,
-            "exact declared final iterations")
+    # The exact hashed batch bundle uses the all-1000-update legacy schema:
+    # final999 is declared by its label and exact per-arm receipt, not an
+    # optional iteration map introduced for unequal-duration arms.
+    require(expected_iterations == {"control": 999, "batch": 999}
+            and "final_iterations" not in prior,
+            "exact legacy final999-only iteration schema")
     require(type(evaluation_launch) is dict
             and evaluation_launch.get("source") == INPUT_SOURCE
             and evaluation_launch.get("protocol") == recipe.PROTOCOL

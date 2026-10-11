@@ -2763,3 +2763,36 @@ single-policy/single-step optional-hook spies, existing foundation/command
 session consumers, and upstream/athletics task-separation tests. The source
 whitespace checks pass, including the new untracked files. This is source
 and CPU-contract evidence only; native replay has not yet run at predeclaration.
+
+### First action-response audit stopped before simulation: reader mismatch
+
+Native CUDA-hidden preflight passes960 tests/3 skips in29.79s,34 known
+warnings. Three retained-artifact consumer checks skip because those separate
+Mac artifacts are not distributed in Git; the new capture/offline/runner/hook
+checks run. Exact clean native sourcef08338bec76f0091cb4ba6a81ff79384c294d705
+and DINO2021-only969MiB/49C/all protected scopes inactive verified before
+launching `microduck-action-response-f08338be-audit.service` with the declared
+resource caps. It exits1/MainPID0 before simulation, retaining `failure.json`:
+`ValueError: evaluation must select declared final checkpoints only`.
+
+Read-only diagnosis confirms the input aggregate still has SHA256
+9a3ab60c7a4f7613bfd371015ce9ab9a59eb15921d5bc56a04d0ba2ea97067e4.
+Its exact batch schema uses `both final999 only; unchanged held-out protocol`
+and omits `final_iterations`, as `motor.evaluation_plan` deliberately does
+when both arms have1000 updates. The new reader copied the unequal-duration
+schema, and synthetic fixtures repeated that assumption. Correct only the
+reader/fixture to this pinned legacy schema; derive final999 from exact
+per-arm contracts and retain literal checkpoint/aggregate pins and complete
+receipts. Add a test against the actual recipe's evaluation plan, not only
+synthetic fixtures. No input, checkpoint, reward, action pipeline or gate
+changes. Keep the failed service/output immutable and retry under a new
+tested source/unit/directory after fresh idle/shared-host proof.
+
+Corrected reader and adjacent capture/body/gait/batch/receipt regression suite:
+187 Mac CPU tests pass in27.41s,31 known warnings; whitespace check passes.
+The copied first failure receipt matches native SHA256
+452e338e17c41fb37b5bbe90e00d68c83ce1dba8a8d953602f8d28c60d50020d.
+The retry preflight must validate the actual native full hashed input bundle
+with CUDA hidden, in addition to synthetic fixture/source-contract tests,
+before starting any simulation. Both final999 contracts, unchanged24-case
+decisions and paired differences remain mandatory.

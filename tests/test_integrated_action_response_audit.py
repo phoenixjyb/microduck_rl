@@ -83,11 +83,10 @@ def bundle(tmp_path, monkeypatch):
                         checkpoint=str(checkpoint.resolve()), checkpoint_sha256=digest),
             actual_checkpoint_sha256=digest)
 
+    evaluation_plan = motor.evaluation_plan(recipe)
     prior = dict(
         source=audit.INPUT_SOURCE, protocol=recipe.PROTOCOL,
-        selection=audit.EVALUATION_SELECTION,
-        final_iterations={arm: motor.training_contract(recipe, arm)["final_iteration"]
-                          for arm in audit.ARMS},
+        selection=evaluation_plan["selection"],
         checkpoint_sha256=hashes, cases=cases, decisions=decisions,
         paired_differences=motor.paired_differences(
             cases["control"], cases["batch"], label="batch_minus_control"),
@@ -132,6 +131,7 @@ def test_input_bundle_pins_aggregate_runtime_receipts_parent_cases_and_seed839_j
     assert validated["decisions"] == prior["decisions"]
     assert validated["checkpoint_sha256"] == hashes
     assert validated["final_iterations"] == {"control": 999, "batch": 999}
+    assert "final_iterations" not in prior
     assert len(prior["cases"]["control"]) == len(prior["cases"]["batch"]) == 12
     assert sum(len(rows) for rows in prior["cases"].values()) == 24
     assert prior["paired_differences"] == motor.paired_differences(
@@ -142,6 +142,14 @@ def test_input_bundle_pins_aggregate_runtime_receipts_parent_cases_and_seed839_j
     assert all(row["seed"] == 839 for _, _, row in jobs)
     assert [row["speed"] for _, _, row in jobs[:4]] == [speed for speed, _ in audit.base.CASES]
     assert [row["yaw"] for _, _, row in jobs[:4]] == [yaw for _, yaw in audit.base.CASES]
+
+
+def test_selection_label_matches_the_production_legacy_final999_plan():
+    plan = motor.evaluation_plan(recipe)
+    assert audit.EVALUATION_SELECTION == plan["selection"]
+    assert "final_iterations" not in plan
+    assert {arm: contract["final_iteration"] for arm, contract in plan["contracts"].items()} == {
+        "control": 999, "batch": 999}
 
 
 @pytest.mark.parametrize("mutation", [
@@ -160,7 +168,7 @@ def test_input_bundle_rejects_changed_identity_or_retained_evidence(
     elif mutation == "selection":
         prior["selection"] = "intermediate checkpoint"
     elif mutation == "iterations":
-        prior["final_iterations"]["batch"] = 998
+        prior["final_iterations"] = {"control": 999, "batch": 999}
     elif mutation == "eval_runtime":
         launch["runtime"]["torch"] = "wrong"
     elif mutation == "eval_parent":

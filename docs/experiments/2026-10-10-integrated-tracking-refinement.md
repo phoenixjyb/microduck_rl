@@ -3252,3 +3252,44 @@ is retained DINO2021 alone, 969 MiB/51C; four protected service scopes remain
 inactive. No video, promotion, raw perception, actor expansion, physical motion
 or protected-service restoration. Next bounded step is a descriptive nonzero
 head-yaw probe of these exact final weights, not policy admission.
+
+## Bounded head-yaw command diagnostic (2026-10-12, predeclared)
+
+After the entropy comparison is complete, verified, and retained, probe the two
+final-999 policies without retraining or promoting either. This is a descriptive
+policy-response diagnostic, not another acceptance matrix or a head-mechanics
+causal claim. Four cases are fixed: both arms, seed 839, eight worlds, forward
+command 0.3 m/s and body yaw zero, with head yaw -0.2 and +0.2 rad.
+Neck pitch, head pitch, head roll, and all body-pose commands remain zero.
+The complete original 24-case entropy matrix, original decisions, source,
+parent hash, per-case JSON and final weights must authenticate before probing.
+The original zero-head 0.3/0 row is retained alongside each observation, but is
+**not an RNG-identical replay** and has no previously captured head-error trace.
+
+The optional evaluator hook sets the head command before environment creation
+and checks all 61 raw actor command slots before each unchanged policy call.
+It requires plain named servo joints without passive-output joints. The
+physical head view is named servo qpos minus HOME, in the established head
+joint order; errors are measured against the actor-visible float32 command,
+after the unchanged 60-step startup. There is one policy call and one step per
+sample, no observation recomputation, sensor update, EMA update, sampling,
+action filtering or clipping. The default evaluator path remains unchanged.
+Existing aligned gait/body-yaw trace validation precedes any new summary.
+First-episode terminals retain partial raw evidence; they are never reset,
+discarded or relabelled as successful complete cases.
+
+Predeclare a single sequential native user service with a 600-second cap,
+480-second child timeout, 15-second stop grace, and a deadline check reserving
+615 seconds before 07:00 Beijing. It uses the same GPU lease, 20% allocator,
+host health guards and six runtime pins plus rsl-rl-lib 5.0.1. DINO and the four
+inactive protected scopes are preserved. No video, policy promotion, raw
+perception, actor expansion or physical motion follows from these summaries.
+A failed original tracking gate remains failed. No new head-error threshold
+is introduced post hoc.
+
+Preparation checks: 34 new focused tests pass (17 evaluator-hook and 17
+evidence/summary tests). Broader Mac regressions pass 1066 in 35.83s with
+45 existing actuator/site warnings. Owner-reviewed changes preserve the
+default evaluator path, retain partial terminals, authenticate the complete
+input matrix and compare shared gait/body trace channels exactly. Whitespace
+checks pass; native CPU checks and the fresh idle-GPU gate precede launch.

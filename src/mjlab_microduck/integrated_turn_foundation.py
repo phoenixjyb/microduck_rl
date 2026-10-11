@@ -302,7 +302,8 @@ def body_yaw_trace_sample(robot, command, actor_command):
 
 
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
-                  angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False):
+                  angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False,
+                  head_yaw_command=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -311,6 +312,12 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
     require(not gait_trace or yaw_trace, "gait capture requires unchanged body-yaw trace")
     require(not action_trace or (diagnostics and target_diagnostics and yaw_trace),
             "action capture requires position/target/body-yaw diagnostics")
+    if head_yaw_command is not None:
+        require(type(head_yaw_command) in (int, float) and math.isfinite(head_yaw_command)
+                and head_yaw_command in (-.2, .2),
+                "fixed diagnostic head yaw is finite +/-0.2 rad")
+        require(diagnostics and yaw_trace and gait_trace,
+                "head-yaw command requires position/body-yaw/gait diagnostics")
     worlds, steps, startup = 8, 240, 60
     torch.manual_seed(seed)
     cfg, agent = load_env_cfg(TASK, play=True), load_rl_cfg(TASK)
@@ -320,6 +327,10 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
     cfg.events.pop("push_robot", None)
     cfg.sim.nan_guard.enabled = True
     fix_velocity_commands(cfg, speed, yaw)
+    if head_yaw_command is not None:
+        head = cfg.commands["head_pose"]
+        head.ranges = ((0., 0.), (0., 0.), (head_yaw_command, head_yaw_command), (0., 0.))
+        head.zero_command_prob = 0.
     install_metric(cfg)
     if angular_diagnostics:
         from mjlab.managers.metrics_manager import MetricsTermCfg
@@ -336,6 +347,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         runner.load(str(checkpoint), strict=True, map_location="cuda:0")
         policy = runner.get_inference_policy(device="cuda:0")
         obs, robot = wrapped.get_observations(), env.scene["robot"]
+        if head_yaw_command is not None:
+            require(not any(name.startswith("passive_") for name in robot.joint_names),
+                    "head diagnostic requires plain servo qpos without passive output joints")
         stream = MotorStepStream.from_robot(robot, worlds, device=env.device, cost_cfg=MotorStepCostCfg())
         env._microduck_motor_step_stream = stream
         phase = torch.zeros(worlds, dtype=torch.long, device=env.device)
@@ -355,6 +369,16 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                                        atol=1e-6, rtol=0), "fixed evaluation command")
                 require(obs["actor"].shape == (worlds, 61) and finite_tree(obs), "finite evaluation obs")
                 require(torch.equal(obs["actor"][:, 48:51], command), "evaluation actor command")
+                if head_yaw_command is not None:
+                    head = env.command_manager.get_command("head_pose")
+                    body = env.command_manager.get_command("body_pose")
+                    require(head.shape == (worlds, 4) and body.shape == (worlds, 6)
+                            and finite_tree((head, body))
+                            and torch.equal(head, head.new_tensor([0., 0., head_yaw_command, 0.]).expand_as(head))
+                            and bool((body == 0).all())
+                            and torch.equal(obs["actor"][:, 51:55], head)
+                            and torch.equal(obs["actor"][:, 55:61], body),
+                            "fixed diagnostic head/body commands and raw actor slots")
                 velocity = torch.stack((robot.data.root_link_lin_vel_b[:, 0], robot.data.root_link_ang_vel_b[:, 2]), -1)
                 require(finite_tree(velocity), "finite measured body velocity")
                 velocities.append(velocity.cpu().clone())
@@ -420,6 +444,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         if gait_trace:
             from mjlab_microduck import gait_yaw_capture
             result["gait_yaw_trace"] = gait_yaw_capture.trace(gait_samples, result["checkpoint_sha256"])
+        if head_yaw_command is not None:
+            result["head_yaw_command"] = head_yaw_command
+            result["head_measurement_view"] = "named plain-servo qpos minus HOME"
         if action_trace:
             result["action_response_trace"] = action_response_capture.trace(action_samples, result["checkpoint_sha256"])
         return result

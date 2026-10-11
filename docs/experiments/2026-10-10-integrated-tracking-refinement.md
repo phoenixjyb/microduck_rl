@@ -1377,3 +1377,58 @@ explicit request. No driver/package changes, new raw perception, publication
 or physical motion. GPU preflight and KL-budget outcomes are pending.
 After review hardening, the complete focused suite passed215 tests in8.12s,
 with the same three existing warnings, and whitespace checks passed again.
+
+### KL-budget native preflight and bounded launch — 2026-10-11 23:07 Beijing time
+
+Source `a9a70f0e977037c706c7c108aaf868dbe8b4bca0` passed the same215-test
+CUDA-hidden native suite in9.96s (three existing warnings). All four GPU
+preflights completed; normalized ONNX CPU inference was finite61-to14 for
+both smokes. Read-only verification checked source/parent hashes, restored
+models/normalizers/Adam and reset counters, finite checkpoint payloads,
+complete finite updates, fixed rewards and yaw variance `.5`, all20 KL
+minibatches per update and every strict-threshold adaptive LR transition.
+
+| Preflight | Elapsed s | Benchmark elapsed x150 s | Falls / NaN | Peak GPU MiB / C |
+| --- | ---: | ---: | ---: | ---: |
+| smoke-control | 4.738157 | — | 0 / 0 | 1511 / 53 |
+| smoke-klbudget | 4.703245 | — | 0 / 0 | 1511 / 54 |
+| benchmark-control | 7.718395 | 1157.759198 | 1 / 0 | 1717 / 57 |
+| benchmark-klbudget | 7.957605 | 1193.640706 | 2 / 0 | 1717 / 57 |
+
+Both projections fit2040s. These preflight falls/torques are diagnostics,
+not held-out acceptance. Runtime pins match the declaration; the live
+optimizer capture additionally requires `rsl-rl-lib==5.0.1`.
+Small receipt copies in
+`artifacts/evaluations/kl-budget-a9a70f0e-20261011-preflight/` match native
+bytes (models remain native-only):
+
+- smoke-control: `42aba9002a21ad5b1edeb8a8ba2f4e44b0066957f2d5a4ea4d659f2b9594fbca`
+- smoke-klbudget: `e6672eeedc3ef6bef1a29fd512b8fee7dddb9f4a093bfe0d4e8c429eb106f137`
+- benchmark-control: `3700c01cb611e7198c8f906463c9cd4ab9d23bed8c171e4b69849ae39af3f245`
+- benchmark-klbudget: `ec41872bc71fa3688feadd872620e3cec8c9b3543540ba9be6374e82bca3d312`
+
+The first wrapper attempt exited125 before Python or any full-arm output:
+`timeout: invalid time interval 's'`. Read-only journals identified systemd
+environment expansion of the shell's `${cap}` argument. Retry replaced
+shell-variable-dependent child arguments and PYTHONPATH with literals; no
+recipe, parent, runtime or output was changed/overwritten. The native
+checkout is intentionally clean detached HEAD at the exact pushed source,
+not a local branch; an earlier overstrict branch-name precheck was corrected
+after read-only inspection, without switching that checkout.
+
+`microduck-kl-budget-a9a70f0e-matched-eval.service` then launched successfully
+at2026-10-11 23:06:31+08, MainPID863519: control1000 → klbudget1000 → unchanged
+24-case final999 evaluation, retained under
+`artifacts/training/kl-budget-a9a70f0e-20261011/`. Live service properties
+confirmed4500s runtime,15s stop grace,8GiB RAM,200% CPU,64 tasks,Nice10 and
+control-group kill mode. Absolute deadline1791759600 is checked before
+launch and each child against the full remaining cap/grace budget; child
+caps2100/2100/240s plus15s grace remain unchanged. Keep this native source
+pinned while active; documentation advances on the Mac only.
+
+Before launch, exact DINO PID2021 owned946MiB (aggregate969MiB, free15225MiB,
+48C); the protected services were inactive in both user/system scopes.
+Control update58 retained finite losses/rewards, zero NaN terminations and
+`model_0.pt`; its KL target `.01` and20 optimizer minibatches were active.
+Completion and unchanged held-out gates remain pending. No policy acceptance,
+publication, physical motion or new skill completion is claimed.

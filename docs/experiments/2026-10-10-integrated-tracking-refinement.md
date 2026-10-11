@@ -2035,3 +2035,46 @@ service, existing lease/DINO2021/protected-service guards,20% allocator;
 07:00 Beijing budget checks. Stop on a true execution/finite-state failure,
 diagnose read-only before changes. No rejected-policy video, obstacle/physical
 promotion, driver/package changes or unrelated workload modification.
+
+### Yaw-bias preflight and retained matched launch
+
+Reviewed source `2f5ffa1ff8f19b1f733a0e07399daec938ba70a9` pushed and fast-forwarded
+onto the idle clean native detached checkout. CPU checks pass570/three existing
+selector warnings locally and on native (12.12s), followed by all four GPU
+preflights in `microduck-yaw-bias-2f5ffa1f-preflight.service`, inactive/dead/
+MainPID0/ExecMainStatus0/Resultsuccess. Verified exact parent bytes, all four
+initial model/normalizer/Adam trees, restored LR/counters, cadence/final finite
+checkpoints, receipt/source/runtime identities and all600 minibatch adaptive
+KL transitions. Both normalized ONNX CPU checks remain61->14. No NaN ends.
+
+| Mode | Seconds | Falls across updates | Mean EMA cost | Actual weighted bias reward rate | Mean signed angular reward rate |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| smoke-control | 4.588428 | 0 | .049113 | 0 | .978067 |
+| smoke-bias | 4.594369 | 0 | .049049 | -.004905 | .975073 |
+| benchmark-control | 7.878100 | 4 | .055730 | 0 | .978805 |
+| benchmark-bias | 7.972032 | 2 | .055577 | -.005558 | .981206 |
+
+All live weighted-bias snapshots agree with-.1*positive cost or exact0 in
+control; no same-step double EMA update. This small reward is active, not a
+dead configured term. Benchmarks yield conservative150x estimates1181.715/
+1195.805s, both below the2040s budget test. Preflight motor peaks around.65
+are execution/gross-abort checks, not a held-out motor-gate pass. Peak1717MiB/
+58C; post-run DINO2021 only969MiB/49C, protected user/system services inactive.
+Sixteen small copied launch/result/warm-start/update files match native hashes
+under `artifacts/evaluations/yaw-bias-2f5ffa1f-20261012-preflight`; models retained
+only on native.
+
+Matched sequential service `microduck-yaw-bias-2f5ffa1f-matched-eval.service`
+launched by2026-10-12 01:10 Beijing time, MainPID1059703, exact clean source
+`2f5ffa1f`, unique `artifacts/training/yaw-bias-2f5ffa1f-20261012`. Frozen source
+stays unchanged while active. Literal2100/2100/240s child caps,4500s service,
+15s grace/control-group kill,8GiB memory/CPU200%/tasks64/nice10; explicit07:00
+deadline budget checked before each phase. Control1000 then bias1000 then the
+unchanged24-case final999 evaluation. Training progress is not acceptance.
+
+| Preflight receipt | SHA256 |
+| --- | --- |
+| smoke-control | `c1b99407efc2afa69611302d57cc877b8e27278eb54bf50ba8b85b0db7003a93` |
+| smoke-bias | `0442d9edbdd71fc9d51022cbd5d13799e9fe7e8784631b1741abfe3a5f545c73` |
+| benchmark-control | `e99960e2d0a2c2f8d9b7bcf216ea311f6834171f3374c08cc3bf3515e7adf3db` |
+| benchmark-bias | `b70229e8a12b40ff3ee3b07916e790e49f330b959ff1367aef6dd9f83e59584f` |

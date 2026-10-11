@@ -2585,3 +2585,51 @@ implicit1024,1025/4096, noninteger/boolean/unbounded capacity requests.
 Preserve the failed source/receipts separately. Retry all four preflights at
 one newly tested/pushed source in a new retained run; never combine old/new
 receipts to authorize full training. Numerical recipe/seeds/gates unchanged.
+
+### Corrected rollout-batch preflight verified and full launch
+
+Sourceb0dedcb341fa9703ce944bf410918f10099bdf7f is clean/pushed;763 focused
+CPU tests pass locally15.23s and native CUDA-hidden14.54s, three existing
+warnings. Read-only integration review confirms bounded capacity forwarding
+and no other fixed256 stream/training bound. The corrected sequential
+`microduck-rollout-batch-b0dedcb3-preflight.service` completed successfully
+before03:08 Beijing, inactive/dead/MainPID0/Resultsuccess/exit0.
+
+All four exact same-source launch/receipt/runtime/parent identities, full
+actor/critic/normalizer/Adam initial restoration and reset LR/counters,
+finite cadence/final weights,600 captured optimizer minibatches and complete
+per-update/cumulative actual command dwell verified. Actual yaw-bias reward
+is zero. Both official normalized ONNX61->14 artifacts have finite CPU
+inference receipts and matching byte hashes. No NaN terminations.
+
+| Mode | Worlds/updates | Seconds | Training falls | Peak GPU MiB/C |
+| --- | --- | ---: | ---: | --- |
+| smoke-control | 64/5 | 4.556316 | 0 | 1511/54 |
+| smoke-batch | 64/5 | 4.573328 | 0 | 1511/55 |
+| benchmark-control | 256/10 | 7.736982 | 1 | 1717/56 |
+| benchmark-batch | 1024/10 | 9.331889 | 13 | 2515/60 |
+
+These falls are exploratory training counts over different exposure, not
+held-out policy admission. Conservative projections1160.547/1399.783s
+fit2040/4440s. Measured1024-world memory/time supports this bounded job,
+not4096-world capacity or better tracking. Post-preflight DINO2021 only
+969MiB/48C,15,225MiB free; all four protected service scopes inactive.
+20 small receipts/launch/warm/update/health files hash-match native under
+Mac `artifacts/evaluations/rollout-batch-b0dedcb3-20261012-preflight`, plus
+copied manifest; weights/ONNX remain native only. The failed-source18 small
+files also hash-match under the separate b3d837fd preflight evidence folder.
+
+Full `microduck-rollout-batch-b0dedcb3-matched-eval.service` launched before
+03:09 Beijing, MainPID1247506, unique retained native run
+`artifacts/training/rollout-batch-b0dedcb3-20261012`. Verified6900s service
+cap/15s grace/control-group kill/8GiB RAM/CPU200%/tasks64/nice10, literal
+2100/4500/240s childcaps and6915/4795/255s remaining-budget checks before
+07:00. Control256×1000 precedes batch1024×1000, then unchanged24-case
+final999-only evaluation. Native source remains frozenb0dedcb3 while active.
+
+| Corrected preflight receipt | SHA256 |
+| --- | --- |
+| smoke-control | `bff42713457ec80d42b4fdd04ab317dd4ac4c783de49ad17e4d5bb339340263c` |
+| smoke-batch | `51739deeecaa74aec9b5cc0b7db30709a73cb2b9d3b3569aebf59eb352d9408d` |
+| benchmark-control | `2ce151c728dcf8c55f613b8b2ea4d0d2e68b38d8f432609362329ab360f179a9` |
+| benchmark-batch | `1637dd79376e8ae0c5d3ab5335002655d79f075edc48b61c4f94fe23a1ca0109` |

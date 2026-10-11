@@ -1432,3 +1432,42 @@ Control update58 retained finite losses/rewards, zero NaN terminations and
 `model_0.pt`; its KL target `.01` and20 optimizer minibatches were active.
 Completion and unchanged held-out gates remain pending. No policy acceptance,
 publication, physical motion or new skill completion is claimed.
+
+### Retained CPU-only minibatch telemetry audit
+
+`python -m mjlab_microduck.integrated_kl_budget_audit <updates.jsonl>
+--expected-updates <N> --desired-kl <.01|.02>` reads retained bytes only,
+prints a deterministic SHA-bound JSON report, and loads neither simulator nor
+checkpoint. It verifies20 finite KL/pre-LR/inferred-applied-LR values per
+ordered update, exact restored initial LR1e-5 and cross-update continuity,
+strict adaptive transitions, true integer threshold counts and summary
+consistency. It distinguishes applied-minibatch floor counts from
+end-of-update floor counts; neither is policy acceptance. Float32 aggregate
+mean reductions may round one ULP outside constant-array extrema, so only
+logging summaries use an explicit numeric tolerance. Controller branches and
+held-out gates retain exact original thresholds.
+
+An independent bounded implementation review and owner inspection found this
+float32 edge case; two owner regression tests cover it and ensure the logging
+tolerance does not relax controller thresholds. The audit suite passed98
+tests; the full focused suite passed313 tests in8.92s with the same three
+existing warnings. Whitespace checks passed. CLI and API both audited all600
+native preflight optimizer minibatches from hash-matched small JSONL copies:
+
+| Preflight | Applied minibatches at LR floor | Updates ending at LR floor | High-KL branches |
+| --- | ---: | ---: | ---: |
+| smoke-control | 42 / 100 | 5 / 5 | 55 / 100 |
+| smoke-klbudget | 24 / 100 | 3 / 5 | 30 / 100 |
+| benchmark-control | 38 / 200 | 4 / 10 | 51 / 200 |
+| benchmark-klbudget | 0 / 200 | 0 / 10 | 15 / 200 |
+
+Preflight input SHA256 (native/Mac bytes equal):
+
+- smoke-control: `7ca6ba281ce40f552f1d28427914c086914f467fc4123c5e5955ae63efc8d84f`
+- smoke-klbudget: `27e3ee6223886cf170491a57cf5a9b558c7c2155b78b3752400b9ca0597125e1`
+- benchmark-control: `258fe138778ee07a266a111b0b5479ce39f8ed93f30f93824ba2283cd0f9702c`
+- benchmark-klbudget: `c98e26caf9c976a3902da97cff652761110e987fe30b9b52dc71b5abc61057b3`
+
+This proves measured controller activity in short preflights, not improved
+held-out tracking. Native training remains pinned at `a9a70f0e`; this offline
+audit addition does not modify or reload that running service.

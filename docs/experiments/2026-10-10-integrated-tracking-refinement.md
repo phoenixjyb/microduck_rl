@@ -1938,3 +1938,47 @@ whole observed case rather than projecting away unexpected result fields.
 Focused CPU checks pass523 tests (three existing selector warnings); the
 copied actual aggregate/receipts/decisions also validate without simulation.
 Native CUDA-hidden tests and the bounded live replay remain required.
+
+### Completed eight-case orientation/rate replay
+
+Native CUDA-hidden tests passed523/three existing warnings in10.46s. The
+four-minute retained service `microduck-yaw-trace-4430bd67.service` completed
+successfully, inactive/dead/MainPID0/ExecMainStatus0 at clean frozen source
+`4430bd679ed065fca785d011a1bc2f9c0e57c6b8`. Retained output:
+`artifacts/evaluations/yaw-trace-4430bd67-20261012`. All eight cases complete
+240 steps without terminal worlds or rated-speed exceedance. All frame,
+quaternion, actor-command and body-MAE arithmetic audits pass; original
+aggregate/checkpoint hashes and deterministic rejected decisions unchanged.
+Raw and summary hashes rechecked; summaries recompute exactly on native.
+Copied16 raw/summary hashes also match. Mac arithmetic recomputation differs
+in one float by1.39e-17 (not byte corruption or a changed admission threshold).
+
+All eight replays differ from the original trajectories, with73/87/93/93
+control and74/84/95/95 precision differing fields under the existing1e-6
+comparison. Accordingly `replay_verified=false`; this seed839 diagnostic is
+not an exact replay or a replacement12-case admission matrix.
+
+| Command vx/yaw | Control / precision body yaw MAE | Signed bias | Residual standard deviation | Mean nonzero residual sign transitions /180 samples |
+| --- | ---: | ---: | ---: | ---: |
+| 0 /0 | .007088 / .007567 | -.000717 / .002803 | .009627 / .010582 | 86.50 /83.25 |
+| .30 /0 | .111041 / .117648 | .017123 / .063165 | .149811 / .144085 | 54.88 /56.38 |
+| .20 /-.20 | .131814 / .136990 | .074931 / .109117 | .147883 / .132172 | 40.38 /34.00 |
+| .20 /+.20 | .121432 / .108532 | -.018198 / .022625 | .156683 / .130571 | 53.38 /53.13 |
+
+These are means of eight per-world descriptive quantities. All heading
+samples are defined. Largest per-world body-versus-heading MAE difference
+is.001097rad/s; frame substitution does not explain the roughly.11-.14
+moving body-yaw MAEs. Both temporal variation and signed bias remain.
+Sign transitions are not a frequency-spectrum or actuator-causality claim.
+Tighter Gaussian width has not uniformly improved tracking; do not tighten
+again, widen gates or change coordinate frames based on this trace.
+
+Maximum pooled torque utilization.526521 control/.496713 precision, below.60.
+All18 health samples satisfy lease/occupancy/protected-service guards; peak
+2003MiB/57C, post-run DINO2021 only969MiB/49C. No learning or policy promotion.
+
+| Artifact | SHA256 |
+| --- | --- |
+| Trace launch | `b2785efba94e9d20bc740ce2d7e315c24c7a9f1ee00a4293491ad5fceb0f634a` |
+| Trace result | `e4686f8e1229dbe8235f97554557eed927887353a23a4bc4bec1f6d81051c175` |
+| Trace health | `bc0559ee0f00c658d062fe516aa6bbbdaa5b06dad9a18a19937a1a28b9a8916c` |

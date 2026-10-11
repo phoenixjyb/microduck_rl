@@ -2239,3 +2239,56 @@ No receipt can authorize a duration projection merely by occupying the
 expected directory. Nineteen additional regression cases cover wrong
 preflight identities/declarations; final focused suite648 passed in18.00s,
 three existing warnings. Read-only review confirms the blocker is closed.
+
+### Duration preflight verified and retained full launch
+
+Exact reviewed/pushed native source
+`7a9c37da8a11695180572c982ebcdf1358d84d30`, clean detached worktree.
+Preflight service `microduck-training-duration-7a9c37da-preflight.service`
+finished01:49:09 Beijing time, inactive/dead/MainPID0/Resultsuccess/exit0.
+Its initial transported test list collected574 tests; before any full launch,
+ran the corrected complete648-test list CUDA-hidden at the same clean source:
+648 passed/three existing selector warnings in12.54s. No GPU configuration,
+weight, source or numerical threshold changed to correct that invocation.
+
+All four same-source preflight receipts, exact initial parent model/normalizer/
+Adam restoration, LR/counters, finite cadence/final weights,600 captured
+adaptive-KL minibatches and actual zero-weight bias diagnostics verified.
+Every telemetry row has exclusive complete per-update/cumulative command
+dwell counts. Both official normalized ONNX artifacts pass finite61->14
+CPU inference and byte hashes. The runner's optional automatic ONNX hook
+still logs its known logger_type warning; the separately retained normalized
+export/inference check is the successful evidence, not that warning.
+
+| Mode | Seconds | Falls | Mean diagnostic EMA cost | Actual bias reward | Mean signed angular reward |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| smoke-control | 4.574443 | 0 | .053346 | 0 | .963731 |
+| smoke-budget | 4.604462 | 0 | .053544 | 0 | .968039 |
+| benchmark-control | 7.730003 | 0 | .051253 | 0 | 1.020039 |
+| benchmark-budget | 7.792399 | 0 | .051137 | 0 | 1.017405 |
+
+Conservative timing projections1159.500s(control×150)/4675.439s(budget×600)
+fit2040/7140s. Paired benchmark dwell counts are identical (seed1051), with
+5147 negative-target and3993 positive-target action-world steps out of61440;
+these short dwell statistics do not establish rarity, tracking or admission.
+No preflight NaNs. Peak1717MiB/58C; post-preflight DINO2021 only969MiB/50C
+and all protected service scopes inactive. Twenty small launch/result/warm/
+update/health files hash-match native under
+`artifacts/evaluations/training-duration-7a9c37da-20261012-preflight`, plus
+copied manifest. Models retained only on native.
+
+Full service `microduck-training-duration-7a9c37da-matched-eval.service`
+launched by01:51 Beijing time, MainPID1137467, unique retained run
+`artifacts/training/training-duration-7a9c37da-20261012`. Verified9600s
+runtime/15s grace/control-group kill/8GiB RAM/CPU200%/tasks64/nice10,
+literal2100/7200/240s child caps and declared9615/7455/255s remaining-budget
+checks against07:00. Native source remains frozen7a9c37da while active.
+Sequential control1000 then budget4000 then unchanged24-case final999/3999
+evaluation. Training progress is not acceptance.
+
+| Preflight receipt | SHA256 |
+| --- | --- |
+| smoke-control | `f51e60d945de3987a1cfb8b1803e9f024dd390155c81b32e5fb2589e91906e9c` |
+| smoke-budget | `dbe58b272a5b2225225eb97dfb2bf80636f76b8b0d018e0e1318fa5f58f0bb65` |
+| benchmark-control | `b7d34588e8d7766e23861c4a3c8725e583324a805c60627b76367a9b84035a64` |
+| benchmark-budget | `df9845b8069c39397116ce4ff761c2604290c45a838c117616cdade28a8df5c3` |

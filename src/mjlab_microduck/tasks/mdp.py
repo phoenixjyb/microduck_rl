@@ -4123,6 +4123,28 @@ def body_angular_tracking_errors(
     return yaw_sq, xy_sq
 
 
+def body_yaw_tracking_l1_cost(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Instantaneous absolute body-yaw command residual, referenced to 1 rad/s.
+
+    Positive raw cost requires a negative weight. Matching a nonzero turn
+    costs zero; this is neither an absolute rotation tax nor an EMA. Leave
+    planar, roll/pitch, actions, commands and reward state untouched.
+    """
+    command = env.command_manager.get_command(command_name)
+    angular = env.scene[asset_cfg.name].data.root_link_ang_vel_b
+    if (command.shape != angular.shape or angular.ndim != 2 or angular.shape[1] != 3
+            or not bool(torch.isfinite(command).all() & torch.isfinite(angular).all())):
+        raise FloatingPointError("invalid raw body yaw tracking state")
+    cost = (command[:, 2] - angular[:, 2]).abs()
+    if not bool(torch.isfinite(cost).all()):
+        raise FloatingPointError("nonfinite raw body yaw tracking cost")
+    return cost
+
+
 def body_yaw_bias_cost(
     env: ManagerBasedRlEnv,
     command_name: str = "twist",

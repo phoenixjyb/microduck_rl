@@ -2856,3 +2856,72 @@ manifest. Transfer is compressed in flight; no checkpoint weights duplicated.
 | Launch | `153e731809f347bb10f5ab6dd9ac90ffc90d1a76ff6913b81ec89053d6d53ffd` |
 | Result | `3047fe46fbcdf96f81abe3214423d267dfbed53894f4df5617721a35e155861c` |
 | Health | `509f47b7a262351df2355fd6e7ace89aea06517a6f59cd17615bbd9ad50a0f21` |
+
+### Predeclared asymmetric-compatible instantaneous yaw-L1 comparison
+
+Mirror-loss review finds the existing61D/14D transformation and RSL-RL5.0.1
+API coherent, but repository guidance says never enable symmetry for an
+asymmetric task. This recipe retains a right-yaw-only safety reward and
+right-side `bearing_roll` randomization. Do not enable mirror loss, change
+those protections or infer a bilaterally symmetric plant from the audit.
+
+Next bounded candidate is `integrated-body-yaw-l1-continuation-v1`:
+control extra yaw-L1 weight0 versus yawl1 weight−.5 from the first action,
+with the same instantaneous positive raw cost in both configs:
+`abs(command_wz - root_link_ang_vel_b[:,2])`, referenced to1rad/s.
+This prices command error, including idle, not absolute turning or action
+motion. It introduces no EMA, low-pass, new actor input or plant modification.
+It is an exploratory objective change, not an established cause of failure.
+The existing twist residual is squared, not L1: at yaw error.1 it contributes
+−.005, while the extra term contributes−.05. The unchanged signed angular
+Gaussian contributes about−.0396 on its yaw component relative to zero error.
+Thus the fixed new coefficient is a bounded near-zero error-pressure test,
+not another variance tightening, EMA-dose search or longer/bigger rollout.
+It may worsen oscillation/stability/head compensation and must pass the same
+numerical gates before any use beyond this experiment.
+
+Both arms restore the exact c81b parent, actor/critic/normalizers/Adam and
+initial LR5.0625e-05, then use fresh simulated states and reset counters.
+Both256 worlds×1000 updates, seed1097,24steps/update, five PPO epochs/four
+minibatches/adaptive KL.01, cadence250 plus final999:6.144M transitions and
+20,000 optimizer minibatches each. Smokes64×5/seed1091 and benchmarks256×10/
+seed1093 are matched. New reward and pre-reset metric exist in both arms;
+only its weight differs. Configuration tests must normalize only that
+weight and run tag. Actual weighted reward must equal declared weight×raw
+cost before reset, be nonpositive and finite; every24step update retains
+instantaneous MAE/signed error plus existing motor, range, Gaussian, KL,
+command-dwell, falls and NaN telemetry. No observed fall is hidden by reset.
+Signed telemetry is body-yaw minus command-yaw. Training metric is measured
+post-reward/pre-reset, while held-out traces sample pre-action; derived-state
+substep timing is retained, not claimed as exact sample-by-sample alignment.
+
+Keep motor−1, right-yaw proximity−4/.15rad, twist−.5/forward0/action-rate−.8,
+signed additive angular2/variances.5/.5, EMAweight0, head/body objectives,
+sampler, collapsed curricula, plant/DR and61actor/14raw unfiltered/unclipped
+outputs unchanged. Symmetry remainsNone. Select both final999 only and run
+the original ordered24cases:seeds839/853/857, commands0/0,.3/0,.2/−.2,.2/+.2,
+8worlds×240steps/startup60, same per-world speed/yaw, idle, motor/range,
+stability and no-terminal gates. Do not cherry-pick intermediates or admit
+the checkpoint merely because yaw improves or the training reward rises.
+
+One sequential preflight service≤600s, then, only if same-source smokes,
+normalized ONNX exports, benchmarks, source/runtime/parent receipts and
+finite telemetry pass, one sequential matched-training/evaluation service
+≤4500s (control2100/yawl12100/evaluation240),15s grace/control-group kill.
+Each measured benchmark×150 must be<2040s. Require4515s remaining before
+07:00 Beijing time on2026-10-12 at full launch, and recheck remaining budget
+before every child. Keep DINO2021, exactGPU/shared lease,20%allocator,
+6144MiB-total/8192MiB-free/<75C guards,8GiB RAM/CPU200%/tasks64/nice10,
+four protected AI scopes inactive. No source changes while a GPU job is
+active. Retain/diagnose failure read-only before changes. No video, skill
+promotion, raw perception, physical motion or protected-service restoration.
+Tests/native capacity and launch evidence will be recorded after verification.
+
+Preparation verification:27 new focused tests pass, plus991 local focused
+regressions in25.72s with34 existing actuator/site-selector warnings;
+whitespace check passes. Tests include actual pre-reset reward after a
+simulated terminal reset, zero-weight control, complete24steps/20KL
+minibatches/dwell and config parity. They caught an inherited telemetry-list
+name collision before GPU use; child lists now use a unique `yaw_l1_` prefix
+and the full-parent-update regression passes. Independent read-only review
+finds no source/harness blocker. Native CPU and simulation remain gated.

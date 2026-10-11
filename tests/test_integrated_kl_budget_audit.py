@@ -291,3 +291,37 @@ def test_cli_is_deterministic_and_hashes_raw_input(tmp_path):
     assert result["input_sha256"] == hashlib.sha256(raw).hexdigest()
     assert result["status"] == "telemetry-audit-only" and result["policy_acceptance"] is False
 
+
+def test_explicit_nonfloor_parent_lr_preserves_controller_and_default_guard():
+    inherited = 5.062500000000001e-05
+    row = make_row(1, .01, [0.] * 20, start_lr=inherited)
+    with pytest.raises(ValueError, match="restored parent LR"):
+        audit_rows([row], expected_updates=1, desired_kl=.01)
+    result = audit_rows([row], expected_updates=1, desired_kl=.01, initial_lr=inherited)
+    assert result["initial_lr"] == result["lr_before_min"] == result["lr_applied_max"] == inherited
+    assert result["minibatch_lr_applied_floor_count"] == 0
+
+
+@pytest.mark.parametrize("initial", [True, None, 1e-6, .1, float("nan"), float("inf")])
+def test_invalid_explicit_initial_lr_is_rejected(initial):
+    with pytest.raises(ValueError):
+        audit_rows(valid_rows(1), expected_updates=1, desired_kl=.01, initial_lr=initial)
+
+
+@pytest.mark.parametrize("explicit", [False, True])
+def test_cli_requires_explicit_nonfloor_parent_identity(tmp_path, explicit):
+    inherited = 5.062500000000001e-05
+    raw = (json.dumps(make_row(1, .01, [.01]*20, start_lr=inherited)) + "\n").encode()
+    path = tmp_path / "updates.jsonl"
+    path.write_bytes(raw)
+    script = Path(__file__).parents[1] / "src/mjlab_microduck/integrated_kl_budget_audit.py"
+    command = [sys.executable, str(script), str(path), "--expected-updates", "1", "--desired-kl", ".01"]
+    if explicit: command.extend(["--initial-lr", repr(inherited)])
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode == (0 if explicit else 2)
+    if explicit:
+        report = json.loads(result.stdout)
+        assert report["initial_lr"] == inherited
+        assert report["input_sha256"] == hashlib.sha256(raw).hexdigest()
+    else: assert "restored parent LR" in result.stderr
+

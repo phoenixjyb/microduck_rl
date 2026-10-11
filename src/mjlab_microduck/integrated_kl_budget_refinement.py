@@ -49,15 +49,18 @@ def check_optimizer(alg, expected):
     return alg.learning_rate
 
 
-def install_optimizer_capture(runner, env):
+def install_optimizer_capture(runner, env, *, initial_lr=1e-5):
     base.require(metadata.version("rsl-rl-lib") == "5.0.1", "reviewed PPO runtime")
     base.require(not hasattr(env, "_microduck_optimizer_audit"), "unique optimizer audit")
     alg = runner.alg
     expected = alg.desired_kl
     base.require(expected in (.01, .02), "predeclared KL target")
-    base.require(check_optimizer(alg, expected) == 1e-5, "known restored initial parent LR")
+    base.require(isinstance(initial_lr, (int, float)) and not isinstance(initial_lr, bool)
+                 and math.isfinite(initial_lr) and 1e-5 <= initial_lr <= 1e-2,
+                 "finite predeclared initial parent LR")
+    base.require(check_optimizer(alg, expected) == initial_lr, "known restored initial parent LR")
     original = alg.actor.get_kl_divergence
-    state = SimpleNamespace(alg=alg, expected=expected, samples=[])
+    state = SimpleNamespace(alg=alg, expected=expected, initial_lr=initial_lr, samples=[])
     env._microduck_optimizer_audit = state
 
     def measured(*args, **kwargs):

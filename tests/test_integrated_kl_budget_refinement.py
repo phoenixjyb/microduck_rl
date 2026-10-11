@@ -125,6 +125,26 @@ def test_nonparent_initial_lr_rejected(monkeypatch):
     with pytest.raises(ValueError, match="initial parent LR"): kl.install_optimizer_capture(runner, env)
 
 
+def test_explicit_parent_lr_is_checked_not_reset(monkeypatch):
+    runner, env, value, _ = fake_optimizer(monkeypatch)
+    inherited = 5.062500000000001e-05
+    runner.alg.learning_rate = runner.alg.optimizer.param_groups[0]["lr"] = inherited
+    kl.install_optimizer_capture(runner, env, initial_lr=inherited)
+    assert env._microduck_optimizer_audit.initial_lr == inherited
+    assert runner.alg.learning_rate == runner.alg.optimizer.param_groups[0]["lr"] == inherited
+    assert runner.alg.actor.get_kl_divergence(None) is value
+    assert env._microduck_optimizer_audit.samples[0][1] == inherited
+
+
+@pytest.mark.parametrize("initial", [True, None, 1e-6, .1, float("nan"), float("inf")])
+def test_invalid_predeclared_parent_lr_fails_before_capture(monkeypatch, initial):
+    runner, env, _, _ = fake_optimizer(monkeypatch)
+    with pytest.raises(ValueError):
+        kl.install_optimizer_capture(runner, env, initial_lr=initial)
+    assert not hasattr(env, "_microduck_optimizer_audit")
+    assert runner.alg.learning_rate == 1e-5
+
+
 def test_exact_adaptive_threshold_counts(monkeypatch):
     runner, env, raw, _ = fake_optimizer(monkeypatch)
     kl.install_optimizer_capture(runner, env)

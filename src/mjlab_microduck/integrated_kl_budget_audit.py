@@ -144,18 +144,21 @@ def _audit_row(row: Any, index: int, desired_kl: float) -> dict[str, Any]:
     }
 
 
-def audit_rows(rows: Any, *, expected_updates: int, desired_kl: float) -> dict[str, Any]:
+def audit_rows(rows: Any, *, expected_updates: int, desired_kl: float,
+               initial_lr: float = _MIN_LR) -> dict[str, Any]:
     """Validate complete per-update telemetry and return a deterministic summary."""
     expected_updates = _integer(expected_updates, "expected_updates")
     _require(expected_updates > 0, "expected_updates must be positive")
     desired_kl = _number(desired_kl, "desired_kl")
     _require(desired_kl in (0.01, 0.02), "desired_kl must be 0.01 or 0.02")
+    initial_lr = _number(initial_lr, "initial_lr")
+    _require(_MIN_LR <= initial_lr <= _MAX_LR, "initial_lr must be within PPO LR bounds")
     _require(isinstance(rows, list) and len(rows) == expected_updates,
              f"expected exactly {expected_updates} update rows")
     _require(isinstance(rows[0], dict), "row 1 must be an object")
     first_rates = _numeric_array(rows[0], "minibatch_lr_before")
-    _require(first_rates[0] == _MIN_LR,
-             "first update must start at the restored parent LR 1e-5")
+    _require(first_rates[0] == initial_lr,
+             "first update must start at the predeclared restored parent LR")
 
     audited = [_audit_row(row, index, desired_kl) for index, row in enumerate(rows, 1)]
     for previous, current in zip(audited, audited[1:]):
@@ -175,6 +178,7 @@ def audit_rows(rows: Any, *, expected_updates: int, desired_kl: float) -> dict[s
         "policy_acceptance": False,
         "expected_updates": expected_updates,
         "desired_kl": desired_kl,
+        "initial_lr": initial_lr,
         "optimizer_minibatches": len(kl_means),
         "kl_mean_min": min(kl_means),
         "kl_mean_max": max(kl_means),
@@ -215,11 +219,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("input_path", type=Path, help="retained updates.jsonl")
     parser.add_argument("--expected-updates", type=int, required=True)
     parser.add_argument("--desired-kl", type=float, required=True)
+    parser.add_argument("--initial-lr", type=float, default=_MIN_LR,
+                        help="exact predeclared parent Adam LR; never resets the optimizer")
     args = parser.parse_args(argv)
     try:
         raw = args.input_path.read_bytes()
         result = audit_rows(_read_jsonl(raw), expected_updates=args.expected_updates,
-                            desired_kl=args.desired_kl)
+                            desired_kl=args.desired_kl, initial_lr=args.initial_lr)
         result["input_sha256"] = hashlib.sha256(raw).hexdigest()
         print(json.dumps(result, sort_keys=True, indent=2, allow_nan=False))
         return 0

@@ -1671,3 +1671,108 @@ new zero/negative/positive-command regression cases passed; suite394 passed,
 and all24 actual retained cases passed the stronger audit. Wording clarifies
 that summaries cannot reconstruct temporal ordering or oscillation frequency,
 rather than denying that nonzero residual variation exists.
+
+### Completed angular-decoupling comparison
+
+The retained service finished2026-10-12 00:07:24 Beijing time, inactive/dead,
+with both training receipts and all24 held-out cases complete. Training
+source remained exact clean `ea24a14a`; control/decoupled took603.794740/
+605.228847s, each1000 updates/24000 steps/6,144,000 transitions. Verification
+checked all10 cadence/final checkpoints, finite model/Adam/counters, both
+exact parent restores, all2000 finite update rows, zero NaN terminations,
+actual signed reward/cumulative stage identities and40000 optimizer
+minibatch transitions. Standalone cases, deterministic decisions and paired
+differences recompute exactly. All34 small copied receipts/update streams/
+case/aggregate files match native SHA256s under Mac
+`artifacts/evaluations/angular-decoupling-ea24a14a-20261011`; no model copies.
+
+Both arms pass12/12 motor and12/12 named joint-range checks. All24 cases
+complete240 steps with no terminal worlds or rated-speed exceedance. Both
+still fail all nine moving combined-tracking cases; only idle passes all
+worlds. Neither policy is accepted. Decoupling improves moving mean yaw
+errors and yields15/72 moving worlds meeting yaw MAE<=.1, versus0/72 control,
+but this is not15 accepted cases or a substitute for every-world admission.
+
+| Command vx/yaw | Control / decoupled speed MAE | Control / decoupled yaw MAE | Speed-passing worlds /24 | Yaw-passing worlds /24 |
+| --- | ---: | ---: | ---: | ---: |
+| 0 / 0 | .000719 / .000918 | .005751 / .007679 | 24 /24 | 24 /24 |
+| .30 /0 | .090774 / .095470 | .148610 / .117411 | 18 /19 | 0 /7 |
+| .20 /-.20 | .037294 / .042796 | .162892 / .129828 | 24 /24 | 0 /3 |
+| .20 /+.20 | .040516 / .042282 | .148766 / .129019 | 24 /24 | 0 /5 |
+
+Means are descriptive only. Moving speed error slightly worsens in treatment,
+while every turning group retains all24 speed-passing worlds. Maximum
+case-level pooled torque p99 utilization.490184/.502690 remains below.60;
+these fields are already dimensionless utilization, not Nm to divide again.
+Body-response descriptive audit passes all24 cases. Straight-group yaw Jensen
+gap decreases.099877->.080508rad/s; negative-turn gap.089321->.058972 and
+positive.100769->.080638. This supports further yaw precision investigation,
+not a proven oscillation/contact mechanism or physical acceptance.
+
+Last100 training falls60/38, yaw-square means.228060/.176203, roll/pitch-rate
+square means.423012/.327317, motor costs.051482/.049857, power proxies
+2.297877/2.298346W, thermal proxies.050854/.049307 and soft-limit fractions
+.006364/.005710. Signed reward negatives cover14.5026% of treatment samples.
+Learning-rate floor utilization is6310/20000(31.55%) versus5837/20000(29.185%);
+no optimizer reset or budget change occurred. Final Adam LRs are1e-5/
+5.062500000000001e-05. Training peaks1717MiB/61C; evaluation2859MiB/59C;
+post-round DINO-only969MiB/52C and all protected services inactive.
+
+| Artifact | SHA256 |
+| --- | --- |
+| Control final999 | `0a7846baf444eab78c73f7024bfc1a0d4c62f758b4cfe7b0491b1983b2805b2c` |
+| Decoupled final999 | `c81bfae742f9caa815a2896cd894d38ee4d069f3237c000086df2ba0c458ecae` |
+| Control receipt | `f29d5f573df0a516f231643a5f16118578f25f3c0af8ae689f8a083deb13e716` |
+| Decoupled receipt | `958c158b7134d4582cacdfdec5b324e791e24bcbf25e8c2ae37f9ba5d0699584` |
+| Control updates | `87bc0865d88a5c4e7f7931e4aed170ac3e6b9c235bbfa93423f110fa3c2b0ef3` |
+| Decoupled updates | `20e300dd96d1cb4abcfa1421d9ecef7ffb867cd3e21eb86f3356b3e8c5438bfa` |
+| Held-out aggregate | `265559a1f2769c911efc56e2e6c1a74e17be9f2521978448a03c6cd73e29e478` |
+| Evaluation launch | `a65c6cb174e9fc78efe02cc1d62a9adf640e89979aaa5518fd51b02382ab90dc` |
+
+### Predeclared independent-kernel yaw-precision continuation
+
+Under the owner's continuation through2026-10-12 07:00 Beijing time, test
+`integrated-decoupled-yaw-precision-v1` in
+`mjlab_microduck.integrated_decoupled_yaw_precision_refinement`. Initialize
+both arms from the preceding unaccepted decoupled final999/hash above, chosen
+for lower moving yaw MAEs while retaining motor/range eligibility. This is a
+shared research initialization, not policy promotion. Restore actor/critic/
+normalizers/Adam exactly, including LR5.062500000000001e-05; restart episode/
+iteration/common-step counters0. Do not silently reset LR to1e-5. The existing
+capture/offline auditor will gain an explicit checked initial-LR argument,
+default1e-5 for all older experiments; only this new parent supplies its exact
+nonfloor value. PPO controller bounds, thresholds and targets stay unchanged.
+
+Both arms use the signed decoupled angular reward, roll/pitch variance.5 and
+weight2. Only yaw variance changes: control.5 throughout; precision.5 until
+common step6000 inclusive, .25 from6001 through12000, and.1 from12001 onward.
+Full exposure6001/6000/11999 actions. Smokes compress strict boundaries to
+steps24/48 (exposures25/24/71); benchmarks use treatment final variance.1.
+This tests the whole precision curriculum, not independent stage efficacy.
+No product-kernel cross-axis attenuation is reintroduced, no negatives clipped,
+no actor expansion or live command override. Preserve motor-1, right-yaw
+qpos-4/margin.15, twist-.5, forward0, action-rate-.8, plant/DR/commands,
+adaptive desired_kl.01/four minibatches/five epochs and61-to14 contract.
+
+Paired smokes64 worlds/5 updates seed1021, benchmarks256/10 seed1023,
+full256/1000 seed1027, cadence250/final999 only. Retain the same24 held-out
+cases, startup window and every-world tracking/motor/named-range gates.
+Before-action guards validate exact live callable/weight/previous variance,
+monotone predeclared transitions and optimizer identity. Pre-reset snapshots
+must match actual signed weighted formula at their current variance, including
+terminal worlds; retain raw errors, negative counts/fraction and exact per-
+update/cumulative variance exposures plus all20 optimizer minibatches.
+Stale/missing/nonfinite/mismatched state fails closed.
+
+Require reviewed tested/pushed clean source, native CUDA-hidden focused suite,
+both normalized ONNX smokes and measured benchmarks before full training.
+Preserve360s preflight/4500s sequential service caps,2100/2100/240s children,
+15s grace, GPU lease, exact DINO2021 identity, protected-service inactivity
+and occupancy/temperature guards. Verify each full remaining budget fits the
+same07:00 cutoff before launch/every child. No publication, video, raw
+perception, driver/package changes or physical motion. Owner review verified
+the implementation and strengthened live schedule-identity/reverse-stage
+guards plus120-action compressed signed pre-reset checks. Focused suite428
+passed with three existing selector warnings, including explicit inherited-LR
+capture/audit/CLI regressions and unchanged older default guards. Native
+preflight is pending; no new GPU work launched from this declaration yet.

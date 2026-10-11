@@ -2329,3 +2329,47 @@ bundle: wait for both duration finals and all24 unchanged held-out cases,
 verify their bytes/decisions and idle GPU, then pin a bounded diagnostic if
 the numerical evidence warrants one. No new reward intervention is inferred
 from training logs or these synthetic tests.
+
+### Predeclared bounded duration gait/head replay
+
+If the completed duration matrix retains a tracking failure, run one
+diagnostic-only8-case replay, not another reward search. Select both declared
+finals (control999/budget3999), seed839, and all four commands in the existing
+order before seeing the duration result. No intermediate checkpoint, best
+world, accepted-only subset or seed selection. Input run is fixed to
+`training-duration-7a9c37da-20261012`, training source is full7a9c37da above;
+parent c81b,256 worlds/seed1061 and the declared1000/4000 update counts must
+match exact launch/receipt/weight bytes. The full24-case result and original
+deterministic decisions must be verified before any replay.
+
+`integrated_gait_yaw_audit` requires an explicit lowercase SHA256 of the
+completed aggregate over raw bytes. Record that hash and both final hashes
+below after completion, then pass the literal aggregate hash at invocation.
+It independently checks source/protocol/runtime, exact resolved final paths,
+all ordered24 case identities, selected final iterations and recomputed
+decisions. The audit source must be a pushed/tested exact clean revision;
+never advance the native worktree while duration training/evaluation is active.
+
+Use the same eight-world240-step/startup60 evaluator with optional pre-action
+body and gait capture. Write both raw traces plus original/observed case
+evidence before validators can reject a partial episode or clock mismatch.
+Hash-bind both summaries to the raw file and each result row to its summary.
+Retain every replay difference rather than overwrite the original result or
+claim GPU determinism. Recomputed MAE/frame/contact/head statistics remain
+diagnostic-only, with all acceptance/qualification/physical flags false.
+None of these eight cases can replace the full24-case admission matrix.
+
+One retained user service with literal300s cap/15s grace/control-group kill,
+8GiB RAM/CPU200%/tasks64/nice10,20% allocator, the existing GPU lease and
+DINO2021/occupancy/temperature/protected-service guards. Start only after
+the duration service is successfully inactive and GPU contains DINO only,
+and only with at least315s remaining before07:00 Beijing. No learning,
+new reward, raw perception, plant/runtime/package change or video. After
+retaining and reviewing this evidence, any distinct training intervention
+requires a separate tested predeclaration and smoke/benchmark before launch.
+
+Preparation verification:716 focused CPU tests passed locally in25.34s,
+three existing selector warnings. This includes strict input-bundle/hash/
+receipt/path/order guards and a mocked eight-case entrypoint proving the
+raw-before-both-summaries retention sequence. No simulator or GPU diagnostic
+has run yet, and the active native duration source remains unchanged.

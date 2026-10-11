@@ -3333,3 +3333,62 @@ Diagnostic aggregate SHA256 `6efb3d03683e42bb51834d8d44fa9eb29575c1dfb0e7dde3cc4
 aggregate `c6bc3567f4b67a68cfb3edea9b2664bb88100a60c6d4c8d06e5c1630562f6f85`.
 Peak1631MiB/55C; post-GPU DINO2021 alone969MiB/50C and four protected scopes
 inactive. No video, promotion, physical motion or protected-service restoration.
+
+### Predeclared fixed low-yaw rehearsal comparison
+
+Proceed only after the entropy comparison and four-case head diagnostic are
+finished, verified and retained. Protocol
+`integrated-low-yaw-rehearsal-continuation-v1` tests one curriculum change:
+training twist yaw support control [-.5,+.5] versus rehearsal [-.25,+.25] rad/s.
+Both start from the original c81b parent, not either rejected entropy/neutral/
+yaw-L1 checkpoint. Preserve all restored models, normalizers, Adam moments and
+initial LR 5.0625e-05, fresh simulator counters, entropy coefficient .01,
+continuous head sampler with zero-command probability 0, all head/body tasks,
+plant, DR, rewards, motor−1, right-yaw−4/.15rad, twist−.5, forward0,
+action-rate−.8, additive angular2/.5/.5, yaw-bias0, symmetryNone and raw61/14.
+
+Negative prior: the earlier staged ±.05→.10→.20 turning-range trial was rejected
+and worsened straight/negative-arc yaw. That used the earlier 604700b0 parent
+and full-angular shaping, whereas this fixed band uses the later c81b decoupled
+parent; that distinction justifies at most this small test, not confidence
+that narrowing ranges works. The ±.25 support includes both held-out ±.2
+targets from the beginning and does not stage away from the positive/negative
+target band. Conditional uniform turning probability of (.15,.25] magnitude
+increases from 20% to 40%, but realized dwell is measured rather than assumed.
+There is no training exposure above .25 in treatment, so it cannot establish
+preserved high-turn capability. Identical seeds do not make trajectories
+RNG-identical after commands diverge.
+
+Equal full budgets: 256 worlds ×500 updates, seed1181, 24 steps/update,
+5 epochs×4 minibatches, adaptive KL .01. Each has 3.072M transitions and
+10,000 optimizer minibatches. Checkpoint cadence 0/250/final499.
+Smokes64×5 seed1163; benchmarks256×10 seed1171. All phase settings match except
+the yaw support. A read-only observer verifies the live manager ranges and
+cached actor command slots48:51, measures original complete exclusive dwell
+bins, and requires zero positive/negative high-bin exposure in rehearsal.
+No extra command sampling, sensor/observation/reward computation or RNG use.
+
+Evaluate both final499 checkpoints only in the original ordered 24-case
+protocol, seeds839/853/857, commands0/0,.3/0,.2/±.2,8 worlds×240 steps,
+startup60. Every original per-world speed/yaw, idle, motor, range and
+first-episode terminal gate remains unchanged. No intermediate selection,
+threshold relaxation, automatic promotion, video or additional skill launch.
+
+Preflight: one retained600s service, four120s children; normalized finite CPU
+ONNX and exact source/runtime/parent/receipt checks mandatory. Benchmark
+projection to500 updates with1.5 safety factor must be below840s per arm.
+Full: one sequential2100s user service, control900/rehearsal900/evaluation240s
+children and15s grace, requiring2115s before07:00 Beijing at launch and a
+fresh per-child deadline check. If this cannot fit, retain preparation only.
+Keep native GPU lease,20% allocator,aggregate≤6144MiB/free≥8192MiB/<75C,
+DINO2021 unchanged, RAM8G/CPU200%/Tasks64/Nice10 and all four protected scopes
+inactive. Freeze source during GPU work. No raw perception, actor expansion,
+action filters/clipping, physical motion or service restoration.
+
+Preparation checks: 24 new focused tests pass; owner-reviewed adjacent
+recipe, training-budget, checkpoint, original motor/foundation and prior
+turning-range regressions pass155 in24.21s. Exact single-factor config parity
+also passes against the inherited c81b recipe, including original entropy.01
+and head probability0. Live entropy/sampler/cache drift, zero high-bin
+treatment exposure, raw61D slots and unchanged RNG are covered. Whitespace
+checks pass; native CUDA-hidden tests and bounded preflight remain mandatory.

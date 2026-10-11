@@ -2702,3 +2702,64 @@ coefficient, seed selection or higher-duration training.
 | Batch receipt | `46fa7c2fb584a019c92217cd42f8734a80761c3cba6abd0cc6e11613a92ce149` |
 | Evaluation launch | `55aa097ca53603fcce1f8a24e9e578713b50a36eea83156df89c1f0072231926` |
 | Held-out aggregate | `9a3ab60c7a4f7613bfd371015ce9ab9a59eb15921d5bc56a04d0ba2ea97067e4` |
+
+### Predeclared bounded action/joint-response replay
+
+The mixed batch result does not justify another guessed coefficient or a
+longer/bigger-batch run. Next is an eight-case diagnostic-only replay of the
+two declared final999 checkpoints above, seed839 and all four unchanged
+commands, eight worlds,240 steps,60-step startup exclusion,20ms control dt.
+Input is the literal native `rollout-batch-b0dedcb3-20261012` bundle at
+b0dedcb341fa9703ce944bf410918f10099bdf7f. The runner pins the exact aggregate
+and both checkpoint hashes, checks full24-case ordering, training receipts,
+runtime/parent identities, deterministic decisions and paired differences
+before selecting the declared eight cases. No intermediate checkpoints,
+new admission criteria, actor slots, policy filtering or raw perception.
+
+The optional evaluator hook clones pre-policy raw previous actions,
+actor previous-action slots, actual named14-joint positions/velocities,
+previous applied targets, cloned action offsets/live encoder bias, configured
+hard limits, lagged generalized constraint forces and reset/common/physics
+clocks. It attaches the current raw action after the existing single policy
+call and before the existing single environment step. The default evaluator
+does not invoke the helper. Runtime action layout, disabled wrapper/action
+clipping, exact named action/motor columns, history alignment, reset-free
+clocks and next-target affine mapping are checked. Real CPU Warp-backed
+adapter tests cover constraint and clock slicing; no wrapper-as-Tensor
+assumption. Samples are detached clones, not policy inputs.
+
+Each full raw observed case and aligned body/action traces are retained before
+offline descriptive summaries. Actual body-yaw gates remain unchanged;
+body/action shared samples must agree exactly. Full observed-case differences
+are retained, while the explicitly added `joint_target_diagnostics` field
+alone is excluded from a separate original-field replay comparison. Other
+unexpected fields or metric drift cannot disappear from the comparison.
+The original24-case decisions are retained and never replaced by these eight.
+
+Summaries describe settled per-world/per-joint raw-output variation, actual
+joint motion, previous-target error, configured-range target overshoot,
+actual position margin/stop proximity and lagged constraint exposure, plus
+within-world yaw-residual correlations. Raw output beyond magnitude1 is not
+saturation; BAM targets may intentionally exceed joint ranges. The .15rad
+position-margin costs across all joints are hypothetical diagnostics, not
+claims that the selected right-yaw reward was applied to every joint.
+Constraint force includes contact and limit contributions and solver lag;
+it is not an isolated simultaneous hard-stop force measurement. Correlations
+are co-occurrence, not causal grounds to freeze head motion or clip targets.
+
+Launch only after focused CPU checks, exact tested/pushed source, clean native
+checkout and fresh DINO2021-only GPU/protected-service proof. One retained
+user service,240s child cap plus15s grace,8GiB RAM,CPU200%,tasks64,nice10,
+owned GPU lease,20% allocator and existing shared-host guards. The255s
+remaining-budget check must fit before2026-10-12 07:00 Beijing. Source stays
+frozen while active. No package/driver changes, new training, video, policy
+promotion, simulator qualification or physical motion is authorized by this
+diagnostic; any next training factor requires a separate evidence-led
+predeclaration and tests within the remaining window.
+
+Owner integration checks:963 focused Mac CPU tests pass in40.71s (34 known
+actuator/site-match warnings), including new capture/offline/runner tests,
+single-policy/single-step optional-hook spies, existing foundation/command
+session consumers, and upstream/athletics task-separation tests. The source
+whitespace checks pass, including the new untracked files. This is source
+and CPU-contract evidence only; native replay has not yet run at predeclaration.

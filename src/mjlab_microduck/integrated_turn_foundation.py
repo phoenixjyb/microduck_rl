@@ -302,13 +302,15 @@ def body_yaw_trace_sample(robot, command, actor_command):
 
 
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
-                  angular_diagnostics=False, yaw_trace=False, gait_trace=False):
+                  angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 
     require(not target_diagnostics or diagnostics, "target capture requires position diagnostics")
     require(not gait_trace or yaw_trace, "gait capture requires unchanged body-yaw trace")
+    require(not action_trace or (diagnostics and target_diagnostics and yaw_trace),
+            "action capture requires position/target/body-yaw diagnostics")
     worlds, steps, startup = 8, 240, 60
     torch.manual_seed(seed)
     cfg, agent = load_env_cfg(TASK, play=True), load_rl_cfg(TASK)
@@ -327,6 +329,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
     try:
         require(env.step_dt == .02, "20ms evaluation control step")
         wrapped = RslRlVecEnvWrapper(env, clip_actions=agent.clip_actions)
+        if action_trace:
+            from mjlab_microduck import action_response_capture
+            action_response_capture.validate_wrapper(wrapped)
         runner = load_runner_cls(TASK)(wrapped, asdict(agent), device="cuda:0")
         runner.load(str(checkpoint), strict=True, map_location="cuda:0")
         policy = runner.get_inference_policy(device="cuda:0")
@@ -339,6 +344,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         angular_samples = []
         yaw_samples = []
         gait_samples = []
+        action_samples = []
         limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
         with torch.inference_mode():
             for step in range(steps):
@@ -363,8 +369,12 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                     targets.append(robot.data.joint_pos_target[:, stream.joint_ids].cpu().clone())
                     dofs = robot.data.indexing.joint_v_adr[list(stream.joint_ids)]
                     constraints.append(robot.data.data.qfrc_constraint[:, dofs].cpu().clone())
+                if action_trace:
+                    action_sample = action_response_capture.capture_state(env, robot, obs["actor"], stream)
                 actions = policy(obs)
                 require(actions.shape == (worlds, 14) and finite_tree(actions), "finite evaluation actions")
+                if action_trace:
+                    action_samples.append(action_response_capture.add_action(action_sample, actions))
                 stream.begin(step, phase)
                 obs, rewards, dones, _ = wrapped.step(actions)
                 require(finite_tree((obs, rewards)), "finite evaluation output")
@@ -410,6 +420,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         if gait_trace:
             from mjlab_microduck import gait_yaw_capture
             result["gait_yaw_trace"] = gait_yaw_capture.trace(gait_samples, result["checkpoint_sha256"])
+        if action_trace:
+            result["action_response_trace"] = action_response_capture.trace(action_samples, result["checkpoint_sha256"])
         return result
     finally:
         env.close()

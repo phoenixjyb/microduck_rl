@@ -3618,3 +3618,107 @@ Whitespace checks pass. The independent read-only review found no launch
 blocker; the owner added explicit prior timing-launch runtime/hash and all eight
 raw-case hash checks before committing. Native CPU qualification remains a
 separate required launch gate.
+### Four repeated observation replays: ordinary numerical spread exists
+
+Exact source `a6dc9380a53652e3af9d576f54d88236334eb79d`, service
+`microduck-obs-replay-a6dc9380-diagnostic.service`, completed at approximately
+06:45:48 Beijing October12, inactive/dead, MainPID0, Result=success, exit0.
+Before launch, the exact native source passed1158 CPU-hidden tests with3
+historical-artifact skips and45 existing warnings in33.37s; the complete Mac
+selection passed1161 with45 existing warnings in27.77s. Neither initializes
+CUDA in the separate bundle qualification. All four declared runs completed
+240 steps without terminals and retained the exact control499 hash above.
+
+| Comparison, right minus left | Max absolute per-world speed-MAE difference m/s | Max absolute per-world yaw-MAE difference rad/s |
+| --- | ---: | ---: |
+| Baseline repeat (run3 minus run0) | .001118 | .015081 |
+| Trace repeat (run2 minus run1) | .001073 | .010376 |
+| First trace minus baseline (run1 minus run0) | .000770 | .011787 |
+| Second trace minus baseline (run2 minus run3) | .001535 | .012812 |
+
+All common-field comparisons are non-exact; both full traces also differ.
+The baseline repeat's yaw-MAE spread is larger than either adjacent trace/
+baseline difference. Ordinary replay variation therefore exists even without
+observation tracing. The eight-case timing discrepancy cannot be attributed
+to the trace hook alone; neither can this small four-run sample establish that
+instrumentation has no effect, a repeat distribution, simulator cause or a
+learned improvement. The original full matrix rejection remains authoritative.
+Do not add deterministic-mode changes, tolerances or policy admission to this
+result. It does not justify filtering or relaxing instantaneous yaw tracking.
+
+Native CPU-only verification recomputed all four comparisons and both raw
+observation/reward summaries, authenticated inputs/weights and verified all
+case hashes/order and shared-host bounds. Peak1699MiB/55C; post969MiB/49C,
+DINO2021 alone and all protected scopes inactive. All7 JSON/JSONL files
+(5,285,016bytes) are independently hash/size verified on native and Mac at
+`artifacts/evaluations/obs-replay-a6dc9380-20261012`, with a Mac
+`verified-manifest.json`. No checkpoint duplication or Git asset upload.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Result | `5d3283917e21a197418fc89152fdedbab04df1f6a686a0097dc966560a433efa` |
+| Launch | `6e1a0e5a49a2edb4ab29da2ad4c3cfca2914e4cd931c9dfb3372fa3a294d8858` |
+| Health | `b3570611b033644646bc0f547b31e2cc3308e6da50cf037082ede50c3af21b5c` |
+
+### Predeclare next-window angular-latency learning comparison (not launched)
+
+Prepare one evidence-informed hypothesis rather than stack rejected reward,
+head, entropy or command-support changes. This is **source/test preparation
+only** in the current window; fresh execution authority and a sufficient
+measured budget are required after07:00 Beijing. No additional training
+factor runs before that cutoff.
+
+Use the original c81 parent and unchanged model/normalizer/Adam/LR restoration.
+Both arms inherit the original control recipe; only fresh-arm actor
+`base_ang_vel.delay_max_lag` changes1→0 (minimum already0). Keep the body-rate
+function,6deg mounting rotation, uniform±.03 noise, corruption enabled,
+update period64/per-env/per-env-phase/hold flags, all other observation terms
+and delays,61D raw actor/14D raw actions, existing signed decoupled angular
+objectives, head sampler, command support, asymmetric plant, motor and joint
+constraints unchanged. No filtering, clipping, sensor recalibration or raw
+camera perception. This changes a training distribution, not a deployed sensor.
+
+Pinned mjlab1.3.0 instantiates and executes a DelayBuffer **only if max_lag>0**.
+The fresh arm therefore bypasses that angular buffer entirely, not a sampled
+fixed-zero buffer. Removing its phase/lag draws can change later RNG streams.
+This is a matched-recipe learning comparison, not an RNG-identical isolated
+sensor counterfactual. It may teach reliance on fresher rates and worsen
+robustness under the unchanged delayed evaluator; reject it if so.
+
+Matched predeclared runs:64×5 smoke seed1193,256×10 benchmark seed1201,
+then256×1000 seed1213 per arm,24 steps/update,5 PPO epochs/4 minibatches,
+6.144M transitions/20,000 optimizer minibatches each. Retain common0/250/500/
+750/999 checkpoints; only final999 is eligible for the original three-seed×
+four-command/eight-world×240-step matrix. Evaluate **both arms using the stock
+corrupted0/1-delay factory**, not their training observation configs. Every
+original stability, speed, instantaneous yaw, motor and named joint-range gate
+stays unchanged. No post-hoc checkpoint choice or automatic policy promotion.
+
+Prepared config parity and live telemetry must reject unrelated drift. Guard
+actual actor config/layout/cache and command slots48:51; control's real delay
+bounds/history/flags and selected cache; fresh's absent angular buffer and
+logical effective lag0. Verify projected-gravity0/1 and joint-velocity fixed1
+remain intact. Read effective lag without calling compute(), observation/noise
+functions, policy or another physics step. Retain complete zero/one-lag dwell
+per24-step update and cumulative common-step accounting; telemetry is not a
+tracking gate. A future same-source smoke must verify the actual buffer-bypass
+path, finite optimization, motor safety telemetry and durable checkpoints.
+
+Before any full run, measured same-world benchmarks for both arms must fit
+unchanged2100s child caps with margin and the then-authorized deadline. Use one
+sequential retained service/lease, no GPU overlap, exact pushed clean source,
+pinned native runtime,20%Torch allocator, memory≤6144/free≥8192MiB/<75C,
+DINO and unrelated work preserved, protected scopes inactive. No long job is
+admitted by source tests or these timing diagnostics. Hopping, obstacles,
+football, video, raw perception and physical motion remain unadvanced.
+
+Preparation implemented in `integrated_angular_latency_refinement.py` with24
+focused tests. New and adjacent duration-recipe checks pass44 in7.60s;
+the complete owner-reviewed combined selection passes1185 in29.27s with45
+existing actuator-selector warnings. Review caught and fixed an inherited
+observer-mode collision: parent `mode` must remain `control` for its angular
+schedule; the arm uses separate `latency_mode`. Actual prepared sensor funcs,
+params/noise/scale/delay flags were checked against the factory. Config parity,
+real CPU DelayBuffer immutability, complete census and malformed drift checks
+pass. Native CPU qualification and a future GPU smoke remain separate; no
+fresh-arm learner, checkpoint, performance or physical result exists yet.

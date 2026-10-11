@@ -1929,3 +1929,12 @@ identities, owned GPU lease, exact DINO2021/protected-service guards,20%
 allocator cap and240s runtime/15s grace, checked against07:00 Beijing. No
 learning, actor change, video, raw perception, driver/package change or
 physical motion. Outcome remains diagnostic-only and no policy promotion.
+
+The replay implementation pins the full aggregate and both final checkpoint
+hashes above, revalidates training/evaluation source and runtime receipts,
+and recomputes the original decisions. Owner review added exact per-arm,
+seed/command/checkpoint identity checks after raw retention and compares the
+whole observed case rather than projecting away unexpected result fields.
+Focused CPU checks pass523 tests (three existing selector warnings); the
+copied actual aggregate/receipts/decisions also validate without simulation.
+Native CUDA-hidden tests and the bounded live replay remain required.

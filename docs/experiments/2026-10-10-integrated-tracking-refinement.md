@@ -3187,3 +3187,68 @@ and named action-manager fixtures, immutable 24-step std snapshots, drift and
 nonpositive/frozen-variance rejection, no distribution/forward/sample calls,
 unchanged RNG and the inherited reward/dwell/20-KL path are covered.
 Whitespace checks pass. Native CPU tests and preflight remain mandatory.
+
+### Completed entropy-pressure comparison
+
+Exact source `f5f112bf43b8e09f274e291249a5f66626b0137f` was committed and pushed before
+native CPU checks and launch. Native combined tests passed 1029, with three
+existing artifact-dependent skips and 45 existing actuator/site warnings.
+Both preflight smokes and benchmarks authenticated the c81b parent, restored
+models/normalizers/Adam, positive named 14D std, counters, normalized finite
+CPU ONNX and the unchanged optimizer/reward/dwell contracts.
+Benchmark projections were 1163.67/1169.90 seconds, below 2040.
+
+The full sequential service `microduck-entropy-f5f112bf-matched-eval.service`
+completed successfully by 05:52 Beijing on 2026-10-12: inactive/dead, MainPID 0,
+exit 0. Control/consolidate completed 1000 updates each in
+629.954585/623.044368 seconds.
+Each has 24,000 common steps, 6.144M transitions, 20,000 optimizer minibatches,
+and durable 0/250/500/750/final999 checkpoints. All 2030 preflight/full update
+rows are finite with zero NaN terminations; coefficient, immutable rollout std,
+analytic entropy, 20-minibatch adaptive-KL transitions and complete exclusive
+command-dwell counts independently verify. Final std remains strictly positive:
+control .117387–.210215; consolidate .047066–.112305. Final differential entropy
+is -7.260562/-17.828798; valid negative values, not an operational error.
+
+Both arms complete 12/12 first-episode cases and pass 12/12 motor and 12/12
+joint-range gates. Both pass only the three idle tracking cases: **all nine
+moving combined-tracking cases still fail**. No checkpoint is promoted.
+Moving-world speed subset passes improve 55/72 to 66/72, while yaw subset
+passes decline 18/72 to 16/72. Pooled means do not replace per-world gates.
+
+| Command vx/yaw | Control / consolidate speed MAE | Control / consolidate yaw MAE | Control / consolidate speed worlds | Control / consolidate yaw worlds |
+| --- | ---: | ---: | ---: | ---: |
+| 0.0/0.0 | 0.001437 / 0.000623 | 0.011225 / 0.005878 | 24/24 / 24/24 | 24/24 / 24/24 |
+| 0.3/0.0 | 0.105764 / 0.093179 | 0.109200 / 0.107861 | 7/24 / 18/24 | 12/24 / 10/24 |
+| 0.2/-0.2 | 0.044879 / 0.036584 | 0.123607 / 0.124545 | 24/24 / 24/24 | 2/24 / 3/24 |
+| 0.2/0.2 | 0.053235 / 0.037489 | 0.130920 / 0.121257 | 24/24 / 24/24 | 4/24 / 3/24 |
+
+Training falls total 413/299, last100 29/24. Last100 motor cost
+.048968/.033280, thermal proxy .048477/.033050, mechanical power
+2.202329/1.765577 W and yaw-error square .156918/.071964 improve descriptively.
+Training right-yaw maximum overrun .048409/.035065 rad is not held-out joint
+acceptance. Removing entropy pressure changes exploration and normalization
+trajectories; this single-seed comparison does not establish the cause of
+remaining deterministic yaw error. Do not automatically adopt zero entropy
+or launch a coefficient sweep.
+
+Independent verification recomputed the ordered 24-case matrix, original
+decisions, all-world tracking/motor/range flags, paired differences and hashes.
+Retained Mac evidence:
+[57 byte-verified JSON/JSONL files and manifest](../../artifacts/evaluations/entropy-f5f112bf-20261012/verified-manifest.json),
+11,020,717 original bytes. Weights and ONNX remain native at
+`artifacts/training/entropy-f5f112bf-20261012`, without duplicate local storage.
+
+| Artifact | SHA256 |
+| --- | --- |
+| Control final999 | `b1f006e450e26d82fb45312c4b0ba71bbfec075e8a803c98f26b9f2ed7c9a858` |
+| Consolidate final999 | `93904aacd34596dbff9c73823f1510591ebe27452b2837eab83d2745da47bd42` |
+| Evaluation aggregate | `c6bc3567f4b67a68cfb3edea9b2664bb88100a60c6d4c8d06e5c1630562f6f85` |
+| Evaluation launch | `932bc155beac5a62fa4716d11e7b8d461db4665a15a7681707e6ebcc17f3d34a` |
+| Evaluation health | `671c3adbe7819289de23a69ddd23e3281749f9aa5c3ef948f6244fba8df2ab17` |
+
+Training peak 1717 MiB/62C; evaluation peak 2859 MiB/59C. Post-completion GPU
+is retained DINO2021 alone, 969 MiB/51C; four protected service scopes remain
+inactive. No video, promotion, raw perception, actor expansion, physical motion
+or protected-service restoration. Next bounded step is a descriptive nonzero
+head-yaw probe of these exact final weights, not policy admission.

@@ -1835,3 +1835,19 @@ round remains rejected, rather than guessing another damping coefficient.
 Owner-reviewed integration and focused suite491 passed, with the same three
 existing actuator-selector warnings. This is source/test evidence only; no
 new diagnostic replay or admission claim has occurred yet.
+
+Read-only pre-transition comparison identified a reproducibility limitation:
+both initial actor/critic(including normalizers)/Adam trees compare exactly,
+both restore the pinned parent/LR and use seed1027, but rollout summaries and
+KL branches already differ while both yaw variances are.5. First-update raw
+yaw-square means.156460208/.156718458 and roll/pitch-square means.253633749/
+.254249032 are close, whereas adaptive LR ends5.0625e-5/2.25e-5. Thus
+matched seed does not imply identical stochastic trajectories or isolate
+observed final deltas from all execution variability. The frozen mjlab RNG
+source explicitly notes MuJoCo Warp nondeterminism; [official MJWarp
+FAQ](https://mujoco.readthedocs.io/en/latest/mjwarp/index.html#frequently-asked-questions)
+confirms GPU atomic-order/numerical variability. This is consistent with the
+observed divergence, not proof of its unique cause. Preserve the completed
+experiment and every-world gates, do not change drivers/runtime/determinism
+mid-run, and regard single-pair reward deltas as preliminary descriptive
+evidence requiring independent training-seed confirmation before promotion.

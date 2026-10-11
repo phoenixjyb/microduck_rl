@@ -2078,3 +2078,75 @@ unchanged24-case final999 evaluation. Training progress is not acceptance.
 | smoke-bias | `0442d9edbdd71fc9d51022cbd5d13799e9fe7e8784631b1741abfe3a5f545c73` |
 | benchmark-control | `e99960e2d0a2c2f8d9b7bcf216ea311f6834171f3374c08cc3bf3515e7adf3db` |
 | benchmark-bias | `b70229e8a12b40ff3ee3b07916e790e49f330b959ff1367aef6dd9f83e59584f` |
+
+### Completed persistent yaw-bias comparison: rejected
+
+The retained sequential service ended successfully at2026-10-12 01:32:41
+Beijing time, inactive/dead/MainPID0/ExecMainStatus0. Exact clean native source
+remained `2f5ffa1ff8f19b1f733a0e07399daec938ba70a9`. Both1000-update arms
+completed24,000 control steps/6,144,000 transitions, all five declared finite
+cadence/final checkpoints and20,000 audited adaptive-KL minibatches each.
+Verified identical initial model/normalizer/Adam trees, parent hash, restored
+LR and fresh counters, source/runtime/receipt identities, all per-step reward
+identities and full24-case result recomputation. No NaN terminations.
+
+| Training diagnostic | Control | Bias |
+| --- | ---: | ---: |
+| Elapsed seconds | 618.730932 | 627.531285 |
+| Falls across1000 updates | 402 | 430 |
+| Mean EMA absolute yaw cost | .059251 | .059178 |
+| Actual weighted bias reward rate | 0 | -.005918 |
+| Last100 mean yaw squared error | .166026 | .165967 |
+| Last100 mean raw yaw MAE | .296762 | .301534 |
+| Last100 mean motor cost | .048960 | .048819 |
+| Last100 thermal proxy | .048407 | .048262 |
+| Last100 soft-limit fraction | .005542 | .005672 |
+| Last100 right-yaw stop exposure | .000397 | .001025 |
+
+The new reward was active and its observed value matched-.1*positive EMA
+cost; this is not a dead-term explanation. It did not materially reduce its
+training cost, and the final held-out yaw MAE increased in every moving group.
+No dose escalation is justified by this one pair. GPU nondeterminism and a
+single training seed limit causal conclusions; retain both outcomes, not a
+best-seed or best-intermediate selection.
+
+| Command vx/yaw | Speed MAE control / bias | Body-yaw MAE control / bias | Mean per-world absolute yaw bias control / bias | Speed-passing worlds control / bias | Yaw-passing worlds control / bias |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 0 /0 | .000841 / .001163 | .006914 / .009406 | .002582 / .002433 | 24 /24 | 24 /24 |
+| .30 /0 | .097642 / .090163 | .119641 / .137756 | .031260 / .039137 | 15 /20 | 3 /0 |
+| .20 /-.20 | .040053 / .037032 | .128165 / .139130 | .063148 / .052437 | 24 /24 | 2 /0 |
+| .20 /+.20 | .045068 / .036966 | .133985 / .137649 | .034196 / .029022 | 24 /24 | 1 /0 |
+
+Each group summarizes24 worlds from three held-out seeds; group means do not
+replace every-world admission. Both arms fail all nine moving combined
+tracking cases; three idle cases pass. Moving yaw-passing worlds are6/72
+control and0/72 bias. Both pass12/12 motor and12/12 named-range checks, with
+maximum pooled torque-p99 utilization.508255/.534881 (gate.60). All24 cases
+complete240 steps without terminals or rated-speed exceedance. Neither final
+is accepted, simulator-qualified, promoted, or authorized for physical motion.
+Smaller turning signed-bias magnitudes do not compensate for worse
+instantaneous yaw MAE; no filtered/heading-rate gate substitution.
+
+Training peaks1717MiB/61C(control)/62C(bias); evaluation2859MiB/59C.
+All retained health samples satisfy the existing occupancy/lease/service
+guards. Post-run DINO2021 alone969MiB/49C, all four protected service scopes
+inactive. Thirty-four small JSON/JSONL copies, preserving control/bias/evaluate
+subdirectories, match native SHA256 values under
+`artifacts/evaluations/yaw-bias-2f5ffa1f-20261012`; copied manifest retained.
+Checkpoints remain durable on native only. Duplicate temporary flat copies
+were removed after verifying all structured copies; no unique evidence lost.
+
+| Artifact | Verified SHA256 |
+| --- | --- |
+| Control final999 | `c00276990c424086cd176dec9fb0337d57b3a2355a6a65811f1229c10ba534c0` |
+| Bias final999 | `5c64d1398d7d27d886ecffbea50b6f069e6de5b9773c26f590fdf9050a67af79` |
+| Control receipt | `7211a893dca0f3f7070445950fb3c9e75c09f9602a4c7a10e99d27aef9050ffc` |
+| Bias receipt | `d18a9c7fc21fc77f9d4ab9683712538631c8c8e0e5e3db2c4f6e13b3b2016ffc` |
+| Evaluation launch | `562e17721540105a19dafdf5b1f954f10025410c652c16b88fb858e45bf05790` |
+| Evaluation aggregate | `c8f54974f24e1a4e15a9ffda5943cd253fda907bcdca18e1164577b1905ded38` |
+
+Next development must address an evidence-backed distinct lever, with a new
+predeclaration and focused tests before GPU work. Current effective training
+yaw range is±.5, not the wider athletics template default; a sampling-density
+hypothesis requires actual command-exposure evidence, and the previously
+rejected gentle-range curriculum must not be overlooked.

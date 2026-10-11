@@ -3116,3 +3116,74 @@ protected-service restoration. Do not automatically adopt this sampler or
 search a larger zero-command probability. Next bounded hypothesis is matched
 entropy-pressure consolidation from the original parent, not either rejected
 checkpoint.
+
+### Predeclared entropy-pressure consolidation comparison
+
+Protocol `integrated-entropy-consolidation-continuation-v1` changes only
+PPO `entropy_coef`: control .01 versus consolidate 0. Both arms restore the
+original c81b parent
+`c81bfae742f9caa815a2896cd894d38ee4d069f3237c000086df2ba0c458ecae`,
+not the rejected neutral-head or yaw-L1 checkpoint. Preserve actor, critic,
+observation normalizers, learned 14D standard deviation, and Adam moments.
+Start with inherited Adam LR 5.0625e-05 and fresh simulation/iteration counters.
+
+Hypothesis: removing the explicit entropy bonus during a fixed consolidation
+phase may improve deterministic mean-policy tracking. This is not evidence
+that exploration caused the previous failure. The restored raw-action standard
+deviations are approximately .122–.210 (geometric mean .151), not a random-policy
+std reset. The pinned scalar Gaussian parameter is one learned value per named
+action dimension; it is direct std, not log-std. Negative differential entropy
+at these values is valid. A scalar entropy loss contribution cannot be compared
+with policy-gradient magnitude without gradient/update evidence.
+
+Zero entropy coefficient does not freeze variance: PPO likelihood gradients
+still update it. Do not reset, clamp or filter std or actions. Both arms retain
+the original continuous head sampler with zero-command probability 0, all
+head/body tasks, rewards, motor−1, right-yaw proximity−4/.15rad, twist−.5,
+forward 0, action-rate−.8, additive signed angular2/.5/.5 and yaw-bias weight 0.
+Plant, DR, curriculum collapse, 61D actor and 14 raw unfiltered/unclipped
+outputs, symmetry None and all existing numerical gates remain unchanged.
+
+Fixed smokes: 64 worlds ×5 updates, seed 1123 for both arms. Benchmarks:
+256×10, seed 1129. Full comparison: 256×1000, seed 1151 for both arms,
+24 steps/update, 5 epochs×4 minibatches, adaptive KL .01, checkpoint cadence
+0/250/500/750/final999. Each full arm has 6.144M transitions and 20,000
+optimizer minibatches. Select final999 only; no intermediate selection or
+post-result coefficient/threshold tuning.
+
+Identical read-only std telemetry in both arms validates the live PPO
+coefficient and actual scalar Gaussian Parameter before each action and after
+each optimizer update. Resolve the 14 std columns through the actual named
+joint-position action term and motor stream; no hardcoded physical joint IDs.
+Record the first pre-rollout std vector and post-update vector, require variance
+unchanged during the complete 24-step collection, and retain analytic entropy
+as descriptive diagnostics. Do not call actor forward, distribution update,
+sample, commands, observations or rewards again. Finite strictly positive std
+is a valid-distribution operational check, not a new skill acceptance gate.
+
+Run the original ordered 24-case matrix for both final checkpoints: seeds
+839/853/857, commands 0/0, .3/0, .2/±.2, eight worlds, 240 steps, startup 60.
+All original per-world speed/yaw, idle, motor, joint-range and first-episode
+no-terminal gates remain in force. Equal initial seeds do not imply identical
+subsequent random trajectories after the optimization paths diverge.
+
+Preflight is one sequential retained service ≤600s, four children ≤120s.
+Only after exact source/runtime/parent receipts, CPU tests, normalized ONNX,
+finite positive std and benchmark checks pass, launch one sequential full
+service ≤4500s (control2100/consolidate2100/evaluation240), 15s grace and
+control-group termination. Each benchmark×150 must be below 2040s. Require
+4515s remaining before 07:00 Beijing time on 2026-10-12 at full launch and
+recheck before every child; otherwise retain preparation without launching.
+Keep DINO2021, exact GPU lease, 20% allocator, ≤6144 MiB total/≥8192 MiB free/
+<75C guards, RAM8G/CPU200%/tasks64/nice10 and all four protected AI scopes
+inactive. Freeze source during GPU work. Diagnose failure read-only first.
+No video, promotion, raw perception, observation expansion, physical motion
+or protected-service restoration. Stop new Duck work at the 07:00 deadline.
+
+Preparation checks: 22 new focused tests passed in 12.24s after owner review,
+with 11 expected actuator/site-selector warnings; 1010 inherited focused
+regressions passed in 46.43s with 34 existing warnings. Actual scalar Gaussian
+and named action-manager fixtures, immutable 24-step std snapshots, drift and
+nonpositive/frozen-variance rejection, no distribution/forward/sample calls,
+unchanged RNG and the inherited reward/dwell/20-KL path are covered.
+Whitespace checks pass. Native CPU tests and preflight remain mandatory.

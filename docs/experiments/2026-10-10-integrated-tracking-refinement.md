@@ -3734,3 +3734,60 @@ remaining window. This qualifies preparation only: the fresh-buffer-bypass
 GPU smoke, measured paired benchmarks and full held-out evaluation remain
 future execution gates under fresh authority. All previous checkpoints and
 hashed rejected matrices are retained unchanged.
+
+### October12 next-window execution: resolved-selector smoke repair
+
+The owner authorized another bounded development/training round after the
+07:00 closeout. At07:28 Beijing, native100.100 was clean at
+`2d443a09653ffbe90da999fd7dcda2a7242d7c17`; no Duck job was running,
+DINO2021 was the sole GPU process (969MiB/48C), and all four protected
+service scopes remained inactive. No service restoration, package/driver
+change, raw perception or physical motion is authorized by this round.
+
+Same-source native and Mac focused CPU selections each passed88 tests
+(7.38s and9.33s). The sequential preflight service
+`microduck-angular-latency-2d443a09-preflight.service` then stopped at
+07:29:23, exit1, before its first optimizer update. Its retained failure is
+`ValueError: unchanged joint_vel effective delay config`. No benchmark,
+fresh arm or full learner started. Retain the failed directory unchanged at
+`artifacts/training/angular-latency-2d443a09-20261012/smoke-control`.
+
+Read-only diagnosis: mjlab1.3.0's manager resolves `SceneEntityCfg` regex
+selectors to ordered names and IDs (or `slice(None)` when all joints match)
+before the observer runs. The telemetry incorrectly compared these live
+names to the pre-resolution regex. Correct the assertion to check the actual
+named14-servo order and matching resolved IDs; do not mutate the observation
+term, buffers, actions or RNG and do not relax any policy gate. Add CPU tests
+that exercise actual selector resolution rather than only unresolved mocks.
+
+The initial-save ONNX warning about `Logger.logger_type` is not this failure.
+The registered `MicroduckOnPolicyRunner` inherits `VelocityOnPolicyRunner.save`,
+which already exported `smoke-control.onnx`; its metadata warning occurred
+before logging initialization. There is no evidence here of an absent export
+path. Fresh successful smoke receipts must still prove final exported ONNX
+bytes and the finite61-to14 CPU inference gate; the failed partial export is
+not a successful smoke or training result.
+
+| Failed-run object | SHA256 |
+| --- | --- |
+| Failure | `ae94534fa1d0bf8882e61bec56507015396cefd5dc500e3f481e029b0f877b17` |
+| Launch | `53f3a7104cae0331db12364ef84d8549f9ccea74d589a413bba31f2c0865978b` |
+| Warm-start | `58665c85b787f57c8071880440591a9d6dea97707cfb2ebd07c15e76feeacb9d` |
+
+After the tested repair is committed/pushed, use a new unique run directory
+and exact clean source. Repeat both64x5 smokes and256x10 benchmarks; only if
+both same-arm receipts and measured1.5x projections fit the existing2100s
+per-arm caps may the declared256x1000 control/fresh comparison start.
+Keep the original c81 parent, all recipe/seed/budget settings and unchanged
+stock delayed held-out matrix above. Run sequentially in retained user
+services with the same shared-GPU lease/bounds and protected-workload checks.
+The repaired assertion changes telemetry validation only, not the training
+factor. No admission or new skill follows from passing preparation.
+
+Repair preparation:32 focused selector/latency tests pass in4.93s;
+the owner-reviewed integrated/motor-stream/observation-timing regression
+selection passes759 tests with14 existing actuator-selector warnings in
+12.87s, CUDA hidden on Mac. Whitespace checks pass. The failed launch,
+warm-start and failure JSON bytes are copied and independently hash verified
+on Mac; initial checkpoint and ONNX remain native only. Native same-source
+CPU qualification and GPU smoke are still separate required gates.

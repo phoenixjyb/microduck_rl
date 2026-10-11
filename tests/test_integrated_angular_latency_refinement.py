@@ -1,12 +1,36 @@
+import re
 from types import SimpleNamespace as NS
 
 import pytest
 import torch
+from mjlab.managers.scene_entity_config import SceneEntityCfg
 
 from mjlab_microduck import integrated_angular_latency_refinement as latency
 from mjlab_microduck import integrated_training_budget_refinement as parent
 from mjlab_microduck import observation_timing_capture as capture
 from mjlab_microduck.tasks import mdp
+
+
+SERVO_JOINT_NAMES = (
+    "left_hip_yaw", "left_hip_roll", "left_hip_pitch", "left_knee", "left_ankle",
+    "neck_pitch", "head_pitch", "head_yaw", "head_roll",
+    "right_hip_yaw", "right_hip_roll", "right_hip_pitch", "right_knee", "right_ankle",
+)
+
+
+class FakeRobot:
+    def __init__(self, joint_names):
+        self.joint_names = tuple(joint_names)
+
+    @property
+    def num_joints(self):
+        return len(self.joint_names)
+
+    def find_joints(self, name_keys, preserve_order=False):
+        keys = (name_keys,) if isinstance(name_keys, str) else tuple(name_keys)
+        matches = [(index, name) for index, name in enumerate(self.joint_names)
+                   if any(re.fullmatch(key, name) for key in keys)]
+        return [index for index, _ in matches], [name for _, name in matches]
 
 
 def test_recipe_has_only_angular_max_lag_change_and_preserves_parent_identity():
@@ -41,7 +65,7 @@ def test_recipe_has_only_angular_max_lag_change_and_preserves_parent_identity():
         assert not control.curriculum and not fresh.curriculum
 
 
-def make_env(mode="control", worlds=4, *, lag=None):
+def make_env(mode="control", worlds=4, *, lag=None, joint_names=None):
     from mjlab.utils.buffers import DelayBuffer
     from mjlab.utils.noise import UniformNoiseCfg
     from mjlab.envs import mdp as base_mdp
@@ -81,11 +105,18 @@ def make_env(mode="control", worlds=4, *, lag=None):
                       func=mdp.projected_gravity_imu_misaligned,
                       params={"max_angle_deg": 6.}, scale=None, clip=None,
                       noise=UniformNoiseCfg(n_min=-.01, n_max=.01, operation="add"))
+    velocity_selector = SceneEntityCfg("robot", joint_names=(r"^(?!passive_).*",))
+    model_joint_names = joint_names or (
+        *SERVO_JOINT_NAMES[:5], "passive_jaw_left", *SERVO_JOINT_NAMES[5:9],
+        "passive_jaw_right", *SERVO_JOINT_NAMES[9:],
+    )
+    robot = FakeRobot(model_joint_names)
+    velocity_selector.resolve({"robot": robot})
     velocity_term = NS(delay_min_lag=1, delay_max_lag=1, delay_update_period=0,
                        delay_per_env=True, delay_per_env_phase=True,
                        delay_hold_prob=0., history_length=0,
                        func=base_mdp.joint_vel_rel,
-                       params={"asset_cfg": NS(name="robot", joint_names=(r"^(?!passive_).*",))},
+                       params={"asset_cfg": velocity_selector},
                        scale=None, clip=None,
                        noise=UniformNoiseCfg(n_min=-.25, n_max=.25, operation="add"))
     terms = {"base_ang_vel": angular_term, "projected_gravity": gravity_term,
@@ -117,6 +148,7 @@ def make_env(mode="control", worlds=4, *, lag=None):
     manager.compute = lambda *args, **kwargs: setattr(manager, "compute_calls", manager.compute_calls + 1)
     env = NS(num_envs=worlds, common_step_counter=0, observation_manager=manager,
              command_manager=NS(get_command=lambda name: command),
+             scene={"robot": robot},
              _latency_command=command, _latency_actor=actor)
     return NS(env=env, actor=actor, command=command, terms=terms, delays=delays,
               angular_delay=angular_delay)
@@ -150,12 +182,35 @@ def test_live_control_reads_real_selected_delay_and_fresh_is_absent_buffer_witho
             assert torch.equal(delay._buffer.buffer, snapshots[name][2])
 
 
+def test_joint_velocity_selector_resolves_to_named_servo_ids_in_model_order():
+    fixture = make_env("control", 4)
+    selector = fixture.terms["joint_vel"].params["asset_cfg"]
+    assert isinstance(selector, SceneEntityCfg)
+    assert tuple(selector.joint_names) == SERVO_JOINT_NAMES
+    assert tuple(selector.joint_ids) == (0, 1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 15)
+    assert "passive_jaw_left" not in selector.joint_names
+    assert latency.inspect_latency(fixture.env, fixture.actor, "control") == {
+        "lag0": 2, "lag1": 2,
+    }
+
+
+def test_joint_velocity_selector_resolves_all_fourteen_model_joints_to_slice():
+    fixture = make_env("control", 4, joint_names=SERVO_JOINT_NAMES)
+    selector = fixture.terms["joint_vel"].params["asset_cfg"]
+    assert tuple(selector.joint_names) == SERVO_JOINT_NAMES
+    assert selector.joint_ids == slice(None)
+    assert latency.inspect_latency(fixture.env, fixture.actor, "control") == {
+        "lag0": 2, "lag1": 2,
+    }
+
+
 @pytest.mark.parametrize("fault", [
     "layout", "cache-shape", "cache-missing", "cache-mismatch", "nonfinite",
     "command-mismatch", "angular-function", "angular-noise", "angular-flags",
     "angular-delay-config", "control-buffer-missing", "fresh-buffer-present",
     "control-buffer-flags", "gravity-cfg", "gravity-buffer", "velocity-cfg",
-    "velocity-buffer",
+    "velocity-buffer", "velocity-passive", "velocity-missing", "velocity-ids",
+    "velocity-order", "velocity-bool-id", "velocity-model-missing",
 ])
 def test_live_angular_latency_rejects_effective_config_cache_or_buffer_drift(fault):
     mode = "fresh" if fault == "fresh-buffer-present" else "control"
@@ -194,6 +249,24 @@ def test_live_angular_latency_rejects_effective_config_cache_or_buffer_drift(fau
         fixture.delays["projected_gravity"].update_period = 32
     elif fault == "velocity-cfg":
         fixture.terms["joint_vel"].delay_min_lag = 0
+    elif fault == "velocity-passive":
+        fixture.terms["joint_vel"].params["asset_cfg"].joint_names.append("passive_jaw_left")
+        fixture.terms["joint_vel"].params["asset_cfg"].joint_ids.append(14)
+    elif fault == "velocity-missing":
+        fixture.terms["joint_vel"].params["asset_cfg"].joint_names.pop()
+        fixture.terms["joint_vel"].params["asset_cfg"].joint_ids.pop()
+    elif fault == "velocity-ids":
+        fixture.terms["joint_vel"].params["asset_cfg"].joint_ids[0] = 14
+    elif fault == "velocity-order":
+        selector = fixture.terms["joint_vel"].params["asset_cfg"]
+        selector.joint_names.reverse()
+        selector.joint_ids.reverse()
+    elif fault == "velocity-bool-id":
+        fixture.terms["joint_vel"].params["asset_cfg"].joint_ids[1] = True
+    elif fault == "velocity-model-missing":
+        fixture = make_env("control", 4, joint_names=SERVO_JOINT_NAMES[:-1])
+        env = fixture.env
+        manager = env.observation_manager
     else:
         fixture.delays["joint_vel"]._current_lags.zero_()
     with pytest.raises(ValueError):

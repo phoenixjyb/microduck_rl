@@ -18,6 +18,11 @@ from mjlab_microduck import observation_timing_capture as capture
 base = previous.base
 PROTOCOL = "integrated-angular-latency-continuation-v1"
 ARMS = ("control", "fresh")
+SERVO_JOINT_NAMES = (
+    "left_hip_yaw", "left_hip_roll", "left_hip_pitch", "left_knee", "left_ankle",
+    "neck_pitch", "head_pitch", "head_yaw", "head_roll",
+    "right_hip_yaw", "right_hip_roll", "right_hip_pitch", "right_knee", "right_ankle",
+)
 MODES = {f"{phase}-{arm}": (worlds, updates, seed)
          for phase, worlds, updates, seed in (("smoke", 64, 5, 1193),
                                                ("benchmark", 256, 10, 1201))
@@ -65,6 +70,34 @@ def _delay_contract(delay, name, worlds, min_lag, max_lag, update_period):
                            & (length >= 1) & (length <= max_lag + 1)).all()),
                  f"initialized live {name} delay state")
     return lag, length
+
+
+def _require_resolved_servo_selector(term, robot):
+    """Validate the resolved joint velocity selector against the live robot."""
+    params = term.params
+    base.require(isinstance(params, Mapping) and set(params) == {"asset_cfg"},
+                 "joint velocity observation has only its pinned asset selector")
+    asset_cfg = params["asset_cfg"]
+    joint_names = tuple(getattr(robot, "joint_names", ()))
+    selected_names = getattr(asset_cfg, "joint_names", None)
+    selected_ids = getattr(asset_cfg, "joint_ids", None)
+    base.require(getattr(asset_cfg, "name", None) == "robot"
+                 and len(joint_names) == len(set(joint_names))
+                 and all(name in joint_names for name in SERVO_JOINT_NAMES),
+                 "live robot contains the named 14-servo joint layout")
+    expected_ids = tuple(joint_names.index(name) for name in SERVO_JOINT_NAMES)
+    if isinstance(selected_ids, slice):
+        resolved_ids = tuple(range(*selected_ids.indices(len(joint_names))))
+    elif isinstance(selected_ids, (tuple, list)):
+        resolved_ids = tuple(selected_ids)
+    else:
+        resolved_ids = ()
+    base.require(tuple(selected_names or ()) == SERVO_JOINT_NAMES
+                 and all(type(index) is int and 0 <= index < len(joint_names)
+                         for index in resolved_ids)
+                 and len(resolved_ids) == len(set(resolved_ids))
+                 and resolved_ids == expected_ids,
+                 "resolved joint velocity selector is the ordered named 14-servo layout")
 
 
 def inspect_latency(env, actor, mode):
@@ -119,10 +152,7 @@ def inspect_latency(env, actor, mode):
         expected_params = ({"max_angle_deg": 6.} if name == "projected_gravity" else None)
         expected_noise = ((-.01, .01) if name == "projected_gravity" else (-.25, .25))
         base.require(term.func is expected_func
-                     and (term.params == expected_params if expected_params is not None else
-                          getattr(term.params.get("asset_cfg"), "name", None) == "robot"
-                          and getattr(term.params.get("asset_cfg"), "joint_names", None)
-                          == (r"^(?!passive_).*",))
+                     and (term.params == expected_params if expected_params is not None else True)
                      and term.scale is None and term.clip is None
                      and isinstance(term.noise, UniformNoiseCfg)
                      and (term.noise.n_min, term.noise.n_max, term.noise.operation)
@@ -132,6 +162,8 @@ def inspect_latency(env, actor, mode):
                      and term.delay_per_env_phase is True and term.delay_hold_prob == 0.
                      and term.history_length == 0,
                      f"unchanged {name} effective delay config")
+        if name == "joint_vel":
+            _require_resolved_servo_selector(term, env.scene["robot"])
 
     delays = manager._group_obs_term_delay_buffer.get("actor")
     base.require(isinstance(delays, Mapping), "live actor delay-buffer map")

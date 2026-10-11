@@ -1190,3 +1190,51 @@ inactive in user and system scopes. Preserve DINO and unrelated workloads;
 100.98/NX remains out of scope. No automatic new skill, video, perception,
 policy publication, driver/package changes or physical motion. GPU preflight
 and this round's training results remain pending at this predeclaration.
+
+### Yaw-precision preflight passed; matched training launched
+
+At exact source `4447fe64954675a7f38cdff38cfd288d4a93c0ae`, native
+CUDA-hidden focused tests passed195 in13.87s (three existing warnings).
+Additional Mac NaN-guard/observation/inference checks passed15 in6.70s.
+The sequential preflight completed successfully and returned to DINO-only
+969MiB. All four receipts have exact parent/source/runtime bindings, finite
+models/Adam and update losses, correct step/transition budgets, zero NaN
+terminations, actual live reward validation and exact yaw-stage exposure.
+Both normalized ONNX CPU smokes passed61-to14 shape/finiteness/hash checks;
+the existing automatic logger-export warning was not used as export evidence.
+The separate retained normalized exports and inference receipts are verified.
+
+| Preflight | Elapsed seconds | Conservative full-arm projection seconds | Verified result SHA256 |
+| --- | ---: | ---: | --- |
+| smoke-control | 5.134571 | not applicable | `305f08a76075a5c799fedf4e215b6e62fa9dbc18c839e8d90fc02aa528a564d0` |
+| smoke-precision | 4.721343 | not applicable | `cdc082930721e89e84a4e777eab0635977f0af9196fa76f90257340e5453f997` |
+| benchmark-control | 8.024094 | 1203.614088 | `0317726d21d8d66e5fa0a680741383a660c38592000f78c4f6259d0c5f0e038f` |
+| benchmark-precision | 8.040501 | 1206.075142 | `a37fc673da1ea976f0c51eb496846a5e295167cb9f208aa2ad1d9c9c39d4da3e` |
+
+Both projections fit2040s. Treatment smoke exposed widths.5/.25/.1 for
+25/24/71 steps as predeclared. Smokes had zero falls; benchmarks had4/8
+control/treatment falls, which are exploratory training observations, not
+stability acceptance. Peak preflight health1717MiB/57C. The frozen native
+runtime exactly matches the parent run: torch2.9.1, Warp1.12.0, MuJoCo3.10.0,
+MuJoCo Warp3.8.1, mjlab1.3.0 and better-actuator-models1.0.1. Native models
+stay in place; only four small JSON receipts were copied to Mac at
+`artifacts/evaluations/yaw-precision-4447fe64-20261011-preflight`, with matching
+hashes, avoiding duplicate checkpoint storage.
+
+Launched `microduck-yaw-precision-4447fe64-matched-eval.service` at
+2026-10-11 21:47:05 Beijing time. While active, verified MainPID755510,
+RuntimeMaxSec4500, TimeoutStopSec15, RAM8GiB, CPU200%, Tasks64, Nice10 and
+KillMode control-group. It runs control1000 then precision1000 then the
+unchanged final999 held-out matrix sequentially; do not modify the running
+native checkout. Retained run root is
+`artifacts/training/yaw-precision-4447fe64-20261011` on100.100.
+
+Initial live control snapshot reached update12/1000 with finite reward/losses,
+zero cumulative NaN terminations,12 training falls, durable initial/model0
+files, variance.5, unchanged motor/qpos/twist/forward weights and positive
+actual angular reward. GPU1717MiB/55C with only Duck and retained DINO2021;
+all four protected service scopes were inactive at launch. The exploratory
+update12 right-hip range overrun was.013072rad: this is not a passing held-out
+range result and must not be described as policy qualification. Both final
+training receipts, full stage exposures and held-out decisions remain pending.
+This follow-up is documentation only; training stays pinned to4447fe64.

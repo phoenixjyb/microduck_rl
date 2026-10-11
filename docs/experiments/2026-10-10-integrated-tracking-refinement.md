@@ -1238,3 +1238,33 @@ update12 right-hip range overrun was.013072rad: this is not a passing held-out
 range result and must not be described as policy qualification. Both final
 training receipts, full stage exposures and held-out decisions remain pending.
 This follow-up is documentation only; training stays pinned to4447fe64.
+
+### Control completed; precision treatment active
+
+On2026-10-11, the pinned4447fe64 control finished1000 updates/24000 action
+steps/6,144,000 transitions in605.665524s. All1000 update records are finite,
+with zero NaN terminations, fixed motor/qpos/twist/forward/roll-pitch shaping
+and exactly24000 steps at yaw variance.5. The last100 updates recorded64
+training falls; this is not a held-out stability pass. CUDA-hidden checkpoint
+inspection verified finite model/Adam states, exact saved iteration/common
+steps and durable bytes for every predeclared checkpoint below.
+
+| Control checkpoint | Verified SHA256 |
+| --- | --- |
+| 0 | `65f25a2186f94f15799f887f2e942402405d1a6a44c609bbb7a3ebf196fc7b99` |
+| 250 | `46f605cf6c294caddfd18447dd603124eb8426115095508b23370cc827933fa2` |
+| 500 | `8141be3907a7bf33b6f5f3aa4d78860cd17cfb52f08eee3dbc39257f36e7216c` |
+| 750 | `6793e0c738319d2e1f0bd279083f108fbf5f95d4cbfbd6343c166edf370fc955` |
+| 999 | `3e0b01bce31f8b73a535fa44bbfe92ce522908c03916269ad6ae203432b6249a` |
+
+Control result SHA256:
+`2357ab458a83d0ef86b625c426c6fcb5e5b6c467bd228a4e1d136cc7ba9400bc`.
+Only its small receipt was copied to Mac at
+`artifacts/evaluations/yaw-precision-4447fe64-20261011/control.json`, with the
+same hash; checkpoints remain on100.100. Existing sequential service started
+precision next, with no overlapping Duck worker or checkout/source changes.
+Its first46 updates were finite/NaN-free with28 training falls, correct initial
+variance.5 and durable model0. Health1717MiB/61C, retained DINO2021 preserved,
+all four protected service scopes inactive. Treatment stage transitions,
+final999 and both held-out decisions remain pending. Do not infer tracking
+improvement or policy acceptance from successful training completion alone.

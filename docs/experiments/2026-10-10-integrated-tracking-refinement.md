@@ -1855,3 +1855,77 @@ The capture integration regression additionally feeds a complete traced mock
 case through the CPU auditor and proves that an episode ending at step61
 retains61 raw samples but is rejected as incomplete, rather than hiding a
 terminal or reconstructing a full trace. The focused suite remains491 passed.
+
+### Completed independent-kernel precision comparison
+
+The sequential service completed successfully, inactive/dead/MainPID0,
+ExecMainStatus0, by2026-10-12 00:47 Beijing time. Exact clean native source
+remained `ecdf2de4`; control/precision took598.570225/601.782753s, each1000
+updates/256 worlds/seed1027/24000 steps/6,144,000 transitions. Verified all10
+cadence/final checkpoints, finite model/Adam/counter state, exact parent/LR
+restores, all2000 finite update rows with zero NaN terminations, all40000
+optimizer minibatch transitions, signed reward and full variance exposures
+(control24000 at.5; precision6001/6000/11999 at.5/.25/.1). Recomputed every
+case/decision/paired difference. All34 small copied receipt/update/case files
+match native SHA256s under Mac
+`artifacts/evaluations/decoupled-yaw-ecdf2de4-20261012`; no model copies.
+
+Both arms pass all12 motor and12 named-range checks, with every case240
+steps/no terminal worlds/no rated-speed exceedance. Both still fail all nine
+moving combined-tracking cases; only idle passes all worlds. Precision does
+not improve moving behavior uniformly and is not accepted or selected for
+promotion. Moving yaw-passing worlds14/72 control versus13/72 precision.
+
+| Command vx/yaw | Control / precision speed MAE | Control / precision yaw MAE | Speed-passing worlds /24 | Yaw-passing worlds /24 |
+| --- | ---: | ---: | ---: | ---: |
+| 0 /0 | .001049 / .000796 | .008208 / .007783 | 24 /24 | 24 /24 |
+| .30 /0 | .099392 / .104653 | .115942 / .122219 | 14 /6 | 7 /3 |
+| .20 /-.20 | .041286 / .041189 | .132032 / .142140 | 24 /24 | 1 /1 |
+| .20 /+.20 | .043022 / .045378 | .126160 / .116104 | 24 /24 | 6 /9 |
+
+Means/world-pass counts are descriptive, not case admission. Maximum pooled
+torque p99 utilization.540153/.507228 remains below.60. All24 body-response
+audits pass. Straight yaw Jensen gap.084780->.057720 accompanies greater
+absolute mean bias.031162->.064499rad/s; negative-turn gap.063316->.037239
+likewise accompanies bias.068716->.104901. Reduced residual gap alone is
+not better tracking. Positive-turn gap.096619->.076139 improves while bias
+increases.029541->.039965. A retained time trace is needed before attributing
+these effects to frame projection, temporal variation or actuator behavior.
+
+Last100 training falls39/35, yaw-square.158123/.146701, roll/pitch-square
+.291268/.284844, motor cost.048018/.047104, power proxy2.200325/2.091289W,
+thermal proxy.047544/.046661 and soft-limit fraction.005112/.004784.
+Negative signed reward samples10.6547%/23.0388%. Applied LR floors6502/20000
+(32.51%)/6206/20000(31.03%); unchanged adaptive controller, both finalLR1e-5.
+Training peaks1717MiB/62C; evaluation2859MiB/59C. Post-round DINO2021 only,
+969MiB/51C; protected user/system services inactive. No new training selected
+until the bounded orientation/rate diagnosis is reviewed.
+
+| Artifact | SHA256 |
+| --- | --- |
+| Control final999 | `04665a21cd131364a188d965e719ccde4bfdd643f745b8fef8b8828982104899` |
+| Precision final999 | `52845be16d58461df2b751ae7ff25bc497a341e4a6fd07064a88dc1805fb51a9` |
+| Control receipt | `ff20bacdb1d5993a603f1fce4feff2ccf970b1a625497ca2c8a48d28fd8005bc` |
+| Precision receipt | `b7ce808bc3eb8de4554573ce391e8e218371e8f3de3884a7ca7fce9db9398c36` |
+| Control updates | `7905cc2a3f9a291b127d05c3df8642c05b3072f4a024d20383234b775148c8ed` |
+| Precision updates | `798cf4839eb897cac663220afa64184cf45863df8db00a33ede6c24d4ad81056` |
+| Held-out aggregate | `2e9b919a94275b791f52d64ccf7d3849f51655e124f195731664ff21a886cbad` |
+| Evaluation launch | `9fdebf754be63eace50ab52724001355f28fa16cb4ba17a1997f713a7c4d391b` |
+
+### Predeclared eight-case orientation/rate replay
+
+Only after the completed round above, reviewed/pushed clean trace source,
+CUDA-hidden native focused tests and an idle shared GPU, run one bounded
+diagnostic service against exactly the retained aggregate/hash and both
+final999 hashes above. Declare seed839 and all four original held-out
+commands for each arm: eight cases, not a new full admission matrix. Capture
+the optional read-only full240x8 trace, audit quaternion/frame/command/MAE
+identity, and retain raw bytes before any summary or replay comparison.
+Compare all original case fields with the retained case under the existing
+1e-6 replay comparison; preserve every discrepancy and set replay_verified
+false if any. Never overwrite old gate evidence or turn an approximate/new
+trajectory into an exact-replay claim. Preserve runtime/parent/receipt/source
+identities, owned GPU lease, exact DINO2021/protected-service guards,20%
+allocator cap and240s runtime/15s grace, checked against07:00 Beijing. No
+learning, actor change, video, raw perception, driver/package change or
+physical motion. Outcome remains diagnostic-only and no policy promotion.

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 import copy
 import fcntl
 import importlib.metadata as metadata
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -30,6 +32,107 @@ MODES = {f"{phase}-{arm}": (worlds, updates, seed)
 MODES.update(control=(256, 1000, 863), motor=(256, 1000, 863))
 CAP_SECONDS = 2100
 MOTOR_STAGES = ((0, 0.), (100, -.25), (300, -.50), (600, -1.))
+MAX_CONTINUATION_UPDATES = 10000
+_MISSING = object()
+
+
+def training_contract(recipe, arm):
+    """Return the validated per-arm continuation budget and final checkpoint."""
+    arms = getattr(recipe, "ARMS", ("control", "motor"))
+    base.require(isinstance(arms, (tuple, list)) and len(arms) == 2
+                 and all(type(value) is str and value for value in arms)
+                 and arms[0] == "control" and len(set(arms)) == 2,
+                 "known two-arm continuation declaration")
+    base.require(type(arm) is str and arm in arms, "declared continuation arm")
+
+    modes = getattr(recipe, "MODES", None)
+    base.require(isinstance(modes, Mapping) and arm in modes,
+                 "declared per-arm training mode")
+    mode = modes[arm]
+    base.require(isinstance(mode, tuple) and len(mode) == 3,
+                 "training mode is a worlds/updates/seed triple")
+    worlds, updates, seed = mode
+    base.require(type(worlds) is int and worlds == 256,
+                 "continuation uses exactly 256 worlds")
+    base.require(type(updates) is int and 0 < updates <= MAX_CONTINUATION_UPDATES,
+                 "continuation updates are a bounded positive integer")
+    base.require(type(seed) is int, "continuation seed is an integer")
+
+    declared_caps = getattr(recipe, "TRAINING_CAP_SECONDS", _MISSING)
+    if declared_caps is _MISSING:
+        cap_seconds = getattr(recipe, "CAP_SECONDS", None)
+    else:
+        base.require(isinstance(declared_caps, Mapping)
+                     and set(declared_caps) == set(arms),
+                     "per-arm training caps exactly match declared arms")
+        cap_seconds = declared_caps[arm]
+    base.require(type(cap_seconds) is int and cap_seconds > 0,
+                 "positive integer per-arm training cap")
+    return dict(arm=arm, worlds=worlds, updates=updates, seed=seed,
+                cap_seconds=cap_seconds, final_iteration=updates - 1)
+
+
+def evaluation_plan(recipe):
+    """Select only each declared final checkpoint, retaining legacy wording."""
+    arms = getattr(recipe, "ARMS", ("control", "motor"))
+    contracts = {arm: training_contract(recipe, arm) for arm in arms}
+    legacy = all(contract["updates"] == 1000 for contract in contracts.values())
+    plan = dict(contracts=contracts,
+                selection=("both final999 only; unchanged held-out protocol" if legacy else
+                           "declared final checkpoints only; unchanged held-out protocol"))
+    if not legacy:
+        plan["final_iterations"] = {
+            arm: contract["final_iteration"] for arm, contract in contracts.items()
+        }
+    return plan
+
+
+def preflight_contract(recipe, phase, arm):
+    """Pin smoke/benchmark identity as strictly as the eventual training arm."""
+    training_contract(recipe, arm)
+    base.require(phase in ("smoke", "benchmark"), "declared preflight phase")
+    mode = f"{phase}-{arm}"
+    spec = recipe.MODES.get(mode)
+    worlds, updates = (64, 5) if phase == "smoke" else (256, 10)
+    base.require(isinstance(spec, tuple) and len(spec) == 3
+                 and type(spec[0]) is int and spec[0] == worlds
+                 and type(spec[1]) is int and spec[1] == updates
+                 and type(spec[2]) is int, "exact declared preflight mode")
+    return dict(arm=mode, worlds=worlds, updates=updates, seed=spec[2],
+                final_iteration=updates-1)
+
+
+def checkpoint_path(run_root, arm, contract):
+    base.require(arm == contract["arm"], "checkpoint arm matches validated contract")
+    return Path(run_root) / arm / f"model_{contract['final_iteration']}.pt"
+
+
+def validate_training_receipt(receipt, recipe, source, contract, checkpoint):
+    """Reject wrong arm/budget/seed receipts before evaluating durable weights."""
+    base.require(receipt["source"] == source and receipt["protocol"] == recipe.PROTOCOL
+                 and receipt["status"] == "training-complete-not-accepted"
+                 and receipt["mode"] == contract["arm"]
+                 and receipt["updates"] == contract["updates"]
+                 and receipt["worlds"] == contract["worlds"]
+                 and receipt["seed"] == contract["seed"]
+                 and receipt["steps"] == contract["updates"] * 24
+                 and receipt["transitions"] == contract["updates"] * 24 * contract["worlds"]
+                 and receipt["warm_start"]["parent_sha256"] == recipe.PARENT_SHA
+                 and base.sha256(checkpoint) == receipt["checkpoint_sha256"],
+                 "complete exact declared training arm")
+
+
+def benchmark_projection_seconds(elapsed_seconds, contract):
+    """Project the 10-update benchmark to the declared arm's full budget."""
+    try:
+        finite_elapsed = math.isfinite(float(elapsed_seconds))
+    except (OverflowError, TypeError, ValueError):
+        finite_elapsed = False
+    base.require(type(elapsed_seconds) in (int, float) and finite_elapsed and elapsed_seconds > 0,
+                 "finite positive benchmark elapsed time")
+    projection = elapsed_seconds * (contract["updates"] / 10) * 1.5
+    base.require(math.isfinite(projection), "finite per-arm benchmark projection")
+    return projection
 
 
 def freeze_source(cfg):
@@ -208,31 +311,32 @@ def main(experiment=None):
         host = shared_host()
         if args.mode.startswith("benchmark"):
             arm = args.mode.split("-")[1]
+            smoke_contract = preflight_contract(recipe, "smoke", arm)
             receipt = json.loads((root / f"smoke-{arm}/result.json").read_text())
-            base.require(receipt["source"] == args.source and receipt["updates"] == 5 and
-                         receipt["worlds"] == 64 and receipt["protocol"] == recipe.PROTOCOL
-                         and receipt["status"] == "training-complete-not-accepted"
-                         and receipt["onnx"]["finite"] and
+            validate_training_receipt(receipt, recipe, args.source, smoke_contract,
+                                      checkpoint_path(root, smoke_contract["arm"], smoke_contract))
+            base.require(receipt["onnx"]["finite"] and
                          base.sha256(receipt["onnx"]["path"]) == receipt["onnx"]["sha256"], "same-arm ONNX smoke before benchmark")
         if args.mode in arms:
             for arm in arms:
+                contract = training_contract(recipe, arm)
                 for phase, worlds, updates in (("smoke", 64, 5), ("benchmark", 256, 10)):
+                    preflight = preflight_contract(recipe, phase, arm)
                     receipt = json.loads((root / f"{phase}-{arm}/result.json").read_text())
-                    base.require(receipt["source"] == args.source and receipt["worlds"] == worlds and
-                                 receipt["protocol"] == recipe.PROTOCOL and receipt["updates"] == updates
-                                 and receipt["warm_start"]["parent_sha256"] == recipe.PARENT_SHA
-                                 and receipt["status"] == "training-complete-not-accepted", "both same-source preflights")
+                    validate_training_receipt(receipt, recipe, args.source, preflight,
+                                              checkpoint_path(root, preflight["arm"], preflight))
                     if phase == "smoke":
                         base.require(receipt["onnx"]["finite"] and base.sha256(receipt["onnx"]["path"]) == receipt["onnx"]["sha256"], "durable ONNX smoke")
                     else:
-                        base.require(receipt["elapsed_s"]*100*1.5 < recipe.CAP_SECONDS-60, "measured continuation fits cap")
+                        projected = benchmark_projection_seconds(receipt["elapsed_s"], contract)
+                        base.require(projected < contract["cap_seconds"]-60,
+                                     "measured per-arm continuation fits cap")
             if args.mode == arms[1]:
+                control_contract = training_contract(recipe, arms[0])
                 control = json.loads((root / "control/result.json").read_text())
-                base.require(control["source"] == args.source and control["updates"] == 1000 and
-                             control["protocol"] == recipe.PROTOCOL and
-                             control["warm_start"]["parent_sha256"] == recipe.PARENT_SHA and
-                             control["status"] == "training-complete-not-accepted" and
-                             base.sha256(root / "control/model_999.pt") == control["checkpoint_sha256"], "control completes before motor arm")
+                control_checkpoint = checkpoint_path(root, arms[0], control_contract)
+                validate_training_receipt(control, recipe, args.source, control_contract,
+                                          control_checkpoint)
         output.mkdir(parents=True, exist_ok=False)
         base.write_new(output / "launch.json", dict(protocol=recipe.PROTOCOL, source=args.source, mode=args.mode,
             host=host, parent=str(recipe.PARENT), parent_sha256=recipe.PARENT_SHA, runtime={n: metadata.version(n) for n in
@@ -250,14 +354,12 @@ def main(experiment=None):
         try:
             if args.mode == "evaluate":
                 cases, decisions, hashes = {}, {}, {}
+                plan = evaluation_plan(recipe)
                 for arm in arms:
+                    contract = plan["contracts"][arm]
                     trained = json.loads((root / arm / "result.json").read_text())
-                    checkpoint = root / arm / "model_999.pt"
-                    base.require(trained["source"] == args.source and trained["updates"] == 1000 and
-                                 trained["protocol"] == recipe.PROTOCOL and
-                                 trained["status"] == "training-complete-not-accepted" and
-                                 trained["warm_start"]["parent_sha256"] == recipe.PARENT_SHA and
-                                 base.sha256(checkpoint) == trained["checkpoint_sha256"], "complete matched arm")
+                    checkpoint = checkpoint_path(root, arm, contract)
+                    validate_training_receipt(trained, recipe, args.source, contract, checkpoint)
                     rows = []
                     for seed in base.SEEDS:
                         for index, (speed, yaw) in enumerate(base.CASES):
@@ -269,9 +371,15 @@ def main(experiment=None):
                 result = dict(cases=cases, decisions=decisions, checkpoint_sha256=hashes,
                     paired_differences=paired_differences(cases[arms[0]], cases[arms[1]],
                         label=arms[1]+"_minus_control"),
-                    selection="both final999 only; unchanged held-out protocol", policy_acceptance=False,
+                    selection=plan["selection"], policy_acceptance=False,
                     simulator_qualified=False, physical_motion_authorized=False)
+                if "final_iterations" in plan:
+                    result["final_iterations"] = plan["final_iterations"]
             else:
+                if args.mode in arms:
+                    contract = training_contract(recipe, args.mode)
+                    base.require(recipe.MODES[args.mode][1] == contract["updates"],
+                                 "launch mode matches declared continuation budget")
                 observer, restored = recipe.MotorObserver(args.mode), {}
                 def initialize(runner, env):
                     restored.update(recipe.warm_load(runner, env))

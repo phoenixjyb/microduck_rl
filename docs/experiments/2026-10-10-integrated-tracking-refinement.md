@@ -2150,3 +2150,92 @@ predeclaration and focused tests before GPU work. Current effective training
 yaw range is±.5, not the wider athletics template default; a sampling-density
 hypothesis requires actual command-exposure evidence, and the previously
 rejected gentle-range curriculum must not be overlooked.
+
+### Predeclared fixed-recipe training-duration comparison
+
+After failed width, KL, command-range and EMA-bias changes, compare added
+training duration rather than another coefficient. Protocol
+`integrated-training-duration-continuation-v1` in
+`integrated_training_budget_refinement`: control1000 versus budget4000
+additional updates from the same exact c81b decoupled parent. This parent
+already descends through earlier trained warm-start continuations; neither
+arm trains from scratch or represents the model's total lifetime updates.
+The hypothesis is narrowly whether another3000 updates under the fixed
+current recipe can improve held-out tracking without motor/range regression.
+The canonical4096-world gait budget is not volume-equivalent: here256 worlds
+means6.144M versus24.576M transitions, not393.216M at4000×4096×24.
+
+Restore the same `angular-decoupling-ea24a14a-20261011/decoupled/model_999.pt`
+SHA `c81bfae742f9caa815a2896cd894d38ee4d069f3237c000086df2ba0c458ecae`,
+all actor/critic/normalizer/Adam state and LR5.062500000000001e-5, fresh
+episodes/counters0. Both use the unbiased control cfg of the preceding
+experiment: yaw-bias weight0 with the same reward-state diagnostic, signed
+additive angular weight2 and variances.5/.5, motor-1, qpos-4/margin.15,
+twist-.5, forward0, action-rate-.8. Keep61D actor/14D unclipped/unfiltered
+actions, adaptiveKL.01/four minibatches/five epochs and all frozen curricula,
+plant/DR/head/pose commands. Only max_iterations differs1000/4000. Longer
+normalizer/Adam/optimizer evolution is part of this duration intervention,
+not a hidden reset or a promised causal/convergence proof.
+
+Effective twist sampler remains vx(.2,.4), vy0, yaw±.5,3–5s resampling,
+standing15%, forward-only25%, no turn-in-place. Prior latest control counts
+932570 idle/1378625 straight/1917248 negative/1915557 positive action-world
+steps already show balanced broad yaw exposure; do not call it untrained.
+Add identical read-only actor-command dwell bins to both arms: exact idle,
+exact straight, and signed magnitudes(0,.15],(.15,.25],(.25,.5]. Capture
+before action and consume once after its control step, including worlds that
+reset; validate finite support, exclusive counts and per-update/cumulative
+world-step totals. No command/RNG mutation, band reward, new sampling mixture,
+filter or new observation. This is descriptive telemetry, not a new gate.
+
+Preflight paired64-world/five-update smokes seed1049 with normalized finite
+61->14 ONNX CPU checks, then paired256-world/ten-update benchmarks seed1051.
+Full paired256 worlds/seed1061/24 steps per update, control1000 then budget4000.
+Retain cadence250 plus final999/3999 respectively; evaluate those declared
+finals exclusively, never choose an intermediate from the observed metrics.
+The shared harness must verify each arm's declared update count/final path,
+not assume every recipe ends at999. Legacy1000 recipes retain their existing
+final999 behavior and caps. Test malformed contracts and nonfinite timing.
+
+Evaluate the unchanged12 held-out cases per arm: seeds839/853/857,8 worlds,
+240 steps/startup60, commands0/0,.3/0,.2/-.2,.2/+.2. Preserve every-world
+speed MAE≤.1/idle≤.03, body-yaw MAE≤.1, pooled torque-p99 utilization≤.60,
+zero terminals/rated-speed exceedance, all14 hard-range overruns≤.005rad and
+named right-hip-yaw proximity exposure≤1% at.05rad. All24 cases and both
+decisions retained even if the longer final is worse. One paired seed and
+GPU nondeterminism cannot establish robust convergence or physical readiness.
+
+Require reviewed/tested/pushed clean exact source, native CUDA-hidden checks,
+all four completed preflights, exact finite parent restores/checkpoints,
+reward/optimizer/exposure identities and measured conservative projections
+before full training. Benchmark seconds×150 must fit2040s for control;
+×600 must fit7140s for budget. Per-arm cap2100/7200s, evaluation240s;
+one sequential retained9600s user service/15s grace/control-group kill,
+8GiB memory/CPU200%/tasks64/nice10,20% allocator and unchanged lease,
+DINO2021/GPU/occupancy/temperature/protected-service guards. Literal caps
+and paths; deadline checks require remaining9615/7455/255s before respective
+phases. All work must safely finish before2026-10-12 07:00 Beijing time
+(epoch1791759600); no launch if the remaining phase budgets do not fit.
+No concurrent Duck GPU job, unrelated workload change, runtime/driver/package
+change, perception/actor expansion, rejected-policy video or physical motion.
+Do not restore protected services without explicit owner request.
+
+Implementation verification:629 focused CPU tests pass locally with three
+existing actuator/site-selector warnings, including legacy1000-recipe
+compatibility, declared3999 selection, malformed/nonfinite budget guards,
+exact receipt mode/seed/world-step identities, exclusive telemetry bins,
+terminal-reset timing and inherited reward/optimizer checks. Whitespace
+check passes. An initial synthetic telemetry fixture incorrectly retained
+post-reset vx0 when reintroducing a nonzero yaw; the support guard correctly
+rejected it. Correcting only the fixture to restore its declared vx made
+the complete suite pass; no runtime bound or numerical gate was relaxed.
+Native preflight/full training remain pending.
+
+Final independent review caught a preflight identity gap in the shared
+harness: same-source receipts were not checking declared mode/seed and full
+step/transition counts. Closed it for smoke-before-benchmark and both arms'
+preflights before full training, including exact final preflight weight hash.
+No receipt can authorize a duration projection merely by occupying the
+expected directory. Nineteen additional regression cases cover wrong
+preflight identities/declarations; final focused suite648 passed in18.00s,
+three existing warnings. Read-only review confirms the blocker is closed.

@@ -1814,3 +1814,24 @@ All eight small preflight receipt/update files were copied under Mac
 `artifacts/evaluations/decoupled-yaw-ecdf2de4-20261012-preflight`; every SHA256
 matches native. Models remain native only. Documentation commits during the
 run do not change its frozen training/evaluator source.
+
+Prepared an optional diagnostic-only `body_yaw_trace` path without enabling it
+in the active evaluator. It captures quaternion(wxyz), body/world XYZ angular
+rates and both command representations at each pre-action boundary, cloning
+live tensors before policy inference/step. A full mocked evaluator regression
+requires all original case/response fields to remain exactly identical with
+the option enabled. Default evaluation and policy/actor targets are unchanged.
+CPU-only `mjlab_microduck.body_yaw_trace` checks the full240x8 trajectory,
+held-out case/seed/hash, exact actor command, original1e-6 fixed-command check,
+unit quaternions and rotation identity(1e-5), and reconstructs original settled
+body-yaw MAE within1e-6 descriptive arithmetic tolerance. It reports bias,
+standard deviation, residual sign transitions/lag1 covariance, world-vertical
+rate and the instantaneous projected-body-x heading rate. Near-vertical
+projection is explicitly undefined, never dropped from the body-yaw gate.
+No frequency or contact/motor causal claim is inferred. CLI is read-only and
+hash-bound; no tensor/simulator import. Independent bounded review found no
+static frame/sign mismatch and recommended this trace if the current precision
+round remains rejected, rather than guessing another damping coefficient.
+Owner-reviewed integration and focused suite491 passed, with the same three
+existing actuator-selector warnings. This is source/test evidence only; no
+new diagnostic replay or admission claim has occurred yet.

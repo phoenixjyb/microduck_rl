@@ -287,8 +287,21 @@ def joint_target_diagnostics(positions, targets, constraints, limits, names):
         policy_acceptance=False, physical_motion_authorized=False)
 
 
+def body_yaw_trace_sample(robot, command, actor_command):
+    """Read-only aligned pre-action orientation/rates; never mutate policy state."""
+    values = dict(command=command, actor_command=actor_command,
+                  quat_wxyz=robot.data.root_link_quat_w,
+                  angular_b=robot.data.root_link_ang_vel_b,
+                  angular_w=robot.data.root_link_ang_vel_w)
+    require(all(isinstance(v, torch.Tensor) and v.shape == (8, 4 if k == "quat_wxyz" else 3)
+                for k, v in values.items()) and finite_tree(values), "finite eight-world yaw trace layout")
+    require(torch.equal(command, actor_command), "yaw trace actor command identity")
+    # Clone before stepping: underlying robot tensors are live views.
+    return {k: v.detach().cpu().clone() for k, v in values.items()}
+
+
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
-                  angular_diagnostics=False):
+                  angular_diagnostics=False, yaw_trace=False):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -322,6 +335,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         velocities, motor_rows, terminals = [], [], []
         positions, targets, constraints = [], [], []
         angular_samples = []
+        yaw_samples = []
         limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
         with torch.inference_mode():
             for step in range(steps):
@@ -335,6 +349,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 velocity = torch.stack((robot.data.root_link_lin_vel_b[:, 0], robot.data.root_link_ang_vel_b[:, 2]), -1)
                 require(finite_tree(velocity), "finite measured body velocity")
                 velocities.append(velocity.cpu().clone())
+                if yaw_trace:
+                    yaw_samples.append(body_yaw_trace_sample(robot, command, obs["actor"][:, 48:51]))
                 if diagnostics:
                     positions.append(robot.data.joint_pos[:, stream.joint_ids].cpu().clone())
                 if target_diagnostics:
@@ -378,6 +394,13 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 torch.stack(targets).double(), torch.stack(constraints).double(), limits.double(), stream.names)
         if angular_diagnostics:
             result["angular_reward_diagnostics"] = angular_audit.summarize(torch.stack(angular_samples), startup=startup)
+        if yaw_trace:
+            result["body_yaw_trace"] = dict(protocol="body-yaw-orientation-trace-v1",
+                step_dt=env.step_dt, startup_steps=startup, steps=len(v), worlds=worlds,
+                checkpoint_sha256=result["checkpoint_sha256"], timing="pre-action state before policy/step",
+                policy_acceptance=False, physical_motion_authorized=False,
+                **{key: torch.stack([sample[key] for sample in yaw_samples]).double().tolist()
+                   for key in ("command", "actor_command", "quat_wxyz", "angular_b", "angular_w")})
         return result
     finally:
         env.close()

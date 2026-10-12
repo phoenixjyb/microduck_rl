@@ -102,7 +102,16 @@ retains both safety objectives and freezes the parent's final stock curricula.
 Control and treatment restore identical model/normalizer/Adam states; only a
 constant-.25 forward residual cost differs, for1000 updates per arm followed by
 the unchanged final-only12-case matrix. This is a small tracking hypothesis,
-not an accepted teacher or a reopened harder-skill gate.
+not an accepted teacher or a reopened harder-skill gate. That comparison has
+now finished: moving speed passes47/72→50/72, yaw0/72→0/72. Both arms retain all12
+motor/range passes and complete first episodes, but all9 moving cases still
+fail tracking; forward worsens straight/negative yaw and narrows modeled load
+headroom. Do not adopt or stack its treatment. Evidence and checkpoints are
+sealed, and the temporarily paused user vLLM is restored with DINO preserved.
+The CPU-only retained-trace diagnosis is also complete: forward increased both
+per-world DC yaw bias and temporal variation without contact-loss evidence.
+Next is one separately declared yaw comparison with both safety objectives
+retained, not an automatic obstacle/hop/ball promotion or correlation-based fix.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only

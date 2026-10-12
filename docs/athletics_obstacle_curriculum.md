@@ -22,6 +22,10 @@ neutral-head exposure, entropy consolidation and low-yaw rehearsal. None has
 cleared the unchanged complete moving-command matrix. The subsequent matched
 angular-latency comparison also completed 1000 updates per arm: moving speed
 world passes 61/72 to 69/72, yaw 4/72 to 8/72, but neither complete matrix passed.
+The following progressive-command round also finished: yaw world passes
+6/72 to 20/72, but speed regressed from 62/72 to 48/72; straight speed passes
+fell from 14/24 to 0/24. Its clocked stages are tested infrastructure, not an
+adopted curriculum or accepted teacher.
 These comparisons keep stability, motor and joint-range gates passing in both
 arms, but all nine moving cases still fail tracking; partial per-world improvements are not policy
 acceptance. Do not stack the rejected treatments or call them newly learned
@@ -34,9 +38,11 @@ small repeated replay probe are descriptive checks, not new acceptance gates,
 raw perception, a filter or an actor-interface expansion. The window ending
 October12 at07:00 Beijing was closed; the owner subsequently authorized the
 completed angular-latency round. It remains rejected, not an adopted sensor
-change or accepted teacher. Next, predeclare a smallest matched progressive
-command curriculum separating straight-gait consolidation from signed turns;
-preserve the stock delayed evaluator rather than run another latency sweep.
+change or accepted teacher. The predeclared progressive-command comparison
+likewise remains rejected. Next, define a separately measured straight-gait
+lesson with stage-exit and retention evidence before introducing turns;
+preserve the stock delayed evaluator and existing gates rather than repeat a
+clocked multi-stage or latency sweep.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only

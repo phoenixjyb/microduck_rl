@@ -4023,3 +4023,117 @@ passes778 with14 existing actuator-selector warnings in14.90s, CUDA hidden
 on Mac. Whitespace checks pass. DINO remains the sole GPU process at969MiB/
 49C after the failure. Native CPU and successful GPU smoke/benchmark receipts
 remain required before a long run; this repair is not a training result.
+
+### Progressive-command matched learning result: yaw/speed trade-off, rejected
+
+Exact source `75272a123540ac025667dccbf20914968fb81d00`.
+Same-source native CUDA-hidden regressions passed778 tests with14 existing
+warnings in13.26s; Mac passed778 in14.90s. Both64x5 GPU smokes completed with
+finite raw actor/actions/optimizer telemetry, zero NaN terminations/falls,
+durable final4 weights and official normalized finite61-to14 ONNX inference.
+Progressive smoke stage action-world counts were1536/1536/1536/3072; actual
+dwell retained720 idle,4680 straight,1440 negative-low and840 positive-low.
+No target/high-yaw sample was fabricated to make the short smoke appear to
+resample every stage.
+
+Matched256x10 final-distribution benchmarks took7.814852/7.799017s; conservative
+1000-update projections1172.228/1169.853s passed the2040s admission threshold.
+The sequential preflight service completed08:25:14 Beijing October12.
+Before the separate full service, native CPU verification authenticated
+all four receipts/checkpoints/normalized ONNX hashes, exact stage/dwell
+census and current idle-Duck shared-host bounds with DINO2021 preserved.
+
+`microduck-progressive-command-75272a12-matched-eval.service` then completed
+successfully at09:16:26 Beijing, inactive/dead, MainPID0, exit0.
+Each arm ran256x1000 updates, seed1249,24 steps/update,6.144M transitions and
+20,000 optimizer minibatches. Elapsed control/progressive630.067506/627.607202s.
+All2030 combined smoke/benchmark/full update rows are finite with zero NaN
+terminations. Original c81 bytes, exact zero-clock model/normalizer/Adam/LR
+restoration, every durable0/250/500/750/999 checkpoint and all payload iteration/
+common counters are authenticated. Only final999 was evaluated.
+
+Control stage census is6,144,000 action-world steps at±.50/.25; treatment is
+exactly1,536,000 in each declared stage. Actual straight dwell rose
+1,320,347→2,303,904, while idle stayed914,898→930,006 and signed command bins
+remained active. Counts represent consumed cached commands, not nominal
+quotas. Natural carryover, inclusive boundaries, live sampler settings and
+per-update/cumulative24-step census all verify. No source/config change was
+made during the job. Full training falls451/395 and last100 falls41/40 are
+not held-out stability acceptance.
+
+Both arms complete all12 first-episode held-out cases without terminals and
+pass all12 motor and named joint-range checks. Idle passes in all24 worlds
+per arm. Every one of the9 moving cases still fails combined tracking:
+recomputed deterministic decision **foundation-not-ready** for both.
+Moving yaw world passes6/72→20/72, but speed passes62/72→48/72. In straight
+.3m/s, speed passes14/24→0/24 despite the greater training straight exposure.
+This is a speed/yaw trade-off, not an overall locomotion improvement; do not
+promote/adopt the clocked curriculum, select an intermediate model or relax
+the original every-world instantaneous gates.
+
+| Command vx m/s, yaw rad/s | Mean speed MAE control / progressive m/s | Mean yaw MAE control / progressive rad/s | Speed world passes /24 control / progressive | Yaw world passes /24 control / progressive |
+| --- | ---: | ---: | ---: | ---: |
+| 0.0, 0.0 | 0.001225 / 0.000743 | 0.009542 / 0.006641 | 24 / 24 | 24 / 24 |
+| 0.3, 0.0 | 0.097450 / 0.129426 | 0.120577 / 0.103853 | 14 / 0 | 4 / 13 |
+| 0.2, -0.2 | 0.038523 / 0.063703 | 0.130951 / 0.136989 | 24 / 24 | 1 / 0 |
+| 0.2, 0.2 | 0.044517 / 0.068356 | 0.136061 / 0.114986 | 24 / 24 | 1 / 7 |
+
+Read-only diagnosis from the retained settled pre-action body-frame response
+confirms underspeed, not merely a noisy error statistic: at commanded .3m/s,
+mean achieved vx falls.202568→.170574m/s. Negative-turn mean body yaw response
+also weakens-.174141→-.130186rad/s; positive-turn response is.172633→.178792.
+These are descriptive signed body-frame rates, not integrated heading/path or
+physical-robot acceptance. They do not replace the unchanged instantaneous gate.
+
+| Command vx m/s, yaw rad/s | Mean achieved body vx control / progressive m/s | Mean signed body yaw rate control / progressive rad/s |
+| --- | ---: | ---: |
+| 0.3, 0.0 | 0.202568 / 0.170574 | 0.003283 / 0.005235 |
+| 0.2, -0.2 | 0.164356 / 0.136323 | -0.174141 / -0.130186 |
+| 0.2, 0.2 | 0.157542 / 0.131687 | 0.172633 / 0.178792 |
+
+The progressive arm has lower mean simulated mechanical power/thermal proxy
+in every command group; at straight .3m/s they are1.756944/1.613319W and
+.031708/.027490. This does not establish greater efficiency at equal achieved
+motion, because speed tracking degraded. Group torque-utilization p99 stays
+within existing motor gates. No measured motor-temperature/hardware claim.
+Training still includes right-hip range overruns up to.033335/.035333rad and
+maximum per-update stop exposure.010417/.007650; these exploration/fall
+metrics remain separate from passing held-out range gates. Low-kp/BAM action
+targets remain unclipped.
+
+Native CPU-only final verification recomputes each decision/case/paired
+difference, exact stage and actual command dwell, all20 minibatches/update,
+fixed reward/KL/parent provenance and shared-host logs. Mac independently
+verifies59 JSON/JSONL payloads (9,829,339bytes) plus the exact retained manifest
+and recomputes the decisions/differences. Retained on Mac under
+`artifacts/evaluations/progressive-command-75272a12-20261012`, with
+`verified-manifest.json`; native originals/checkpoints remain in the
+corresponding `artifacts/training` directory. Weights/ONNX are native only;
+no duplicate model storage or Git asset upload.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Control final999 | `1667928669172c1588258ceeab1344d795fe8ef633a6785a24a75b5e29ff5be7` |
+| Progressive final999 | `e5b63b790d15072cf695a02dd12c5935d4e0edd9965307acfbab579e3751a16d` |
+| Held-out aggregate | `ace8c2347ebe942bc7a0ac43110d110277fcceb27489d2a84cd458f9efee174a` |
+| Native verification | `3eb3d2818fc3fd848764cd6f7ba287fc745f2de0d03eb02f309147354d24a353` |
+| Retained manifest | `6bf689120045567e801520066ec25b818d0baaa7695253880b3e360a2851809a` |
+| Preflight verification | `8cd3eff109bb962246f2ee74b70283f415b060eb9a3cfe34ace82531833f2808` |
+| Evaluation launch | `b174f559a727feac1f9eb58bdb1972c8c884616e48ceb0a77d985884bbd85aab` |
+| Evaluation health | `1941d027f4189f180acc198a261b9c2dcaa996a944635fdd550a2274564c4dde` |
+
+Recorded peak GPU2859MiB/62C; post-verification969MiB/49C, DINO2021 alone
+and all four protected scopes inactive. No Duck GPU job remains. This round
+adds tested curriculum infrastructure and retained learning evidence, not
+an accepted new turning, obstacle, hop or football skill. No MP4, physical
+motion, raw perception or protected-service restoration was performed.
+
+Next direction (recommendation only, no new job launched): do not repeat a
+clocked multi-stage sweep or promote a yaw subset while hiding the straight
+speed regression. Define a separately measured straight-gait lesson and its
+stage-exit/retention criteria before introducing turns; diagnose the actual
+achieved forward velocity and gait/load profile that accompany lower yaw
+error. Keep the stock delayed evaluator and current gates unchanged. Any
+new learner requires its own predeclaration, focused tests and measured GPU
+smoke/budget gate; the original parent and all rejected endpoints remain
+retained, not accepted teachers.

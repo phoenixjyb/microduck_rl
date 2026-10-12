@@ -97,6 +97,10 @@ remains closed until the applicable foundation and retention gates pass.
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.
+The [integrated transition plan and offline scorer](experiments/2026-10-12-integrated-command-transitions.md)
+prepare stop/restart and mirrored moving-turn first attempts in parallel on CPU.
+Synthetic checks do not qualify its future collector or unlock a GPU rollout;
+the active foundation recipe and checkout remain unchanged.
 Keep earlier stabilization and hopping retention checks separate; their legacy
 plant results do not automatically transfer to this source. Rolling-football
 balance still follows its independent plant/support/recovery gates below.

@@ -68,8 +68,9 @@ initialization hypothesis, not an already established cause of the underspeed.
 The Adam-state comparison has now also completed and failed both full matrices:
 moving speed passes69/72 to52/72 and yaw5/72 to16/72. Initial actors/critics/
 normalizers were identical; the intended optimizer reset was verified in the
-saved checkpoints. Do not adopt its reset endpoint. The next single fresh-policy
-foundation baseline preserves the original integrated upstream curricula and
+saved checkpoints. Do not adopt its reset endpoint. The next
+[single fresh-policy foundation baseline](experiments/2026-10-12-fresh-curriculum-foundation.md)
+preserves the original integrated upstream curricula and
 allows6000 updates, including consolidation after the last2000-update stages.
 This is separate from c81 continuation and is not a one-factor causal contrast.
 It keeps the complete held-out tracking/motor/joint-range gates unchanged.

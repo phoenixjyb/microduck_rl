@@ -4611,3 +4611,7 @@ expansion, physical motion or protected-service restoration. Stop coefficient/
 reset stacking on the same unaccepted parent. The next independently declared
 fresh foundation is a new stock-curriculum baseline, not a causal comparison
 with these collapsed-curriculum warm continuations; see its separate declaration.
+
+The [fresh-curriculum declaration](2026-10-12-fresh-curriculum-foundation.md)
+preserves the original schedules and predeclares its larger single-arm budget,
+fresh-state authentication and unchanged final-only numerical gate.

@@ -218,6 +218,24 @@ def test_reset_helper_validates_and_clears_only_populated_adam_state_in_place():
     assert optimizer.state is state_mapping and not optimizer.state
 
 
+@pytest.mark.parametrize("capturable,fused", [(False, False), (True, False),
+                                             (False, True), (False, None)])
+def test_loaded_step_device_policy_accepts_mapped_counter_without_moving_it(capturable, fused):
+    device = torch.device("cuda:0")  # device descriptor only; no CUDA context
+    expected = ((device,) if capturable or fused else (torch.device("cpu"), device))
+    assert reset.allowed_adam_step_devices(device, capturable=capturable, fused=fused) == expected
+    assert torch.device("cuda:1") not in expected
+
+
+def test_installed_torch_noncap_loader_preserves_step_tensor_device():
+    # Meta reproduces the loader's identity rule without allocating a GPU tensor.
+    parameter = torch.nn.Parameter(torch.ones(1))
+    step = torch.empty((), device="meta")
+    returned = torch.optim.Optimizer._process_value_according_to_param_policy(
+        parameter, step, 0, [{"params": [0], "capturable": False, "fused": None}], key="step")
+    assert returned is step and returned.device == step.device
+
+
 @pytest.mark.parametrize("fault", ["wrong-optimizer", "empty", "partial", "bad-step",
                                    "wrong-step-dtype", "fractional-step", "wrong-shape",
                                    "wrong-dtype", "nan-moment", "negative-square-moment", "unexpected-slot",

@@ -52,6 +52,18 @@ def _optimizer_parameters(optimizer):
     return parameters
 
 
+def allowed_adam_step_devices(parameter_device, *, capturable=False, fused=False):
+    """Match torch 2.9 loading: noncapturable counters keep their mapped device.
+
+    Fresh noncapturable Adam normally creates CPU counters, but load_state_dict
+    returns an existing step tensor unchanged. A checkpoint loaded onto CUDA
+    therefore legitimately has CUDA counters even with capturable/fused off.
+    Never move a restored tensor to satisfy this read-only validation.
+    """
+    return ((parameter_device,) if capturable or fused else
+            (torch.device("cpu"), parameter_device))
+
+
 def validate_populated_adam(optimizer):
     """Validate every canonical Adam slot before reporting or clearing it."""
     parameters = _optimizer_parameters(optimizer)
@@ -75,9 +87,9 @@ def validate_populated_adam(optimizer):
                  and step.dtype == expected_step_dtype and torch.isfinite(step).all().item()
                  and step.item() > 0 and step.item().is_integer(),
                  "finite positive integer-valued scalar Adam step")
-        step_device = (parameter.device if group.get("capturable", False)
-                       or group.get("fused", False) else torch.device("cpu"))
-        _require(step.device == step_device, "Adam step on canonical device")
+        step_devices = allowed_adam_step_devices(parameter.device,
+            capturable=group.get("capturable", False), fused=group.get("fused", False))
+        _require(step.device in step_devices, "Adam step on supported restored device")
         for key in expected - {"step"}:
             value = slots[key]
             _require(isinstance(value, torch.Tensor) and value.shape == parameter.shape

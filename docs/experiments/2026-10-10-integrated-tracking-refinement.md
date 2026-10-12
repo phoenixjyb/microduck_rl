@@ -4519,3 +4519,23 @@ adjacent regressions895/895 passed (14 existing selector warnings,42.07s).
 The read-only native parent inspection confirms17 populated parameter states,
 each step210,000, canonical step/exp_avg/exp_avg_sq and original group LR.
 Native regression/smoke/optimizer-checkpoint admission still precedes training.
+
+The first native preflight at source2263c36f passed895 CPU tests, then failed
+smoke-control before its first PPO update with `Adam step on canonical device`.
+The failed root `artifacts/training/adam-reset-2263c36f-20261012` and service are
+retained. Read-only installed loader inspection explains the overly strict
+validator: mjlab loads every checkpoint tensor with map_location=cuda:0, and
+torch2.9 noncapturable/nonfused Adam load_state_dict preserves the supplied step
+tensor rather than recasting it to CPU. Thus restored CUDA step counters are
+valid. No optimizer/model/driver change is needed. The corrected read-only
+check accepts CPU or the parameter's own device in this mode, requires the
+parameter device for capturable/fused Adam, and rejects another GPU's device.
+It never moves/restamps the original counter. Reset still changes only the same
+state mapping, letting torch recreate its normal fresh slots after real PPO.
+A new exact-source unique run must repeat all admission checks; the failed
+preflight is not reused or overwritten and admits no learner or skill.
+
+Corrected owner integrated/adjacent regression:900 tests passed,14 existing
+selector warnings,30.46s, CUDA hidden. CPU device-policy tests cover mapped
+noncapturable counters and the installed torch loader's unchanged-tensor rule.
+GPU smoke still has to exercise the actual CUDA-restored state.

@@ -7,6 +7,7 @@ from mjlab.utils.buffers import DelayBuffer
 from mjlab_microduck import integrated_progressive_command_refinement as command
 from mjlab_microduck import integrated_training_budget_refinement as previous
 from mjlab_microduck import integrated_yaw_bias_refinement as bias
+from mjlab_microduck import integrated_motor_refinement as motor
 
 
 def test_modes_stage_boundaries_and_parent_aliases():
@@ -23,6 +24,11 @@ def test_modes_stage_boundaries_and_parent_aliases():
     assert command.warm_load is previous.warm_load
     assert command.evaluate_case is previous.evaluate_case
     assert command.decision is previous.decision
+    for mode in command.MODES:
+        observer = command.MotorObserver(mode)
+        assert observer.mode == "control"
+        assert observer.schedule == ((0, -1.),)
+        assert observer.command_schedule == command.stages(mode)
     assert command.stage_at_step(0, command.FULL_STAGES) == command.FULL_STAGES[0]
     for update, stage in ((249, 0), (250, 1), (499, 1), (500, 2),
                           (749, 2), (750, 3)):
@@ -35,6 +41,21 @@ def test_modes_stage_boundaries_and_parent_aliases():
     assert command.stage_at_step(18000, command.FULL_STAGES) == command.FULL_STAGES[3]
     assert tuple(command.stage_at_step(update * 24, command.SMOKE_STAGES)
                  for update in range(4)) == command.SMOKE_STAGES
+
+
+@pytest.mark.parametrize("mode", tuple(command.MODES))
+def test_real_inherited_motor_callback_keeps_its_pair_schedule(mode):
+    observer = command.MotorObserver(mode)
+    term = NS(weight=0.)
+    env = NS(common_step_counter=0,
+             reward_manager=NS(get_term_cfg=lambda name: term if name == "motor_load" else None))
+    # Exercise the actual inherited callback, not the mocked reward chain.
+    for clock in (0, 24, 6000, 12000, 18000, 23999):
+        env.common_step_counter = clock
+        motor.MotorObserver.before(observer, env)
+        assert observer.weight == term.weight == -1.
+        assert observer.schedule == ((0, -1.),)
+        assert observer.command_schedule == command.stages(mode)
 
 
 @pytest.mark.parametrize("prefix", ["smoke-", "benchmark-", ""])

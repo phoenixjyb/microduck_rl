@@ -125,12 +125,12 @@ class MotorObserver(previous.MotorObserver):
                      "known progressive command observer mode")
         super().__init__("control")
         self.command_mode = mode
-        self.schedule = stages(mode)
+        self.command_schedule = stages(mode)
         self.pending_clock = None
         self.pending_stage = None
         self.last_post_clock = None
-        self.update_stage_counts = dict.fromkeys(range(len(self.schedule)), 0)
-        self.cumulative_stage_counts = dict.fromkeys(range(len(self.schedule)), 0)
+        self.update_stage_counts = dict.fromkeys(range(len(self.command_schedule)), 0)
+        self.cumulative_stage_counts = dict.fromkeys(range(len(self.command_schedule)), 0)
         self.update_action_steps = 0
         self.cumulative_action_steps = 0
         self.observed_max_yaw = 0.
@@ -148,7 +148,7 @@ class MotorObserver(previous.MotorObserver):
                      "live twist cfg equals the expected prior command stage")
 
     def before(self, env):
-        base.require(self.schedule == stages(self.command_mode), "unchanged declared command schedule")
+        base.require(self.command_schedule == stages(self.command_mode), "unchanged declared command schedule")
         base.require(self.pending_clock is None and self.pending_stage is None,
                      "previous progressive command action consumed")
         base.require(type(env.common_step_counter) is int and env.common_step_counter >= 0,
@@ -156,9 +156,9 @@ class MotorObserver(previous.MotorObserver):
         expected_clock = 0 if self.last_post_clock is None else self.last_post_clock
         base.require(env.common_step_counter == expected_clock,
                      "continuous nonreversing one-step command clock")
-        stage = stage_at_step(env.common_step_counter, self.schedule)
+        stage = stage_at_step(env.common_step_counter, self.command_schedule)
         term, cfg = _live_twist(env)
-        old_stage = stage_at_step(max(0, env.common_step_counter - 1), self.schedule)
+        old_stage = stage_at_step(max(0, env.common_step_counter - 1), self.command_schedule)
         if self.last_post_clock is None:
             old_stage = stage
         self._validate_sampler(env, cfg, old_stage)
@@ -190,7 +190,7 @@ class MotorObserver(previous.MotorObserver):
 
         self.pending_clock = env.common_step_counter
         self.pending_stage = stage
-        stage_index = self.schedule.index(stage)
+        stage_index = self.command_schedule.index(stage)
         self.update_stage_counts[stage_index] += env.num_envs
         self.cumulative_stage_counts[stage_index] += env.num_envs
         self.update_action_steps += 1
@@ -219,7 +219,7 @@ class MotorObserver(previous.MotorObserver):
         row.update(command_curriculum_protocol="pre-action-command-stage-census-v1",
                    command_mode=self.command_mode,
                    command_curriculum_stage=list(stage_at_step(env.common_step_counter - 1,
-                                                                self.schedule)),
+                                                                self.command_schedule)),
                    command_curriculum_stage_counts={str(k): v for k, v in
                                                     self.update_stage_counts.items()},
                    command_curriculum_cumulative_counts={str(k): v for k, v in
@@ -229,7 +229,7 @@ class MotorObserver(previous.MotorObserver):
                    command_curriculum_observed_max_abs_yaw=self.observed_max_yaw,
                    command_curriculum_configured_forward_fraction=self.configured_forward_stage)
         self.update_action_steps = 0
-        self.update_stage_counts = dict.fromkeys(range(len(self.schedule)), 0)
+        self.update_stage_counts = dict.fromkeys(range(len(self.command_schedule)), 0)
         self.observed_max_yaw = 0.
         return row
 

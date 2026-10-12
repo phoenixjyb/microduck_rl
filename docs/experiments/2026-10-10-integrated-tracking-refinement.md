@@ -3989,3 +3989,37 @@ not costly copies of buffers or RNG state. Stage schedules must start at zero
 and stay equal to the declaration; only the live manager is changed, not the
 source env config. Whitespace checks pass. Native CPU/GPU preflight remains
 a separate execution gate; preparation alone establishes no learned result.
+
+### Progressive-command initial smoke: inherited-schedule collision repaired
+
+The first native source was `903d6c0756a492425b6ce4ae3e4de750042a29ad`.
+Its CPU qualification passed; `microduck-progressive-command-903d6c07-preflight.service`
+then failed at08:20:43 Beijing, exit1, in smoke-control before any PPO update:
+`ValueError: too many values to unpack (expected 2)`. No benchmark, treatment
+or full learner started. The initial-save ONNX metadata warning was separate.
+Failed artifacts are retained unchanged under native
+`artifacts/training/progressive-command-903d6c07-20261012/smoke-control`;
+launch/failure/warm-start JSON bytes are copied and hash-verified on Mac under
+`artifacts/evaluations/progressive-command-903d6c07-20261012-failed`.
+
+Read-only diagnosis confirmed that the new command triples overwrote inherited
+`MotorObserver.schedule`, whose motor callback expects pairs. Rename the new
+field to `command_schedule` throughout; preserve inherited `mode='control'`
+and `schedule=((0,-1.),)`. No command-stage, recipe, seed, learner, plant or
+acceptance setting changes. Add an unmocked motor callback test at every
+boundary clock in every mode; mocked reward callbacks had concealed this
+collision in the initial CPU fixture. Independent review confirms the fields
+remain distinct. Retry only from a tested/pushed exact clean source and a new
+unique retained run directory; do not overwrite the failed attempt.
+
+| Failed object | SHA256 |
+| --- | --- |
+| Failure | `ea4524ac03e1b201c5f5782d17f8a16b40a89345cab746f00e844ceba5a4c50f` |
+| Launch | `94968dbc7d42686e32e44e748d3d93f8ddb882468ca9313ffc46f232fc34d886` |
+| Warm-start | `58665c85b787f57c8071880440591a9d6dea97707cfb2ebd07c15e76feeacb9d` |
+
+Repaired focused tests pass39 in9.43s; the broader owner-reviewed selection
+passes778 with14 existing actuator-selector warnings in14.90s, CUDA hidden
+on Mac. Whitespace checks pass. DINO remains the sole GPU process at969MiB/
+49C after the failure. Native CPU and successful GPU smoke/benchmark receipts
+remain required before a long run; this repair is not a training result.

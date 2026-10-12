@@ -4217,3 +4217,107 @@ selector warnings in215.91s, covering the integrated recipe/harness, new
 stage-exit scorer, offline gait summaries and motor/observation contracts.
 The focused recipe run passed23 tests. These are source/CPU checks only;
 native smoke, timing admission, learning and held-out results are separate.
+
+### Fixed straight lesson result: concentration did not clear the frontier
+
+Exact source `41808a064dd4449fd75e2a679c347a865c749511`.
+Native852 CUDA-hidden regressions passed with14 existing warnings in29.52s;
+Mac852 passed in215.91s. Both64x5 smokes had zero falls/NaNs, durable
+weights and normalized finite61-to14 ONNX inference. Benchmarks took
+8.016729/7.988376s; conservative full projections1202.509/1198.256s cleared
+the2040s admission bound. CPU-hidden verification authenticated all four
+preflight receipts, parent restoration, exact actual coverage and weights.
+
+`microduck-straight-lesson-41808a06-matched-eval.service` completed
+October12 at10:10:47 Beijing, inactive/dead/MainPID0/Resultsuccess/exit0.
+Each matched arm ran256x1000 updates, seed1279,24 steps/update,6.144M
+transitions and20,000 optimizer minibatches. Control/straight elapsed
+621.585026/624.041645s. Both original c81 parent restorations, original
+Python LR/model/normalizer/Adam, zero clocks and all0/250/500/750/999
+checkpoint payloads are authenticated. All2030 preflight/full update rows
+are finite with zero NaN terminations. Only final999 was evaluated.
+
+Actual straight dwell increased1,306,292→5,235,568 action-world steps;
+idle908,152/908,432. All treatment signed-yaw bins are exactly zero; control
+retains both signs and its original complete coverage. Training falls418/411,
+tail100 falls44/46; these exploration counts do not establish held-out
+stability or an improvement.
+
+All24 held-out cases complete their first240-step episode without terminals.
+Both arms pass every motor and named/all-joint range case; idle tracking passes
+all24 worlds. Both nevertheless fail all9 moving-case combined tracking gates:
+**foundation-not-ready**. Moving speed passes57/72→52/72, yaw15/72→24/72.
+The concentrated lesson trades some yaw improvement for worse speed, not a
+new accepted locomotion skill.
+
+| Command vx/yaw | Speed MAE control / straight (m/s) | Body-yaw MAE control / straight (rad/s) | Speed passes /24 control / straight | Yaw passes /24 control / straight |
+| --- | ---: | ---: | ---: | ---: |
+| (0.0, 0.0) | 0.001177 / 0.000806 | 0.010324 / 0.007570 | 24 / 24 | 24 / 24 |
+| (0.3, 0.0) | 0.101639 / 0.107956 | 0.115002 / 0.104106 | 9 / 4 | 9 / 16 |
+| (0.2, -0.2) | 0.037661 / 0.051690 | 0.124016 / 0.119701 | 24 / 24 | 3 / 4 |
+| (0.2, 0.2) | 0.041269 / 0.054635 | 0.123041 / 0.128077 | 24 / 24 | 3 / 4 |
+
+At straight .3m/s, settled achieved vx .198366→.192048m/s confirms actual
+underspeed, not simply noisy error statistics. Straight signed body-yaw mean
+.019616→-.004017rad/s, while absolute body-yaw MAE remains.115002/.104106.
+These are body-frame rates, not integrated heading or physical acceptance.
+Arc achieved vx also falls: negative.164048→.148501, positive.159732→.145608m/s.
+
+The separately recomputed stage scorer rejects:28 per-world straight-stage
+failures, zero arc safety failures and70 paired per-world arc-retention
+regressions. Stage exit false, arc safety true, arc retention false.
+Turning progression stays closed. No subset/intermediate model selection,
+gate relaxation or promotion.
+
+The six retained straight gait traces describe one-contact fractions
+96.7593%/96.6435%, two-contact3.1944%/3.3102%, no-contact.0463% in both.
+Contact-masked foot-site XY speed means left.013947/.013458 and
+right.011796/.012229m/s are similar. These are sampled site/contact proxies,
+not contact-patch slip, continuous flight duration or causal evidence for
+changing slip/head/contact rewards.
+
+Saved actor normalizers have parent count64,512,000 and both finals70,656,000,
+the expected+6.144M. Installed rsl-rl5.0.1 uses epsilon.01 and no count cap.
+Yaw-command std parent/control/straight.231978/.231918/.221664; normalized
++.2rad/s command.829737/.829680/.866388. This is a modest input-scaling shift,
+not collapse. It is part of the whole-sampler contrast, not proof of causal
+action effects; do not freeze normalization based on these statistics alone.
+
+A descriptive pre-action angular-component calculation on4320 settled samples
+per arm gives mean XY-rate magnitude.242785/.204687rad/s. Under the existing
+training kernel, XY component score is1.736073/1.798482 and yaw component
+1.909824/1.924371 (each component maximum2; signed combined reward is their
+sum minus2). XY deficit from the stationary maximum.263927/.201518 is larger
+than yaw deficit.090176/.075629. This is arithmetic on retained pre-action
+states, not the post-reward timing or proof that an alternate gait is feasible.
+It motivates a separately predeclared motion-allowance contrast, not relaxing
+any evaluation/stability gate or repeating exposure-only/duration sweeps.
+
+Native final CPU verification recomputes complete receipts/checkpoint hashes,
+actual dwell, rewards/KL/20 minibatches, standalone cases/aggregate decisions,
+paired differences, stage scorer, gait summaries and shared-host bounds.
+Mac independently verifies62 payloads (69,604,727bytes) plus the sealed manifest,
+recomputes cases/decisions/gates/gait/normalizer arithmetic, and retains
+`verified-manifest.json` under
+`artifacts/evaluations/straight-lesson-41808a06-20261012`.
+The larger retained JSON includes raw gait traces and their aggregate bindings;
+weights/ONNX remain native only. No model copy or Git asset upload.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Control final999 | `e1547073a05edde109e980b8d8307150ede1980292e2f10657c15106caf6baa5` |
+| Straight final999 | `fe5c24f466c1bc3708db75ffb4f961713fe26ec9a58a7d5a4499b51d68df14f0` |
+| Full aggregate | `27c13f5c8b8cd7a0e895ccf2077414ffe64c0cff0414acf71b8700b0f4060b2a` |
+| Stage-exit decision | `a8b783049ee76109b24083a2f485cf4c214ba50c910891d358c59c8de43eb96e` |
+| Gait summary | `f9236bc4e639165ee7e328c5ec07bd61baa19b059c813ad2ec5e16f483b1a794` |
+| Saved-normalizer audit | `afe9670dafe8d9c8d68d53b6fc0c05ee502898ca28048428a0bf78c9e1761e80` |
+| Native verification | `dd27da260f58a419d49793869b285159dc7bc68763d55db4c3a8aca04ad4abb5` |
+| Sealed manifest | `6cd25176e3c5ab15c37589965bc96ea779138a9a95033e3129c935613ef8b112` |
+
+Peak recorded GPU2381MiB/61C; after completion DINO2021 alone969MiB/49C,
+all four protected service scopes inactive. Training still exposes right-hip
+overruns up to.043416/.030554rad; held-out range passing does not erase those
+exploration states. BAM targets remain unclipped. Brief SSH connection timeouts
+recovered without restarting/changing jobs, and did not interrupt the retained
+service. No MP4, raw perception, physical motion or protected-service restoration.
+

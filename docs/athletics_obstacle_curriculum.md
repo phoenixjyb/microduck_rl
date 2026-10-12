@@ -51,6 +51,14 @@ gates and exact per-world arc-retention comparisons, while retaining the
 unchanged full foundation decision. No training or skill acceptance is claimed
 by the predeclaration alone; see the experiment document for budgets and gates.
 
+That fixed lesson has now finished and is rejected: straight speed world passes
+9/24 to4/24, yaw9/24 to16/24; achieved vx at .30m/s command .198 to .192m/s.
+The full moving matrix still fails for both arms. The separate scorer records
+28 straight-stage failures and70 paired arc-retention regressions, with arc
+safety passing. Turning progression remains closed. The next foundation
+diagnostic will test roll/pitch motion allowance with the original mixed
+commands, not adopt the rejected straight-only sampler or weaken the gates.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

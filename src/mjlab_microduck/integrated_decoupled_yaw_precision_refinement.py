@@ -1,6 +1,7 @@
 """Matched yaw-precision continuation of the signed decoupled angular reward."""
 
 from collections import Counter
+import math
 import sys
 
 import torch
@@ -91,6 +92,7 @@ class MotorObserver(forward.MotorObserver):
         self.mode = mode
         self.yaw_schedule = stages(mode)
         self.previous_variance = self.yaw_schedule[0][1]
+        self.roll_pitch_variance = ROLL_PITCH_VARIANCE
         self.variances, self.yaw_costs, self.xy_costs, self.angular_rewards = [], [], [], []
         self.cumulative_counts = Counter()
         self.negative_samples = 0
@@ -102,9 +104,13 @@ class MotorObserver(forward.MotorObserver):
 
         variance = motor.motor_weight(env.common_step_counter, self.yaw_schedule)
         term = env.reward_manager.get_term_cfg(TERM)
+        base.require(type(self.roll_pitch_variance) is float
+                     and math.isfinite(self.roll_pitch_variance)
+                     and self.roll_pitch_variance in (.5, 1.),
+                     "canonical decoupled roll/pitch variance")
         base.require(term.func is mdp.decoupled_body_angular_tracking and term.weight == WEIGHT
                      and term.params == dict(command_name="twist", yaw_variance=self.previous_variance,
-                                             roll_pitch_variance=ROLL_PITCH_VARIANCE)
+                                             roll_pitch_variance=self.roll_pitch_variance)
                      and self.yaw_schedule == stages(self.mode)
                      and .1 <= variance <= self.previous_variance <= VARIANCE,
                      "known monotone live decoupled yaw precision")
@@ -129,7 +135,7 @@ class MotorObserver(forward.MotorObserver):
                      and bool((yaw_sq >= 0).all() & (xy_sq >= 0).all()),
                      "finite captured angular state and live variance")
         expected = WEIGHT * (torch.exp(-yaw_sq / variance)
-                             + torch.exp(-xy_sq / ROLL_PITCH_VARIANCE) - 1.)
+                             + torch.exp(-xy_sq / self.roll_pitch_variance) - 1.)
         base.require(bool(((actual >= -WEIGHT) & (actual <= WEIGHT)).all())
                      and torch.allclose(actual, expected, atol=1e-6, rtol=1e-5),
                      "actual signed pre-reset reward matches decoupled aggregation")
@@ -152,7 +158,7 @@ class MotorObserver(forward.MotorObserver):
             angular_aggregation=AGGREGATION,
             yaw_variance_min=min(self.variances),
             yaw_variance_max=max(self.variances),
-            roll_pitch_variance=ROLL_PITCH_VARIANCE,
+            roll_pitch_variance=self.roll_pitch_variance,
             angular_tracking_weight=WEIGHT,
             yaw_error_sq_mean=sum(self.yaw_costs) / 24,
             roll_pitch_rate_sq_mean=sum(self.xy_costs) / 24,

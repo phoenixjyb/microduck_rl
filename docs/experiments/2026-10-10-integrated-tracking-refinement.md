@@ -4321,3 +4321,58 @@ exploration states. BAM targets remain unclipped. Brief SSH connection timeouts
 recovered without restarting/changing jobs, and did not interrupt the retained
 service. No MP4, raw perception, physical motion or protected-service restoration.
 
+### Roll/pitch motion allowance: predeclared single-factor foundation trial
+
+The rejected fixed lesson does not justify adopting its sampler or advancing
+turning/obstacle/hop curricula. Retained pre-action rates instead motivate a
+bounded question: is the existing roll/pitch angular-motion reward discouraging
+forward gait? The measured component deficit is a reason to test, not a causal
+finding; neither gait feasibility nor improved speed is assumed.
+
+Protocol `integrated-roll-pitch-allowance-continuation-v1`, arms
+`control/allowance`. Both restore original c81 parent/model/normalizer/Adam/LR,
+fresh episodes and zero clocks, and use the original mixed command sampler.
+The **only** treatment is `track_angular_velocity`'s
+`roll_pitch_variance=.5→1.0`; yaw_variance stays.5 and weight2. The signed
+additive function remains exp(-yaw_sq/.5)+exp(-xy_sq/variance)-1, without
+clipping negative rewards. This softens a training motion penalty only;
+upright, falls, motor limits, named qpos limits and every held-out acceptance
+threshold are unchanged. Do not confuse reward width with a safety gate.
+
+Keep all other rewards (motor-1, named qpos-4, twist-.5, forward0, yaw-bias0),
+head/body sampling, DR, plant/BAM,61D actor/14 raw unfiltered actions, stock
+observation delays, live normalization, adaptive KL.01/entropy.01 and original
+Python LR unchanged. Neither the rejected straight endpoint nor an intermediate
+model is an accepted teacher. No frozen normalization, sensor retiming or pose
+reward change. Actual command dwell must include idle/straight/both yaw signs.
+
+| Phase | Worlds x updates per arm | Matched seed | Cap |
+| --- | ---: | ---: | ---: |
+| CUDA-hidden integrated/adjacent checks | no GPU | n/a | before smoke |
+| GPU smoke + normalized finite61-to14 ONNX |64x5|1283|600s each|
+| Same-world benchmark |256x10|1289|600s each|
+| Matched continuation |256x1000|1291|2100s each|
+| Final999 unchanged full evaluation |8x240, seeds839/853/857, original4commands|fixed|900s total|
+
+Each arm has6.144M transitions/20,000 minibatches; retain0/250/500/750/999,
+evaluate only final999. The original full12-case decision is the advancement
+gate, with no stage-only pass replacing it. Preserve straight-case read-only
+gait traces for descriptive comparison. Both live reward parameters and
+pre-reset signed rewards must match the declared variance, and all inherited
+motor/range/twist/forward-zero/yaw-bias-zero/KL/actual-command checks remain
+active. The shared observer defaults to.5 for every legacy recipe; only the
+new explicitly declared trial selects1.0.
+
+Admission requires clean exact tested/pushed source, same-source native checks,
+two successful64x5 smokes with actual coverage/normalized ONNX, and conservative
+benchmark projections below2040s per arm. One retained lease-protected user
+service runs control, allowance and evaluation sequentially; never overlap
+another Duck GPU process. Keep DINO2021 and unrelated workloads untouched and
+both protected services inactive in user/system scopes. No automatic next job,
+MP4, raw perception, actor expansion, physical motion or policy promotion.
+
+Prelaunch owner review retains the complete training-budget observer chain,
+including zero yaw-bias checks and actual command census; it does not use an
+angular-only shortcut. Focused new/legacy checks passed31 tests. The owner-run
+integrated/adjacent suite passed865 tests with14 existing selector warnings
+in27.25s. Native smoke, measured admission and full results remain separate.

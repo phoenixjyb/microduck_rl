@@ -113,6 +113,15 @@ per-world DC yaw bias and temporal variation without contact-loss evidence.
 Next is one separately declared yaw comparison with both safety objectives
 retained, not an automatic obstacle/hop/ball promotion or correlation-based fix.
 
+The [new yaw aggregation diagnostic](experiments/2026-10-13-motor-range-yaw-diagnostic.md)
+is predeclared from the retained **control**, not the rejected forward arm.
+Its only factor is stock product versus signed decoupled angular tracking at
+unchanged weight/widths. Motor and bilateral qpos objectives, final source
+curricula, observations, raw BAM actions and every held-out gate are fixed.
+Earlier decoupling had a partial yaw signal on a different parent but never
+qualified a skill; this new matched1000-update round must establish its own
+evidence and restore the temporarily paused user vLLM before another handoff.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

@@ -91,7 +91,9 @@ def prepare_config(mode):
     return cfg, agent
 
 
-def restored_counters(runner):
+def restored_counters(runner, *, normalizer_count=PARENT_NORMALIZER_COUNT, adam_step=PARENT_ADAM_STEP):
+    base.require(type(normalizer_count) is int and normalizer_count > 0
+                 and type(adam_step) is int and adam_step > 0, "declared restored counters")
     counts = {}
     for name in ("actor", "critic"):
         model = getattr(runner.alg, name)
@@ -101,14 +103,14 @@ def restored_counters(runner):
                            for key in ("_mean", "_var", "_std"))]
         base.require(len(matches) == 1 and matches[0].ndim == 0
                      and matches[0].dtype == torch.int64
-                     and matches[0].item() == PARENT_NORMALIZER_COUNT,
+                     and matches[0].item() == normalizer_count,
                      "exact restored " + name + " normalizer count")
         counts[name + "_normalizer_count"] = matches[0].item()
     states = list(runner.alg.optimizer.state.values())
     base.require(len(states) == 17 and all(isinstance(state.get("step"), torch.Tensor)
-                 and state["step"].numel() == 1 and state["step"].item() == PARENT_ADAM_STEP
+                 and state["step"].numel() == 1 and state["step"].item() == adam_step
                  for state in states), "exact restored seventeen Adam counters")
-    return dict(**counts, adam_state_entries=17, adam_step=PARENT_ADAM_STEP)
+    return dict(**counts, adam_state_entries=17, adam_step=adam_step)
 
 
 def warm_load(runner, env):

@@ -156,7 +156,7 @@ no weights/ONNX were duplicated. Native source remains detached at the exact
 training commit while later documentation commits advance the fork branch.
 
 The sequential retained service
-`microduck-fresh-motor-range-d0cba9c0-foundation-eval.service` is now active:
+`microduck-fresh-motor-range-d0cba9c0-foundation-eval.service` was launched:
 6000 foundation updates, then only final5999's12 held-out cases, no follow-on
 learner. Initial live check reached update89/6000 (2136 environment steps),
 with finite optimizer telemetry20 minibatches/update, no NaN termination or
@@ -170,4 +170,114 @@ At that check GPU used1717MiB/free14476MiB/59C, with only retained DINO2021
 and the authorized Duck process2447653. All four protected service scopes
 remained inactive. The next gate is completed training, durable final5999 and
 the full unchanged numerical matrix; do not alter the active job or synchronize
-its checkout while it runs. No result or promotion is claimed yet.
+its checkout while it runs. That launch snapshot claimed no result or promotion.
+
+## Completed run: motor/range gates pass, foundation still rejected
+
+By approximately16:35 Beijing both retained services had exited successfully
+(inactive/MainPID0/Resultsuccess/ExecMainStatus0), and only preserved DINO2021
+remained on the GPU. Training completed6000 updates in3769.136s (62m49s),
+144,000 environment steps,36,864,000 transitions and120,000 optimizer
+minibatches. All25 scheduled foundation checkpoints plus smoke/benchmark
+model_0 and final checkpoints were CPU-authenticated for finite tensors,
+iteration/environment counters, normalizer counts and actual Adam state/steps.
+Fresh initial foundation bytes match the earlier fresh baseline's initialization;
+no parent checkpoint was loaded. Final actor/critic counts are36,864,000 and
+all17 Adam parameter-state clocks are120,000.
+
+All6015 smoke/benchmark/foundation update records were finite, with zero NaN
+terminations. The verifier reproduced raw FP32 KL summary reductions and
+minibatch LR timing, actual command dwell, every strict-step motor/qpos stage,
+cost/reward signs, bilateral named-cost sums and the final stock curriculum
+endpoints. Training falls totaled73,352; first100 updates14,884 and last100
+152, each interval614,400 transitions. Compared to baseline72,994/15,099/131,
+this is not evidence of improved whole-episode stability or a controlled causal
+result. Training torque p99 could still exceed the strict held-out.60 threshold;
+the final update was.726107. No training metric replaced the held-out decision.
+
+### Final-only matrix and baseline comparison
+
+All12 final5999 cases completed240 first-episode steps across96 worlds with
+zero terminals, falls or rated-speed exceedance. **All12 cases passed the
+existing motor-envelope and joint-range/stop gates.** Minimum hard-range
+distance across all joints/cases was.208368rad; every held-out hard-range
+violation and.05rad stop-proximity fraction was zero. Maximum case-level global
+torque utilization p99 was.578503 versus.60. This is a meaningful simulated
+envelope improvement, not hardware safety or complete locomotion acceptance.
+
+The full unchanged decision remains `foundation-not-ready`:10 tracking flags
+across10 unique cases (all9 moving cases plus seed853 idle). There are12 cases,
+not10 total evaluations. Per-world idle speed passes24/24 and yaw23/24;
+moving speed31/72 and yaw0/72. Seed853 world2's idle yaw MAE.102167 exceeds.10;
+its speed MAE.027925 passes. No threshold or evaluator was changed to rescue it.
+
+Each row below pools three seeds/24 worlds. MAE units are m/s and rad/s;
+measured responses retain their signs. The earlier baseline is the separate
+[fresh stock-curriculum run](2026-10-12-fresh-curriculum-foundation.md).
+
+|Command vx / yaw|Speed MAE baseline → new|Yaw MAE baseline → new|Achieved vx baseline → new|Signed achieved yaw baseline → new|Max global torque p99 baseline → new|
+|---|---:|---:|---:|---:|---:|
+|0 /0|.001150 → .002201|.008952 → .011109|.000180 → .001019|.001519 → -.000470|1.067539 → .411581|
+|.30 /0|.129703 → .147940|.217597 → .271535|.170297 → .152060|.016879 → -.049079|1.067539 → .524069|
+|.20 /-.20|.080758 → .093839|.255557 → .311046|.119242 → .106184|-.013998 → -.143670|1.067539 → .578503|
+|.20 /+.20|.084033 → .096448|.289013 → .313767|.115972 → .103552|.010678 → .032568|1.067539 → .565574|
+
+The new recipe trades reduced simulated load/limit exposure for worse mean
+tracking, rather than adding a universally better gait. Negative-turn signed
+mean response is closer to its target, but its absolute error remains high;
+positive turning is still weak. Distinguish persistent bias from oscillatory
+error before selecting the next tracking objective. Moving speed world passes
+fell44→31, while moving yaw passes remained0. Standing/no-fall short rollouts
+cannot unlock stop/start, obstacle, hopping, football or a video.
+
+Power and thermal-load proxies are scalar means **already pooled across each
+case's worlds**; pool them over three seeds, not divide again by24:
+
+|Command|Mean absolute mechanical power W baseline → new|Mean thermal-load proxy baseline → new|
+|---|---:|---:|
+|Idle|.150325 → .092576|.170991 → .012219|
+|Straight|1.505598 → 1.346747|.181906 → .030576|
+|Negative arc|1.060346 → .929881|.178844 → .029575|
+|Positive arc|1.029255 → .897988|.178820 → .028391|
+
+The highest per-joint force p99 is.548502Nm at the left knee in seed853's
+positive arc, while the existing global percentile pools all14 servo columns.
+Thus passing that global gate does not mean every joint's own force percentile
+is below.36Nm. No per-joint criterion was silently added/removed or physical
+safety certificate inferred. Positions and forces are sampled at different
+phases; retain the result's explicit nonsynchronous-position/force caveat.
+Both added objectives changed together, so these differences do not establish
+which cost caused the gains or regressions.
+
+### Sealed retention and next boundary
+
+The CPU-only native verifier authenticated all declared checkpoints, source,
+pins, receipts,6000-update learner and12 standalone cases, recomputed the full
+canonical decision and three straight-gait summaries, then sealed the evidence
+once. Independent stdlib-only Mac reception verified33 JSON/JSONL payloads
+(51,646,376 bytes), all sizes/hashes, a separately implemented numerical gate
+and all three gait summaries. Mac `verified-manifest.json` is a local derived
+receipt outside the original native seal. No weights/ONNX were duplicated.
+
+|Object|SHA-256|
+|---|---|
+|Final5999 checkpoint|`811b38b530e508d08967dba0ff194cf14fddb35011b9a4878a04f71a5b804190`|
+|Evaluation aggregate|`8be416b392f40ff3de8e5304e5bac1ee4b841b6169bfbd7436f34699d2d45b2c`|
+|Straight-gait summary|`81111cd9628183ffa8dc9bbc68eea54a7a57a0139104a5f4062645c7666f7823`|
+|Native verification|`4cd3a7590b02c36ab4fa96a01624c89fbaa19c776f57ebfcd9c31cc8645fc7ea`|
+|Sealed33-payload manifest|`1a63e267fe25103ab611a1e0dc188302f9db5fef081e4ecb349c59446490977b`|
+
+Observed peak GPU2073MiB/62C; post-proof969MiB/free15225MiB/49C, DINO2021 only.
+Both Duck services were inactive and both protected AI services remained
+inactive in user/system scopes. No new learner, collector rollout, video,
+policy publication, protected-service restoration or physical motion followed.
+
+The next separately predeclared learning question is **tracking/response with
+the current motor and bilateral range objectives retained**, not weakening the
+first passing envelope gates or adopting this rejected endpoint as a teacher.
+Read-only signed-response/gait/reward-mass diagnosis should identify one small
+tracking factor before another bounded control/treatment experiment. The
+[parallel transition preparation](2026-10-12-integrated-command-transitions.md)
+is source-tested but runtime-gated; its API review also records unsynchronized
+metric/sensor timing and missing compiled-scene binding. No automatic follow-on
+GPU job is authorized by this closeout.

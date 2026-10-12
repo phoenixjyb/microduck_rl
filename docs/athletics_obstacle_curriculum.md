@@ -87,12 +87,15 @@ closeout. The next separately predeclared foundation should address motor load
 and both named hip-yaw joint ranges, without clipping BAM targets, relaxing the
 evaluator or claiming a causally proven fix from co-occurring diagnostics.
 
-The next [fresh motor/range-aware foundation](experiments/2026-10-12-fresh-motor-range-foundation.md)
-is now predeclared: same fresh6000-update budget and stock curricula, with only
-staged motor-load and bilateral hip-yaw qpos costs added. Its smoke/benchmark
-and full final5999 evaluation are separate gates. Source preparation does not
-establish training admission or an accepted skill; obstacle/hop/football work
-remains closed until the applicable foundation and retention gates pass.
+The [fresh motor/range-aware foundation](experiments/2026-10-12-fresh-motor-range-foundation.md)
+has now completed its6000 updates and final-only12-case evaluation. All12
+survived and passed the existing motor/range gates: maximum global torque p99
+.578503 versus.60, with zero held-out stop/range violations. It still fails
+10 tracking cases (all9 moving and one idle), with moving speed passes31/72 and
+yaw0/72. This is a load/range improvement but not an accepted integrated skill;
+mean tracking regressed versus the preceding fresh baseline. The next bounded
+question is tracking response with these objectives retained. Obstacle/hop/
+football work remains closed until foundation and retention gates pass.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
@@ -100,7 +103,7 @@ inside the avoidance segment and speed tracking retained before/after it.
 The [integrated transition plan and offline scorer](experiments/2026-10-12-integrated-command-transitions.md)
 prepare stop/restart and mirrored moving-turn first attempts in parallel on CPU.
 Synthetic checks do not qualify its future collector or unlock a GPU rollout;
-the active foundation recipe and checkout remain unchanged.
+the completed foundation recipe and retained native checkout remain unchanged.
 Keep earlier stabilization and hopping retention checks separate; their legacy
 plant results do not automatically transfer to this source. Rolling-football
 balance still follows its independent plant/support/recovery gates below.

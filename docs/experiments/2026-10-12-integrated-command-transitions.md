@@ -167,3 +167,52 @@ this is training telemetry, still above the held-out.60 gate, not acceptance.
 GPU1717MiB/free14476MiB/62C and all four protected AI-service scopes inactive.
 Native source remained frozen at `d0cba9c0`; later Mac commits must not be
 synchronized into it while training/evaluation remains active.
+
+## Parallel collector API review: explicit remaining boundaries
+
+A separate read-only worker inspected the installed mjlab1.3.0 loop and existing
+delivery/capture helpers. This is source/API evidence, not an executed collector.
+The useful next implementation is a mockable capture core, not another actor,
+new simulator or a duplicate command-refresh implementation.
+
+`command_delivery.fresh_actor_twist` already clones a raw61D input and changes
+only slots48:51, preserving the other58 slots and observation-manager cache.
+Stage the external command in the live twist tensor before inference, prepare
+an independent actor input before its existing normalizer, and assert issued,
+manager and consumed command equality. Do not call `get_observations()` as a
+refresh shortcut: its default path is cached. Direct group recomputation can
+append delayed samples/resample noise even with update_history=False. Delivery
+timing and its exact-source training compatibility must be bound explicitly;
+the existing helper does not infer compatibility from absent metadata.
+
+The pre-reset metric boundary is suitable for retaining terminal flags but is
+**not a proof of synchronized fresh fields**. Installed `ManagerBasedRlEnv.step`
+computes terminations/rewards/metrics before reset and its final forward call.
+Its source documents derived kinematics as one integration stale at that
+boundary; existing MotorStepStream likewise reports force's one-integration lag
+separately from integrated joint velocity. The feet_ground_contact sensor is
+consumed before the later sensing update, so capture needs independently checked
+support validity/freshness, not merely an old found=True value.
+
+The v1 frame-phase string above is a **required target contract**, not an
+attestation that this existing hook fulfills it. Do not tag stale or staggered
+fields as a synchronized last-substep trace. A runtime design must either prove
+the target timing or separately declare truthful field-phase/age semantics and
+a versioned protocol before capture; never silently add forward/sense calls or
+change the frozen simulator loop to make the label true. No existing retained
+foundation matrix is rescored by this timing investigation.
+
+Other independent capture bindings remain: disabled wrapper action clipping,
+actual14 actuator-force columns versus named joints and action target order,
+per-world first-terminal retention, and a reproducible hash of the **actual
+compiled scene/model**, not only selected robot arrays or caller-supplied hashes.
+Next source tests may mock these interfaces without constructing an environment.
+Actual callback/sensor/model binding and an idle-GPU inference-only launch still
+require the applicable same-checkpoint foundation numerical pass.
+
+The reviewed installed ObservationManager command-delivery regressions passed
+35 tests in51.21s with CUDA hidden. They use synthetic CPU sensors, not robot
+dynamics, and cover stale cached commands, delay/noise history, independent raw
+input cloning and explicit timing compatibility. Documentation links and
+whitespace checks passed. The now-completed foundation still rejects tracking,
+so no collector/inference/GPU launch followed from this preparation.

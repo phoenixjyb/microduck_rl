@@ -113,5 +113,40 @@ warnings, CUDA hidden/single-threaded. The first test fixtures had old parent
 counters/callable assumptions and an incomplete manager lookup; those fixtures
 were corrected and both suites rerun without changing the reward to fit them.
 Independent objective and installed-runtime hook/formula reviews informed the
-single-factor choice. Native admission and measured smokes/benchmarks are pending;
-no new learner or accepted skill is claimed yet.
+single-factor choice.
+
+Native preflight has passed at exact clean trained source
+`4b9de3cc258af2528a526d30e7ed81b7734c12b2`:1000 tests/16 existing warnings in
+35.76s. Both official normalized ONNX exports passed finite61-to14 CPU inference
+and hash checks. Both initial checkpoints have identical SHA256
+`d7dd1a99d9ca1f950d6ee2f3603a65661acbb9fff3c8848494cac5eb276f4235`;
+actual parent actor/critic/normalizer/Adam tensors and counters were authenticated.
+Smokes took4.422/4.385s and benchmarks7.681/7.617s, with conservative projections
+1152.09/1142.58s below2040s. Smokes had0/0 falls, benchmarks15/8, and all30
+preflight update rows were finite with zero NaN terminations/600 optimizer
+minibatches. Treatment's actual negative angular sample fractions were40.495%
+and41.144%; control0%. No signed negatives were clipped, forward pressure stayed0
+and all motor/bilateral/live-final-curriculum guards passed. These short training
+fall/load samples do not constitute held-out acceptance.
+
+Native proof SHA256
+`1c63ae094c6f817b01a7be3a4867428f309ca7c2df2891915625ac63537c4753`.
+Closed preflight JSON-only evidence is retained on Mac under
+`artifacts/evaluations/motor-range-yaw-4b9de3cc-20261013-preflight`;
+models and ONNX binaries remain native only.
+
+The retained sequential `microduck-yaw-4b9de3cc-matched-eval.service` is now
+running, under `recomo-duck-yaw-4b9de3cc-handoff.service`. Run directory
+`artifacts/training/motor-range-yaw-4b9de3cc-20261013`. At the23:56 Beijing
+snapshot control had83/1000 updates and durable model0, with finite metrics,
+zero NaN terminations, GPU1710MiB/60°C, DINO2029 retained and all four protected
+scopes inactive during the authorized pause. Control→decoupled→both final999
+matrices remains the declared sequence. The outer restoration guard is installed
+and the initial service/GPU context is durable; vLLM restoration is **pending**
+until Duck finishes or aborts safely. Do not fast-forward/change the active
+native worktree or either job. Source/data/model acceptance and final gate
+decision are still pending; no new capability or policy promotion is claimed.
+The subsequent monitor reached287/1000 control updates/6888 vector steps with
+durable model250 and model0; latest NaN terminations0, torque utilization
+p99.718869 and modeled thermal proxy.062424. Training p99 is not the held-out
+.60 gate; its predeclared gross abort guard is1.5. No gate was changed or waived.

@@ -3791,3 +3791,97 @@ selection passes759 tests with14 existing actuator-selector warnings in
 warm-start and failure JSON bytes are copied and independently hash verified
 on Mac; initial checkpoint and ONNX remain native only. Native same-source
 CPU qualification and GPU smoke are still separate required gates.
+
+### Angular-latency matched learning result: rejected, no promotion
+
+Exact source `ac6a9880717d3d602f82b20e2fdf1442bcd61226`.
+The repaired native same-source CPU selection passed759 tests with14 existing
+warnings in13.66s; both64x5 GPU smokes passed finite raw observations/actions,
+optimizer checks, effective-lag census, durable checkpoints and normalized
+61-to14 ONNX CPU inference. Matched256x10 benchmarks took8.067083/8.087391s,
+projecting1210.062/1213.109s with the declared1.5x margin, below the2040s
+admission threshold for each2100s cap. Preflight service completed successfully
+at07:34:14 Beijing October12; idle-Duck shared-host health was verified before
+the separate sequential training/evaluation service started.
+
+`microduck-angular-latency-ac6a9880-matched-eval.service` completed successfully
+at approximately07:58 Beijing: inactive/dead, MainPID0, exit0. Control/fresh each
+ran256x1000 updates at seed1213,24 steps/update,20,000 optimizer minibatches
+and6.144M transitions; elapsed631.513908/626.374500s. All2030 combined smoke,
+benchmark and full updates have finite telemetry and zero NaN terminations.
+Every declared0/250/500/750/999 checkpoint is finite, durable and hashed on
+native; final999 alone was evaluated. Warm-start JSON matches embedded
+receipts and preserves exact c81 parent/model/normalizer/Adam/LR restoration
+with zero initial clocks. Original c81 parent bytes remain unchanged.
+
+Full training falls were395/287; last100-update falls46/27. Control's effective
+angular lag census was3,166,114 lag0 and2,977,886 lag1 action-world steps;
+fresh's was6,144,000 lag0 and0 lag1 with no angular DelayBuffer. Telemetry
+protocol/mechanism labels, actual command dwell, staged reward weights and
+all20 optimizer minibatches/update are verified. The missing buffer changes
+RNG consumption: these are matched-recipe results, not isolated causal proof
+about latency.
+
+All12 held-out cases per arm completed their first240-step episode without
+falls; all12 retained motor and named joint-range gates passed. Both idle
+matrices pass, but all9 moving cases per arm fail the original speed/yaw
+tracking gate. Recomputed deterministic decision for both:
+**foundation-not-ready**. Moving speed world passes improved61/72→69/72 and
+yaw passes4/72→8/72; neither aggregate nor average improvements satisfy the
+every-world case gate. Do not widen it or replace instantaneous error with an
+EMA, and do not adopt/promote the fresh recipe on these partial gains.
+
+| Command vx m/s, yaw rad/s | Mean speed MAE control / fresh m/s | Mean yaw MAE control / fresh rad/s | Speed world passes /24 control / fresh | Yaw world passes /24 control / fresh |
+| --- | ---: | ---: | ---: | ---: |
+| 0.0, 0.0 | 0.001023 / 0.000868 | 0.009360 / 0.007488 | 24 / 24 | 24 / 24 |
+| 0.3, 0.0 | 0.098931 / 0.086095 | 0.116947 / 0.118307 | 13 / 21 | 3 / 4 |
+| 0.2, -0.2 | 0.037390 / 0.028629 | 0.122073 / 0.130818 | 24 / 24 | 1 / 2 |
+| 0.2, 0.2 | 0.042810 / 0.038949 | 0.133824 / 0.132247 | 24 / 24 | 0 / 2 |
+
+Fresh also uses more moving mechanical power and thermal-load proxy. At
+straight .3m/s, mean mechanical power is1.772031/1.891619W and mean thermal
+proxy.029590/.032866; max held-out torque utilization p99 is.495725/.540645.
+Across moving commands fresh's soft-limit exposure and torque-utilization
+p99 are higher, though all existing held-out motor gates still pass. These
+are simulated mechanical/load proxies, not measured motor temperatures or
+hardware acceptance. Training is not globally joint-range-clean: maximum
+right-hip overrun is.032450/.036308rad, including exploration/fall steps;
+that evidence is retained separately from the passing held-out range gates.
+Do not clip low-kp/BAM action targets to conceal it.
+
+Native CPU-only verification authenticated all checkpoint payloads/iterations/
+common counters and receipts, recomputed every case decision and paired
+difference, and checked complete lag/dwell census and shared-host logs.
+Mac independently verified all59 retained JSON/JSONL payloads
+(9,463,421bytes), plus the exact retained manifest, and recomputed decisions/
+paired differences from copied cases. Retained under
+`artifacts/evaluations/angular-latency-ac6a9880-20261012` on Mac, with a
+`verified-manifest.json`; native originals/checkpoints are under the
+corresponding `artifacts/training` run directory. Weights/ONNX remain native
+only; no duplicate weight storage or Git asset upload.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Control final999 | `6735b1c6869528972121ea31c010b3a67831a9f77176a69bc8f6d343e7501c3e` |
+| Fresh final999 | `232e450641a19cb19fcc2ef0406e18cf85cf79e9e26669f074190330e2486301` |
+| Held-out aggregate | `60103e80ad7ec3e1944f6f03c0931ffa319cee13715d16c51741f4a4ab77fda8` |
+| Native verification | `ac3184ee78420d376c1ac0d8fa4225bb63d224371bee742329f7dfb49000b47f` |
+| Retained manifest | `ea2f1719fd94c5f0e953a24f3d5fb1c9d83c17d0fb7e7ab2bf15593b9f6d81d5` |
+| Preflight verification | `f506d337ea9577a1396c0f3b0f817238a2390ec15002025f14149045704d6c18` |
+| Evaluation launch | `950eaeb0a4e1d0b20b8d6b71edfde22cc6dc0cc0549484cc2173892e9f588160` |
+| Evaluation health | `8fe2171c461c41fc92b0acc9be2cab1387469167f7007cc153d1a3b8c094c20e` |
+
+Peak recorded GPU occupancy2859MiB and62C; post-verification969MiB/52C,
+DINO2021 alone and all four protected scopes inactive. No Duck GPU job remains.
+No accepted new turn, hop, obstacle or football skill, MP4, raw perception,
+physical motion or protected-service restoration follows from this round.
+
+Next curriculum direction (recommendation, not a launched/predeclared job):
+separate straight-gait consolidation from progressive signed-turn lessons,
+then combine them with retention checks. Do not run another fresh-sensor
+factor sweep or jump to obstacles from a rejected endpoint. Before a further
+learner, predeclare the smallest matched progressive-command experiment,
+preserve the stock delayed evaluator and existing gates, and test actual
+stage boundaries, zero-command coverage, both turn signs and old motor/range
+constraints. The original c81 parent and all rejected comparison evidence
+remain available; no current rejected arm is an accepted teacher.

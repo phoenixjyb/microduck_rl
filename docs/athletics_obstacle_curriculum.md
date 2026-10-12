@@ -19,9 +19,11 @@ not an expired campaign window or an old plant's acceptance receipt.
 
 Actual matched PPO continuations have run, including instantaneous yaw-L1,
 neutral-head exposure, entropy consolidation and low-yaw rehearsal. None has
-cleared the unchanged complete moving-command matrix. The low-yaw comparison
-keeps stability, motor and joint-range gates passing in both arms, but all nine
-moving cases still fail tracking; partial per-world improvements are not policy
+cleared the unchanged complete moving-command matrix. The subsequent matched
+angular-latency comparison also completed 1000 updates per arm: moving speed
+world passes 61/72 to 69/72, yaw 4/72 to 8/72, but neither complete matrix passed.
+These comparisons keep stability, motor and joint-range gates passing in both
+arms, but all nine moving cases still fail tracking; partial per-world improvements are not policy
 acceptance. Do not stack the rejected treatments or call them newly learned
 turning, obstacle, hopping or football skills.
 
@@ -29,8 +31,12 @@ The next lesson remains integrated straight/left/right command tracking, with
 one explicitly declared training factor, original parent/runtime and complete
 held-out evaluation. The cached angular-observation timing diagnostic and its
 small repeated replay probe are descriptive checks, not new acceptance gates,
-raw perception, a filter or an actor-interface expansion. No further training
-factor is launched in the window ending October12 at07:00 Beijing.
+raw perception, a filter or an actor-interface expansion. The window ending
+October12 at07:00 Beijing was closed; the owner subsequently authorized the
+completed angular-latency round. It remains rejected, not an adopted sensor
+change or accepted teacher. Next, predeclare a smallest matched progressive
+command curriculum separating straight-gait consolidation from signed turns;
+preserve the stock delayed evaluator rather than run another latency sweep.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only

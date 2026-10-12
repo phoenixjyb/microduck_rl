@@ -97,6 +97,13 @@ mean tracking regressed versus the preceding fresh baseline. The next bounded
 question is tracking response with these objectives retained. Obstacle/hop/
 football work remains closed until foundation and retention gates pass.
 
+The next [matched forward diagnostic](experiments/2026-10-12-motor-range-forward-diagnostic.md)
+retains both safety objectives and freezes the parent's final stock curricula.
+Control and treatment restore identical model/normalizer/Adam states; only a
+constant-.25 forward residual cost differs, for1000 updates per arm followed by
+the unchanged final-only12-case matrix. This is a small tracking hypothesis,
+not an accepted teacher or a reopened harder-skill gate.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

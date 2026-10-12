@@ -118,3 +118,56 @@ hidden throughout. Documentation link targets and whitespace checks passed.
 Native exact-source regressions, smoke, benchmark admission and full final
 evaluation remain separate gates; record their source, unique directory,
 service names and evidence below when admitted.
+
+### Native admission and learner launch: October12
+
+Exact source `d0cba9c0735fa49fc86b42383e756a5fbd6c70a5` was committed/pushed,
+then synchronized only after an idle-GPU, clean-repository and no-Duck-service
+check. Native exact-source regressions passed925/925 with16 selector warnings
+in29.92s. Preflight service
+`microduck-fresh-motor-range-d0cba9c0-preflight.service` completed successfully
+with MainPID0/Resultsuccess/ExecMainStatus0.
+
+Smoke completed5 updates in5.562860s,201 training falls, zero NaNs; finite
+normalized61-to14 ONNX hash
+`54c28564bfb311f129610ceed4e85903f8c55d994f02d26c8d2f2407f1c400c4`.
+Benchmark completed10 updates in10.283680s,1658 training falls, zero NaNs.
+Its conservative projection9255.312s is below the predeclared10740s gate.
+All four actual command buckets, live initial/final new cost weights,
+nonpositive weighted costs, bilateral named costs/exposures and unchanged
+initial stock curriculum profile were authenticated from retained update rows.
+
+The CUDA-hidden admission verifier loaded initial/final checkpoint tensors and
+verified empty initial Adam, zero normalizer counts, initial LR.001,17 final
+Adam parameter states with100/200 actual steps, and final normalizer counts
+7680/61440 for smoke/benchmark. Checkpoint SHA-256:
+
+|Object|SHA-256|
+|---|---|
+|Smoke final4|`f43721b6fe399edfd369b02745263a9b1c221444cc4ed63b7f70bc66814aedc8`|
+|Benchmark final9|`9b8af5d7a0fe46b24b14a9a89ee39382f7fd8ed28e7e293794dba7dac2027ae8`|
+|Admission proof|`a056f67b48cf20d88dccd83d5cef16a01f0d97c475f028993c70eff87fb2afc5`|
+
+Retained native root:
+`/home/converge/work/microduck_rl-upstream-20261010/artifacts/training/fresh-motor-range-d0cba9c0-20261012`.
+Admission proof is also retained on Mac in
+`artifacts/evaluations/fresh-motor-range-d0cba9c0-20261012/preflight-verified.json`;
+no weights/ONNX were duplicated. Native source remains detached at the exact
+training commit while later documentation commits advance the fork branch.
+
+The sequential retained service
+`microduck-fresh-motor-range-d0cba9c0-foundation-eval.service` is now active:
+6000 foundation updates, then only final5999's12 held-out cases, no follow-on
+learner. Initial live check reached update89/6000 (2136 environment steps),
+with finite optimizer telemetry20 minibatches/update, no NaN termination or
+failure file, and durable initial.pt/model_0.pt. At this early stage motor
+weight remains0 and qpos weight-.25 as declared; measured raw motor cost is
+nonzero and bilateral weighted qpos cost is negative. This is optimizer activity,
+not a new skill or a numerical pass. Early training falls and range exposure
+remain expected diagnostics, not waived acceptance criteria.
+
+At that check GPU used1717MiB/free14476MiB/59C, with only retained DINO2021
+and the authorized Duck process2447653. All four protected service scopes
+remained inactive. The next gate is completed training, durable final5999 and
+the full unchanged numerical matrix; do not alter the active job or synchronize
+its checkout while it runs. No result or promotion is claimed yet.

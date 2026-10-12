@@ -3885,3 +3885,107 @@ preserve the stock delayed evaluator and existing gates, and test actual
 stage boundaries, zero-command coverage, both turn signs and old motor/range
 constraints. The original c81 parent and all rejected comparison evidence
 remain available; no current rejected arm is an accepted teacher.
+
+### Predeclare progressive straight-to-signed-turn command curriculum
+
+The owner authorized another bounded round after the rejected angular-latency
+comparison. Native100.100 was verified at08:12 Beijing October12: clean
+`6a9eb284f1439691af26ce964fd090453a86c8b5`, no running Duck service/process,
+DINO2021 alone at969MiB/48C and all four protected service scopes inactive.
+This round does not authorize a driver/package change, protected-service
+restoration, raw perception, physical motion, video or policy publication.
+
+Protocol: `integrated-progressive-command-continuation-v1`, implemented in
+`integrated_progressive_command_refinement.py`. Both arms inherit the original
+c81 parent and unchanged control recipe from
+`integrated_training_budget_refinement`: exact model/normalizer/Adam/LR
+restoration with fresh zero clocks. Do not inherit the rejected fresh-sensor
+checkpoint or bypass its angular delay. Both arms retain stock angular0/1
+delay/noise/IMU rotation, head/body sampling, signed additive decoupled angular
+rewards, motor-1, named right-hip qpos-4, command-cost-.5, forward-cost0,
+yaw-bias0, entropy.01/adaptive-KL.01,61D actor/14D unfiltered/unclipped actions,
+plant and all other curriculum/DR settings.
+
+The sole experimental factor is the whole command-distribution curriculum:
+progressively change yaw sampling support and forward-only sampling probability.
+Control is constant yaw±.50rad/s and forward probability.25. Treatment:
+
+| Start update, inclusive | Pre-action common-step start | Yaw support rad/s | Forward-only probability |
+| ---: | ---: | ---: | ---: |
+| 0 | 0 | ±.05 | .65 |
+| 250 | 6000 | ±.10 | .50 |
+| 500 | 12000 | ±.25 | .35 |
+| 750 | 18000 | ±.50 | .25 |
+
+Boundaries are inclusive and aligned to the first action of each declared
+250-update stage, not the prior range experiment's strict-after boundary.
+This is a predeclared fixed-time learning hypothesis, not proof of mastery at
+each boundary or permission to tune pacing during a running job. Each full
+stage contains6000 control steps; its actual action-world command dwell must
+be retained, including natural carryover of earlier commands.
+
+Keep forward speed support(.2,.4), lateral0, exact-idle probability.15,
+turn-in-place probability0, and natural3–5s resampling unchanged. Pinned
+`UniformVelocityCommand` already clamps forward-only samples to vx≥.3,
+vy/yaw0; increasing its probability therefore also changes the speed mixture
+within the original support. Idle commands still override all components.
+Neither nominal straight nor sign probabilities imply exact sample quotas.
+
+Apply stages only to the live command manager's sampling config before action.
+Do not force resampling, reset episodes, rewrite current commands/cached actor,
+recompute observations, advance delay histories, add policy calls or draw RNG
+in the stage observer. Existing commands remain valid within expanding yaw
+bounds; changing the forward probability affects future ordinary resamples.
+It can change later RNG streams. This is a whole-recipe comparison, not an
+isolated yaw-versus-speed causal experiment.
+
+Telemetry must check the current expected live range/mix and unchanged sampler
+fields, finite raw actor/manager command equality at slots48:51, consecutive
+pre-action/post-step clocks, monotone stages and complete24-step per-update
+and cumulative stage census. Retain existing actual idle/straight/both-sign
+dwell and motor/range/KL/reward telemetry. Fail closed on drift; do not use
+nominal sampling fractions or average errors to relax existing gates.
+
+Matched preflight:64x5 smokes at seed1231 per arm; treatment stages compressed
+to inclusive updates0/1/2/3. Because2.4s smoke is shorter than the3–5s
+resampling dwell, initial commands may persist throughout: smoke proves
+live stage transitions and inherited actual signed-command coverage, not
+resampling in every stage. Initial±.05, rather than±.01, keeps meaningful
+signed samples above the inherited coverage threshold|yaw|>.01 without
+weakening it. Matched256x10 benchmarks at seed1237 use the final±.50/.25
+distribution for treatment; throughput is not evidence of stage learning.
+
+Full matched runs:256x1000, seed1249 each,24 steps/update,5 PPO epochs and
+4 minibatches. Retain0/250/500/750/999 checkpoints; final999 only is eligible
+for the unchanged stock-delayed three-seed/four-command/eight-world/
+240-step held-out matrix. Retain every original speed/yaw, first-episode
+stability, motor and named joint-range gate. Do not pick a better intermediate
+checkpoint, stack rejected treatments, filter/clamp actions or promote a
+partially successful arm.
+
+Before a full learner, require exact clean pushed source, native CUDA-hidden
+focused/integrated regressions, both same-source finite GPU/normalized ONNX
+smoke receipts and both measured benchmarks projecting below2040s with the
+existing1.5x margin for2100s per-arm caps. Use sequential retained user
+services only: GPU lease, preserved verified DINO2021,20%Torch allocator,
+aggregate memory≤6144/free≥8192MiB/<75C,8GiB RAM/CPU200%/Tasks64/Nice10,
+15s stop grace and all four protected scopes inactive. Full service cap5300s,
+children2100/2100/900s for control/progressive/evaluation. Diagnose any failure
+read-only before a tested fix, retaining the failed unique run directory.
+Stop this bounded round after retaining/recomputing its matrix. No obstacle,
+hop, football or physical acceptance follows from source or training progress.
+
+Preparation: the new lesson and inherited budget-focused selection pass33
+tests in4.78s. The owner-reviewed integrated/motor-stream/observation-timing
+selection passes772 tests with14 existing actuator-selector warnings in12.59s
+on Mac, CUDA hidden. Real CPU DelayBuffer state/identity, commands, cached
+actor and RNG remain unchanged at compressed stage boundaries; compute,
+append and resample spies fail on an extra call. Tests cover exact idle and
+both yaw signs, real pinned sampler forward clamping/idle override, config
+parity, inclusive boundaries and complete stage/dwell census. Review found
+and corrected idle rejection and inappropriate delay-object deep-copy
+comparison before any GPU launch. Production performs cfg-only stage writes,
+not costly copies of buffers or RNG state. Stage schedules must start at zero
+and stay equal to the declaration; only the live manager is changed, not the
+source env config. Whitespace checks pass. Native CPU/GPU preflight remains
+a separate execution gate; preparation alone establishes no learned result.

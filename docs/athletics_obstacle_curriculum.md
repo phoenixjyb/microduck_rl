@@ -87,6 +87,13 @@ closeout. The next separately predeclared foundation should address motor load
 and both named hip-yaw joint ranges, without clipping BAM targets, relaxing the
 evaluator or claiming a causally proven fix from co-occurring diagnostics.
 
+The next [fresh motor/range-aware foundation](experiments/2026-10-12-fresh-motor-range-foundation.md)
+is now predeclared: same fresh6000-update budget and stock curricula, with only
+staged motor-load and bilateral hip-yaw qpos costs added. Its smoke/benchmark
+and full final5999 evaluation are separate gates. Source preparation does not
+establish training admission or an accepted skill; obstacle/hop/football work
+remains closed until the applicable foundation and retention gates pass.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import stat
 import subprocess
+import sys
 import time
 
 import torch
@@ -230,12 +231,13 @@ class FreshObserver:
                     required_coverage=list(REQUIRED_COVERAGE))
 
 
-def validate_training_receipt(root, mode, source, receipt):
+def validate_training_receipt(root, mode, source, receipt, *,
+                              protocol=PROTOCOL, cap_seconds=FOUNDATION_CAP_SECONDS):
     require(mode in MODES and isinstance(receipt, dict), "declared training receipt")
     worlds, updates, seed = MODES[mode]
     output = Path(root) / mode
     checkpoint = output / f"model_{updates-1}.pt"
-    require(receipt.get("protocol") == PROTOCOL and receipt.get("source") == source
+    require(receipt.get("protocol") == protocol and receipt.get("source") == source
             and receipt.get("status") == "training-complete-not-accepted"
             and receipt.get("mode") == mode and receipt.get("worlds") == worlds
             and receipt.get("seed") == seed and receipt.get("updates") == updates
@@ -308,7 +310,7 @@ def validate_training_receipt(root, mode, source, receipt):
                 and base.sha256(onnx["path"]) == onnx.get("sha256"),
                 "durable normalized ONNX 61-to-14 CPU smoke")
     if mode == "foundation":
-        require(elapsed <= FOUNDATION_CAP_SECONDS, "foundation completed within declared cap")
+        require(elapsed <= cap_seconds, "foundation completed within declared cap")
     return dict(mode=mode, worlds=worlds, updates=updates, seed=seed,
                 steps=updates * 24, transitions=worlds * updates * 24,
                 checkpoint=str(checkpoint), checkpoint_sha256=receipt["checkpoint_sha256"],
@@ -328,17 +330,18 @@ def onnx_check(path):
     return motor.onnx_check(path)
 
 
-def evaluate(root, output, source, health):
+def evaluate(root, output, source, health, *, experiment=None):
+    recipe = sys.modules[__name__] if experiment is None else experiment
     root = Path(root)
     trained = json.loads((root / "foundation" / "result.json").read_text())
-    checkpoint = validate_evaluation_receipt(root, source, trained)
+    checkpoint = recipe.validate_evaluation_receipt(root, source, trained)
     rows = []
-    for seed in EVAL_SEEDS:
-        for index, (speed, yaw) in enumerate(EVAL_CASES):
-            row = evaluate_case(checkpoint, seed, speed, yaw, health)
+    for seed in recipe.EVAL_SEEDS:
+        for index, (speed, yaw) in enumerate(recipe.EVAL_CASES):
+            row = recipe.evaluate_case(checkpoint, seed, speed, yaw, health)
             base.write_new(output / f"s{seed}-c{index}.json", row)
             rows.append(row)
-    result = decision(rows)
+    result = recipe.decision(rows)
     result.update(cases=rows, checkpoint=str(checkpoint),
                   checkpoint_sha256=base.sha256(checkpoint), final_iteration=FINAL_CHECKPOINT,
                   selection="final5999 only; no checkpoint fishing",
@@ -347,9 +350,14 @@ def evaluate(root, output, source, health):
     return result
 
 
-def main():
+def main(experiment=None):
+    recipe = sys.modules[__name__] if experiment is None else experiment
+    require(recipe.MODES == MODES and recipe.FINAL_CHECKPOINT == FINAL_CHECKPOINT
+            and recipe.EVAL_SEEDS == EVAL_SEEDS and recipe.EVAL_CASES == EVAL_CASES
+            and recipe.REQUIRED_COVERAGE == REQUIRED_COVERAGE,
+            "fresh recipe preserves exact budgets, coverage and evaluation matrix")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=(*MODES, "evaluate"))
+    parser.add_argument("mode", choices=(*recipe.MODES, "evaluate"))
     parser.add_argument("--source", required=True)
     parser.add_argument("--run-id", required=True)
     args = parser.parse_args()
@@ -371,23 +379,23 @@ def main():
         host = shared_host()
         if args.mode in ("benchmark", "foundation"):
             smoke = json.loads((root / "smoke" / "result.json").read_text())
-            validate_training_receipt(root, "smoke", args.source, smoke)
+            recipe.validate_training_receipt(root, "smoke", args.source, smoke)
         if args.mode == "foundation":
             bench = json.loads((root / "benchmark" / "result.json").read_text())
-            validate_training_receipt(root, "benchmark", args.source, bench)
-            projected = benchmark_projection_seconds(bench["elapsed_s"])
-            require(projection_admitted(bench["elapsed_s"]),
-                    "measured benchmark projection fits 9000-second cap with margin")
+            recipe.validate_training_receipt(root, "benchmark", args.source, bench)
+            projected = recipe.benchmark_projection_seconds(bench["elapsed_s"])
+            require(recipe.projection_admitted(bench["elapsed_s"]),
+                    "measured benchmark projection fits declared cap with margin")
         if args.mode == "evaluate":
             trained = json.loads((root / "foundation" / "result.json").read_text())
-            validate_evaluation_receipt(root, args.source, trained)
+            recipe.validate_evaluation_receipt(root, args.source, trained)
         output.mkdir(parents=True, exist_ok=False)
         runtime = {name: metadata.version(name) for name in
                    ("torch", "warp-lang", "mujoco", "mujoco-warp", "mjlab", "better-actuator-models")}
-        base.write_new(output / "launch.json", dict(protocol=PROTOCOL, source=args.source,
+        base.write_new(output / "launch.json", dict(protocol=recipe.PROTOCOL, source=args.source,
             mode=args.mode, runtime=runtime, host=host, parent_checkpoint=None,
             initialization="fresh actor/critic/normalizers/Adam", policy_acceptance=False,
-            physical_motion_authorized=False, foundation_cap_seconds=FOUNDATION_CAP_SECONDS
+            physical_motion_authorized=False, foundation_cap_seconds=recipe.FOUNDATION_CAP_SECONDS
             if args.mode == "foundation" else None))
 
         def health():
@@ -404,16 +412,16 @@ def main():
         configure_torch_backends()
         try:
             if args.mode == "evaluate":
-                result = evaluate(root, output, args.source, health)
+                result = evaluate(root, output, args.source, health, experiment=recipe)
             else:
-                observer = FreshObserver(args.mode)
+                observer = recipe.FreshObserver(args.mode)
                 initialization = {}
 
                 def initialize(runner, env):
                     initialization.update(validate_fresh_runner(runner, env))
 
                 result = base.training(output, args.mode, health,
-                    recipe=prepare_config(args.mode), initialize=initialize,
+                    recipe=recipe.prepare_config(args.mode), initialize=initialize,
                     before_action=observer.before_action, after_step=observer.after_step,
                     after_update=observer.after_update, required_command_coverage=REQUIRED_COVERAGE)
                 result["command_exposure"] = observer.receipt(result)
@@ -426,15 +434,15 @@ def main():
                 result["fresh_initialization"] = initialization
                 if args.mode == "smoke":
                     result["onnx"] = onnx_check(output / f"{args.mode}.onnx")
-            result.update(protocol=PROTOCOL, source=args.source)
+            result.update(protocol=recipe.PROTOCOL, source=args.source)
             if args.mode == "foundation":
-                result["cap_seconds"] = FOUNDATION_CAP_SECONDS
+                result["cap_seconds"] = recipe.FOUNDATION_CAP_SECONDS
                 result["benchmark_projection_seconds"] = projected
             base.write_new(output / "result.json", result)
             health()
         except Exception as exc:
             base.write_new(output / "failure.json", dict(type=type(exc).__name__,
-                error=str(exc), source=args.source, protocol=PROTOCOL))
+                error=str(exc), source=args.source, protocol=recipe.PROTOCOL))
             raise
 
 

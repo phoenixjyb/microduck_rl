@@ -75,6 +75,18 @@ allows6000 updates, including consolidation after the last2000-update stages.
 This is separate from c81 continuation and is not a one-factor causal contrast.
 It keeps the complete held-out tracking/motor/joint-range gates unchanged.
 
+That fresh baseline has now completed all6000 updates and its final-only
+12-case evaluation. It is **rejected**, not a new accepted integrated skill:
+all12 cases survived240 first-episode steps but failed motor and joint-range
+gates; all9 moving cases failed combined tracking. Both hip-yaw joints spent
+about97–98% of sampled steps near their configured stops, with modeled torque
+utilization p99 about1.068 versus the.60 gate. More consolidation alone did not
+produce an accepted foundation. Checkpoints and independently recomputed evidence
+are retained in the linked experiment; no further learner is launched by this
+closeout. The next separately predeclared foundation should address motor load
+and both named hip-yaw joint ranges, without clipping BAM targets, relaxing the
+evaluator or claiming a causally proven fix from co-occurring diagnostics.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

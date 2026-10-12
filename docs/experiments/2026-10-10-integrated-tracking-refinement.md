@@ -4539,3 +4539,75 @@ Corrected owner integrated/adjacent regression:900 tests passed,14 existing
 selector warnings,30.46s, CUDA hidden. CPU device-policy tests cover mapped
 noncapturable counters and the installed torch loader's unchanged-tensor rule.
 GPU smoke still has to exercise the actual CUDA-restored state.
+
+### Adam-state reset: completed result and initialization hypothesis not adopted
+
+Exact source `23ad07207eea55198839f56de7a91437fadd6760`, retained native root
+`artifacts/training/adam-reset-23ad0720-20261012`. Both services finished
+successfully, inactive, MainPID0, exit0. Corrected900-test native CPU preflight,
+both64x5 official normalized finite ONNX smokes and256x10 benchmarks passed;
+conservative projections1185.939/1191.246s were below2040s.
+
+Both arms completed1000 updates,24,000 steps,6.144M transitions and20,000
+minibatches, with finite metrics and zero NaN terminations. Control/reset elapsed
+625.030/624.633s; training falls460/481, final100 falls64/34. These exploration
+counts are not the held-out stability gate or proof of better convergence.
+Actual census covers all eight bins: idle950,593/925,290 and straight1,313,225/
+1,303,651, with both signed-yaw bands exercised throughout the unchanged sampler.
+
+Native CPU authentication verifies the exact original c81 models/normalizers
+in both initial snapshots, zero episode/learning clocks, original LR and
+parameter groups. Control initial Adam has17 populated parameter states;
+reset initial Adam is empty. At every0/250/500/750/999 checkpoint both have17
+finite states with the expected per-parameter steps. Final control230,000,
+reset20,000: the intended intervention happened and real PPO repopulated it.
+No parent model, normalization buffer, parameter/group identity, option or RNG
+was modified by the reset itself. Fresh-device counter validation preserves
+the installed loader's semantics; it does not recast restored control slots.
+
+All24 held-out cases complete their first240-step episode with no terminals,
+and both arms pass every motor and named/all-joint range case. Idle passes all
+24 worlds. Both still fail all nine moving-case combined tracking gates:
+**foundation-not-ready**. Moving speed passes69/72 to52/72; yaw5/72 to16/72.
+The reset trades some yaw improvement for substantial straight underspeed.
+Do not adopt the treatment, select another checkpoint or weaken any gate.
+This one-seed diagnostic does not establish a general optimizer-state cause.
+
+| Command vx/yaw | Speed MAE control / reset (m/s) | Body-yaw MAE control / reset (rad/s) | Speed passes /24 control / reset | Yaw passes /24 control / reset |
+| --- | ---: | ---: | ---: | ---: |
+| (0.0, 0.0) |0.000846 /0.000842|0.009043 /0.007026|24 /24|24 /24|
+| (0.3, 0.0) |0.085672 /0.108217|0.124844 /0.105011|21 /4|3 /11|
+| (0.2, -0.2) |0.030813 /0.044734|0.148046 /0.129870|24 /24|0 /1|
+| (0.2, 0.2) |0.033037 /0.048152|0.122626 /0.118844|24 /24|2 /4|
+
+Straight power1.938401/1.675156W and thermal proxy.032913/.027522 accompany
+the worse speed, not matched-speed efficiency gains. Training max torque
+utilization p99.673939/.672019, soft-limit exposure.008254/.008150 and thermal
+proxy.054119/.051573 are retained separately. Right-hip stop exposure reaches
+.013835/.011068 and overrun.031955/.034724rad; held-out passing does not erase
+those exploration states. BAM targets remain raw, unfiltered and unclipped.
+
+Native final CPU verification authenticates all preflight/full receipts,
+initial and durable checkpoint semantics, source/runtime, all2030 finite
+update rows, actual dwell/rewards/KL, full cases/decisions/differences and gait
+summaries. Mac independently hashes60 JSON/JSONL payloads (69,584,105bytes) plus
+the sealed manifest, recomputes all cases/decisions/differences/gait summaries,
+and saves `verified-manifest.json` under
+`artifacts/evaluations/adam-reset-23ad0720-20261012`. Weights and ONNX remain
+native only; no duplicate model storage or Git asset upload.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Control final999 | `391ffb64c89eb14870381584147f91ba235efc6bf1a3d95cc5b5b44d93cc49d3` |
+| Reset final999 | `2528bb1f8aa142904b671ae9b0f2039f937361123bafc9d36dbf1b63cde682ea` |
+| Full aggregate | `51947d814ead2d33cc7b2acde06e0309ae191e073876e62c3073787086f60835` |
+| Gait summary | `8fd62c3235daaece1e46fbd40e85b8a395fb9f1842ab2d680b78f8adf5745a1b` |
+| Native verification | `3329a2ab08e78a19cd9cf4a6ac8c015e720c703a468d159d6aefb4a1be3415e3` |
+| Sealed manifest | `c14cc475f085c39b0db7a4fcb3ca72ca54040d132dca2ac48d9d43800cf8b397` |
+
+Peak recorded GPU2381MiB/62C; completion DINO2021 alone969MiB/48C, protected
+services inactive in all four scopes. No promotion, MP4, raw perception, actor
+expansion, physical motion or protected-service restoration. Stop coefficient/
+reset stacking on the same unaccepted parent. The next independently declared
+fresh foundation is a new stock-curriculum baseline, not a causal comparison
+with these collapsed-curriculum warm continuations; see its separate declaration.

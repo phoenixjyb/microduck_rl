@@ -333,6 +333,20 @@ def paired_differences(control, motor, *, label="motor_minus_control"):
     return differences
 
 
+def initialize_continuation(recipe, runner, env, mode):
+    """Dispatch an explicitly declared initialization without changing legacy loads."""
+    base.require(type(mode) is str and mode in recipe.MODES,
+                 "declared continuation initialization mode")
+    hook = getattr(recipe, "warm_load_for_mode", _MISSING)
+    if hook is _MISSING:
+        receipt = recipe.warm_load(runner, env)
+    else:
+        base.require(callable(hook), "callable mode-aware continuation initializer")
+        receipt = hook(runner, env, mode)
+    base.require(isinstance(receipt, dict), "continuation initialization receipt")
+    return receipt
+
+
 def main(experiment=None):
     # Share the bounded two-arm harness; the original recipe is the default.
     recipe = sys.modules[__name__] if experiment is None else experiment
@@ -428,7 +442,7 @@ def main(experiment=None):
                                  "launch mode matches declared continuation budget")
                 observer, restored = recipe.MotorObserver(args.mode), {}
                 def initialize(runner, env):
-                    restored.update(recipe.warm_load(runner, env))
+                    restored.update(initialize_continuation(recipe, runner, env, args.mode))
                     base.write_new(output / "warm-start.json", restored)
                 result = base.training(output, args.mode, health, recipe=recipe.prepare_config(args.mode),
                     initialize=initialize, before_action=observer.before,

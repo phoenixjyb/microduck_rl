@@ -138,3 +138,35 @@ def test_paired_report_never_compares_tracking_from_partial_reset_case():
     right.reverse()
     with pytest.raises(ValueError, match="matched case"):
         refinement.paired_differences(left, right)
+
+
+def test_initializer_preserves_legacy_call_and_dispatches_explicit_mode():
+    calls = []
+    runner, env = object(), object()
+    receipt = {"parent_sha256": "parent"}
+    def legacy(*args):
+        calls.append(args)
+        return receipt
+    recipe = SimpleNamespace(MODES={"control": (256, 1000, 1)}, warm_load=legacy)
+    assert refinement.initialize_continuation(recipe, runner, env, "control") is receipt
+    assert calls == [(runner, env)]
+    def mode_aware(*args):
+        calls.append(args)
+        return receipt
+    recipe.warm_load_for_mode = mode_aware
+    assert refinement.initialize_continuation(recipe, runner, env, "control") is receipt
+    assert calls[-1] == (runner, env, "control")
+
+
+@pytest.mark.parametrize("fault", ["mode", "hook", "receipt"])
+def test_initializer_fails_closed_on_malformed_declarations(fault):
+    recipe = SimpleNamespace(MODES={"control": (256, 1000, 1)}, warm_load=lambda *a: {})
+    mode = "control"
+    if fault == "mode":
+        mode = "unknown"
+    elif fault == "hook":
+        recipe.warm_load_for_mode = None
+    else:
+        recipe.warm_load_for_mode = lambda *a: []
+    with pytest.raises(ValueError):
+        refinement.initialize_continuation(recipe, object(), object(), mode)

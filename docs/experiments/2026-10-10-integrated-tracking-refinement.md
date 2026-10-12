@@ -4392,7 +4392,7 @@ minibatches, with finite metrics and zero NaN terminations. Control/allowance
 elapsed627.624/625.924s; exploration falls450/467, final100 falls34/47. Both
 restored the exact original c81 parent/model/normalizers/Adam/Python LR and
 started fresh episodes at zero clocks. Retained0/250/500/750/999 checkpoints
-are finite and clock/hash-verified. Actual command census includes all seven
+are finite and clock/hash-verified. Actual command census includes all eight
 idle/straight/signed-yaw bins; straight dwell1,302,945/1,310,597, idle915,433/
 927,053. The sole live reward change was roll/pitch variance.5 to1.0.
 
@@ -4447,3 +4447,75 @@ protected service scopes inactive. No alternate-checkpoint selection, widened
 acceptance gate, MP4, raw perception, actor expansion, physical motion, policy
 promotion or protected-service restoration. Restore the original.5 reward for
 the next independent initialization diagnostic; do not stack this treatment.
+
+### Adam-state reset: predeclared two-arm initialization diagnostic
+
+After the rejected reward/exposure contrasts, test one training-initialization
+factor rather than add another coefficient. The c81 research parent has been
+continued repeatedly with its inherited actor, critic, empirical normalizers,
+Adam moments/parameter step counters and Python LR. Exact restoration is now
+verified; that makes an optimizer-state-only contrast possible. It does **not**
+establish that inherited moments caused underspeed, nor that a1000-update
+continuation can qualify a fresh upstream recipe. No random-policy arm, LR
+reset, normalization freeze, wider roll/pitch reward or sampler change is added.
+
+Protocol `integrated-adam-reset-continuation-v1`, arms `control/reset`.
+Both first restore the exact c81 parent actor/critic/normalizers/Adam, reset
+episode/curriculum clocks, and keep original Python/group LR
+`5.062500000000001e-05`. The reset arm then clears **only the same Adam
+object's state mapping**, dropping moments and per-parameter step counters for
+both actor and critic. Optimizer/group/parameter identities, options/defaults,
+learned parameters and all normalization buffers remain byte-identical; torch
+CPU/CUDA RNG remains unchanged by this intervention. The control retains all
+restored slots. The first actual PPO updates must repopulate reset Adam, not
+merely produce a completion receipt.
+
+Strict initialization rejects missing/partial/nonfinite/wrong-shaped slots,
+non-Adam optimizers, wrong model parameter coverage, invalid step counters or
+incorrect inherited LR. Mode-aware dispatch is explicit and optional; all
+legacy recipes keep their original two-argument warm loader. Metadata separates
+verified parent Adam restoration from the reset arm's subsequently empty Adam;
+it must not falsely claim active optimizer-state preservation in that arm.
+Initial checkpoints independently authenticate model/normalizer equality and
+control-populated/reset-empty slots; every final must have finite populated Adam.
+
+Both arms use the original mixed command support/resampling/head/body/DR,
+stock delayed61D observations,14 raw unclipped/unfiltered BAM actions, current
+installed plant/runtime, motor-1, named qpos-4, twist-.5, forward0, bias0,
+signed additive angular weight2/yaw variance.5/roll-pitch variance.5,
+adaptive KL.01/entropy.01 and5epochs x4minibatches. No parameter, observation,
+reward, acceptance or action-processing change is hidden in initialization.
+The observer retains the complete training-budget reward/KL/actual-dwell chain.
+
+| Phase | Worlds x updates per arm | Matched seed | Cap |
+| --- | ---: | ---: | ---: |
+| CUDA-hidden integrated/adjacent regressions | no GPU | n/a | before smoke |
+| Smoke + official normalized finite61-to14 ONNX |64x5|1301|600s each|
+| Same-world benchmark |256x10|1303|600s each|
+| Matched continuation |256x1000|1307|2100s each|
+| Final999 full held-out evaluation |8x240, seeds839/853/857, original4commands|fixed|900s total|
+
+Retain0/250/500/750/999, evaluate only final999,6.144M transitions and20,000
+minibatches per arm. The unchanged complete12-case foundation decision governs
+advancement; paired speed/yaw, terminals, torque, power, thermal and named/all-
+joint range metrics explain differences but cannot replace it. Read-only
+straight gait traces remain descriptive. No intermediate selection or seed
+sweep rescue. One paired seed is diagnostic, not multi-seed skill qualification.
+
+Admission requires clean exact tested/pushed source, same-source native CPU
+regressions, both64x5 smokes with actual command coverage and normalized ONNX,
+authenticated initial/final optimizer semantics and both benchmark projections
+below2040s. One retained lease-protected sequential user service runs both arms
+then evaluation, overall5300s; preflight overall2500s. Preserve DINO2021 and
+unrelated work, keep both protected services inactive in user/system scopes.
+No automatic follow-on training, MP4, raw perception, actor expansion, policy
+publication, physical motion or protected-service restoration. A failed matrix
+must be retained and diagnosed before any separate larger fresh-foundation
+experiment; it does not prove upstream training infeasible.
+
+Owner review corrected the loader to the installed rsl-rl5 separate actor and
+critic API before native execution. Focused CPU tests26/26 and integrated/
+adjacent regressions895/895 passed (14 existing selector warnings,42.07s).
+The read-only native parent inspection confirms17 populated parameter states,
+each step210,000, canonical step/exp_avg/exp_avg_sq and original group LR.
+Native regression/smoke/optimizer-checkpoint admission still precedes training.

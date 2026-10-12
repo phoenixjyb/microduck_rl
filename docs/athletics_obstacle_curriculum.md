@@ -56,8 +56,14 @@ That fixed lesson has now finished and is rejected: straight speed world passes
 The full moving matrix still fails for both arms. The separate scorer records
 28 straight-stage failures and70 paired arc-retention regressions, with arc
 safety passing. Turning progression remains closed. The next foundation
-diagnostic will test roll/pitch motion allowance with the original mixed
-commands, not adopt the rejected straight-only sampler or weaken the gates.
+diagnostic tested roll/pitch motion allowance with the original mixed commands.
+It also finished and is rejected: moving speed passes61/72 to55/72, yaw8/72
+to19/72, while straight achieved vx .201 to .194m/s at the .30m/s target.
+All moving-case combined tracking gates remain closed. Do not adopt its wider
+reward or the straight-only sampler. The next separately bounded comparison
+will isolate inherited Adam state versus reset Adam state at identical models,
+normalizers, original mixed commands, rewards and learning rate. This tests an
+initialization hypothesis, not an already established cause of the underspeed.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only

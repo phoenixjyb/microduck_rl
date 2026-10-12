@@ -4376,3 +4376,74 @@ including zero yaw-bias checks and actual command census; it does not use an
 angular-only shortcut. Focused new/legacy checks passed31 tests. The owner-run
 integrated/adjacent suite passed865 tests with14 existing selector warnings
 in27.25s. Native smoke, measured admission and full results remain separate.
+
+### Roll/pitch allowance: completed matched result, not promoted
+
+Exact source `9d2de049584905ac6363fb1eecb5e69658286ff9`, native retained root
+`artifacts/training/roll-pitch-9d2de049-20261012`. The preflight service finished
+October12 10:35:18 Beijing and the sequential matched/evaluation service finished
+11:00:27; both inactive, Result success, exit0, MainPID0. No job was modified
+while active. Native CUDA-hidden865-test regression, both64x5 normalized finite
+ONNX smokes and256x10 benchmarks passed. Conservative projections1163.994/
+1163.282s were below2040s. This is admission, not policy acceptance.
+
+Both arms completed1000 updates,24,000 steps,6.144M transitions and20,000
+minibatches, with finite metrics and zero NaN terminations. Control/allowance
+elapsed627.624/625.924s; exploration falls450/467, final100 falls34/47. Both
+restored the exact original c81 parent/model/normalizers/Adam/Python LR and
+started fresh episodes at zero clocks. Retained0/250/500/750/999 checkpoints
+are finite and clock/hash-verified. Actual command census includes all seven
+idle/straight/signed-yaw bins; straight dwell1,302,945/1,310,597, idle915,433/
+927,053. The sole live reward change was roll/pitch variance.5 to1.0.
+
+All24 held-out cases complete240 steps without terminals and pass every motor
+and named/all-joint range case. Idle tracking passes all24 worlds. Both arms
+nevertheless fail all nine moving-case combined tracking gates:
+**foundation-not-ready**. Moving speed passes61/72 to55/72; yaw8/72 to19/72.
+This trades negative-turn yaw improvement for straight underspeed, not a new
+skill or permission to advance turning/obstacles/hopping/football.
+
+| Command vx/yaw | Speed MAE control / allowance (m/s) | Body-yaw MAE control / allowance (rad/s) | Speed passes /24 control / allowance | Yaw passes /24 control / allowance |
+| --- | ---: | ---: | ---: | ---: |
+| (0.0, 0.0) |0.001331 /0.000847|0.012449 /0.007063|24 /24|24 /24|
+| (0.3, 0.0) |0.099427 /0.105928|0.109245 /0.112361|13 /7|5 /8|
+| (0.2, -0.2) |0.042354 /0.046394|0.122171 /0.114592|24 /24|1 /9|
+| (0.2, 0.2) |0.047070 /0.045739|0.130982 /0.133458|24 /24|2 /2|
+
+Straight achieved vx.200797 to.194078m/s at .30m/s target; negative-arc vx
+.159931 to.153995 and positive.155395 to.155043. Signed body-yaw means are
+straight.001391/.007021, negative-.159196/-.171666, positive.134571/.144944;
+these are body-frame rates, not integrated heading or physical outcomes.
+Straight power1.815261/1.721537W and thermal proxy.031076/.029557 accompany
+the lower speed, not proof of improved efficiency at matched achieved speed.
+
+Exploration max torque utilization p99.676274/.687188, soft-limit fraction
+.008429/.009068 and thermal proxy.053852/.054290 remain separately recorded.
+Right-hip stop exposure reaches.009928/.011556 and overrun.036379/.035983rad;
+held-out range passing does not erase these training states. Targets remain
+raw/unclipped. All inherited motor/range/twist/forward-zero/bias-zero/KL/actual
+command checks remained active, not only the angular observer.
+
+Native final CPU verification authenticates receipts, exact source/runtime,
+all checkpoints and clocks, actual census/rewards/minibatches, full standalone
+cases and decisions, paired differences, straight gait summaries and host
+bounds. Independent Mac verification hashes60 JSON/JSONL payloads
+(69,580,228bytes) plus their sealed manifest, recomputes all cases/decisions/
+differences/gait summaries, and saves `verified-manifest.json` in
+`artifacts/evaluations/roll-pitch-9d2de049-20261012`. Checkpoints and ONNX remain
+native only; no duplicate model storage or Git asset upload.
+
+| Retained object | SHA256 |
+| --- | --- |
+| Control final999 | `6291dc401b3910cb890b05ea79a766de4f298dfcfe8438aa334727d3e0d9c17a` |
+| Allowance final999 | `d222ea25254f3b1c2b25fec2201482f70672233e1ebeea5738544cd6ade06f20` |
+| Full aggregate | `0f2664594677cd8aed11b411f67c0167d7dea8724a31e9148a9ac171d24372a8` |
+| Gait summary | `8e85528b92a66ae35839e642e8f8a0d9878417c73d05dbc8e0e120fb2d83c198` |
+| Native verification | `b43b3643f40285cc9fd3442416fb5495cc89460862ccd7bbd4aeb55d76c52d31` |
+| Sealed manifest | `f83fe14063487bb4d1e071d3f2d474190cbb7c6affbbaf692740b801ed3e7d25` |
+
+Peak recorded GPU2381MiB/61C; post-job DINO2021 alone969MiB/48C, all four
+protected service scopes inactive. No alternate-checkpoint selection, widened
+acceptance gate, MP4, raw perception, actor expansion, physical motion, policy
+promotion or protected-service restoration. Restore the original.5 reward for
+the next independent initialization diagnostic; do not stack this treatment.

@@ -131,6 +131,24 @@ def motor_stream_capacity(recipe, mode):
     return 1024 if contract["worlds"] == 1024 else 256
 
 
+def command_coverage(recipe, mode):
+    """Explicit sampler lesson opt-in; every legacy recipe keeps four bins."""
+    base.require(mode in recipe.MODES, "declared command coverage mode")
+    declared = getattr(recipe, "COMMAND_COVERAGE", _MISSING)
+    if declared is _MISSING:
+        return base.FULL_COMMAND_COVERAGE
+    arms = getattr(recipe, "ARMS", ("control", "motor"))
+    base.require(isinstance(declared, Mapping) and set(declared) == set(arms)
+                 and type(declared[arms[0]]) is tuple
+                 and type(declared[arms[1]]) is tuple
+                 and declared[arms[0]] == base.FULL_COMMAND_COVERAGE
+                 and declared[arms[1]] == base.STRAIGHT_COMMAND_COVERAGE,
+                 "control retains full coverage; treatment declares straight-only lesson")
+    arm = mode if mode in arms else mode.partition("-")[2]
+    base.require(arm in arms, "known command coverage arm")
+    return declared[arm]
+
+
 def validate_training_receipt(receipt, recipe, source, contract, checkpoint):
     """Reject wrong arm/budget/seed receipts before evaluating durable weights."""
     base.require(receipt["source"] == source and receipt["protocol"] == recipe.PROTOCOL
@@ -144,6 +162,10 @@ def validate_training_receipt(receipt, recipe, source, contract, checkpoint):
                  and receipt["warm_start"]["parent_sha256"] == recipe.PARENT_SHA
                  and base.sha256(checkpoint) == receipt["checkpoint_sha256"],
                  "complete exact declared training arm")
+    if getattr(recipe, "COMMAND_COVERAGE", _MISSING) is not _MISSING:
+        base.require(receipt.get("required_command_coverage") ==
+                     list(command_coverage(recipe, contract["arm"])),
+                     "receipt preserves declared sampler lesson coverage")
 
 
 def benchmark_projection_seconds(elapsed_seconds, contract):
@@ -411,7 +433,8 @@ def main(experiment=None):
                 result = base.training(output, args.mode, health, recipe=recipe.prepare_config(args.mode),
                     initialize=initialize, before_action=observer.before,
                     after_step=observer.step, after_update=observer.update,
-                    motor_stream_max_envs=motor_stream_capacity(recipe, args.mode))
+                    motor_stream_max_envs=motor_stream_capacity(recipe, args.mode),
+                    required_command_coverage=command_coverage(recipe, args.mode))
                 result["warm_start"] = restored
                 if args.mode.startswith("smoke"):
                     result["onnx"] = onnx_check(output / f"{args.mode}.onnx")

@@ -4137,3 +4137,83 @@ error. Keep the stock delayed evaluator and current gates unchanged. Any
 new learner requires its own predeclaration, focused tests and measured GPU
 smoke/budget gate; the original parent and all rejected endpoints remain
 retained, not accepted teachers.
+
+### Fixed straight/idle lesson: predeclared matched diagnostic
+
+The owner authorized the next bounded slice after the progressive round.
+This experiment asks whether concentrating the *unchanged* learning recipe
+on exact standing and .30m/s straight commands can consolidate straight
+behavior without degrading the original held-out arcs. Greater straight
+exposure is not assumed beneficial: the preceding progressive round already
+increased exposure while reducing achieved speed. This is a whole-sampler
+support contrast, not an isolated reward/gait causal proof.
+
+Protocol `integrated-straight-lesson-continuation-v1`, arms `control/straight`.
+Both restore original c81 parent bytes, model, normalizer, Adam and original
+Python LR with fresh episodes and zero learning/environment clocks; neither
+uses a rejected endpoint as an accepted teacher. Control retains vx(.2,.4),
+yaw(-.5,.5). Straight treatment changes only those supports to vx(.3,.3),
+yaw(0,0). Lateral zero, standing.15, forward-only.25, turn-in-place0 and
+ordinary3-5s resampling remain unchanged. Ordinary and forward-only moving
+buckets both collapse to(.3,0,0); standing overrides to exact zero. Actual
+actor-consumed commands, not nominal fractions, are the exposure evidence.
+There is no clocked stage change, forced resample or direct cached-command
+write. The 61D actor/14 raw action interface, signed additive angular reward,
+all reward weights, plant, BAM, head/body sampling, stock observation delays,
+randomization, optimizer and full held-out numerical gates remain unchanged.
+
+The shared training coverage API keeps four command bins by default for all
+legacy recipes. Only this explicitly declared treatment requires idle and
+straight; it also checks exactly zero yaw on every action and zero signed-yaw
+counts. Control still requires all four bins. This is a sampler lesson
+declaration, not a relaxed evaluation requirement. Observer inheritance keeps
+the original motor/reward schedules and actual pre-action command census.
+
+| Phase | Worlds x updates per arm | Matched seed | Cap |
+| --- | ---: | ---: | ---: |
+| CUDA-hidden focused/broad regressions | no GPU | n/a | before smoke |
+| GPU smoke + normalized finite61-to14 ONNX |64x5|1259|600s each|
+| Same-world benchmark |256x10|1277|600s each|
+| Matched continuation |256x1000|1279|2100s each|
+| Final999 full held-out matrix |8x240, seeds839/853/857, original4commands|fixed|900s total|
+
+Each full arm has6.144M transitions,24 steps/update and20,000 optimizer
+minibatches. Only final999 is evaluated; durable0/250/500/750/999 remain
+retained, not candidates for hindsight selection. Admission requires exact
+clean pushed source, native regressions, same-source successful smokes/ONNX
+and measured conservative projection below2040s per arm. One retained user
+service executes control, straight and full evaluation sequentially, with
+the existing GPU lease and shared-host bounds, DINO2021 preserved and both
+protected services inactive in user/system scopes. No automatic next job.
+
+Three distinct numerical outcomes must be retained:
+
+- Full foundation decision: recompute the original12-case gate for each arm,
+  unchanged, including named joint-range exposure.
+- Straight stage exit: all6 treatment idle/straight cases must pass original
+  every-world speed/yaw, first-episode stability, motor and named range gates.
+- Arc retention: all6 treatment arc cases must pass original stability,
+  motor and range gates; every exact paired world must have speed **and** yaw
+  MAE no greater than control. Retention is not arc acceptance: original
+  absolute tracking gates still determine full foundation readiness.
+
+`straight_lesson_gate` combines the stage-exit and retention results, records
+every failure and authenticates ordered cases/checkpoint hashes. A failed
+result leaves turning progression closed. A pass only permits preparing a
+separately declared turn lesson, not automatic training, policy promotion,
+simulator qualification, hopping, obstacle/football admission or physical
+motion. One training seed is exploratory even with three held-out seeds.
+
+Straight cases additionally retain read-only pre-action body-yaw and named
+foot-contact/force/foot-velocity/head traces; the existing offline gait
+summary supplies descriptive contact/slip/yaw co-occurrence, not causal or
+acceptance gates. Report achieved vx, per-world tracking, falls, motor/load,
+joint-range exposure and gait evidence together. No raw perception, actor
+expansion, filtering, clipping, driver changes or MP4 is authorized by this
+diagnostic. Retain JSON evidence locally and weights only on the native host.
+
+Local integration verification:852 tests passed with14 existing actuator
+selector warnings in215.91s, covering the integrated recipe/harness, new
+stage-exit scorer, offline gait summaries and motor/observation contracts.
+The focused recipe run passed23 tests. These are source/CPU checks only;
+native smoke, timing admission, learning and held-out results are separate.

@@ -44,6 +44,13 @@ lesson with stage-exit and retention evidence before introducing turns;
 preserve the stock delayed evaluator and existing gates rather than repeat a
 clocked multi-stage or latency sweep.
 
+The next bounded diagnostic is now predeclared as a fixed straight/idle lesson
+at .30m/s, matched against the original mixed-command recipe. Turning stages
+remain closed: the separate stage-exit scorer requires unchanged idle/straight
+gates and exact per-world arc-retention comparisons, while retaining the
+unchanged full foundation decision. No training or skill acceptance is claimed
+by the predeclaration alone; see the experiment document for budgets and gates.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

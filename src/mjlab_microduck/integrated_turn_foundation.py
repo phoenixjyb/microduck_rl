@@ -35,6 +35,8 @@ SEEDS = (839, 853, 857)
 CASES = ((0., 0.), (.30, 0.), (.20, -.20), (.20, .20))
 EVAL_CHECKPOINTS = (750, 1499)
 FOUNDATION_CAP_SECONDS = 2700
+FULL_COMMAND_COVERAGE = ("idle", "straight", "negative_yaw", "positive_yaw")
+STRAIGHT_COMMAND_COVERAGE = ("idle", "straight")
 
 
 def require(condition, message):
@@ -107,11 +109,14 @@ def validate_commands(command):
 
 def training(output, mode, health, *, recipe=None, initialize=None,
              before_action=None, after_step=None, after_update=None,
-             motor_stream_max_envs=256):
+             motor_stream_max_envs=256, required_command_coverage=FULL_COMMAND_COVERAGE):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_runner_cls
 
+    require(type(required_command_coverage) is tuple and
+            required_command_coverage in (FULL_COMMAND_COVERAGE, STRAIGHT_COMMAND_COVERAGE),
+            "explicit full or straight-only training command coverage")
     cfg, agent = prepare_config(mode) if recipe is None else recipe
     worlds, updates, seed = cfg.scene.num_envs, agent.max_iterations, agent.seed
     torch.manual_seed(seed)
@@ -139,6 +144,9 @@ def training(output, mode, health, *, recipe=None, initialize=None,
                     "finite actor/critic input and actor order")
             command = env.command_manager.get_command("twist")
             validate_commands(command)
+            if required_command_coverage == STRAIGHT_COMMAND_COVERAGE:
+                require(bool((command[:, 2] == 0.).all()),
+                        "straight-only coverage requires exactly zero yaw commands")
             require(torch.equal(obs["actor"][:, 48:51], command), "raw actor command equals manager")
             pending = command.clone()
             actions = act(obs)
@@ -219,13 +227,17 @@ def training(output, mode, health, *, recipe=None, initialize=None,
         runner.save(str(output / "initial.pt"))
         runner.learn(num_learning_iterations=updates, init_at_random_ep_len=False)
         require(counters["steps"] == updates*24 and counters["updates"] == updates, "complete PPO budget")
-        require(all(counters[k] > 0 for k in ("idle", "straight", "negative_yaw", "positive_yaw")), "actual command coverage")
+        require(all(counters[k] > 0 for k in required_command_coverage), "actual command coverage")
+        if required_command_coverage == STRAIGHT_COMMAND_COVERAGE:
+            require(counters["negative_yaw"] == counters["positive_yaw"] == 0,
+                    "straight lesson contains no signed-yaw actions")
         checkpoint = output / f"model_{updates-1}.pt"
         payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
         require(finite_tree(payload) and payload["optimizer_state_dict"]["state"], "durable finite model/Adam")
         return dict(status="training-complete-not-accepted", mode=mode, **counters,
                     worlds=worlds, seed=seed, elapsed_s=time.monotonic()-started,
                     transitions=worlds*counters["steps"], checkpoint=str(checkpoint),
+                    required_command_coverage=list(required_command_coverage),
                     checkpoint_sha256=sha256(checkpoint), motor_stream=stream.provenance())
     finally:
         env.close()

@@ -4279,6 +4279,38 @@ def _publish_body_yaw_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None
     }
 
 
+def capture_action_rate_training_metric(env: ManagerBasedRlEnv) -> torch.Tensor:
+    """Read-only raw/weighted action-cost snapshot after reward, before reset.
+
+    This is instrumentation, not a new penalty or action filter. The reward
+    remains mjlab's unmodified raw-policy-output action_rate_l2 function.
+    """
+    from mjlab.envs.mdp.rewards import action_rate_l2
+
+    if getattr(env, "_microduck_action_rate_snapshot", None) is not None:
+        raise ValueError("previous action-rate snapshot consumed")
+    term = env.reward_manager.get_term_cfg("action_rate_l2")
+    if (term.func is not action_rate_l2 or term.params != {}
+            or isinstance(term.weight, bool) or not isinstance(term.weight, (int, float))
+            or not math.isfinite(term.weight) or not -1. <= term.weight <= -.1):
+        raise ValueError("unchanged action-rate callable and bounded negative weight")
+    action, prior = env.action_manager.action, env.action_manager.prev_action
+    if (action.shape != (env.num_envs, 14) or prior.shape != action.shape
+            or not action.is_floating_point() or not prior.is_floating_point()
+            or not bool(torch.isfinite(action).all() & torch.isfinite(prior).all())):
+        raise FloatingPointError("finite raw fourteen-action history")
+    cost = action_rate_l2(env)
+    actual = env.reward_manager._step_reward[:, env.reward_manager.active_terms.index("action_rate_l2")]
+    if (cost.shape != (env.num_envs,) or actual.shape != cost.shape
+            or not bool(torch.isfinite(cost).all() & torch.isfinite(actual).all())
+            or not bool((cost >= 0).all() & (actual <= 0).all())
+            or not torch.allclose(actual, cost * term.weight, atol=1e-6, rtol=1e-5)):
+        raise FloatingPointError("actual action-rate reward matches finite raw cost")
+    env._microduck_action_rate_snapshot = (cost.detach().clone(), actual.detach().clone(),
+                                            float(term.weight), env.common_step_counter)
+    return torch.zeros(env.num_envs, device=env.device)
+
+
 def yaw_only_body_angular_tracking(
     env: ManagerBasedRlEnv,
     std: float,

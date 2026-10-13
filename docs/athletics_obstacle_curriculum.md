@@ -174,6 +174,14 @@ sealed and user vLLM restored with DINO preserved. Next is a separately bounded
 action-smoothness release-and-recovery hypothesis from the original parent and
 stock angular reward, not another seed/yaw sweep or harder-skill promotion.
 
+The [matched action-release diagnostic](experiments/2026-10-13-motor-range-action-release.md)
+now predeclares that next lesson: control-1 versus temporary-.1/-.4 release,
+recovering-1 after500 updates, with both arms retaining stock XYZ angular tracking
+and unchanged motor/range gates. Actual raw and signed action costs are measured
+by command and stage before autoreset. This tests a hypothesis, not a demonstrated
+cause of underspeed or a qualified phase-based curriculum. Only final999 may be
+evaluated; source tests and native preflight still precede either learner.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

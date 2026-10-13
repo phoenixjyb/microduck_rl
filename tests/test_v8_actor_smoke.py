@@ -81,6 +81,66 @@ def test_prepare_config_is_exact_smoke_recipe_with_only_v8_specific_overrides():
     assert agent.actor.distribution_cfg["std_type"] == "scalar"
 
 
+def test_real_ppo_construction_resolves_tuple_actor_group_and_keeps_fresh_cpu_state():
+    from rsl_rl.algorithms import PPO
+
+    _, agent = smoke.prepare_config()
+    cfg = asdict(agent)
+    # Match MjlabOnPolicyRunner's optional-field cleanup and its single-process
+    # setting, without constructing the runner logger or a simulator.
+    for key in ("actor", "critic"):
+        for optional in ("cnn_cfg", "distribution_cfg"):
+            if cfg[key].get(optional) is None:
+                cfg[key].pop(optional, None)
+        if cfg[key].get("rnn_type") is None:
+            for optional in ("rnn_type", "rnn_hidden_dim", "rnn_num_layers"):
+                cfg[key].pop(optional, None)
+    cfg["multi_gpu"] = None
+
+    observations = TensorDict({
+        "actor": torch.zeros(64, 61),
+        "critic": torch.zeros(64, 61),
+    }, batch_size=[64])
+    env = SimpleNamespace(num_envs=64, num_actions=14)
+    assert cfg["obs_groups"]["actor"] == ("actor",)
+    assert type(cfg["obs_groups"]["actor"]) is tuple
+
+    alg = PPO.construct_algorithm(observations, env, cfg, "cpu")
+
+    assert type(alg.actor) is FrozenV8Actor
+    assert alg.actor.obs_groups == ("actor",)
+    assert alg.actor.obs_normalization is True
+    assert alg.actor.distribution.std_type == "scalar"
+    assert torch.all(alg.actor.distribution.std_param == smoke.INITIAL_STD)
+    assert alg.critic.obs_groups == ("critic",)
+    assert alg.actor.obs_normalizer.count.item() == alg.critic.obs_normalizer.count.item() == 0
+    assert type(alg.optimizer) is torch.optim.Adam and not alg.optimizer.state
+    parameter_ids = {id(p) for p in (*alg.actor.parameters(), *alg.critic.parameters())}
+    optimizer_ids = {id(p) for group in alg.optimizer.param_groups for p in group["params"]}
+    assert optimizer_ids == parameter_ids
+    assert alg.storage.num_transitions_per_env == agent.num_steps_per_env
+    assert not any(p.grad is not None for p in alg.actor.parameters())
+
+
+@pytest.mark.parametrize("obs_set,groups", [
+    ("actor", {"actor": "actor"}),
+    ("actor", {"actor": ()}),
+    ("actor", {"actor": ("actor", "critic")}),
+    ("actor", {"critic": ("actor",)}),
+    ("critic", {"actor": ("actor",)}),
+])
+def test_actor_constructor_rejects_illegal_group_contracts(obs_set, groups):
+    observations = TensorDict({"actor": torch.zeros(2, 61),
+                               "critic": torch.zeros(2, 61)}, batch_size=[2])
+    with pytest.raises(ValueError, match="single raw actor observation group"):
+        FrozenV8Actor(
+            observations, groups, obs_set, 14,
+            hidden_dims=(512, 256, 128), activation="elu", obs_normalization=True,
+            distribution_cfg={"class_name": "rsl_rl.modules:GaussianDistribution",
+                              "init_std": .3, "std_type": "scalar"},
+        )
+
+
 def test_initialize_imports_only_actor_preserving_fresh_target_state(monkeypatch, tmp_path):
     runner, env = _runner_env()
     actor, critic, optimizer = runner.alg.actor, runner.alg.critic, runner.alg.optimizer

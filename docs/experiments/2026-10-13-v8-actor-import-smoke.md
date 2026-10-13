@@ -80,4 +80,26 @@ updates in train mode left the target counter at zero. These include raw zero,
 upright/forward command and seeded affine-scale perturbations, not physical
 robot measurements. The actual-artifact test also reconstructs the actor from
 its state and checks the regular runner's serialized ONNX against the original
-CPU ONNX on all128 probes. The native integration smoke has not yet run.
+CPU ONNX on all128 probes.
+
+## First native attempt — constructor rejection before learning
+
+At source `371474f360bbab1aa81dae86cc22a0b321182d4a`, native affected checks
+passed1307 tests with18 warnings. The new retained service then stopped with
+`ValueError: single raw actor observation group required` before constructing
+the algorithm, importing the actor or taking any PPO update. The packet contains
+only `launch.json` and `failure.json`, with no checkpoint/update log. It remains
+native at `artifacts/training/v8-actor-smoke-371474f3-20261013`; failure SHA256
+`5375f85924bad72bbfa61fba0ac3790cbbd9badf320865b68bd8d539939ebd6b`.
+The guarded original-vLLM restoration receipt has SHA256
+`c4a1858c8b71c0f6437bcc324958808bc10629714d974987475dcc70667abd0b`;
+DINO and the other protected scopes were preserved.
+
+Read-only diagnosis checked the actual registered cfg and installed RSL resolver:
+they use/preserve `('actor',)`, while the bridge compared only to `['actor']`.
+The correction accepts list or tuple containers ONLY with that exact singleton
+order; it changes no observation layout, graph, normalizer, reward, action,
+plant, gate, budget or seed. Add a real serialized-cfg/PPO construction regression
+test, repeat focused/native checks, and use a new source-bound retained run ID.
+Never restart or overwrite the failed packet. The same five-update predeclaration
+applies to the corrected attempt; no longer job or motion claim is admitted.

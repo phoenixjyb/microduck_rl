@@ -45,7 +45,9 @@ runner configuration; loading its state into the generic MLPModel is invalid.
     def __init__(self, obs, obs_groups, obs_set, output_dim,
                  hidden_dims=HIDDEN_DIMS, activation="elu",
                  obs_normalization=True, distribution_cfg=None):
-        require(obs_set == "actor" and obs_groups.get("actor") == ["actor"],
+        groups = obs_groups.get("actor")
+        require(obs_set == "actor" and type(groups) in (list, tuple)
+                and tuple(groups) == ("actor",),
                 "single raw actor observation group required")
         require(obs["actor"].ndim == 2 and obs["actor"].shape[-1] == 61,
                 "raw 61D actor observations required")

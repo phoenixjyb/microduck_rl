@@ -213,6 +213,13 @@ recomputing the stateful EMA. Gate-driven secondary-range expansion and command
 transitions follow only a qualified foundation; this declaration alone is not
 an accepted lesson, new capability or permission for harder-skill promotion.
 
+That lesson now shows broad held-out improvement: moving speed48→64/72,
+all three moving speed/yaw means lower, and all matched case motor/range metrics
+improve. Training falls1404→976. It still rejects motion (yaw0/72), with worst
+straight world-heading drift43.41° over3.58s. Preserve this curriculum-complexity
+signal, not an accepted endpoint; separately target steering before transitions,
+obstacles, hopping combinations or football promotion.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

@@ -178,3 +178,79 @@ all four protected scopes inactive during the authorized user-vLLM pause.
 Native source4de0017d is frozen while active. Learner outcome, all final
 checkpoints, numerical evaluation/seal and original-service restoration remain
 pending. Do not infer capability or promote harder skills from this admission.
+
+## Sealed outcome: broad improvement, motion gate still rejected
+
+Both1000-update learners completed676.721/682.391s; each6144000 transitions
+and20000 minibatches. All initial/0/250/500/750/999 checkpoints are durable,
+with exact restored original936a state, final normalizer49152000/Adam160000.
+All24 cases completed, without terminals, rated-speed exceedance, hard-range
+violation or right-hip stop exposure. Idle speed/yaw24/24 passes per arm.
+Both endpoints remain `foundation-not-ready`: all nine moving cases fail and
+**moving yaw passes0/72 in both arms**. No trained endpoint is promoted.
+
+|Command|Speed MAE control→quiet|Speed passes /24|Yaw MAE control→quiet|Achieved vx control→quiet|
+|---|---:|---:|---:|---:|
+|Idle|.000792→.000618|24→24|.006624→.005306|-.000107→-.000185|
+|Straight .3|.116893→.093737|1→16|.310505→.222831|.183107→.206278|
+|.2, yaw-.2|.066319→.055024|24→24|.336963→.254313|.134444→.145096|
+|.2, yaw+.2|.070341→.051906|23→24|.314969→.239788|.129796→.148542|
+
+Moving speed48→64/72. The predeclared command-group descriptive-benefit rule
+passes: all three moving speed/yaw means improve, and all12 matched cases have
+lower torque p99, soft-limit fraction, power and thermal proxy, higher minimum
+all-joint hard margin and no terminal/rated-speed/right-stop regression.
+Independent review additionally found6/72 individual moving worlds with worse
+speed MAE and7/72 with worse yaw MAE. Group improvement cannot erase those
+worlds or override the failed gate; neither causality nor multi-seed acceptance
+is established. This supports lesson simplification, not rejected-teacher adoption.
+
+Worst held-out torque p99.592842→.467920Nm; minimum hard margin
+.171445→+.218218rad. Straight/negative/positive power
+1.512874/1.089465/1.061335→1.484705/1.045152/1.031545W; thermal proxy
+.033766/.031858/.031164→.026336/.021997/.021967. Training falls1404→976
+(first100143→92; last100141→85), zero NaNs. Final training torque
+.736699→.638501 and thermal.064461→.050224 are not the held-out gate.
+
+All four actual head slots have6144 nonzero samples/update. Mean absolute head
+commands [.549231,.550830,.700931,.155008]→[.024988,.024938,.034969,.007532]rad;
+weighted tracking1.553643→1.846865, bias-.536029→-.205359 with unchanged+2/+3
+weights. Raw linear kernel.692510→.716444, raw action cost1.234265→1.059908,
+angular reward.613106→.729119; yaw-error square.573756→.463195 and roll/pitch
+rate square.808602→.655200. These are actual training statistics, not acceptance.
+
+Native and independent portable verification authenticate59 files/75275312 bytes:
+
+- Control final `e90f061090aa8d078c9705190573fe2c60b59180a796bfd0e6e7e953ca68d6e3`.
+- Quiet final `b29196a4f8f49dc1610655f69d01c546f4f3456544b87dd0e8083a9e4e0d1106`.
+- Aggregate `a4918b9b90347c208a382e4e680764301d3b537b872a2b7a69456a9546cdb826`.
+- Native proof `377ea95acaaca5d5218299e34171a44f0869428394a89d68ba99c08cf2556598`.
+- Manifest `7f251f478b017f236764887829ec3623782ecc4ef55888cfc78fbf093a03a9e0`.
+- Local summary `973b32dc364202a5d491500e50ff08c5378a2715f63bc303d27c61638c02eda9`.
+- Local verification `eb0a78d0192a97a9a6770fa728953d10b65de78e2133c81dda136c208f7b8726`.
+- Restore `3d9971429b5b3eaa893628c3aa04598d08e4f5d69b63c635a6406f6da647efdb`.
+
+Native run `artifacts/training/motor-range-headlesson-4de0017d-20261013`;
+JSON-only Mac packet `artifacts/evaluations/motor-range-headlesson-4de0017d-20261013`.
+All three scoped services completed successfully/inactive. Peak Duck GPU2374MiB,
+69°C; original user vLLM restored (GPU729955/9692MiB), DINO2029/946MiB retained,
+other protected scopes inactive. No video, new simulator/physical qualification,
+100.98 work, package/driver change or controller publication.
+
+## Remaining steering diagnosis, not an averaging loophole
+
+The tested straight-only heading geometry audit authenticates the sealed matrix
+and retains all24 worlds per arm. Mean absolute heading change over3.58s falls
+.509470→.297394rad, but worst world still56.20°→43.41°. Quiet-head signed mean
+change+.091863rad hides worlds ranging-.732050..+.757647rad. Average25-sample
+body-wz moving-mean error.142396→.087987 also hides worst-world.294985→.213995.
+There is real residual drift, not merely an instantaneous gait-rate metric issue.
+No arc/idle quaternion traces exist here; do not infer their paths from averages.
+
+Audit JSON `headlesson-heading-audit.json`, SHA256
+`6f8aa68b5633b013f924073df9c41dd240452e2ec24c7d4b176d9f8ff58e5f77`.
+The unchanged geometry engine is bound by SHA256
+`d93e4ab32bf6f904c6c74d08846b6ff9db26c7eb2eafec795cdbf5712c6fca68`;
+its7 stdlib geometry/fault tests pass. This analysis leaves all gates unchanged.
+Next work must target signed steering under the simpler head lesson, separately
+predeclared/tested from original936a, without adopting b291 as a qualified teacher.

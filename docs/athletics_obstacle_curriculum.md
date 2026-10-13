@@ -236,6 +236,14 @@ Preserve the simpler-head lesson signal and reject sharper-yaw endpoint
 promotion. The next bounded curriculum hypothesis is under easier-command
 source/history review; no follow-on training or new capability is implied.
 
+The [gentle-turn command lesson](experiments/2026-10-13-quiet-head-gentle-turn-lesson.md)
+now predeclares that bounded contrast: fixed training yaw support ±.50 versus
+±.25 rad/s, with the same quiet head, stock rewards and original936a parent.
+Measure increased held-out-target-band exposure without fabricating absent
+high-yaw samples. Both arms still face the full unchanged idle/straight/±.20
+held-out gate; no harder-skill promotion or follow-on GPU job precedes tested
+source, a fresh native admission and measured timing caps.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

@@ -122,3 +122,46 @@ action validation in native preflight/final proof plus independent stdlib
 portable verification. Two portable arithmetic tests passed across all modes,
 strict transition boundaries and corruption refusals. Native admission and
 learners remain pending at this source declaration.
+
+## Native admission passed; matched motion training active
+
+Exact clean native source `17d80717fd2e6ae510d375b3610296f1b99c5b53` was tested
+and pushed before execution. Native1097 checks passed in36.33s with16 existing
+warnings. Both official normalized61→14 ONNX smokes passed finite CPU inference
+and hash checks; control/release took4.516/4.464s with0/0 falls. Benchmarks took
+7.815/7.849s with5/7 falls and conservative projections1172.274/1177.291s,
+both below2040s. All30 closed preflight rows passed finite/zero-NaN, stock XYZ
+angular, motor/bilateral qpos and raw/signed action-stage/stratum checks.
+Actual identical initial models/normalizers/Adam/LR were verified against936a;
+initial SHA256 `d7dd1a99d9ca1f950d6ee2f3603a65661acbb9fff3c8848494cac5eb276f4235`.
+
+Native admission proof SHA256
+`70be3095ffb4d5e4b6ea3aef768184b3b6ae65006055c4742e85e104605acc51`;
+original service/GPU context SHA256
+`6c21861de889d84cf4ab4577aa7c5cee9409f8d131459239a792191f1a3ddeeb`.
+Mac JSON-only admission data is retained at
+`artifacts/evaluations/motor-range-actionrelease-17d80717-20261013-preflight`;
+local stdlib verification authenticates these two hashes and all30 closed rows.
+Any `live-control-observation` subdirectory is explicitly an unclosed monitoring
+snapshot, not part of the admission proof. Models/ONNX remain native.
+
+Run directory `artifacts/training/motor-range-actionrelease-17d80717-20261013`.
+`microduck-actionrelease-17d80717-matched-eval.service` is active under
+`recomo-duck-actionrelease-17d80717-handoff.service`, serial control→release→
+both final999 matrices. At10:30 Beijing control was671/1000 with durable
+0/250/500 checkpoints, all finite and zero NaN terminations; training falls881,
+recent100110, latest torque p99.711380/thermal.060410. This is exploratory
+training evidence, not a pass of the held-out.60 motor or tracking gates.
+CUDA-hidden actual model250 read verified finite tensors, iteration250/env6024,
+normalizers44550144 and17 Adam states145020, SHA256
+`0af04c1e09285db4134e6cf242ddad36fa4ebb41df2b4a38aa20e825aa601030`.
+
+GPU1710MiB/67°C, DINO2029 preserved, all four protected scopes inactive during
+the scoped pause. The native checkout stays17d80717 while jobs are active;
+later documentation commits do not change training source. Shell/Python syntax,
+systemd validation,3 mock restore tests (7 conflict refusals),2 portable row
+tests and independent actual generated-ops review passed before launch.
+Five additional CPU-only stage-analysis tests passed after handling the actual
+nested decision schema and partial first-episode cases; analysis awaits sealed
+data. Final result, checkpoint/evidence seal and original user-vLLM restoration
+are still pending. No qualified new motion, harder-skill promotion or video.

@@ -100,3 +100,48 @@ mode invalid; it was corrected without changing the recipe. Full config equality
 against the first-seed recipe permits only seed/experiment identity differences.
 Independent source/declaration and ops-generator reviews found no blocker.
 Native admission, normalized smokes, measured benchmarks and outcome pending.
+
+## Native admission passed; matched learners active
+
+Native source is exact clean `4693c2a6ad27ae58b78da3e314044f029871c667`, tested
+and pushed before execution (code declaration7a00923c; subsequent documentation
+clarification changes no recipe). Native CPU1052 checks passed in36.58s with16
+existing warnings. Both official normalized ONNX exports passed finite61→14
+CPU inference/hash validation; smokes0/0 falls and4.480/4.474s. Benchmarks took
+7.652/7.811s with4/5 falls; conservative projections1147.779/1171.676s are below
+2040s. All30 preflight updates passed positive angular reward/zero negative sample,
+finite/zero-NaN, live stability/motor/bilateral/final-curriculum and command-dwell
+guards. Native checks authenticate actual identical initial model, normalizer,
+Adam and LR against original936a parent, initial SHA256
+`d7dd1a99d9ca1f950d6ee2f3603a65661acbb9fff3c8848494cac5eb276f4235`.
+Preflight peak1710MiB/62°C. These are admission checks, not policy acceptance.
+
+Preflight proof SHA256
+`bb8b033533bd022b4e025f2103e23e3910a0e0f0b3509b69cd86394798921718`;
+original service/GPU context SHA256
+`9aee0a851e3e8c16c8fa62bb64758a7bbbc2fea2cad82bd88384d8d233197913`.
+Closed JSON-only proof/phases/context are on Mac at
+`artifacts/evaluations/motor-range-yawrep-4693c2a6-20261013-preflight`.
+Local stdlib checks authenticate these hashes and all30 reward/safety rows.
+Weights/ONNX stay native; no duplicate binaries fetched. Shell/Python syntax,
+systemd verification,3 mock-only restore tests (including7 refusal cases), and
+independent generated-ops review passed before launch.
+
+Native run directory `artifacts/training/motor-range-yawrep-4693c2a6-20261013`.
+The active sequence is `microduck-yawrep-4693c2a6-matched-eval.service`, under
+`recomo-duck-yawrep-4693c2a6-handoff.service`: control→yawonly→both final999
+matrices. An early89-update/2136-vector-step audit has finite rows, zero NaN
+terminations/negative samples and121 training falls. Latest training torque
+p99.713759/thermal proxy.063604; left/right hip stop exposure.00048828125/0.
+This is below gross training guard1.5, not a pass of the held-out.60 motor gate.
+CUDA-hidden CPU read authenticates actual finite control/model0 at iteration0/
+env24, normalizers43014144 and seventeen Adam states140020, SHA256
+`7c790b3caf92122f528f07594e11d8f70494b7dcdd328e6d29fdf512e646bab1`.
+
+At09:22 Beijing both matched/outer units remain active, GPU1710MiB/67°C, DINO2029
+retained, and all four protected scopes inactive during the authorized pause.
+Native worktree stays clean at4693c2a6; do not change it or the jobs while active.
+The scoped exit restoration guard is installed; original user-vLLM restoration,
+final numerical decision and first/second-seed comparison remain **pending**.
+No new capability, policy promotion or additional job is claimed from this early
+checkpoint. Later evidence-only fork commits do not change the trained source.

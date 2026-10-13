@@ -160,6 +160,12 @@ speed retention or establishes a qualified skill. Source checks are
 complete:82 focused/1052 integrated checks passed. Native admission remains
 pending; only tested/pushed exact source may start the guarded handoff.
 
+Native1052 checks, both normalized smokes and benchmark projections now passed
+at exact source4693c2a6. The second-seed control→yawonly→final-evaluation service
+is active; early control89/1000 has authenticated finite model0 and zero NaN
+terminations. Original user-vLLM restoration and final paired numerical decision
+remain pending; the first-seed failures remain part of the eventual comparison.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

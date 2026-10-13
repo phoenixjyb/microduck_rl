@@ -142,3 +142,39 @@ fault cases; all12 generated-operation templates compile in a no-write dry run.
 Document links and whitespace checks pass. Native complete scoped CPU regression,
 smokes, projections and actual learner/evaluation evidence remain mandatory and
 pending; source success alone admits no motion capability.
+
+## Native admission passed; matched training active
+
+Exact clean tested/pushed native source
+`4de0017d59658ea00d5fe32ab3a352d542029f32`;1171 native scoped regression
+checks passed36.70s with16 existing warnings. Both normalized61→14 ONNX smokes
+passed4.707/4.614s with1/0 training falls, zero NaNs. Benchmarks8.107/8.089s,
+5/3 falls, projections1216.109/1213.351s below2040s. Actual identical initial
+SHA256 `d7dd1a99d9ca1f950d6ee2f3603a65661acbb9fff3c8848494cac5eb276f4235`
+confirms original936a models/normalizers/Adam/LR restored in all four phases.
+Closed-phase validators passed all30 action/linear/head rows; all four head
+slots had nonzero actual dwell in both arms. Both retained linear2/action-1.
+
+At final benchmark row, actual control head absolute commands were
+[.565076,.564077,.731109,.155352]rad versus
+[.025353,.025863,.036927,.007600]rad for quiethead. Weighted head tracking
+1.543259→1.648124 and bias-.546710→-.413717 verify lesson/reward exposure, not
+locomotion improvement. Zero RNG/reward/filter changes are introduced by capture.
+
+Admission proof `a9526d3aeac047729ad0025177e9e4e4a6443f0b8cea5eba4624c93bbe86b6f7`;
+original service context `bf50b5e734ee06b30aab2965ebf11928f7ef65be86b272f4fe523e4185b98f96`.
+Closed JSON-only Mac packet
+`artifacts/evaluations/motor-range-headlesson-4de0017d-20261013-preflight`;
+owner authenticated both hashes and repeated all30 source row validators.
+Source/ops reviews, shell/Python/systemd validation,3 mock restoration tests
+including7 refusal cases and2 portable arithmetic tests passed before launch.
+
+Run `artifacts/training/motor-range-headlesson-4de0017d-20261013`, services
+`microduck-headlesson-4de0017d-matched-eval.service` and
+`recomo-duck-headlesson-4de0017d-handoff.service`: control→quiethead→both final
+matrices. First retained audit: control141/1000,201 training falls, zero NaNs,
+finite rewards/optimizer, proper full ranges; GPU1710MiB/63°C, DINO2029 retained,
+all four protected scopes inactive during the authorized user-vLLM pause.
+Native source4de0017d is frozen while active. Learner outcome, all final
+checkpoints, numerical evaluation/seal and original-service restoration remain
+pending. Do not infer capability or promote harder skills from this admission.

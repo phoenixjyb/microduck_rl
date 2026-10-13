@@ -122,10 +122,13 @@ Earlier decoupling had a partial yaw signal on a different parent but never
 qualified a skill; this new matched1000-update round must establish its own
 evidence and restore the temporarily paused user vLLM before another handoff.
 Its exact-source CPU suite1000 tests and both normalized smokes/measured
-benchmarks have passed; the paired learner/evaluation service is now running
-with checkpoint250 durable in control. Full held-out results and restoration
-remain pending. No newly accepted yaw, obstacle, hopping or ball skill follows
-from successful preflight or live optimizer activity.
+benchmarks passed, and the paired1000-update round is now complete. Decoupling
+improved moving yaw MAE14–25% but speed passes fell50/72→32/72 and yaw remains0/72.
+Both final policies are rejected despite all24 first episodes and motor/range
+subsets passing. Evidence is sealed and user vLLM restored with DINO preserved.
+Next is a separately bounded angular-axis inclusion question, not default
+duration/weight escalation or adoption of the rejected decoupled endpoint.
+No newly accepted yaw, obstacle, hopping or ball skill follows from this result.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only

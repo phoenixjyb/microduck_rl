@@ -135,8 +135,8 @@ Closed preflight JSON-only evidence is retained on Mac under
 `artifacts/evaluations/motor-range-yaw-4b9de3cc-20261013-preflight`;
 models and ONNX binaries remain native only.
 
-The retained sequential `microduck-yaw-4b9de3cc-matched-eval.service` is now
-running, under `recomo-duck-yaw-4b9de3cc-handoff.service`. Run directory
+Historical launch: the retained sequential `microduck-yaw-4b9de3cc-matched-eval.service`
+ran under `recomo-duck-yaw-4b9de3cc-handoff.service`. Run directory
 `artifacts/training/motor-range-yaw-4b9de3cc-20261013`. At the23:56 Beijing
 snapshot control had83/1000 updates and durable model0, with finite metrics,
 zero NaN terminations, GPU1710MiB/60°C, DINO2029 retained and all four protected
@@ -150,3 +150,93 @@ The subsequent monitor reached287/1000 control updates/6888 vector steps with
 durable model250 and model0; latest NaN terminations0, torque utilization
 p99.718869 and modeled thermal proxy.062424. Training p99 is not the held-out
 .60 gate; its predeclared gross abort guard is1.5. No gate was changed or waived.
+
+## Completed result and rejection
+
+The October13 morning check found all three Duck services inactive/MainPID0/
+Resultsuccess/ExecMainStatus0, with no failure receipt. Both1000-update learners
+and all24 final-only held-out cases completed. Control took617.151s, decoupled
+624.817s; each24000 vector steps/6144000 transitions/20000 optimizer minibatches.
+All cadence0/250/500/750/999 plus initial checkpoints were authenticated against
+actual finite tensors, parent state, clocks, normalizers and Adam counters.
+Final normalizer counts49152000 and seventeen Adam counters160000. All2030
+preflight/learner rows are finite; zero NaN terminations. Native source remains
+`4b9de3cc`, separate from later evidence-only fork commits.
+
+Both policies are **rejected**: all9 moving cases fail combined tracking, moving
+yaw passes0/72 for both. All12 cases per arm survived240 first-episode steps;
+zero terminals, rated-speed exceedance, hard-range violations or stop proximity.
+Idle speed/yaw passes24/24 each. No video, harder skill or accepted teacher.
+
+| Quantity | Control | Decoupled |
+| --- | ---: | ---: |
+|Moving speed world passes|50/72|32/72|
+|Moving yaw world passes|0/72|0/72|
+|Straight achieved speed, target.30m/s|.178028|.155494|
+|Straight speed/yaw MAE|.121973/.283053|.144506/.213446|
+|Straight signed mean yaw, target0|+.143200|+.050822|
+|Negative arc speed/yaw MAE|.068011/.297309|.089751/.237395|
+|Negative arc signed mean yaw, target-.20|+.015099|-.088932|
+|Positive arc speed/yaw MAE|.063466/.250642|.095910/.214901|
+|Positive arc signed mean yaw, target+.20|+.227353|+.184099|
+|Maximum per-case pooled torque utilization p99|.599540|.557033|
+|Minimum all-joint hard-stop distance, rad|+.153735|+.130572|
+
+Yaw MAE falls14–25% across moving groups and negative-turn mean sign becomes
+correct, but speed regresses in every group; there is no yaw-world acceptance
+advancement. Do not adopt/stack decoupling or infer a successful curriculum from
+the partial yaw signal. Control's worst torque margin is only.0004595 below.60;
+the p99 remains a per-case motor/world/time pooled statistic, not each motor's
+limit or a cross-case re-pooled percentile. Gate passing is not physical safety.
+
+Scalar mean mechanical power/thermal by command (control→decoupled, three
+case scalars each): idle.067374W/.015649→.047085W/.011511;
+straight1.452882W/.034945→1.504080W/.033195;
+negative1.095586W/.033493→1.123255W/.031276;
+positive1.120874W/.034499→1.020515W/.030809. Do not report maxima as these means,
+divide by24 worlds, or call the modeled proxy measured motor temperature.
+
+Training total falls1531/1125; first100137/133 and last100181/72. Treatment
+negative angular sample fraction32.538% across6.144M samples, versus control0;
+mean angular rewards.614707/.380678. Mean squared yaw errors.566609/.422007,
+roll/pitch rates.820618/.630519. Reduced training falls/load/error are descriptive,
+not replacements for the failed held-out tracking gates or evidence for longer
+training without a new declaration.
+
+## Retention and restored original workload
+
+Native weights/JSON stay at the declared run path; Mac JSON-only evidence is
+`artifacts/evaluations/motor-range-yaw-4b9de3cc-20261013`. No duplicate weights or
+ONNX binaries were fetched. The sealed manifest authenticates59 JSON/JSONL
+payloads,69497154 bytes. Independent stdlib verification recomputed case identities,
+all gate flags, per-world pass counts and aggregates; a parallel numerical review
+confirmed the tradeoff. Local derived summary/seal checks and restoration receipts
+are retained separately without modifying sealed payloads.
+
+| Object | SHA256 |
+| --- | --- |
+|Control final999|`0f30c53d4027684320d0781244664e9572016a0cf512a7bd49a623010ca53013`|
+|Decoupled final999|`b994505e9b24fb68b2150e77414e7a7b12d899d0349bc2487780c1e4c0ac4c65`|
+|Full aggregate|`06371ae8d756d3ea3520b1a0ffb836b12171fab03807d16c1a56a77b71077f8d`|
+|Native verification|`197e8d8af459aed1d5f60c50bc778f798441cf4b44767ff20a35d8c9810f7747`|
+|Sealed manifest|`41ec902f42f1e8058bb1bbc41b963288f2a17e0b59610fdfbb48482c9bd9327f`|
+|Local derived summary|`d728c7eeeaa28bc9463b87aa981944ed91520189c4737cb21ad513f546bf0115`|
+|Restoration receipt|`fb371920592a784de9caa5f4d89340725f6efa1cfc74f84e793b5f999389d9c7`|
+
+Peak Duck occupancy2374MiB/68°C, below declared limits. At00:18:30 Beijing the
+guard restored only originally active **user vLLM**, after free lease/no Duck
+service/DINO-only GPU proof. Its new cgroup-owned engine167678 used9692MiB;
+DINO2029 remained946MiB; other three protected scopes remained inactive.
+The07:51 live check confirms restored vLLM and no Duck GPU process. No other
+workload, driver, library,100.98, raw perception or physical robot was changed.
+
+## Next bounded question
+
+Do not repeat the rejected aggregation or extend it by default. Before the next
+learner, inspect whether the stock angular tracking's roll/pitch factor duplicates
+the explicit trunk angular-velocity/momentum regularization and discourages
+forward gait. A yaw-only tracking inclusion contrast may isolate that question
+while preserving those separate stability costs and every original gate. It
+would need its own tested declaration, original exploratory parent rather than
+either rejected new endpoint, and fresh guarded handoff. The next result must
+be judged on **both** speed and yaw; quieter/slower walking is not success.

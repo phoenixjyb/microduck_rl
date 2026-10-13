@@ -139,3 +139,47 @@ shadowed by a contradictory duplicate. Documentation links and whitespace pass.
 
 Complete native regression, both normalized smokes, fresh host context and
 measured timing remain mandatory. No learner has been admitted yet.
+
+## Native admission passed; matched training active
+
+Exact tested/pushed clean native source
+`c5274c58c2dbba01558ba636c8b442c590da358a`; source is frozen while active.
+Native scoped regression: **1,216 passed, 16 existing warnings in 37.64 s**.
+Normalized-export smokes completed 4.659 / 4.632 s with zero falls/NaNs;
+benchmarks 8.083 / 8.151 s, three / six falls, zero NaNs. Projected budgets
+1,212.411 / 1,222.622 s stay below 2,040 s. The benchmarks admit runtime and
+timing, not a motion improvement.
+
+All four initial checkpoint hashes remain
+`d7dd1a99d9ca1f950d6ee2f3603a65661acbb9fff3c8848494cac5eb276f4235`,
+with exact original parent models/normalizers/Adam/LR restored. Thirty closed
+rows independently pass action, linear, head, angular and command-support
+validators. Actual treatment high bins are zero, both signed target bins are
+nonzero, and stock angular .5 / .5 / weight 2 remains unchanged in both arms.
+
+The automatic training export hook repeats the existing warning
+`'Logger' object has no attribute 'logger_type'` in all four preflight phases;
+the previous yaw-focus preflight has the same four warnings. Read-only diagnosis
+confirms the **separate explicit official normalized-export smoke** succeeds,
+with finite [1,61] → [1,14] receipts and byte hashes bound by native admission:
+control `8f2c2d12ab47c2eadaf4b335477adb601d8fce70e4d24daeb6de6307f55d1893`,
+gentleturn `d4421cd15c5bc4654fae7f2a406ae26404f1bf9aa948d4c0ab8e476a340d1ab3`.
+No logger/package/source fix was made during the active job. Later deployment
+must still use the explicit official export route, not assume the hook worked.
+
+Admission SHA `1c37ad7a19db819ea12ff3ee6cc55346622fecdff5c9d42386ce25427b5f13a3`;
+fresh context `875894a512b090cbd2eccae6adfa1a9142a7a62c7c01f7a64ecd665ea99c089d`.
+Closed JSON-only Mac packet
+`artifacts/evaluations/quiet-gentleturn-c5274c58-20261013-preflight`; owner
+compared both hashes to fresh native reads and reran all 30 five-contract checks.
+Three inherited mock restore tests with seven refusal paths pass; generated
+Python/shell and native systemd unit verification pass.
+
+Run `artifacts/training/quiet-gentleturn-c5274c58-20261013`, retained services
+`microduck-quiet-gentleturn-c5274c58-matched-eval.service` (MainPID 801302) and
+`recomo-duck-quiet-gentleturn-c5274c58-handoff.service` (MainPID 799350):
+control → gentleturn → both final matrices. First audit control 220/1,000,
+214 training falls, zero NaNs, finite rows; GPU 1,710 MiB / 65°C, DINO 2029
+preserved, all four protected scopes inactive during the scoped user-vLLM pause.
+Final checkpoints, held-out outcomes, evidence seal and service restoration
+remain pending. No motion capability, video or harder-skill promotion is claimed.

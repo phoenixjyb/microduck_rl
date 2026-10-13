@@ -129,3 +129,37 @@ compile in a no-write dry run;2 portable angular arithmetic tests pass including
 variance/label/count/sign/nonfinite failures. Documentation links and whitespace
 checks pass. Full native scoped regression, both smokes and projected budgets
 remain mandatory before either new learner; native results are still pending.
+
+## Native admission passed; new matched learners active
+
+Exact clean tested/pushed native source
+`154516d8211e1f8e451b9212289adea462353ab0`;1199 scoped regression checks
+passed37.00s with16 existing warnings. Normalized61→14 ONNX smokes passed
+4.712/4.643s,0/0 falls/NaNs; benchmarks8.084/8.150s,2/4 falls, zero NaNs,
+projections1212.595/1222.458s below2040s. Both actual initial checkpoints hash
+`d7dd1a99d9ca1f950d6ee2f3603a65661acbb9fff3c8848494cac5eb276f4235`,
+with exact original936a models/normalizers/17 Adam/LR restored.
+
+All30 closed rows pass action/linear/head/yaw validators. Both head ranges are
+the small nonzero lesson; coefficient2 and XY variance.5 stay fixed, actual yaw
+variance.5/.1 and product labels differ as declared. Final benchmark angular
+reward.631537→.350205 decreases by construction under the narrower kernel;
+raw yaw-error square.525011→.539585 is not an improvement claim. Judge only
+the declared final matrix, not this short timing benchmark.
+
+Admission SHA `81af7c83db2368b8ecb735abae8d9fa8763a40e6f5adc18fa2ce3ef245561c5e`;
+original context `7a9ee84d9b6ce1ad41558af7e4004aa084eb539eae0c55de85352e2ab7bc475f`.
+Closed JSON-only Mac packet `artifacts/evaluations/quiet-yawfocus-154516d8-20261013-preflight`;
+owner compared both hashes to fresh native reads and repeated all30 four-contract
+row validations. Independent generated-ops review, shell/Python/systemd checks,
+3 mock restore tests with7 refusals and2 portable angular arithmetic tests pass.
+
+Run `artifacts/training/quiet-yawfocus-154516d8-20261013`, managed by
+`microduck-quiet-yawfocus-154516d8-matched-eval.service` and
+`recomo-duck-quiet-yawfocus-154516d8-handoff.service`, control→yawfocus→both
+final999 matrices. First retained audit control265/1000,284 training falls,
+zero NaNs, finite metrics,250 checkpoint durable; GPU1710MiB/65°C, DINO2029
+preserved, all four protected scopes inactive during scoped user-vLLM pause.
+Native source154516d8 is frozen while active. Final numerical results, extended
+trace coverage, checkpoint seal and original-service restoration are pending;
+no qualified motion, video, harder-skill promotion or physical authority follows.

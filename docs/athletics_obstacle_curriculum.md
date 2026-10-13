@@ -152,6 +152,14 @@ behavior. Same-recipe controls differed materially between training seeds, so
 the next separately predeclared slice is a second matched-seed replication,
 not another stacked reward change or automatic harder-skill promotion.
 
+The [second matched-seed replication](experiments/2026-10-13-motor-range-yaw-only-replication.md)
+is predeclared at training seed1481, repeating both original-parent arms with
+unchanged1000-update budgets, objective, safety terms and held-out gates. First
+seed1447 remains in the evidence; no favorable second seed erases its failed
+speed retention or establishes a qualified skill. Source/native admission are
+complete:82 focused/1052 integrated checks passed. Native admission remains
+pending; only tested/pushed exact source may start the guarded handoff.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

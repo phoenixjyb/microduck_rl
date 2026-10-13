@@ -260,6 +260,13 @@ C1-S repetition or teacher admission. Raw observations use the baked normalizer
 once; no yaw-command remap or gate relaxation. Torque p99 is normalized utilization,
 not Nm; explicit raw-force companion reporting preserves the legacy gate.
 
+That archived reference now fails all nine moving cases (speed1/72, yaw0/72),
+without a motor/range or episode-terminal failure; it is not a teacher. The
+[pinned upstream v8 reference](experiments/2026-10-13-official-v8-native-reference.md)
+is the next fixed-gate diagnostic. Its training-side calibrated teacher labels
+are a concrete structural lead, but its bundled release claims are not our
+simulator or physical acceptance and do not automatically authorize a PPO job.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

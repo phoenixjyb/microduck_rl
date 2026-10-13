@@ -175,6 +175,37 @@ def test_hash_is_checked_before_ort_and_only_pinned_artifact_is_allowed(monkeypa
     assert calls == []
 
 
+def test_unregistered_digest_is_rejected_before_payload_or_runtime_access(monkeypatch, tmp_path):
+    payload_calls = []
+    runtime_calls = []
+
+    def forbidden_payload(path):
+        payload_calls.append(path)
+        pytest.fail("unregistered digest must be rejected before artifact reads")
+
+    class NeverOrt:
+        @staticmethod
+        def InferenceSession(*args, **kwargs):
+            runtime_calls.append((args, kwargs))
+            pytest.fail("unregistered digest must be rejected before ORT construction")
+
+    monkeypatch.setattr(ref.policy_inspection, "_read_payload", forbidden_payload)
+    monkeypatch.setitem(sys.modules, "onnxruntime", NeverOrt)
+    path = tmp_path / "does-not-exist.onnx"
+    with pytest.raises(ValueError, match="only the pinned official VelStand artifacts"):
+        ref.load_normalized_onnx_reference(path, "0" * 64)
+
+    assert payload_calls == []
+    assert runtime_calls == []
+
+
+def test_two_registered_policy_hashes_remain_explicit():
+    assert ref.OFFICIAL_VELSTAND_SHA256 == (
+        "1c659be55da94bc5753b707de5c6a3e7c49931e05ca3b6991615cef1a8ba9a45")
+    assert ref.OFFICIAL_V8_SHA256 == (
+        "2fc7f8ee6acd7d0d3f66a99927b5d5a56589aeed02ec714de329b252d5ccf492")
+
+
 @pytest.mark.parametrize(
     ("inputs", "outputs", "providers", "message"),
     [
@@ -349,4 +380,23 @@ def test_optional_archived_velstand_cpu_smoke():
     actions = adapter(actor)
     assert actions.shape == (1, 14)
     assert actions.dtype == torch.float32
+    assert bool(torch.isfinite(actions).all())
+
+
+def test_optional_official_v8_cpu_smoke_batch_eight():
+    path = (Path(__file__).resolve().parents[1]
+            / "artifacts/community/intake-20261013/official-velstand-v8/policy.onnx")
+    if not path.is_file():
+        pytest.skip("pinned official v8 artifact is not present")
+    assert path.stat().st_size == 793705
+    pytest.importorskip("onnxruntime")
+    adapter = ref.load_normalized_onnx_reference(path, ref.OFFICIAL_V8_SHA256)
+    actor = TensorDict({"actor": torch.zeros((8, 61), dtype=torch.float32)}, batch_size=[8])
+
+    actions = adapter(actor)
+
+    assert adapter.artifact_sha256 == ref.OFFICIAL_V8_SHA256
+    assert adapter.provider == "CPUExecutionProvider"
+    assert actions.shape == (8, 14)
+    assert actions.dtype == torch.float32 and actions.device.type == "cpu"
     assert bool(torch.isfinite(actions).all())

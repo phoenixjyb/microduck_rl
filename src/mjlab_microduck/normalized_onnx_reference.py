@@ -30,6 +30,7 @@ def _require(condition: bool, message: str) -> None:
 
 
 OFFICIAL_VELSTAND_SHA256 = "1c659be55da94bc5753b707de5c6a3e7c49931e05ca3b6991615cef1a8ba9a45"
+OFFICIAL_V8_SHA256 = "2fc7f8ee6acd7d0d3f66a99927b5d5a56589aeed02ec714de329b252d5ccf492"
 OBSERVATION_NAMES = (
     "base_ang_vel",
     "projected_gravity",
@@ -103,14 +104,17 @@ def validate_actor_contract(cfg: ManagerBasedRlEnvCfg) -> tuple[str, ...]:
 
 
 class NormalizedOnnxReference:
-    """Single pinned API-1 model, with exact-byte CPU ONNX Runtime inference."""
+    """One of two pinned API-1 models, with exact-byte CPU ONNX Runtime inference."""
 
     def __init__(self, path: str | Path, expected_sha256: str):
         _require(type(expected_sha256) is str
                  and re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is not None,
                  "expected SHA256 must be 64 lowercase hexadecimal characters")
-        _require(expected_sha256 == OFFICIAL_VELSTAND_SHA256,
-                 "only the pinned official VelStand artifact is accepted")
+        # Resolve these module constants at construction time so contract tests
+        # can substitute a fixture digest for the original pinned v1 artifact.
+        # Production accepts only the two explicit official policy digests.
+        _require(expected_sha256 in (OFFICIAL_VELSTAND_SHA256, OFFICIAL_V8_SHA256),
+                 "only the pinned official VelStand artifacts are accepted")
 
         payload = policy_inspection._read_payload(Path(path))
         digest = hashlib.sha256(payload).hexdigest()

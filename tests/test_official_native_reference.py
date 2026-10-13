@@ -1,4 +1,5 @@
 import copy
+from dataclasses import replace
 import json
 
 import pytest
@@ -62,3 +63,27 @@ def test_binding_and_unchanged_motion_and_range_gates(tmp_path, fault):
         result = reference.evaluate_matrix(object(), lambda: None, tmp_path, evaluator=evaluate)
         assert result['numerical_gate']['decision'] == 'foundation-not-ready'
         assert len(result['numerical_gate']['failures']) == 1
+
+
+@pytest.mark.parametrize('spec', [reference.ARCHIVE, reference.V8])
+def test_registered_references_keep_the_same_matrix_and_bound_artifact(tmp_path, spec):
+    rows = rows_with_positions()
+    for row in rows:
+        row['checkpoint_sha256'] = spec.sha256
+    calls = []
+    def evaluate(path, seed, speed, yaw, health, **kwargs):
+        assert path == spec.path
+        calls.append((seed, speed, yaw))
+        return rows[len(calls)-1]
+    result = reference.evaluate_matrix(object(), lambda: None, tmp_path, evaluator=evaluate, spec=spec)
+    assert len(calls) == 12 and result['artifact_sha256'] == spec.sha256
+    assert result['protocol'] == spec.protocol
+    assert result['numerical_gate']['decision'] == 'foundation-ready-for-next-experiment'
+
+
+def test_unregistered_spec_rejected_before_inference_or_writes(tmp_path):
+    bad = replace(reference.V8, sha256='0'*64)
+    with pytest.raises(ValueError, match='predeclared reference'):
+        reference.evaluate_matrix(object(), lambda: None, tmp_path,
+                                  evaluator=lambda *_a, **_k: pytest.fail('unexpected inference'), spec=bad)
+    assert not list(tmp_path.iterdir())

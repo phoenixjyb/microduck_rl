@@ -75,4 +75,54 @@ must retain failures and investigate plant/source mismatch, not relax thresholds
 or repeat C1-S. Historical learner packets are descriptive context, not a matched
 causal control for this independent reference. No video, raw perception, physical
 motion, hop/obstacle/football promotion or automatic next long learner is authorized
-by this diagnostic decision. Results are pending.
+by this diagnostic decision.
+
+## Completed and rejected
+
+Source `3b958f5b0d9823b1c3fb5d8e9d366cd513e0b502`; retained native directory
+`artifacts/evaluations/official-native-3b958f5b-20261013`. All 12 cases complete,
+240 steps/eight first-episode worlds each, in 56.421 seconds. All nine moving
+cases fail tracking: moving speed 1/72 worlds, yaw 0/72; idle speed/yaw 24/24.
+
+| Command (vx,wz) | Mean speed MAE | Mean yaw MAE | Mean body vx | Mean body wz |
+| --- | ---: | ---: | ---: | ---: |
+| (0,0) | .000964 | .005659 | −.000174 | −.000346 |
+| (.3,0) | .162761 | .278769 | .137239 | −.046081 |
+| (.2,−.2) | .168983 | .229231 | .031017 | −.052203 |
+| (.2,+.2) | .176715 | .226041 | .023285 | .011856 |
+
+No terminal, rated-speed exceedance or motor/range gate failure. Highest pooled
+utilization p99 .502438 = raw force p99 .301463 Nm; minimum all-joint margin
+.203911 rad. Sampled GPU peak 1784 MiB, minimum free 14410 MiB, maximum 57°C.
+The process succeeds but the numerical decision is `foundation-not-ready`, not
+teacher/skill/physical acceptance. This archived reference is NOT a walking teacher.
+
+Evidence seals (full traces remain on 100.100; lightweight seals suffice on Mac):
+
+- Result: `dd19de98099474a0e255d7be4019d1c774c1f13c9f82b59a345d502e0c9b3507`.
+- Fifteen-file native inventory: `426900a0314bd764ca2847e5f3de2a774ac40ab13f903283a81a57452f066129`.
+- CPU-only summary: `a23ad79b235b6f07b644c0c84aafbe1de9d1741fbc662c25592081a9d6db3747`.
+- Restoration: `8122ff8e9fffcd4e8bd898282690c075cd55118b2c0334968b321f9f9a6b2bb0`.
+
+The create-exclusive closeout checks exact result hash, ordered case identities,
+per-case/aggregate equality, artifact identity, finite values, unchanged gates,
+force-unit conversion and retained original-service restoration. The user service
+is inactive/success; user vLLM was restored (observed main PID883343, GPU engine
+883655/9692 MiB) and DINO2029/946 MiB preserved. Other protected services stay inactive.
+These process identities are point-in-time, not reusable host defaults.
+
+Checks: Mac focused suite 74 passed; native affected suite 1256 passed/16 existing
+warnings; restoration guard 3 passed/7 refusal subtests; native CPU 240×8 ONNX
+calls .04035 seconds. The broad all-tests sweep timed out at 180 seconds and is
+NOT a broad pass. Its first failure is the unchanged ADA audit's global
+`sys.modules` isolation assertion after whole-suite collection loads Torch;
+that file passes separately (88 tests). An unrelated ADA CPU fixture also fails
+its retained raw-payload bound (54 passed/1 error in the diagnostic subset).
+Those sources are unchanged from c5274c58; no ADA repair, driver or package change
+was made. Exact logs are retained in native `.local/state/official-native-3b958f5b-*`.
+
+The launch's initial SSH attempt timed out before connection; on restored
+reachability its never-started service timestamp and absent output were verified
+before one successful launch. Do not confuse the connectivity retry with another
+evaluation attempt. Next assess the separately pinned upstream v8 release,
+not another blind scalar/support learner or a relaxed gate.

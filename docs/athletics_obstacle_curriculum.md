@@ -1095,3 +1095,13 @@ adds measured world XY and contact-cycle coverage with endpoint AND trajectory
 checks, continuously unwrapped heading and unchanged motor/stability gates.
 Replay only the original mean and the two declared final999 checkpoints before
 choosing the next learning objective; no new skill follows from source tests.
+
+All36 new native route replays are now complete and independently checked.
+Every moving world has4–8 complete support cycles; all motor/range and no-fall
+checks pass, but no full moving case satisfies route accuracy. Original/stock/
+cautious moving route-passing worlds are0/1/2 out of72; this is not a qualified
+walking/obstacle capability. The original teacher is slow with better heading,
+whereas adaptation increases speed and persistent route drift. Next prioritize
+steady steering without taxing gait oscillation, with speed/idle retention and
+the newly fixed route protocol. Reward-source preparation is not another run;
+separately predeclare and test its experiment before allocating a new budget.

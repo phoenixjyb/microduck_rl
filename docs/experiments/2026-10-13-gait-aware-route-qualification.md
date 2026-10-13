@@ -76,3 +76,69 @@ cover signed arcs, heading wrap/full-spin aliases, returned path excursions,
 unsupported contact cycles/timers, hash/frame/clock mismatches, safety metrics
 and default-evaluator noninterference. Results pending; no gait-aware native
 qualification is claimed yet.
+
+## Native closeout — measured route failures, not a raw-yaw-only artifact
+
+Exact source `c10a6a57dca64431793b16e94e6da47791129ec7`, native affected tests
+1493 pass/18 existing warnings. One sequential retained
+`recomo-duck-v8-gait-route-c10a6a57-20261013.service` finished inactive/success0.
+The initial/stock/cautious arms took59.019/60.644/60.539s; all36 cases completed
+240 frames, no terminals and zero optimizer updates. Both decisions were
+independently recomputed from each retained raw trace and matched the records.
+All three full matrices are `route-not-qualified`; no threshold was changed.
+
+| Command vx / yaw | Original v8 route-passing worlds | Stock final999 | Cautious final999 |
+| --- | --- | --- | --- |
+| .30 / 0 |0/24 |0/24 |0/24 |
+| .20 / −.20 |0/24 |0/24 |1/24 |
+| .20 / +.20 |0/24 |1/24 |1/24 |
+
+No full moving case passes. Original and cautious idle each pass3/3 cases and
+all24 worlds; stock idle passes2/3 cases because its seed853 idle body-yaw bar
+fails, even though all24 path-component world checks pass. This is a separate
+new replay, not a claim that trajectories are byte-identical to older rollouts.
+All motor/range checks pass in this replay. Cautious raw force p99 peaks
+.359999Nm, very close to the unchanged .36-Nm bar: do not round away the margin.
+
+| Full settled interval mean error | Original v8 | Stock final999 | Cautious final999 |
+| --- | --- | --- | --- |
+| Straight XY endpoint/T (m/s) |.178345 |.118163 |.121502 |
+| Negative arc XY endpoint/T (m/s) |.118199 |.074077 |.071298 |
+| Positive arc XY endpoint/T (m/s) |.119084 |.061381 |.059763 |
+| Straight heading endpoint/T (rad/s) |.041639 |.145980 |.156549 |
+| Negative arc heading endpoint/T (rad/s) |.056566 |.149403 |.170334 |
+| Positive arc heading endpoint/T (rad/s) |.051389 |.095476 |.120784 |
+
+Acceptance uses every world, every cycle and the maximum trajectory errors,
+not these means. The new measurements confirm a real speed/route tradeoff:
+the original teacher is slow but has much smaller heading bias; learned actors
+make forward/arc-distance gains while worsening straight and negative-turn
+heading. Cycle-heading errors dominate the learned actor failures. A low
+`valid_cycle_count` means cycles failed route accuracy, not absent contact
+coverage; keep physical support coverage distinct from successful route cycles.
+Actual moving support-cycle count ranges are4–7 original,6–8 stock and6–7
+cautious; every moving world has sufficient complete cycles and there are no
+support-timer, missing-right-touchdown or cycle-duration failures.
+The next learning hypothesis should price persistent steering error without
+taxing unavoidable within-gait angular oscillation, and retain speed and idle.
+An existing reset/command-aware `body_yaw_bias_cost` is a candidate objective;
+it measures body-rate bias, not the projected-heading trajectory, so its reward
+signal must be diagnosed and its recipe separately predeclared/tested before
+another learner. No such new learner is launched by this measurement closeout.
+
+Full native packet:
+`artifacts/evaluations/v8-gait-route-c10a6a57-20261013`; only compact
+summary/inventory counterparts are retained on the Mac. Maximum GPU1754MiB,
+minimum free14440MiB, maximum65°C. DINO PID2029 remains unchanged; user vLLM
+restored active and owns its GPU memory again. Other protected scopes remain
+inactive. No libraries, policies, rewards, actor inputs, old gates or unrelated
+workloads were changed during replay; no motion, camera perception or video.
+
+| Sealed artifact | SHA256 |
+| --- | --- |
+| Initial actor replay result | `ccea297aed76500c1ac5634628206bc639ac47ab870ebc708cc49d758bd20b6a` |
+| Stock actor replay result | `b6b172d70a933ee89b66de6599f18be568598459b098950e9af3fd3a9b14f31d` |
+| Cautious actor replay result | `632f1656afdb0ce0a43f01beef6580d24187497fbfeaa6e877c8ad71ab1f11a2` |
+| Summary | `13b6c4109cd74a50d3584f5aa99237da702eedf1a29303fac0c8053604be0c44` |
+| Full packet inventory | `7a80c7721d0ff8d6f99714e49c7f0d3accea980c33ee35371c3163b1d684c853` |
+| Scoped restoration | `d1dc8303ad10ffc7876daa0e8a823fa2a454933d3b8f9dadc8138d1e796ea5c5` |

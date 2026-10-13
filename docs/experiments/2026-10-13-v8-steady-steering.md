@@ -91,7 +91,7 @@ windows, touch100.98/NX/drivers/packages, run raw perception, publish policy,
 create video, start harder skill jobs or authorize physical motion.
 
 Focused/source and exact native affected tests plus preflight precede launch.
-Results pending.
+The completed exact-source outcome is recorded below; it is not promoted.
 
 Preparation checks:129 focused tests and1543 affected local tests pass (18
 existing warnings in the wider set), including the installed RewardManager
@@ -190,3 +190,133 @@ prerequisite failure, with DINO unchanged; no long training budget was spent.
 | Invalid first preflight script | `90c271ca52543ca0140a3a39f9c724286083a6582b4bab3406661b5af5f7590b` |
 | First no-restart receipt | `74011b1eaedcc07aeaf816675b911695f10b60660dcc7bc551d4185cb36091e3` |
 | Correct CPU preflight script | `968266748fee21b953904951c9a4b83185caecf0c5caeab5465ec15753d85327` |
+
+## Completed corrected-source round
+
+Execution source **`7f55ded7c615e0adda4f859e6e05dde40c447e66`**, clean native
+checkout, passed **1550 affected tests** (18 existing warnings,45.54s), CPU
+control/retention preflight and independent imported-module smoke/benchmark
+receipt validation. The namespace fix has136 focused local passes. No learning
+weight, rate, budget, plant, sampler or qualification gate was changed to repair
+the software-only failures. This is a fresh run, not a restart of either old unit.
+
+Retained packet:
+`/home/converge/work/microduck_rl-upstream-20261010/artifacts/training/v8-steady-steering-7f55ded7-20261013`.
+Its sequential user service
+`recomo-duck-v8-steady-steering-7f55ded7-20261013.service` finished with
+`Result=success`,exit0,inactive. Stages took4.221s smoke,7.630s benchmark,
+58.755s initial evaluation,**620.539s foundation**,60.618s final evaluation.
+Foundation completed **1000 updates / 6,144,000 transitions**, with892 training
+fall terminations and0 NaN terminations. These exploratory training terminations
+are distinct from the held-out episode results below.
+
+First-update foundation KL mean **.01021270**, maximum minibatch mean
+**.02042201**, passes the fixed .05/.10 guard. Smoke and benchmark passed their
+own guards. Actual post-reward bias activity covered24000/24000 foundation
+steps; mean EMA cost.16026596 and mean actual reward−.16026596. All1000 update
+rows are finite with24 snapshots and20 optimizer minibatches each. The
+independent CPU verifier checks exact initial state matches, empty initial Adam,
+frozen actor affine/count0, final critic count6144000, all17 Adam states at
+20000 steps, final environment clock24000 and checkpoint cadence0/250/500/750/999.
+Regular normalized ONNX export is retained, not a deployment approval.
+
+Maximum sampled GPU use1752MiB, minimum free14442MiB, temperature67°C. DINO
+PID2029 was preserved throughout; originally active **user** vLLM was restored
+active and its GPU ownership verified (engine PID1213138 at9692MiB). User
+subject worker and both system service scopes remained inactive. No100.98
+workload, package/driver, physical robot or perception model was touched.
+
+### Held-out result and matched descriptive comparison
+
+All12 final cases completed240 steps,8 worlds each, with no first-episode
+terminal/fall or motor/hinge/rated-speed gate failure. Idle passes3/3 full cases
+and24/24 speed/yaw worlds. Moving speed passes **66/72**, equal to the sealed
+cautious control, and each command's MAE stays within its fixed+.02m/s allowance:
+the independent decision is **`walking-idle-retained`**. Legacy moving yaw
+passes0/72; its old rejection is unchanged.
+
+| Moving vx / yaw | Cautious body-speed MAE | New MAE | Cautious full heading error / T | New heading error / T | Cautious full XY error / T | New XY error / T |
+| --- | --- | --- | --- | --- | --- | --- |
+| .30 / 0 |.074133 |.070188 |.156549 |.074679 |.121502 |.085446 |
+| .20 / −.20 |.040906 |.048545 |.170334 |.081787 |.071298 |.053056 |
+| .20 / +.20 |.039725 |.043694 |.120784 |.095747 |.059763 |.058954 |
+
+Speed and XY rates are m/s; heading rates are rad/s. This table uses the
+endpoint error divided by the whole settled interval, not the stricter
+trajectory maximum or complete qualification. Descriptive gains: roughly52%
+less full-interval heading error for straight and left commands,21% less for
+right; straight/left XY error decreases roughly30%/26%. Actual mean body yaw
+is now+.013690/−.163860/+.166679, versus cautious+.131807/−.043814/+.158711.
+Actual body forward speed is.232875/.161649/.166122. This supports the fixed
+low-frequency reward hypothesis, but one training seed and nondeterministic
+GPU trajectories do not establish a statistical effect or hardware capability.
+The slow original actor still has smaller full-interval heading error
+(.043906/.051030/.049181); this round improves the speed/steering tradeoff
+against cautious adaptation, not every measure against the original teacher.
+
+The full **route gate still rejects all9 moving cases**, with only **3/72**
+moving worlds satisfying every route component (cautious2/72). Idle passes
+3/3. No actor is promoted and no harder skill/video job follows from this round.
+Held-out maximum force utilization.593511 (dimensionless), raw force p99
+.356107Nm, minimum named motor-hinge margin.137737rad. This passing held-out
+envelope must not be confused with stochastic training maxima: utilization
+1.067539, soft-limit fraction.082252, rated-speed exceed fraction.001070,
+absolute mechanical power7.137665W and thermal proxy.154415. The proxy is not
+measured motor temperature or a physical safety certification.
+
+### Read-only rejection diagnosis and next lesson
+
+Counts below are reductions of the hash-sealed route cases under the unchanged
+gate, not a new acceptance definition or a checkpoint search.
+
+| Command | Worlds passing full XY endpoint AND maximum | Worlds passing full heading endpoint AND maximum | Complete cycles | Cycle heading endpoint failures | Additional peak-only heading failures | Worlds with fewer than3 physical cycles |
+| --- | --- | --- | --- | --- | --- | --- |
+| .30 / 0 |17/24 |16/24 |164 |48 |51 |0 |
+| .20 / −.20 |21/24 |15/24 |150 |43 |38 |2 |
+| .20 / +.20 |22/24 |15/24 |153 |58 |36 |1 |
+
+Existing completed cycles have no duration or right-touchdown-count failure.
+Straight worlds have6–7 cycles; three turning worlds have insufficient physical
+cycle coverage. `valid_cycle_count` also requires path/heading accuracy; its
+failure is NOT automatically a contact-sensor failure. There are149 cycle
+heading endpoint failures and125 additional peak-only failures across467
+cycles. Therefore removing trajectory maxima would neither preserve the fixed
+gate nor solve all residual steering failures.
+
+Next prioritize a separately predeclared **projected-world heading lesson**:
+the current reward targets body yaw, whereas qualification measures unwrapped
+projected heading and the actual path over each gait cycle. First design/test
+command/episode reset, angle unwrapping and tilted-body behavior of that reward
+using existing privileged simulator state. Preserve the61D actor interface,
+raw14D actions, perception separation, walking/idle retention and all existing
+route/safety gates. Predeclare one matched reward change and its units/budget
+before a fresh smoke; do not blindly extend this rejected actor, adjust gates,
+add observation filters, or claim an obstacle/hop/football skill from this result.
+That next learner has **not** been implemented or launched by this closeout.
+
+### Durable evidence
+
+The native packet contains100 sealed files /254823608 bytes. Full PTs and raw
+traces stay native; only the32095-byte summary and15079-byte inventory are
+copied to Mac `artifacts/training/v8-steady-steering-7f55ded7-20261013-closeout/`.
+Independent CPU verification recomputes route, legacy, retention and paired
+descriptive results from raw cases, checks every declared checkpoint/export
+and authenticates original workload restoration. Its retained source is
+`/home/converge/.local/state/verify-steady-steering-7f55ded7-closeout.py`.
+
+| Completed evidence | SHA256 |
+| --- | --- |
+| Foundation result | `efc31f498a25f1c70c647ae2e686834936e64527a64d615b5348b81c05a661fa` |
+| Foundation initial PT | `5f9f8778078dd343df7533d5b6873c58989f1656807e67fbeff3d5a8a2c141c7` |
+| Final model999 | `d307531267971fc8276f158d42cc0ac9259b4a69efe1ccfcedd5b773e600b47f` |
+| Normalized foundation ONNX | `5c7d10c007addebb9d12c0d982bf331490a98ce56ffc3a9016200646202ca1bd` |
+| Initial evaluation | `0a6052d587f7a54d2c0c939e4be872988c3b4f20cc229a3a7c948a45819d38e9` |
+| Final evaluation | `a361471830a58a2a02e49e9b4fe2c3b5a12e6a1844b5f759a44b90ce56cf2966` |
+| Verified summary | `182e7fd99c6ec069f8e6b932ccc3008e0125fb6ba94a7e08f55e6d72edf7f155` |
+| Full packet inventory | `8e0954b7853d9e810a9e13127ba0c9f86e2be1d16896da81cceffbae0b9c6de6` |
+| Original-workload restoration | `3b09f2976b1a960ceec83efccdcdc761f0e5599ad6bd0df2d2d46104434162a9` |
+| Independent verifier source | `dc97791c7c599a666cf8e86b69eeac98e8a05c87ecaaa468354afdcc90e7bbcd` |
+
+Source/tests, actual training completion, numerical qualification, publication
+and physical outcomes remain distinct. The later evidence-document commit is
+not the executed training source.

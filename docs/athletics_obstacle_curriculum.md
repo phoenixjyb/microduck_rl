@@ -1114,3 +1114,16 @@ The EMA is reward state, never an action/observation filter. Actual pre-reset
 activity, exact initial model-state matches and a first-update KL guard precede
 the full budget. Keep measured route gates and explicit speed/idle retention;
 do not trade away walking to improve steering or promote old rejected actors.
+
+The steady-steering round is now complete at execution source `7f55ded7`:
+1000 updates /6.144M transitions, finite metrics and0 NaN terminations. All12
+held-out cases finish without fall/motor/range failure; moving speed retention
+passes66/72 and idle24/24. Full-interval heading error falls roughly52% for
+straight/left and21% for right versus the cautious control, but every moving
+case still fails complete route qualification (3/72 moving worlds pass all
+components). Preserve this partial gain without promoting a skill. The
+[sealed result and diagnosis](experiments/2026-10-13-v8-steady-steering.md)
+separate residual endpoint/within-cycle heading errors from three turning
+worlds with insufficient physical cycle coverage. Next predeclare a matched
+projected-world heading reward lesson, with no actor-observation expansion or
+gate relaxation, before another fresh smoke. That next learner is not yet run.

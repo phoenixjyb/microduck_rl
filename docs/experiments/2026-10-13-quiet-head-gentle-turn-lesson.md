@@ -85,8 +85,10 @@ width/weight, without recomputing the stateful head EMA.
 The full matrix remains seeds 839/853/857 × idle / (.3,0) / (.2,−.2) / (.2,+.2):
 12 cases per arm, eight first-episode worlds, 240 steps, omit startup 60 only
 for tracking. Per-world speed MAE ≤.03 idle / ≤.10 moving, yaw MAE ≤.10,
-no terminal or rated-speed exceedance, case-pooled torque p99 ≤.60 Nm, all
-14 hard margins ≥−.005 rad and right-hip stop exposure ≤1%. No relaxed gate.
+no terminal or rated-speed exceedance, case-pooled absolute-force utilization
+p99 ≤.60 (dimensionless; equivalent raw |force| p99 ≤.36 Nm at the .60 Nm
+reference), all 14 hard margins ≥−.005 rad and right-hip stop exposure ≤1%.
+No relaxed gate.
 Retain body-orientation and gait traces for every case using the existing
 read-only pre-action API and truthful contact timing; no sensor refresh.
 
@@ -199,7 +201,7 @@ and yaw pass 24/24 worlds in each arm. Every moving case still fails tracking:
 moving speed passes **53→51/72**, moving yaw **0/72 in both**. Both decisions
 remain `foundation-not-ready`, not policy or simulator qualification.
 
-| Command (m/s, rad/s) | Speed MAE control→gentleturn | Yaw MAE control→gentleturn | Speed passes /24 | Worst case torque p99 Nm |
+| Command (m/s, rad/s) | Speed MAE control→gentleturn | Yaw MAE control→gentleturn | Speed passes /24 | Worst case force-utilization p99 (unitless) |
 | --- | ---: | ---: | ---: | ---: |
 | Idle | .000947→.001087 | .006776→.007787 | 24→24 | .247408→.244288 |
 | (.3,0) | .110048→.112365 | .227538→.275427 | 5→3 | .490175→.464991 |
@@ -207,9 +209,13 @@ remain `foundation-not-ready`, not policy or simulator qualification.
 | (.2,+.2) | .063210→.070974 | .245758→.266547 | 24→24 | .465213→.430127 |
 
 No terminal, rated-speed exceedance, hard-range violation or right-hip stop
-exposure occurs. All case torque p99 values remain under .60 Nm; minimum joint
-margin stays positive but decreases .252958→.206727 rad. These safety-subset
-passes are not motion qualification. Independent matched numerical review also
+exposure occurs. Every case force-utilization p99 remains under the unchanged
+.60 limit; minimum joint margin stays positive but decreases .252958→.206727
+rad. The worst case utilization values convert to absolute-force p99 of
+.294104844 Nm control and .278994786 Nm gentleturn (multiply by the .60 Nm
+reference). This report-only unit clarification does not alter the sealed JSON,
+hashes, existing gate or decisions. These safety-subset passes are not motion
+qualification. Independent matched numerical review also
 finds paired regressions: torque p99 3/12 cases, soft-limit fraction 3/12, power
 2/12, thermal proxy 3/12, minimum joint margin 11/12. The descriptive-benefit rule
 fails: straight and positive-turn speed means regress, as do all three moving

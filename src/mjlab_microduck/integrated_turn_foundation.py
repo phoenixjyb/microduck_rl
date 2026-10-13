@@ -71,6 +71,23 @@ def write_new(path, data):
         os.fsync(output.fileno())
 
 
+def motor_force_summary(force_nm):
+    """Report force units explicitly without changing the legacy utilization gate.
+
+    ``torque_p99`` has always meant p99(abs(force) / 0.60 Nm), NOT Nm.
+    Its existing <=0.60 gate therefore corresponds to <=0.36 Nm raw p99.
+    New companion fields are additive; sealed earlier reports remain untouched.
+    """
+    require(isinstance(force_nm, torch.Tensor) and force_nm.numel() > 0
+            and force_nm.dtype in (torch.float32, torch.float64) and finite_tree(force_nm),
+            "finite nonempty motor force tensor in Nm")
+    force = force_nm.double().abs().flatten()
+    reference_nm = .60
+    return dict(torque_p99=float(torch.quantile(force / reference_nm, .99)),
+                abs_force_p99_nm=float(torch.quantile(force, .99)),
+                torque_p99_reference_nm=reference_nm)
+
+
 def prepare_config(mode):
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
@@ -315,7 +332,7 @@ def body_yaw_trace_sample(robot, command, actor_command):
 
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
                   angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False,
-                  head_yaw_command=None, observation_trace=False):
+                  head_yaw_command=None, observation_trace=False, onnx_reference=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -341,6 +358,12 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
     cfg.events.pop("push_robot", None)
     cfg.sim.nan_guard.enabled = True
     fix_velocity_commands(cfg, speed, yaw)
+    if onnx_reference is not None:
+        from mjlab_microduck.normalized_onnx_reference import NormalizedOnnxReference, validate_actor_contract
+        require(isinstance(onnx_reference, NormalizedOnnxReference)
+                and onnx_reference.artifact_sha256 == sha256(checkpoint),
+                "typed exact-byte ONNX reference; not a PPO checkpoint")
+        validate_actor_contract(cfg)
     if head_yaw_command is not None:
         head = cfg.commands["head_pose"]
         head.ranges = ((0., 0.), (0., 0.), (head_yaw_command, head_yaw_command), (0., 0.))
@@ -360,14 +383,21 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         if action_trace:
             from mjlab_microduck import action_response_capture
             action_response_capture.validate_wrapper(wrapped)
-        runner = load_runner_cls(TASK)(wrapped, asdict(agent), device="cuda:0")
-        runner.load(str(checkpoint), strict=True, map_location="cuda:0")
-        policy = runner.get_inference_policy(device="cuda:0")
+        if onnx_reference is None:
+            runner = load_runner_cls(TASK)(wrapped, asdict(agent), device="cuda:0")
+            runner.load(str(checkpoint), strict=True, map_location="cuda:0")
+            policy = runner.get_inference_policy(device="cuda:0")
+        else:
+            # The deployed ONNX already includes its normalizer. No PPO runner,
+            # checkpoint load, additional normalization, remap or action filter.
+            policy = onnx_reference
         obs, robot = wrapped.get_observations(), env.scene["robot"]
         if head_yaw_command is not None:
             require(not any(name.startswith("passive_") for name in robot.joint_names),
                     "head diagnostic requires plain servo qpos without passive output joints")
         stream = MotorStepStream.from_robot(robot, worlds, device=env.device, cost_cfg=MotorStepCostCfg())
+        if onnx_reference is not None:
+            onnx_reference.validate_robot(robot, stream.joint_ids, stream.names)
         env._microduck_motor_step_stream = stream
         phase = torch.zeros(worlds, dtype=torch.long, device=env.device)
         velocities, motor_rows, terminals = [], [], []
@@ -440,7 +470,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         settled = v[startup:]
         result = dict(seed=seed, speed=speed, yaw=yaw, worlds=worlds, steps=len(v),
                     complete=len(v) == steps and not terminals, terminal_worlds=terminals,
-                    checkpoint_sha256=sha256(checkpoint), torque_p99=float(torch.quantile(u.flatten(), .99)),
+                    checkpoint_sha256=sha256(checkpoint), **motor_force_summary(f),
                     rated_speed_exceed_fraction=float((s.abs() > RATED_SPEED).double().mean()),
                     soft_limit_fraction=float((u > .70).double().mean()),
                     mean_abs_mechanical_power_w=float((f*s).abs().sum(-1).mean()),
@@ -448,6 +478,10 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                     speed_mae=(settled[..., 0]-speed).abs().mean(0).tolist() if len(settled) else None,
                     yaw_mae=(settled[..., 1]-yaw).abs().mean(0).tolist() if len(settled) else None,
                     motor_stream=stream.provenance())
+        if onnx_reference is not None:
+            # Legacy trace/checkpoint hash keys are artifact identifiers here,
+            # not claims that the ONNX is a resumable PPO checkpoint.
+            result["inference_backend"] = onnx_reference.provenance()
         if diagnostics:
             result["response_diagnostics"] = response_diagnostics(v, m, torch.stack(positions).double(),
                 limits.double(), stream.names, yaw, startup=startup)

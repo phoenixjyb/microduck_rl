@@ -253,6 +253,13 @@ do not promote the endpoint or repeat this scalar/support line automatically.
 Next investigate structural learning and a compatible positive walking reference
 before another predeclared training experiment; no acceptance bar is lowered.
 
+The [fresh official native reference check](experiments/2026-10-13-official-native-reference.md)
+now binds the archived official ONNX to our existing plain native collector for
+the same 12 held-out cases. This is an independent diagnostic, not PPO training,
+C1-S repetition or teacher admission. Raw observations use the baked normalizer
+once; no yaw-command remap or gate relaxation. Torque p99 is normalized utilization,
+not Nm; explicit raw-force companion reporting preserves the legacy gate.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

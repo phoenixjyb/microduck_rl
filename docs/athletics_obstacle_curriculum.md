@@ -137,7 +137,10 @@ momentum stability penalties remain active at identical weights, along with moto
 and bilateral range objectives. Their signals/frames differ, so this tests axis
 inclusion rather than claiming redundant penalties. Both speed and yaw must pass
 the unchanged held-out gates. Source checks76 focused/1046 integrated passed;
-native GPU admission and measured outcome are pending.
+native1046 tests, both normalized smokes and both benchmark projections have also
+passed. The exact-source `d71c3028` paired1000-update round is active, with control
+182/1000 at08:17 Beijing and authenticated finite model0. Final held-out decision
+and scoped user-vLLM restoration are pending; no new accepted skill is claimed.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only

@@ -190,6 +190,13 @@ Close the release schedule; a separately predeclared direct linear-tracking
 contrast keeps full smoothness and all safety gates, with no rejected endpoint
 adopted as a teacher or new hop/obstacle/football promotion.
 
+The [direct linear-priority contrast](experiments/2026-10-13-motor-range-linear-boost.md)
+predeclares coefficient2→2.5 on the unchanged stock XYZ linear kernel, from the
+original936a parent. Both arms keep action-rate-1 and all angular/motor/range
+protections. This is a bounded motion hypothesis, not a pure forward-only reward
+or accepted skill; actual raw/weighted terms and unchanged full gates determine
+the result before any new capability is claimed.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

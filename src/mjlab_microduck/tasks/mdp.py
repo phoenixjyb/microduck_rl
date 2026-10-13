@@ -4279,6 +4279,30 @@ def _publish_body_yaw_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None
     }
 
 
+def capture_linear_tracking_training_metric(env: ManagerBasedRlEnv) -> torch.Tensor:
+    """Read-only official linear-kernel reward capture after reward/before reset."""
+    from mjlab.tasks.velocity.mdp.rewards import track_linear_velocity
+
+    if getattr(env, "_microduck_linear_tracking_snapshot", None) is not None:
+        raise ValueError("previous linear tracking snapshot consumed")
+    term = env.reward_manager.get_term_cfg("track_linear_velocity")
+    if (term.func is not track_linear_velocity or isinstance(term.weight, bool)
+            or term.weight not in (2., 2.5)
+            or term.params.get("std") != math.sqrt(.1)
+            or term.params.get("command_name") != "twist"):
+        raise ValueError("fixed official linear tracking callable parameters and positive weight")
+    raw = term.func(env, **term.params)
+    actual = env.reward_manager._step_reward[:, env.reward_manager.active_terms.index("track_linear_velocity")]
+    if (raw.shape != (env.num_envs,) or actual.shape != raw.shape
+            or not bool(torch.isfinite(raw).all() & torch.isfinite(actual).all())
+            or not bool(((raw >= 0) & (raw <= 1) & (actual >= 0) & (actual <= term.weight)).all())
+            or not torch.allclose(actual, raw * term.weight, atol=1e-6, rtol=1e-5)):
+        raise FloatingPointError("actual positive linear tracking reward matches finite raw kernel")
+    env._microduck_linear_tracking_snapshot = (raw.detach().clone(), actual.detach().clone(),
+                                               float(term.weight), env.common_step_counter)
+    return torch.zeros(env.num_envs, device=env.device)
+
+
 def capture_action_rate_training_metric(env: ManagerBasedRlEnv) -> torch.Tensor:
     """Read-only raw/weighted action-cost snapshot after reward, before reset.
 

@@ -1070,3 +1070,19 @@ budget contrast, keeping walking/turning retention checks. No automatic follow-o
 job or new corner, obstacle, hop, football or physical skill is claimed. The old
 07:00 window was not reused; the later renewed request used fresh6/15/6-minute
 smoke/candidate/evaluation process caps and closed all three Duck GPU processes.
+
+### October13: v8-seeded learning and route qualification
+
+The [stock v8 adaptation](experiments/2026-10-13-v8-actor-foundation-learning.md)
+completed1000 PPO updates. Moving speed passes improved4→65/72; steering and one
+idle world regressed, so final999 remains rejected. The next matched contrast
+changes only [initial learning rate](experiments/2026-10-13-v8-cautious-initial-lr.md),
+with a fresh original-v8 actor and exact initial model-state checks against the
+retained stock controls. A first-update KL guard precedes any full budget.
+
+The owner also approved a separate prospective gait-aware path/heading
+qualification, with instantaneous yaw retained as a diagnostic. Existing trace
+packets lack root XY positions: no actual path acceptance can be derived from
+those files. Add aligned position capture and explicit contact-cycle coverage
+before measuring this new contract; do not relabel old rejections or infer an
+obstacle, hopping, football or physical capability from forward-speed gains.

@@ -147,3 +147,69 @@ skill. GPU1710MiB/68°C, DINO2029 retained and all four protected scopes inactiv
 during the scoped pause. Keep native source479f444d frozen while active.
 Final outcome, checkpoint seal and original user-vLLM restoration remain pending.
 No physical/simulator/policy qualification or harder-skill/video promotion.
+
+## Sealed result: complete, rejected
+
+Both learners completed1000 updates (666.360/676.948s), each6144000
+transitions/20000 minibatches. Initial models/normalizers/Adam/LR match original
+936a; final normalizer counts49152000 and17 Adam counters160000 match the
+declared budget. Initial and0/250/500/750/999 checkpoints are durable. All24
+held-out cases completed; both endpoints are `foundation-not-ready`. Idle
+speed/yaw passes24/24 per arm, but **moving yaw passes0/72 in both arms** and
+all nine moving cases per arm fail the unchanged combined tracking gate.
+
+|Held-out command|Speed MAE control→boost|Speed passes /24|Yaw MAE control→boost|Achieved vx control→boost|
+|---|---:|---:|---:|---:|
+|Idle|.001207→.001192|24→24|.006602→.008388|-.000072→-.000019|
+|Straight .3|.108002→.104615|7→10|.298634→.276837|.191998→.195445|
+|.2, yaw-.2|.056724→.060383|24→24|.328742→.259706|.144141→.139827|
+|.2, yaw+.2|.057410→.069850|24→24|.281764→.275725|.142813→.130311|
+
+Moving speed passes55→58/72 do not establish a motion benefit: both turning
+speed MAEs regress, despite lower group yaw MAEs. Signed negative-turn response
+-.001653→-.163691 moves toward its goal, whereas positive-turn response
+.206717→+.068660 moves away. These pooled signed means do not replace individual
+world tracking or heading checks. The predeclared descriptive-benefit rule fails;
+do not adopt either endpoint, rerun this scalar contrast automatically or promote
+hopping/obstacle/football work.
+
+Neither arm has a held-out terminal, rated-speed exceedance, hard-range violation
+or right-hip stop exposure. Worst case torque p99.523476→.514716 remains below
+.60Nm, but idle torque.285027→.320172 and straight torque.507001→.514716 rise.
+Minimum all-joint hard margin+.185627→+.158380rad shrinks. Straight mechanical
+power1.531962→1.581090W and thermal proxy.030406→.033049 increase; other command
+groups are mixed. Numerical safety passes, not physical motor qualification.
+
+Training falls1448→1392 (first100132→121; last100137→117). Mean raw linear
+kernel.687022→.709251, weighted1.374045→1.773126: the larger weighted value is
+partly constructed by coefficient2→2.5. Raw action cost1.231990→1.269200 rises;
+mean angular reward.629337→.598837 falls and yaw-error square.561191→.588306
+rises. Exploration statistics are not deterministic held-out gait acceptance.
+
+Native source479f444d stayed frozen. Native and portable independent verification
+passed all59 retained JSON/JSONL files (73762228 bytes), including actual tensor,
+clock, command-dwell and positive-linear/negative-action telemetry checks. Hashes:
+
+- Control final `d302eb944276f95565d1639ead7a9b7981c7feee8cf7ec8e4201cef0a7f61ab5`.
+- Boost final `8eeaf935596e02b88779ecf21d695adf4a8bc29507192a6843d25245a9b1ab4d`.
+- Aggregate `6e37edf8420de4a7397274f6fa42d93282619dd4979e1fea61aae7fb8d8d5993`.
+- Native proof `00d682d4b6606785db438cd8c684bf7f83f107c39bf99d71f5e261513f2f769e`.
+- Manifest `6099536f77f62bf416940c3851b53f06800897183c30e1d918205fcbfd2c43aa`.
+- Local summary `84c1db15a380703d67a21dd4228cd0edc19d520ba8a5ed1ef11bed56b49e79ae`.
+- Local verification `a89d96bfc1fe2ad7951461c78a5a811b2c91c6830b676ace2ef3464fe1cbb989`.
+- Restoration `4fd898412999c83b9c5ff3fd68b61a24a115ebf7e19c43423678b4c227ad1746`.
+
+Native retained run `artifacts/training/motor-range-linearboost-479f444d-20261013`;
+portable JSON-only packet `artifacts/evaluations/motor-range-linearboost-479f444d-20261013`.
+All three scoped services finished successfully/inactive. Duck peak GPU2374MiB,
+69°C; DINO2029 remained intact. Only original user vLLM restored with GPU engine
+679947/9692MiB; other three protected scopes inactive. Fresh12:00 Beijing check
+confirms no Duck GPU process, DINO946MiB plus vLLM9692MiB,48°C. No100.98,
+driver/package, physical-motion, video or external publication changes.
+
+Next hypothesis changes lesson complexity, not another reward coefficient:
+temporarily keep the existing small nonzero beginner head commands while teaching
+the same full locomotion command coverage, rewards and motor/range gates. This
+does not prove head goals caused the failure. A separate tested predeclaration
+and fresh native admission are required; do not stack this change on boost or
+weaken the evaluation protocol.

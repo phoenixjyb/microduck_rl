@@ -197,6 +197,13 @@ protections. This is a bounded motion hypothesis, not a pure forward-only reward
 or accepted skill; actual raw/weighted terms and unchanged full gates determine
 the result before any new capability is claimed.
 
+That contrast is now sealed and rejected too: speed passes55→58/72 but yaw0/72
+in both arms, with both turning speed MAEs worse. All held-out episodes and
+motor/range safety subsets pass, not the motion gate. No endpoint is a qualified
+teacher. Shift the next bounded hypothesis to lesson complexity (small nonzero
+head goals before large secondary head motion), preserving the original parent,
+full locomotion coverage and unchanged final gates; do not continue scalar sweeps.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

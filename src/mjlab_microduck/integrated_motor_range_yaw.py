@@ -104,8 +104,7 @@ class MotorObserver(previous.MotorObserver):
         base.require(all(isinstance(v,torch.Tensor) and v.shape == (env.num_envs,) for v in (yaw,xy,actual))
                      and base.finite_tree(snapshot) and bool((yaw >= 0).all() & (xy >= 0).all()),
                      "finite pre-reset angular components")
-        expected = (WEIGHT*(torch.exp(-yaw/VARIANCE)+torch.exp(-xy/VARIANCE)-1.) if self.treatment
-                    else WEIGHT*torch.exp(-(yaw+xy)/VARIANCE))
+        expected = self.expected_reward(yaw,xy)
         base.require(bool(((actual >= (-WEIGHT if self.treatment else 0.)) & (actual <= WEIGHT)).all())
                      and torch.allclose(actual,expected,atol=1e-6,rtol=1e-5),
                      "actual signed angular reward matches live aggregation")
@@ -113,6 +112,10 @@ class MotorObserver(previous.MotorObserver):
         self.angular_rewards.append(float(actual.mean()))
         self.negative_samples += int((actual < 0).sum());self.sample_count += actual.numel()
         env._microduck_yaw_aggregation_snapshot = None
+
+    def expected_reward(self,yaw,xy):
+        return (WEIGHT*(torch.exp(-yaw/VARIANCE)+torch.exp(-xy/VARIANCE)-1.) if self.treatment
+                else WEIGHT*torch.exp(-(yaw+xy)/VARIANCE))
 
     def update(self,env):
         row = super().update(env)

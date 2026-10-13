@@ -130,6 +130,15 @@ Next is a separately bounded angular-axis inclusion question, not default
 duration/weight escalation or adoption of the rejected decoupled endpoint.
 No newly accepted yaw, obstacle, hopping or ball skill follows from this result.
 
+The [yaw-only tracking inclusion diagnostic](experiments/2026-10-13-motor-range-yaw-only-diagnostic.md)
+is now separately predeclared from the original exploratory control parent.
+Only the angular tracking callable changes; explicit trunk-angular and whole-body
+momentum stability penalties remain active at identical weights, along with motor
+and bilateral range objectives. Their signals/frames differ, so this tests axis
+inclusion rather than claiming redundant penalties. Both speed and yaw must pass
+the unchanged held-out gates. Source checks76 focused/1046 integrated passed;
+native GPU admission and measured outcome are pending.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

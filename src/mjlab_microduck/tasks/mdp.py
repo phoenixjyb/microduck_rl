@@ -4279,6 +4279,30 @@ def _publish_body_yaw_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None
     }
 
 
+def yaw_only_body_angular_tracking(
+    env: ManagerBasedRlEnv,
+    std: float,
+    command_name: str = "twist",
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Positive yaw-tracking kernel without XY rates in this reward group.
+
+    Independent posture/angular stability costs are not altered by this
+    function. Use a positive weight. Validate all raw angular components even
+    though XY rates do not enter the kernel; this is not a NaN escape hatch.
+    """
+    if isinstance(std, bool) or not isinstance(std, (int, float)) or std <= 0:
+        raise ValueError("yaw tracking std must be finite and positive")
+    variance = float(std) * float(std)
+    if not math.isfinite(variance) or variance <= 0:
+        raise ValueError("yaw tracking std must be finite and positive")
+    yaw_sq, _ = body_angular_tracking_errors(env, command_name, asset_cfg)
+    exponent = yaw_sq / variance
+    if not bool(torch.isfinite(exponent).all()):
+        raise FloatingPointError("nonfinite raw yaw-only angular exponent")
+    return torch.exp(-exponent)
+
+
 def factorized_body_angular_tracking(
     env: ManagerBasedRlEnv,
     yaw_variance: float = .5,

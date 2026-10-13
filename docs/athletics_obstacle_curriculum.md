@@ -267,6 +267,15 @@ is the next fixed-gate diagnostic. Its training-side calibrated teacher labels
 are a concrete structural lead, but its bundled release claims are not our
 simulator or physical acceptance and do not automatically authorize a PPO job.
 
+The v8 plain-plant matrix is closed too: moving speed4/72, instantaneous yaw0/72,
+all nine moving cases rejected. Signed mean heading slopes nevertheless improve
+to −.184/+ .174 rad/s at commands±.2. Preserve this useful reference signal without
+calling it a qualified fork skill. The next
+[fixed-policy backlash probe](experiments/2026-10-13-v8-backlash-reference.md)
+isolates the coupled mechanical/encoder contract on the existing flat walking
+twin. It does not reproduce the entire Rough/VelStand training plant or change
+the old PPO collectors, acceptance gates, drivers or packages.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

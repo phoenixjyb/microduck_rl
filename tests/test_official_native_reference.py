@@ -65,7 +65,7 @@ def test_binding_and_unchanged_motion_and_range_gates(tmp_path, fault):
         assert len(result['numerical_gate']['failures']) == 1
 
 
-@pytest.mark.parametrize('spec', [reference.ARCHIVE, reference.V8])
+@pytest.mark.parametrize('spec', [reference.ARCHIVE, reference.V8, reference.V8_BACKLASH])
 def test_registered_references_keep_the_same_matrix_and_bound_artifact(tmp_path, spec):
     rows = rows_with_positions()
     for row in rows:
@@ -73,6 +73,10 @@ def test_registered_references_keep_the_same_matrix_and_bound_artifact(tmp_path,
     calls = []
     def evaluate(path, seed, speed, yaw, health, **kwargs):
         assert path == spec.path
+        if spec == reference.V8_BACKLASH:
+            assert kwargs['evaluation_task_override'] == spec.task
+        else:
+            assert 'evaluation_task_override' not in kwargs
         calls.append((seed, speed, yaw))
         return rows[len(calls)-1]
     result = reference.evaluate_matrix(object(), lambda: None, tmp_path, evaluator=evaluate, spec=spec)

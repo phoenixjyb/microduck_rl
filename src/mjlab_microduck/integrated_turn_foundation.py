@@ -332,7 +332,8 @@ def body_yaw_trace_sample(robot, command, actor_command):
 
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
                   angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False,
-                  head_yaw_command=None, observation_trace=False, onnx_reference=None):
+                  head_yaw_command=None, observation_trace=False, onnx_reference=None,
+                  evaluation_task_override=None):
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -343,6 +344,14 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
             "action capture requires position/target/body-yaw diagnostics")
     require(not observation_trace or angular_diagnostics,
             "observation timing capture requires post-reward angular diagnostics")
+    evaluation_task = TASK
+    if evaluation_task_override is not None:
+        from mjlab_microduck.normalized_onnx_reference import NormalizedOnnxReference, OFFICIAL_V8_SHA256
+        require(evaluation_task_override == "Mjlab-Velocity-Flat-Backlash-MicroDuck"
+                and isinstance(onnx_reference, NormalizedOnnxReference)
+                and onnx_reference.artifact_sha256 == OFFICIAL_V8_SHA256,
+                "explicit pinned-v8 flat-backlash reference only; not a PPO recipe change")
+        evaluation_task = evaluation_task_override
     if head_yaw_command is not None:
         require(type(head_yaw_command) in (int, float) and math.isfinite(head_yaw_command)
                 and head_yaw_command in (-.2, .2),
@@ -351,7 +360,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 "head-yaw command requires position/body-yaw/gait diagnostics")
     worlds, steps, startup = 8, 240, 60
     torch.manual_seed(seed)
-    cfg, agent = load_env_cfg(TASK, play=True), load_rl_cfg(TASK)
+    cfg, agent = load_env_cfg(evaluation_task, play=True), load_rl_cfg(evaluation_task)
     cfg.seed = agent.seed = seed
     cfg.scene.num_envs = cfg.scene.terrain.num_envs = worlds
     cfg.curriculum.clear()
@@ -363,7 +372,10 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         require(isinstance(onnx_reference, NormalizedOnnxReference)
                 and onnx_reference.artifact_sha256 == sha256(checkpoint),
                 "typed exact-byte ONNX reference; not a PPO checkpoint")
-        validate_actor_contract(cfg)
+        if evaluation_task_override is None:
+            validate_actor_contract(cfg)
+        else:
+            validate_actor_contract(cfg, expected_actuator="BacklashEncoderBamActuatorCfg")
     if head_yaw_command is not None:
         head = cfg.commands["head_pose"]
         head.ranges = ((0., 0.), (0., 0.), (head_yaw_command, head_yaw_command), (0., 0.))
@@ -482,6 +494,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
             # Legacy trace/checkpoint hash keys are artifact identifiers here,
             # not claims that the ONNX is a resumable PPO checkpoint.
             result["inference_backend"] = onnx_reference.provenance()
+            result["evaluation_task"] = evaluation_task
+            result["position_measurement_view"] = "named motor-hinge qpos; passive joints excluded"
         if diagnostics:
             result["response_diagnostics"] = response_diagnostics(v, m, torch.stack(positions).double(),
                 limits.double(), stream.names, yaw, startup=startup)

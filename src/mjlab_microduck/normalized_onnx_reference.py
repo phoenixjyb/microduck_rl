@@ -53,7 +53,11 @@ ACTOR_TERM_ORDER = OBSERVATION_NAMES
 MAX_BATCH_SIZE = 8
 
 
-def validate_actor_contract(cfg: ManagerBasedRlEnvCfg) -> tuple[str, ...]:
+def validate_actor_contract(
+    cfg: ManagerBasedRlEnvCfg,
+    *,
+    expected_actuator: str = "FrictionDRBamActuatorCfg",
+) -> tuple[str, ...]:
     """Validate actor term order and that cfg adds no scales or history.
 
     This deliberately does not import a simulator, resolve term dimensions, or
@@ -79,10 +83,14 @@ def validate_actor_contract(cfg: ManagerBasedRlEnvCfg) -> tuple[str, ...]:
         _require(getattr(term, "history_length", 0) == 0,
                 f"actor term {name} must not add history")
 
+    _require(expected_actuator in (
+        "FrictionDRBamActuatorCfg", "BacklashEncoderBamActuatorCfg"),
+        "only explicitly supported BAM actuator profiles are accepted")
+
     # The archived policy emits raw normalized-network actions which the
     # training-time joint-position action passes through at scale one. Bind
-    # that boundary and the native BAM actuator from the cfg without importing
-    # simulator/runtime modules into this adapter.
+    # that boundary and the explicitly selected native BAM actuator from the
+    # cfg without importing simulator/runtime modules into this adapter.
     actions = getattr(cfg, "actions", None)
     _require(isinstance(actions, Mapping) and "joint_pos" in actions,
              "native joint_pos action cfg required")
@@ -98,8 +106,8 @@ def validate_actor_contract(cfg: ManagerBasedRlEnvCfg) -> tuple[str, ...]:
     articulation = getattr(scene_entities["robot"], "articulation", None)
     actuators = getattr(articulation, "actuators", None)
     _require(isinstance(actuators, (tuple, list)) and len(actuators) == 1
-             and type(actuators[0]).__name__ == "FrictionDRBamActuatorCfg",
-             "native single FrictionDRBam actuator cfg required")
+             and type(actuators[0]).__name__ == expected_actuator,
+             f"native single {expected_actuator} actuator cfg required")
     return ACTOR_TERM_ORDER
 
 

@@ -36,6 +36,7 @@ class ReferenceSpec:
     sha256: str
     manifest_sha256: str
     hub_revision: str
+    task: str = base.TASK
 
 
 ARCHIVE = ReferenceSpec(PROTOCOL, POLICY, POLICY_SHA, MANIFEST_SHA,
@@ -46,10 +47,14 @@ V8 = ReferenceSpec("official-velstand-v8-native-reference-v1",
     "c566390738dd90a54c1e2de829aaab0e904c636949e2c2c6158ee7bbb889b818",
     "665ae4eb20bfe13bca1ef4ea6d4bb6b4a096e448")
 REFERENCES = {"archive": ARCHIVE, "v8": V8}
+V8_BACKLASH = ReferenceSpec("official-velstand-v8-backlash-reference-v1",
+    V8.path, V8.sha256, V8.manifest_sha256, V8.hub_revision,
+    "Mjlab-Velocity-Flat-Backlash-MicroDuck")
+REFERENCES["v8-backlash"] = V8_BACKLASH
 
 
 def validate_spec(spec):
-    base.require(isinstance(spec, ReferenceSpec) and spec in (ARCHIVE, V8),
+    base.require(isinstance(spec, ReferenceSpec) and spec in (ARCHIVE, V8, V8_BACKLASH),
                  "only explicitly predeclared reference artifacts")
 
 
@@ -58,21 +63,22 @@ def evaluate_matrix(policy, health, output, *, evaluator=None, spec=ARCHIVE):
     validate_spec(spec)
     evaluator = base.evaluate_case if evaluator is None else evaluator
     rows = []
+    plant_kwargs = {} if spec.task == base.TASK else {"evaluation_task_override": spec.task}
     for seed in base.SEEDS:
         for index, (speed, yaw) in enumerate(base.CASES):
             health()
             row = evaluator(spec.path, seed, speed, yaw, health, diagnostics=True,
-                            yaw_trace=True, gait_trace=True, onnx_reference=policy)
+                            yaw_trace=True, gait_trace=True, onnx_reference=policy, **plant_kwargs)
             base.require(row["checkpoint_sha256"] == spec.sha256
                          and (row["seed"], row["speed"], row["yaw"]) == (seed, speed, yaw),
                          "bound reference artifact and ordered case")
             base.write_new(output / f"s{seed}-c{index}.json", row)
             rows.append(row)
-    return dict(protocol=spec.protocol, artifact_sha256=spec.sha256, cases=rows,
+    return dict(protocol=spec.protocol, artifact_sha256=spec.sha256, cases=rows, evaluation_task=spec.task,
                 numerical_gate=limits.decision(rows), policy_acceptance=False,
                 simulator_qualified=False, physical_motion_authorized=False,
                 ppo_checkpoint=False, command_remap=False,
-                interpretation="reference diagnostic on current plain native plant; not teacher admission")
+                interpretation=f"reference diagnostic on {spec.task}; not teacher admission")
 
 
 def main():
@@ -105,7 +111,7 @@ def main():
         output.mkdir(parents=True, exist_ok=False)
         base.write_new(output / "launch.json", dict(protocol=spec.protocol, source=args.source,
             artifact_sha256=spec.sha256, manifest_sha256=spec.manifest_sha256,
-            reference=args.reference, hub_revision=spec.hub_revision, runtime=runtime, host=host,
+            reference=args.reference, hub_revision=spec.hub_revision, evaluation_task=spec.task, runtime=runtime, host=host,
             inference_backend=policy.provenance(), seeds=list(base.SEEDS), cases=list(base.CASES),
             cap_seconds=CAP_SECONDS, training=False, ppo_checkpoint=False,
             policy_acceptance=False, physical_motion_authorized=False))

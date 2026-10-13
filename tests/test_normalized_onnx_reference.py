@@ -299,12 +299,15 @@ def test_actor_cfg_contract_checks_order_scale_history_and_concat():
     class FrictionDRBamActuatorCfg:
         pass
 
-    def make_cfg(actor, *, scale=1.):
+    class BacklashEncoderBamActuatorCfg(FrictionDRBamActuatorCfg):
+        pass
+
+    def make_cfg(actor, *, scale=1., actuator_type=FrictionDRBamActuatorCfg):
         return SimpleNamespace(
             observations={"actor": actor},
             actions={"joint_pos": JointPositionActionCfg(scale)},
             scene=SimpleNamespace(entities={"robot": SimpleNamespace(
-                articulation=SimpleNamespace(actuators=(FrictionDRBamActuatorCfg(),)))}),
+                articulation=SimpleNamespace(actuators=(actuator_type(),)))}),
         )
 
     terms = {name: SimpleNamespace(scale=None, history_length=0)
@@ -342,6 +345,49 @@ def test_actor_cfg_contract_checks_order_scale_history_and_concat():
     bad_actuator.scene.entities["robot"].articulation.actuators = (SimpleNamespace(),)
     with pytest.raises(ValueError, match="FrictionDRBam"):
         ref.validate_actor_contract(bad_actuator)
+
+    backlash = make_cfg(
+        SimpleNamespace(terms=terms, concatenate_terms=True, history_length=None),
+        actuator_type=BacklashEncoderBamActuatorCfg)
+    with pytest.raises(ValueError, match="FrictionDRBamActuatorCfg"):
+        ref.validate_actor_contract(backlash)
+    assert ref.validate_actor_contract(
+        backlash, expected_actuator="BacklashEncoderBamActuatorCfg") == ref.ACTOR_TERM_ORDER
+
+    with pytest.raises(ValueError, match="explicitly supported BAM actuator profiles"):
+        ref.validate_actor_contract(valid, expected_actuator="AnyBamActuatorCfg")
+    with pytest.raises(ValueError, match="BacklashEncoderBamActuatorCfg"):
+        ref.validate_actor_contract(valid, expected_actuator="BacklashEncoderBamActuatorCfg")
+    with pytest.raises(ValueError, match="FrictionDRBamActuatorCfg"):
+        ref.validate_actor_contract(backlash, expected_actuator="FrictionDRBamActuatorCfg")
+    backlash_bad_scale = make_cfg(
+        SimpleNamespace(terms=terms, concatenate_terms=True, history_length=None),
+        scale=.5, actuator_type=BacklashEncoderBamActuatorCfg)
+    with pytest.raises(ValueError, match="action scale"):
+        ref.validate_actor_contract(backlash_bad_scale,
+                                    expected_actuator="BacklashEncoderBamActuatorCfg")
+    backlash_bad_history = make_cfg(
+        SimpleNamespace(terms=history_terms, concatenate_terms=True, history_length=None),
+        actuator_type=BacklashEncoderBamActuatorCfg)
+    with pytest.raises(ValueError, match="must not add history"):
+        ref.validate_actor_contract(backlash_bad_history,
+                                    expected_actuator="BacklashEncoderBamActuatorCfg")
+
+
+def test_registered_backlash_task_cpu_cfg_matches_explicit_profile():
+    from mjlab.tasks.registry import load_env_cfg
+
+    cfg = load_env_cfg("Mjlab-Velocity-Flat-Backlash-MicroDuck")
+
+    assert ref.validate_actor_contract(
+        cfg, expected_actuator="BacklashEncoderBamActuatorCfg") == ref.ACTOR_TERM_ORDER
+    actor = cfg.observations["actor"]
+    assert tuple(actor.terms) == ref.ACTOR_TERM_ORDER
+    assert actor.history_length is None
+    assert all(term.scale is None and term.history_length == 0 for term in actor.terms.values())
+    assert cfg.actions["joint_pos"].scale == 1.0
+    actuators = cfg.scene.entities["robot"].articulation.actuators
+    assert len(actuators) == 1 and type(actuators[0]).__name__ == "BacklashEncoderBamActuatorCfg"
 
 
 def test_robot_binding_and_provenance(monkeypatch, tmp_path):

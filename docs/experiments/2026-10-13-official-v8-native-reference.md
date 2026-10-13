@@ -64,4 +64,52 @@ not a matched learner causal control. Even a numerical pass is not physical or
 automatic teacher admission. If it fails, diagnose its actual response and plant
 boundary; do not weaken gates or repeat the older C1-S attempt. No automatic PPO
 job, hopping/obstacle/football promotion, video or physical motion follows this
-check. Results pending.
+check.
+
+## Completed: better signed turning, full gate still rejected
+
+Source `71b4bff863f077f329c8d2a628a516b28bc2e4ca`, native
+`artifacts/evaluations/official-v8-native-71b4bff8-20261013`. All 12 cases complete
+in 55.987 seconds. Idle speed/yaw 24/24; moving speed4/72, yaw0/72. All nine moving
+cases fail tracking. No episode terminal, rated-speed or motor/range failure.
+
+| Command (vx,wz) | Mean speed MAE | Mean yaw MAE | Mean body vx | Mean body wz |
+| --- | ---: | ---: | ---: | ---: |
+| (0,0) | .000829 | .003898 | −.000111 | .000274 |
+| (.3,0) | .175389 | .253450 | .124611 | .030064 |
+| (.2,−.2) | .117901 | .259784 | .082099 | −.183288 |
+| (.2,+.2) | .118540 | .234112 | .081482 | .170927 |
+
+The borrowed upstream network has much better mean signed turning than the
+archive (−.0522→−.1833 and +.0119→+.1709 rad/s), but is too slow on this plain
+plant and does not pass instantaneous yaw tracking. This is not a newly trained
+fork skill or a qualified teacher. Peak case utilization .537727 = raw force p99
+.322636 Nm, minimum motor-hinge margin .174101 rad. Sampled GPU peak1784 MiB,
+minimum free14410 MiB, max62°C. VLLM was restored (observed main924932/GPU925115,
+9692 MiB), DINO2029/946 MiB retained; outer service inactive/success.
+
+Sealed evidence:
+
+- Result `cdef2804df31e72eeb12d8fcb0987194e16f461ad092352d32857b10e7ffd36f`.
+- Native inventory `d56a04ffd1c60d3bbbafd42db5e4fde8683e0685c2458339acc810fcd5918d99`.
+- CPU summary `4dd00c66993706a872b32a7fc5eaa4c786c509a91cbdd68731e84ada1457300b`.
+- Restoration `384a27c36d1be63682520db9dc031a278eeb06cd5db8f3820a8aa8f7a04a7b1c`.
+- Hash-bound heading description `a40798bc517e302e9352e00c86599c620838606abf689ec57e077a619396762b`.
+
+The descriptive audit validates actor/manager command identity, unit quaternions,
+body→world angular-vector rotation and recomputed per-world yaw MAE before using
+the retained, tested heading arithmetic. Mean world-heading slopes improve from
+−.05519/+ .01160 (archive) to −.18417/+ .17404 rad/s (v8) in the two turn groups.
+Raw body-yaw MAE is .25978/.23411, while descriptive half-second moving-mean error
+is .06667/.06175 (archive .16068/.18965). This supports separating net response
+from oscillation in diagnosis, NOT changing the gate or asserting every world is
+good. Body yaw and world heading remain distinct at nonzero roll/pitch; signed
+means can hide failures. All existing decisions and acceptance flags remain false.
+
+Checks: Mac focused80 passed; native affected1262 passed/16 existing warnings;
+body-yaw trace arithmetic48 passed. The prior broad-suite failure caveats remain
+recorded in the archive report; no broad pass, package upgrade or driver change.
+Full traces stay on 100.100; copy only lightweight seals to the Mac.
+
+The next [backlash morphology diagnostic](2026-10-13-v8-backlash-reference.md)
+tests the identified plant boundary without new reward tweaks or weakening gates.

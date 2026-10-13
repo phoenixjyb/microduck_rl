@@ -42,7 +42,8 @@ def _typed_reference(monkeypatch, artifact_sha256, action, calls):
                         provider="CPUExecutionProvider")
 
     monkeypatch.setattr(reference, "validate_actor_contract",
-                        lambda cfg: calls.append(("actor_contract", cfg)))
+                        lambda cfg, **kwargs: calls.append(("actor_contract", cfg, kwargs)
+                                                           if kwargs else ("actor_contract", cfg)))
     return FakeReference.__new__(FakeReference)
 
 
@@ -105,6 +106,51 @@ def test_default_none_keeps_legacy_ppo_runner_path(monkeypatch, tmp_path):
     assert fake.events == ["policy", "step"] * 240 + ["close"]
     assert result["complete"] is True
     assert "inference_backend" not in result
+
+
+def test_explicit_v8_backlash_override_is_bound_without_touching_default_loader(monkeypatch, tmp_path):
+    import mjlab.tasks.registry as registry
+
+    fake = install_fake_evaluator(monkeypatch)
+    path = tmp_path / "fixture-reference.onnx"
+    path.write_bytes(b"fixture only; artifact hash function explicitly stubbed")
+    monkeypatch.setattr(base, "sha256", lambda _path: reference.OFFICIAL_V8_SHA256)
+    calls, selected = [], []
+    adapter = _typed_reference(monkeypatch, reference.OFFICIAL_V8_SHA256,
+                               _fixture_action(fake, monkeypatch), calls)
+    original_cfg = registry.load_env_cfg
+    def cfg(task, **kwargs):
+        selected.append(task)
+        return original_cfg(task, **kwargs)
+    monkeypatch.setattr(registry, "load_env_cfg", cfg)
+    monkeypatch.setattr(registry, "load_runner_cls",
+                        lambda *_a, **_k: pytest.fail("must not construct PPO"))
+    result = base.evaluate_case(path, 839, .3, 0., lambda: None, onnx_reference=adapter,
+                               evaluation_task_override="Mjlab-Velocity-Flat-Backlash-MicroDuck")
+    assert selected == ["Mjlab-Velocity-Flat-Backlash-MicroDuck"]
+    assert calls[0] == ("actor_contract", fake.cfg, {"expected_actuator": "BacklashEncoderBamActuatorCfg"})
+    assert result["complete"] and fake.calls["step"] == 240
+    assert result["evaluation_task"] == selected[0]
+    assert result["position_measurement_view"] == "named motor-hinge qpos; passive joints excluded"
+
+
+@pytest.mark.parametrize("task,sha,use_reference", [
+    ("Mjlab-Velocity-Flat-Backlash-MicroDuck", reference.OFFICIAL_V8_SHA256, False),
+    ("Mjlab-Velocity-Flat-MicroDuck", reference.OFFICIAL_V8_SHA256, True),
+    ("Mjlab-VelStand-Flat-Backlash-MicroDuck", reference.OFFICIAL_V8_SHA256, True),
+    ("Mjlab-Velocity-Flat-Backlash-MicroDuck", reference.OFFICIAL_VELSTAND_SHA256, True),
+])
+def test_plant_override_cannot_change_ppo_or_expand_to_unbound_tasks(monkeypatch, tmp_path, task, sha, use_reference):
+    import mjlab.envs
+    fake = install_fake_evaluator(monkeypatch)
+    calls = []
+    adapter = _typed_reference(monkeypatch, sha, _fixture_action(fake, monkeypatch), calls) if use_reference else None
+    monkeypatch.setattr(mjlab.envs, "ManagerBasedRlEnv",
+                        lambda *_a, **_k: pytest.fail("invalid override reached environment"))
+    with pytest.raises(ValueError, match="pinned-v8 flat-backlash"):
+        base.evaluate_case(tmp_path/"no-file-needed", 839, .3, 0., lambda: None,
+                           onnx_reference=adapter, evaluation_task_override=task)
+    assert not calls
 
 
 @pytest.mark.parametrize("reference_value", ["not-an-adapter", object()])

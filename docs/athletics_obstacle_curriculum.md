@@ -280,6 +280,13 @@ The original user vLLM is restored. Next prepare a CPU-verified actor-only v8
 import with frozen exported normalization and explicitly fresh PPO state; source
 parity is not skill acceptance or automatic admission for another training job.
 
+The [actor-only bridge and five-update smoke](experiments/2026-10-13-v8-actor-import-smoke.md)
+now define that bounded integration step. Only the deterministic mean network and
+exported affine transform are imported; critic, exploration and optimizer state
+are fresh. Frozen normalization is durable under checkpoint reconstruction.
+Five PPO updates test actual integration/export, not completion of a walking or
+turning curriculum; longer learning still needs its own declaration and benchmark.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

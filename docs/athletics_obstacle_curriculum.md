@@ -166,6 +166,14 @@ is active; early control89/1000 has authenticated finite model0 and zero NaN
 terminations. Original user-vLLM restoration and final paired numerical decision
 remain pending; the first-seed failures remain part of the eventual comparison.
 
+The second pair has now finished: paired yaw-error direction repeats at both
+training seeds, but moving yaw passes remain0/72 and seed1481 speed passes fall
+41→21/72; neither endpoint qualifies. Both first-episode/safety subsets pass,
+though treatment torque p99.590394 is close to.60. Evidence/checkpoints are
+sealed and user vLLM restored with DINO preserved. Next is a separately bounded
+action-smoothness release-and-recovery hypothesis from the original parent and
+stock angular reward, not another seed/yaw sweep or harder-skill promotion.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

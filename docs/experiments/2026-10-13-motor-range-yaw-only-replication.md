@@ -145,3 +145,85 @@ The scoped exit restoration guard is installed; original user-vLLM restoration,
 final numerical decision and first/second-seed comparison remain **pending**.
 No new capability, policy promotion or additional job is claimed from this early
 checkpoint. Later evidence-only fork commits do not change the trained source.
+
+## Completed pair and two-seed decision
+
+Both1000-update learners and24 final999 held-out cases completed, control620.854s/
+yawonly626.154s. Initial and0/250/500/750/999 actual checkpoints, finite tensors,
+parent/source/clocks, normalizers49152000 and seventeen Adam states160000 are
+authenticated; all2030 preflight/training rows finite, zero NaN terminations.
+All three Duck units ended inactive/MainPID0/Resultsuccess/ExecMainStatus0.
+No new policy or skill is qualified: both arms fail all9 moving tracking cases.
+
+| Seed1481 quantity | Control | Yaw-only |
+| --- | ---: | ---: |
+|Moving speed/yaw world passes|41/72;0/72|21/72;0/72|
+|Straight achieved vx, target.30|.173764|.146403|
+|Straight speed/yaw MAE|.126236/.280615|.153597/.234292|
+|Negative arc speed/yaw MAE|.080191/.282570|.102241/.224568|
+|Positive arc speed/yaw MAE|.085140/.288139|.099711/.218226|
+|Maximum per-case pooled torque p99|.561591|.590394|
+|Minimum all-joint hard margin, rad|+.120896|+.209901|
+
+All24 first episodes survived240 steps, idle speed/yaw24/24 each, no rated-speed
+exceedance, hard-range violation or stop proximity. Training falls1539/1397;
+first100141/122 and last100142/145. Yaw-only torque margin is only.009606 below
+the modeled.60 gate; not a per-joint or physical safety certificate.
+
+The predeclared **direction** criterion passes: paired yaw MAE decreases in all
+three moving groups at both seeds1447 and1481 (first25–34%; second16–24%).
+That is not general locomotion improvement. Speed worsens in all moving groups
+at1481 (negative speed passes21→10/24, positive20→11/24); first seed also loses
+positive-turn speed and total moving passes32→29/72. Every arm still has moving
+yaw passes0/72 and straight speed0/24. Retain the mixed fall trend and all speed
+regressions; do not pool away either seed or adopt/stack yaw-only.
+
+Scalar mean power W/thermal proxy across three cases per command, control→yawonly:
+idle.033121/.010857→.022534/.011447; straight1.447074/.031694→1.418251/.032035;
+negative1.049700/.029804→1.004887/.029629; positive1.004648/.030474→.952490/.028079.
+The torque table is the maximum across per-case pooled percentiles, not a new
+cross-case percentile or mean. Proxies are not measured motor temperatures.
+
+## Retention, independent checks and restoration
+
+Native59-payload seal is69656457 bytes; portable verification recomputed failures,
+world passes and group means. A separate hash-bound two-seed check authenticated
+decision labels/nested flags and preserved all paired countermetrics. Independent
+parallel review confirmed the full tradeoff. Mac JSON-only bundle is
+`artifacts/evaluations/motor-range-yawrep-4693c2a6-20261013`; weights/ONNX stay native.
+
+| Object | SHA256 |
+| --- | --- |
+|Control final999|`4b94c233e6bc72135768b51174c06a44f38a5a0ad485e5bf0f3bae51a3767f02`|
+|Yaw-only final999|`1c8643194447111bf14eca0fb1266df79709962b62d5f53b71cf9919257af73b`|
+|Aggregate|`c15811a2cf6cb2b3aab669d100a6a0a6a7afd13ada09e562a352bb9594b766f4`|
+|Native verification|`ab34dbcd317cdeb2cc638f6622347791dc248c560408fcb149d40cc4bf92180e`|
+|Manifest|`e1c95c6477d54d9830a5f7233b1cb178e532e9cf3559cbf158c3e7b8a697de81`|
+|Local summary|`6b56244dff954086192bf2e93a4401b17553ce3d73b27cea5e789c18cddcf193`|
+|Local verification|`cacaa5a98424b4dd4b95a4df490a45e7695c45ae8cffb6a94d335aff08254529`|
+|Two-seed comparison|`0431e5f36be2ec2a302426271216ef64d6016a146a393f2af21141dbf42f43bb`|
+|Episode reward-mass audit|`2e3ae23f3a19eb4c92b35c028cc3d9bf30c7c6bca2864afcdd3a985b9c964d2f`|
+|Restoration receipt|`3a632f23c48159f7a89022c9f72371d85990a8b1ba2f8c6f504da4374d04b2e6`|
+
+At09:43:53 Beijing, guard restored only original user vLLM after Duck exit/free
+lease/DINO-only proof. Engine578733 uses9692MiB, DINO2029 remains946MiB and other
+three protected scopes inactive. Duck peak2374MiB/68°C. No restart/reboot,
+driver/library,100.98/NX/FilmBrain, physical motion, raw perception or MP4 changes.
+
+## Next measured motion hypothesis
+
+Stop yaw-kernel tuning. An audit of this owned Duck unit's last100 complete
+episode-log blocks per arm (iterations900–999) shows action-rate weighted reward
+control-1.094232/yawonly-1.168994, versus forward+1.220695/+1.182202, motor
+-.058334/-.060403, bilateral range-.000561/-.001255 and head bias-.478737/-.478156.
+These are means of **rounded mixed-command episode aggregates**, not per-world
+or instantaneous costs; sampled exploration contributes to raw action differences.
+They motivate testing, not proving, an attempt-tax mechanism. New data must
+capture raw/actual weighted costs by command rather than infer behavior from
+configured weights or these logger means alone.
+
+Next is a separately bounded release-and-recovery of global action_rate_l2,
+from the original936a parent and stock XYZ angular reward, never either rejected
+new endpoint. Keep motor/range, other final source stages, actor/actions and
+every held-out gate fixed; restore the original smoothness weight before final
+evaluation. Predeclare/test/commit before the next guarded GPU handoff.

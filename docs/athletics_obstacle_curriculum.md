@@ -1127,3 +1127,11 @@ separate residual endpoint/within-cycle heading errors from three turning
 worlds with insufficient physical cycle coverage. Next predeclare a matched
 projected-world heading reward lesson, with no actor-observation expansion or
 gate relaxation, before another fresh smoke. That next learner is not yet run.
+
+The owner approved that next step. The
+[projected-world heading lesson](experiments/2026-10-13-v8-projected-heading.md)
+replaces only the body-rate EMA reward with command-relative unwrapped world
+heading error. Reset/priming/physics-refresh tests and actual pre-reset telemetry
+precede its fresh smoke. Keep BOTH cautious and steady speed/idle retention
+references and every existing route/motor gate. It is reward-only simulator
+state, not an actor-observation expansion or position-aware navigation claim.

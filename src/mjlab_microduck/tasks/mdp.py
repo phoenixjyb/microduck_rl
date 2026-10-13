@@ -9802,3 +9802,332 @@ def roulade_lateral_velocity_penalty(
     """Body-frame lateral (y) linear velocity² — keeps the roll straight."""
     asset: Entity = env.scene[asset_cfg.name]
     return torch.nan_to_num(asset.data.root_link_lin_vel_b[:, 1].pow(2), nan=0.0)
+
+
+# ---------------------------------------------------------------------------
+# Projected heading tracking. The pre-action hook captures the state before
+# the policy action; the reward is evaluated after physics has advanced.
+# ---------------------------------------------------------------------------
+
+_PROJECTED_HEADING_PROTOCOL = "projected-heading-error-cost-v1"
+_PROJECTED_HEADING_MIN_NORM_XY_SQ = 1.0e-4
+
+
+def _projected_heading_validate_scalar(name: str, value: float) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float, np.number)):
+        raise ValueError(f"{name} must be a finite positive scalar")
+    result = float(value)
+    if not math.isfinite(result) or result <= 0.0:
+        raise ValueError(f"{name} must be a finite positive scalar")
+    return result
+
+
+def _projected_heading_read_inputs(env, command_name: str, asset_cfg):
+    num_envs = getattr(env, "num_envs", None)
+    if isinstance(num_envs, bool) or not isinstance(num_envs, int) or num_envs <= 0:
+        raise ValueError("num_envs must be a positive integer")
+    command = env.command_manager.get_command(command_name)
+    if not isinstance(command, torch.Tensor) or command.shape != (num_envs, 3):
+        raise ValueError("command must have shape (num_envs, 3)")
+    if not command.is_floating_point():
+        raise ValueError("command must be a floating point tensor")
+    if not torch.isfinite(command).all():
+        raise FloatingPointError("nonfinite projected-heading command")
+
+    asset_name = getattr(asset_cfg, "name", None)
+    if not isinstance(asset_name, str) or not asset_name:
+        raise ValueError("asset_cfg must name an asset")
+    try:
+        quat = env.scene[asset_name].data.root_link_quat_w
+    except (AttributeError, KeyError, TypeError) as exc:
+        raise ValueError("asset root_link_quat_w is unavailable") from exc
+    if not isinstance(quat, torch.Tensor) or quat.shape != (num_envs, 4):
+        raise ValueError("root_link_quat_w must have shape (num_envs, 4)")
+    if not quat.is_floating_point():
+        raise ValueError("root_link_quat_w must be a floating point tensor")
+    if quat.dtype != command.dtype:
+        raise ValueError("command and root_link_quat_w must share a floating point dtype")
+    if quat.device != command.device:
+        raise ValueError("command and root_link_quat_w must share a device")
+    if not torch.isfinite(quat).all():
+        raise FloatingPointError("nonfinite projected-heading quaternion")
+
+    qnorm = torch.linalg.vector_norm(quat, dim=-1)
+    if not torch.isfinite(qnorm).all() or (qnorm <= 0.0).any():
+        raise ValueError("root_link_quat_w norm must be finite and positive")
+    if ((qnorm - 1.0).abs() > 1.0e-5).any():
+        raise ValueError("root_link_quat_w must be unit normalized")
+
+    episodes = getattr(env, "episode_length_buf", None)
+    if not isinstance(episodes, torch.Tensor) or episodes.shape != (num_envs,):
+        raise ValueError("episode_length_buf must have shape (num_envs,)")
+    if episodes.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8):
+        raise ValueError("episode_length_buf must have an integer dtype")
+    if episodes.device != command.device or (episodes < 0).any():
+        raise ValueError("episode_length_buf must be nonnegative and share the input device")
+
+    # Rotate body X by the wxyz quaternion, then project onto world XY.
+    # Invalid projections use safe atan2 inputs but their angle is never consumed.
+    q = quat / qnorm.unsqueeze(-1)
+    w, x, y, z = q.unbind(-1)
+    axis_x = 1.0 - 2.0 * (y.square() + z.square())
+    axis_y = 2.0 * (x * y + w * z)
+    norm_xy_sq = axis_x.square() + axis_y.square()
+    valid = norm_xy_sq >= _PROJECTED_HEADING_MIN_NORM_XY_SQ
+    safe_x = torch.where(valid, axis_x, torch.ones_like(axis_x))
+    safe_y = torch.where(valid, axis_y, torch.zeros_like(axis_y))
+    heading = torch.atan2(safe_y, safe_x)
+    if not torch.isfinite(heading).all() or not torch.isfinite(norm_xy_sq).all():
+        raise FloatingPointError("nonfinite projected-heading geometry")
+    layout = (
+        num_envs,
+        tuple(command.shape),
+        tuple(quat.shape),
+        command.dtype,
+        quat.dtype,
+        command.device,
+        quat.device,
+    )
+    return command, quat, episodes, heading, valid, asset_name, layout
+
+
+def _projected_heading_snapshot(
+    env, *, step, command_name, asset_name, reference_time_s, step_dt,
+    signed_error, cost, valid, actual, target, segment_reset,
+):
+    # Published tensors own their storage; callers may retain or mutate them.
+    env._microduck_projected_heading_state = {
+        "protocol": _PROJECTED_HEADING_PROTOCOL,
+        "step": int(step),
+        "command_name": command_name,
+        "asset_name": asset_name,
+        "reference_time_s": float(reference_time_s),
+        "step_dt": float(step_dt),
+        "signed_heading_error_rad": signed_error.detach().clone(),
+        "cost": cost.detach().clone(),
+        "projection_valid": valid.detach().clone(),
+        "actual_heading_unwrapped_rad": actual.detach().clone(),
+        "target_heading_unwrapped_rad": target.detach().clone(),
+        "segment_reset": segment_reset.detach().clone(),
+    }
+    return cost.detach().clone()
+
+
+def prepare_projected_heading_step(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    reference_time_s: float = 1.0,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> None:
+    """Capture projected heading and integrate the pre-action yaw target.
+
+    Call once immediately before each policy action. The matching cost call
+    must run after physics and reward.
+    """
+    if not isinstance(command_name, str) or not command_name:
+        raise ValueError("command_name must be a nonempty string")
+    reference_time_s = _projected_heading_validate_scalar("reference_time_s", reference_time_s)
+    step_dt = _projected_heading_validate_scalar("step_dt", getattr(env, "step_dt", None))
+    step = getattr(env, "common_step_counter", None)
+    if isinstance(step, bool) or not isinstance(step, (int, np.integer)) or int(step) < 0:
+        raise ValueError("common_step_counter must be a nonnegative integer")
+    step = int(step)
+    command, quat, episodes, heading, valid, asset_name, layout = _projected_heading_read_inputs(
+        env, command_name, asset_cfg
+    )
+    previous = getattr(env, "_microduck_projected_heading_internal", None)
+    if previous is not None and not isinstance(previous, dict):
+        raise RuntimeError("projected-heading private state is malformed")
+
+    if previous is None:
+        global_reset = True
+        base_target = torch.zeros_like(heading)
+        base_actual = torch.zeros_like(heading)
+        have_actual = torch.zeros_like(valid)
+        previous_valid = torch.zeros_like(valid)
+        previous_raw = torch.zeros_like(heading)
+        previous_command = command.clone()
+        last_post_step = None
+        config = (command_name, asset_name, reference_time_s, step_dt, layout)
+    else:
+        if previous["config"] != (command_name, asset_name, reference_time_s, step_dt, layout):
+            raise ValueError("projected-heading call has incompatible config")
+        last_post_step = previous["last_post_step"]
+        old_pending = previous.get("pending")
+        rolled_back_pending = old_pending is not None and step < old_pending["step"]
+        rolled_back_post = last_post_step is not None and step < last_post_step
+        if rolled_back_pending or rolled_back_post:
+            global_reset = True
+            last_post_step = None
+            base_target = torch.zeros_like(heading)
+            base_actual = torch.zeros_like(heading)
+            have_actual = torch.zeros_like(valid)
+            previous_valid = torch.zeros_like(valid)
+            previous_raw = torch.zeros_like(heading)
+            previous_command = command.clone()
+            old_pending = None
+        else:
+            global_reset = False
+            if old_pending is not None:
+                if step == old_pending["step"]:
+                    raise RuntimeError("projected-heading pre-action call repeated before post-reward call")
+                raise RuntimeError("projected-heading skipped post-reward call before next pre-action")
+            if last_post_step is not None and step != last_post_step:
+                raise RuntimeError("projected-heading skipped forward step")
+            base_target = previous["target"].clone()
+            base_actual = previous["actual"].clone()
+            have_actual = previous["have_actual"].clone()
+            previous_valid = previous["last_valid"].clone()
+            previous_raw = previous["last_raw"].clone()
+            previous_command = previous["command"].clone()
+        config = previous["config"]
+
+    changed_command = (command != previous_command).any(dim=-1)
+    episode_reset = episodes == 0
+    recovery = (~previous_valid) & valid if previous is not None and not global_reset else torch.zeros_like(valid)
+    segment_reset = torch.full_like(valid, global_reset) | episode_reset | changed_command | recovery
+
+    # mjlab refreshes xquat after reward/autoreset. Account for that fresh
+    # lastpost→pre-action pose delta while preserving the unwrapped trajectory.
+    pre_delta = torch.atan2(torch.sin(heading - previous_raw), torch.cos(heading - previous_raw))
+    corrected_actual = base_actual + pre_delta
+    continuing = valid & have_actual & ~segment_reset
+    base_actual = torch.where(continuing, corrected_actual, base_actual)
+    base_actual = torch.where(segment_reset & valid, heading, base_actual)
+    base_target = torch.where(segment_reset & valid, heading, base_target)
+    target = base_target + command[:, 2] * step_dt
+    if not torch.isfinite(target).all() or not torch.isfinite(base_actual).all():
+        raise FloatingPointError("nonfinite projected-heading target")
+    actual_ready = have_actual | (segment_reset & valid) | continuing
+
+    env._microduck_projected_heading_internal = {
+        "config": config,
+        "last_post_step": last_post_step,
+        "target": previous["target"].clone() if previous is not None else torch.zeros_like(heading),
+        "actual": previous["actual"].clone() if previous is not None else torch.zeros_like(heading),
+        "have_actual": have_actual,
+        "last_valid": previous_valid,
+        "last_raw": previous_raw,
+        "command": previous_command,
+        "pending": {
+            "step": step,
+            "command": command.detach().clone(),
+            "pre_quat": quat.detach().clone(),
+            "pre_heading": heading.detach().clone(),
+            "pre_valid": valid.detach().clone(),
+            "target": target.detach().clone(),
+            "actual_base": base_actual.detach().clone(),
+            "actual_ready": actual_ready.detach().clone(),
+            "segment_reset": segment_reset.detach().clone(),
+        },
+    }
+
+
+def projected_heading_error_cost(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    reference_time_s: float = 1.0,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Return unwrapped absolute heading error in rad/s after physics.
+
+    Undefined XY projections receive a fixed finite cost of 1.0 and are
+    excluded from tracking; valid recovery starts a new zero-error segment.
+    """
+    if not isinstance(command_name, str) or not command_name:
+        raise ValueError("command_name must be a nonempty string")
+    reference_time_s = _projected_heading_validate_scalar("reference_time_s", reference_time_s)
+    step_dt = _projected_heading_validate_scalar("step_dt", getattr(env, "step_dt", None))
+    step = getattr(env, "common_step_counter", None)
+    if isinstance(step, bool) or not isinstance(step, (int, np.integer)) or int(step) < 0:
+        raise ValueError("common_step_counter must be a nonnegative integer")
+    step = int(step)
+    command, quat, episodes, heading, valid, asset_name, layout = _projected_heading_read_inputs(
+        env, command_name, asset_cfg
+    )
+    internal = getattr(env, "_microduck_projected_heading_internal", None)
+    if not isinstance(internal, dict):
+        raise RuntimeError("prepare_projected_heading_step must precede reward")
+    config = (command_name, asset_name, reference_time_s, step_dt, layout)
+    if internal["config"] != config:
+        raise ValueError("projected-heading call has incompatible config")
+    cache = internal.get("post_cache")
+    if cache is not None and cache["step"] == step:
+        if (not torch.equal(command, cache["command"])
+                or not torch.equal(quat, cache["quat"])
+                or not torch.equal(episodes, cache["episodes"])):
+            raise RuntimeError("projected-heading inputs changed after reward")
+        return _projected_heading_snapshot(
+            env,
+            step=step,
+            command_name=command_name,
+            asset_name=asset_name,
+            reference_time_s=reference_time_s,
+            step_dt=step_dt,
+            signed_error=cache["signed_error"],
+            cost=cache["cost"],
+            valid=cache["valid"],
+            actual=cache["actual"],
+            target=cache["target"],
+            segment_reset=cache["segment_reset"],
+        )
+
+    pending = internal.get("pending")
+    if pending is None:
+        raise RuntimeError("prepare_projected_heading_step must precede reward")
+    if step != pending["step"] + 1:
+        raise RuntimeError("projected-heading skipped forward step")
+    if not torch.equal(command, pending["command"]):
+        raise RuntimeError("projected-heading command inputs changed during step")
+
+    raw_delta = torch.atan2(
+        torch.sin(heading - pending["pre_heading"]),
+        torch.cos(heading - pending["pre_heading"]),
+    )
+    actual = pending["actual_base"] + raw_delta
+    target = pending["target"].clone()
+    recovering = valid & (~pending["pre_valid"] | ~pending["actual_ready"])
+    actual = torch.where(recovering, heading, actual)
+    target = torch.where(recovering, heading, target)
+    actual = torch.where(valid, actual, pending["actual_base"])
+    error = torch.where(valid, target - actual, torch.zeros_like(target))
+    cost = torch.where(valid, error.abs() / reference_time_s, torch.ones_like(error))
+    if not torch.isfinite(actual).all() or not torch.isfinite(target).all() or not torch.isfinite(cost).all():
+        raise FloatingPointError("nonfinite projected-heading result")
+
+    segment_reset = pending["segment_reset"] | recovering
+    result = _projected_heading_snapshot(
+        env,
+        step=step,
+        command_name=command_name,
+        asset_name=asset_name,
+        reference_time_s=reference_time_s,
+        step_dt=step_dt,
+        signed_error=error,
+        cost=cost,
+        valid=valid,
+        actual=actual,
+        target=target,
+        segment_reset=segment_reset,
+    )
+    internal["last_post_step"] = step
+    internal["target"] = target.detach().clone()
+    internal["actual"] = actual.detach().clone()
+    internal["have_actual"] = valid.detach().clone()
+    internal["last_valid"] = valid.detach().clone()
+    internal["last_raw"] = heading.detach().clone()
+    internal["command"] = command.detach().clone()
+    internal["pending"] = None
+    internal["post_cache"] = {
+        "step": step,
+        "command": command.detach().clone(),
+        "quat": quat.detach().clone(),
+        "episodes": episodes.detach().clone(),
+        "signed_error": error.detach().clone(),
+        "cost": cost.detach().clone(),
+        "valid": valid.detach().clone(),
+        "actual": actual.detach().clone(),
+        "target": target.detach().clone(),
+        "segment_reset": segment_reset.detach().clone(),
+    }
+    return result

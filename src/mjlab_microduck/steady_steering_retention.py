@@ -33,6 +33,13 @@ def load_baseline():
 
 
 def compare(rows, baseline):
+    return _compare_sealed_reference(rows, baseline,
+        source=BASELINE_SOURCE, checkpoint_sha=BASELINE_CHECKPOINT_SHA,
+        summary_sha=BASELINE_SUMMARY_SHA, protocol="v8-steady-steering-retention-v1")
+
+
+def _compare_sealed_reference(rows, baseline, *, source, checkpoint_sha, summary_sha, protocol):
+    """Shared numerical bars; callers bind an independently authenticated control."""
     expected = [(seed, speed, yaw) for seed in base.SEEDS for speed, yaw in base.CASES]
     base.require(type(rows) is list and len(rows) == len(expected), "complete retention matrix")
     for row, identity in zip(rows, expected, strict=True):
@@ -44,8 +51,8 @@ def compare(rows, baseline):
             base.require(type(values) is list and len(values) == 8
                          and all(type(v) in (int,float) and math.isfinite(v) and v >= 0 for v in values),
                          "finite nonnegative eight-world retention errors")
-    base.require(baseline["source"] == BASELINE_SOURCE
-                 and baseline["evaluations"]["final-eval"]["checkpoint_sha256"] == BASELINE_CHECKPOINT_SHA,
+    base.require(baseline["source"] == source
+                 and baseline["evaluations"]["final-eval"]["checkpoint_sha256"] == checkpoint_sha,
                  "retention contrast identity")
     groups = baseline["evaluations"]["final-eval"]["groups"]
     base.require([tuple(g["command"]) for g in groups] == list(base.CASES),
@@ -76,10 +83,10 @@ def compare(rows, baseline):
             control_speed_passes=control["speed_passes"],candidate_yaw_passes=yaw_passes))
     if moving_candidate_passes < moving_control_passes:
         failures.append(["moving-speed-pass-count-regression"])
-    return dict(protocol="v8-steady-steering-retention-v1",
+    return dict(protocol=protocol,
         decision="walking-idle-retained" if not failures else "walking-idle-not-retained",
-        baseline_source=BASELINE_SOURCE,baseline_checkpoint_sha256=BASELINE_CHECKPOINT_SHA,
-        baseline_summary_sha256=BASELINE_SUMMARY_SHA,
+        baseline_source=source,baseline_checkpoint_sha256=checkpoint_sha,
+        baseline_summary_sha256=summary_sha,
         moving_mean_speed_mae_allowance_mps=MOVING_MEAN_MAE_ALLOWANCE_MPS,
         moving_candidate_speed_passes=moving_candidate_passes,
         moving_control_speed_passes=moving_control_passes,groups=reports,failures=failures,

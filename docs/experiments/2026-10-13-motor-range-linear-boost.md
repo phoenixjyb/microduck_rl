@@ -112,3 +112,38 @@ Documentation links and diff whitespace checks passed. Full Mac regression was
 not rerun: the changed MDP code only adds this unused read-only function; the
 complete native regression set is mandatory before smokes and either learner.
 Native admission/training/outputs remain pending at the source declaration.
+
+## Native admission passed; next matched learners running
+
+Native source is exact clean tested/pushed
+`479f444d6514bd257e64e6db99322ed7a40e4e75`;1134 complete regression checks
+passed in36.57s with16 existing warnings. Both normalized61→14 ONNX smokes
+passed finite CPU/hash checks, took4.691/4.595s and had0/0 falls. Benchmarks
+took8.044/8.091s,4/4 falls, projections1206.614/1213.588s below2040s. All30
+preflight rows passed fixed action-rate-1, actual positive linear2/2.5,
+stock angular, motor/bilateral qpos, command-dwell and zero-NaN guards.
+Native actual initial tensors/normalizers/Adam/LR match original936a; identical
+initial SHA256 `d7dd1a99d9ca1f950d6ee2f3603a65661acbb9fff3c8848494cac5eb276f4235`.
+
+Admission proof SHA256 `ba2eaff600df4051bacb9537ddcaaf9494c216c6663b57233ff2d66442cc7005`;
+original service/GPU context `018687c4df3fc27cc1bf3f81f980f961aaa29193adc5cacd2af872e3b785a02e`.
+Mac closed JSON-only phases/proof/context at
+`artifacts/evaluations/motor-range-linearboost-479f444d-20261013-preflight`;
+stdlib checks authenticate both hashes and all30 action/linear rows. No active
+learner snapshots or model/ONNX binaries are copied into that admission packet.
+Source/ops reviews, shell/Python syntax, systemd validation,3 mock restore tests
+with7 refusal cases and2 portable positive-row tests passed before launch.
+Review caught and corrected a stale paired-difference label **before** copying
+or executing those operations; final verification expects `linearboost_minus_control`.
+
+Run `artifacts/training/motor-range-linearboost-479f444d-20261013`, under
+`microduck-linearboost-479f444d-matched-eval.service` and
+`recomo-duck-linearboost-479f444d-handoff.service`: control→linearboost→both
+final999 matrices. At11:32 Beijing control completed1000 with0/250/500/750/999
+checkpoints,1448 training falls and zero NaNs; treatment162/1000 was finite,
+203 falls, zero NaNs, actual fixed linear2.5 and action-rate-1. Its raw/weighted
+linear means.699557/1.748892 demonstrate the declared coefficient, not a new
+skill. GPU1710MiB/68°C, DINO2029 retained and all four protected scopes inactive
+during the scoped pause. Keep native source479f444d frozen while active.
+Final outcome, checkpoint seal and original user-vLLM restoration remain pending.
+No physical/simulator/policy qualification or harder-skill/video promotion.

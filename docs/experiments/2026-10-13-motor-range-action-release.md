@@ -242,3 +242,31 @@ health stream. Physical/simulator/policy acceptance remains false. Next is one
 separately declared direct linear-tracking contrast from936a, with full
 smoothness and stock angular tracking, not another smoothness sweep or harder
 skill promotion.
+
+## Straight-only heading diagnosis; no replacement acceptance gate
+
+The sealed packet contains orientation traces for exactly six straight c1
+cases (3 seeds ×2 arms,48 worlds), **not** idle or arcs. The hash-bound stdlib
+audit verifies trace/case/aggregate/checkpoint identity,240×8 shape, dt.02,
+startup60, unit WXYZ quaternions, body↔world angular rotation, commands and
+recomputed legacy yaw MAE. Seven tests cover analytic rotation, wrapping,
+oscillation, quaternion sign invariance and malformed/hash refusal cases.
+
+Over the settled180 samples (sample span3.58s), control/release body-wz MAEs
+are.248578/.267715rad/s; overlapping25-sample moving-mean error.069262/.102482.
+Mean signed world-heading changes+.012091/-.085376rad are small, but **must not
+hide per-world drift**: mean absolute changes.224369/.340210rad, worst absolute
+changes.691099/.871233rad (39.60°/49.92°). Worst world moving-mean errors
+.175895/.260059rad/s also remain large. Instantaneous body-frame wz and
+projected-forward-axis world heading are distinct measurements, not equivalent
+gates. These traces expose both oscillation and genuine directional drift; they
+do not identify a gait cause, qualify straight walking, infer arc trajectories
+or justify retroactively replacing the rejected full per-world decision.
+
+Audit SHA256 `3980877d822c0f21fbfe34d313fc76f1269d7245d954afb135fa5b7b8d7c7a54`;
+separate worst-world reconciliation `c055bb0601dc92e2d2755f3086cb0a7b8bdcd12a8a3489242d23988700313021`.
+Audit source/tests SHA256 `d93e4ab32bf6f904c6c74d08846b6ff9db26c7eb2eafec795cdbf5712c6fca68` /
+`96154573c3f1ee33e567bc92cc48fba997227d2813f465290c4ef54aa7662345`.
+JSON and operations are retained natively under the existing `derived` and
+`actionrelease-17d80717-analysis-v2` directories, without changing the sealed
+59-payload manifest or active next-round source.

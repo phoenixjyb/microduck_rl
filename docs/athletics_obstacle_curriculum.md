@@ -142,6 +142,16 @@ passed. The exact-source `d71c3028` paired1000-update round is active, with cont
 182/1000 at08:17 Beijing and authenticated finite model0. Final held-out decision
 and scoped user-vLLM restoration are pending; no new accepted skill is claimed.
 
+That yaw-only round has now completed and is rejected: moving yaw MAE falls
+25–34%, but yaw passes remain0/72 and speed passes32→29/72; both straight-speed
+subsets are0/24. All24 first episodes and motor/range subsets pass, but neither
+foundation qualifies. Native checkpoints and59-payload evidence are sealed;
+user vLLM restored with DINO preserved. Straight-only retained traces show less
+DC bias/oscillation but still large heading error; they do not explain turn
+behavior. Same-recipe controls differed materially between training seeds, so
+the next separately predeclared slice is a second matched-seed replication,
+not another stacked reward change or automatic harder-skill promotion.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

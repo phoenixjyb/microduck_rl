@@ -333,7 +333,15 @@ def body_yaw_trace_sample(robot, command, actor_command):
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
                   angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False,
                   head_yaw_command=None, observation_trace=False, onnx_reference=None,
-                  evaluation_task_override=None):
+                  evaluation_task_override=None, frozen_v8_checkpoint=None):
+    if frozen_v8_checkpoint is not None:
+        from mjlab_microduck.v8_actor_checkpoint import FrozenV8Checkpoint
+        require(type(frozen_v8_checkpoint) is FrozenV8Checkpoint,
+                "typed FrozenV8Checkpoint required")
+        require(onnx_reference is None and evaluation_task_override is None,
+                "frozen v8 PPO actor is exclusive with ONNX and task overrides")
+        require(frozen_v8_checkpoint.matches_positional_checkpoint(checkpoint),
+                "frozen v8 checkpoint path and exact bytes must match positional checkpoint")
     from mjlab.envs import ManagerBasedRlEnv
     from mjlab.rl import RslRlVecEnvWrapper
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
@@ -352,6 +360,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                 and onnx_reference.artifact_sha256 == OFFICIAL_V8_SHA256,
                 "explicit pinned-v8 flat-backlash reference only; not a PPO recipe change")
         evaluation_task = evaluation_task_override
+    if frozen_v8_checkpoint is not None:
+        require(evaluation_task == TASK,
+                "frozen v8 PPO actor requires the plain base task")
     if head_yaw_command is not None:
         require(type(head_yaw_command) in (int, float) and math.isfinite(head_yaw_command)
                 and head_yaw_command in (-.2, .2),
@@ -376,6 +387,15 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
             validate_actor_contract(cfg)
         else:
             validate_actor_contract(cfg, expected_actuator="BacklashEncoderBamActuatorCfg")
+    v8_reference = None
+    if frozen_v8_checkpoint is not None:
+        from mjlab_microduck.normalized_onnx_reference import (
+            NormalizedOnnxReference, validate_actor_contract,
+        )
+        from mjlab_microduck import official_native_reference
+        validate_actor_contract(cfg)
+        v8_reference = NormalizedOnnxReference(
+            official_native_reference.V8.path, official_native_reference.V8.sha256)
     if head_yaw_command is not None:
         head = cfg.commands["head_pose"]
         head.ranges = ((0., 0.), (0., 0.), (head_yaw_command, head_yaw_command), (0., 0.))
@@ -395,14 +415,19 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         if action_trace:
             from mjlab_microduck import action_response_capture
             action_response_capture.validate_wrapper(wrapped)
-        if onnx_reference is None:
+        if onnx_reference is None and frozen_v8_checkpoint is None:
             runner = load_runner_cls(TASK)(wrapped, asdict(agent), device="cuda:0")
             runner.load(str(checkpoint), strict=True, map_location="cuda:0")
             policy = runner.get_inference_policy(device="cuda:0")
-        else:
+        elif onnx_reference is not None:
             # The deployed ONNX already includes its normalizer. No PPO runner,
             # checkpoint load, additional normalization, remap or action filter.
             policy = onnx_reference
+        else:
+            # Reconstruct only the authenticated FrozenV8Actor. Critic,
+            # optimizer, runner clock and PPO history are intentionally absent.
+            policy = frozen_v8_checkpoint.construct_actor(wrapped.get_observations(), agent)
+            policy.to(device=env.device).eval()
         obs, robot = wrapped.get_observations(), env.scene["robot"]
         if head_yaw_command is not None:
             require(not any(name.startswith("passive_") for name in robot.joint_names),
@@ -410,6 +435,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         stream = MotorStepStream.from_robot(robot, worlds, device=env.device, cost_cfg=MotorStepCostCfg())
         if onnx_reference is not None:
             onnx_reference.validate_robot(robot, stream.joint_ids, stream.names)
+        if v8_reference is not None:
+            v8_reference.validate_robot(robot, stream.joint_ids, stream.names)
         env._microduck_motor_step_stream = stream
         phase = torch.zeros(worlds, dtype=torch.long, device=env.device)
         velocities, motor_rows, terminals = [], [], []
@@ -480,9 +507,11 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         f, s = m[..., 0], m[..., 1]
         u = f.abs()/.60
         settled = v[startup:]
+        result_checkpoint_sha = (frozen_v8_checkpoint.sha256 if frozen_v8_checkpoint is not None
+                                 else sha256(checkpoint))
         result = dict(seed=seed, speed=speed, yaw=yaw, worlds=worlds, steps=len(v),
                     complete=len(v) == steps and not terminals, terminal_worlds=terminals,
-                    checkpoint_sha256=sha256(checkpoint), **motor_force_summary(f),
+                    checkpoint_sha256=result_checkpoint_sha, **motor_force_summary(f),
                     rated_speed_exceed_fraction=float((s.abs() > RATED_SPEED).double().mean()),
                     soft_limit_fraction=float((u > .70).double().mean()),
                     mean_abs_mechanical_power_w=float((f*s).abs().sum(-1).mean()),
@@ -495,6 +524,10 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
             # not claims that the ONNX is a resumable PPO checkpoint.
             result["inference_backend"] = onnx_reference.provenance()
             result["evaluation_task"] = evaluation_task
+            result["position_measurement_view"] = "named motor-hinge qpos; passive joints excluded"
+        if frozen_v8_checkpoint is not None:
+            result["inference_backend"] = frozen_v8_checkpoint.provenance()
+            result["evaluation_task"] = TASK
             result["position_measurement_view"] = "named motor-hinge qpos; passive joints excluded"
         if diagnostics:
             result["response_diagnostics"] = response_diagnostics(v, m, torch.stack(positions).double(),

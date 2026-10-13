@@ -103,3 +103,44 @@ plant, gate, budget or seed. Add a real serialized-cfg/PPO construction regressi
 test, repeat focused/native checks, and use a new source-bound retained run ID.
 Never restart or overwrite the failed packet. The same five-update predeclaration
 applies to the corrected attempt; no longer job or motion claim is admitted.
+
+## Corrected native smoke — complete, not a skill qualification
+
+Source `c178fbcc53c9d7e16d9bd09b5b21896fecf18645` passed97 local focused tests
+(two export deprecation warnings) and1313 native affected tests (18 warnings).
+`recomo-duck-v8-actor-smoke-c178fbcc-20261013.service` completed successfully:
+five PPO updates,120 environment steps,7680 transitions, finite losses and
+three training falls, with zero NaN terminations. Learner time was4.5023 s;
+the outer worker including export checks took4.6404 s. This tiny2.4-s per-world
+window is not a stability, tracking, obstacle or hop qualification.
+
+The actual initial raw64×61 actor import matched CPU ONNX with maximum error
+`3.2782554626464844e-7`. The CPU closeout verified changed actor/critic weights,
+all17 Adam parameter states at step100, initial empty Adam, iteration0→4 and
+curriculum clock0→120. The imported actor transform stayed byte-equal with
+count0; the new critic accumulated7680 samples. Normalized metadata-bearing ONNX
+was produced by the normal registered runner save/export path and CPU-smoked.
+
+Maximum training force-utilization p99 was1.067539, soft-limit exposure6.0593%,
+rated-speed exposure0.06975%, mean absolute mechanical power4.5446 W and thermal
+proxy0.127936. These stochastic-training metrics passed the declared gross
+process guards, **not** the stricter deterministic held-out motor/skill gate.
+GPU peak1504 MiB, minimum free14690 MiB, maximum temperature55 C. Original user
+vLLM was restored; DINO and the other protected scopes remained preserved.
+
+Native packet: `artifacts/training/v8-actor-smoke-c178fbcc-20261013`.
+The create-exclusive CPU inventory/summary certify:
+
+- Result SHA256: `bfd1eb3081bc0dcdc6ce8d291714c93944d4a6e92a87a92c83d732c9269c8e68`.
+- Initial PT SHA256: `1f4c8b3c1538ce88c1cb0409658c998ce0d6454b960214775e422015d898b2e3`.
+- Final PT SHA256: `9f5762e866d125cb657c02256b6bef37c23485e60fffe65eeba7f28beff2e5d7`.
+- ONNX SHA256: `1db7c36bfbffc308247696435e07098d24c4133b8d4ea59b8eb6e4e611f30ba8`.
+- Inventory SHA256: `d105c72bb404827dfae9a409ed4c415ccda34a1d664b3f699144b4b63a5bd753`.
+- Summary SHA256: `4c19c641eebc97cb7a183be0aa21337537e88bdfff8f789ccd9bb320b85c49a9`.
+- Restoration SHA256: `108bf9e08d8b425a5b2d4bd8e4a090479fdde16a779fc0edb37e1a7f31f40e26`.
+
+Only the lightweight inventory/summary are copied to the Mac (`-closeout`),
+with matching hashes. No motion acceptance or physical claim follows. Next
+predeclare a256-world timing benchmark, exact actor-checkpoint held-out path,
+and a bounded foundation budget before launching further learning; retain all
+old gates and reject rather than promote any failed endpoint.

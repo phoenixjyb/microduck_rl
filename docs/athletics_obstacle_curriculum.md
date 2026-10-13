@@ -287,6 +287,13 @@ are fresh. Frozen normalization is durable under checkpoint reconstruction.
 Five PPO updates test actual integration/export, not completion of a walking or
 turning curriculum; longer learning still needs its own declaration and benchmark.
 
+That smoke completed five updates with finite checkpoints/exports and three
+training falls, not motion acceptance. The next
+[v8-seeded foundation experiment](experiments/2026-10-13-v8-actor-foundation-learning.md)
+fixes a256-world benchmark, original-mean held-out baseline and1000 fresh target
+updates with unchanged final held-out gates. Longer curriculum stages, harder
+skills and physical motion remain gated; no rejected old endpoint is promoted.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

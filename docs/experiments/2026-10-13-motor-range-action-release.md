@@ -165,3 +165,80 @@ Five additional CPU-only stage-analysis tests passed after handling the actual
 nested decision schema and partial first-episode cases; analysis awaits sealed
 data. Final result, checkpoint/evidence seal and original user-vLLM restoration
 are still pending. No qualified new motion, harder-skill promotion or video.
+
+## Completed pair: release schedule rejected, no skill promotion
+
+Both1000-update learners and24 held-out cases finished successfully: control
+648.281s/release657.009s, each6144000 transitions/20000 optimizer minibatches.
+Actual initial and0/250/500/750/999 checkpoints were verified finite, with the
+declared parent, clocks, normalizers49152000 and17 Adam states160000. All2030
+preflight/training rows passed zero-NaN, fixed stock angular/motor/bilateral
+guards and exact action-stage/command-stratum reconciliation, including mixed
+updates251/501 and fully recovered502–1000. All three services are inactive,
+MainPID0/Resultsuccess/ExecMainStatus0. Neither endpoint qualifies; all nine
+moving cases fail the unchanged combined tracking decision in both arms.
+
+| Held-out command | Speed MAE control→release | Speed passes/24 | Yaw MAE control→release | Yaw passes/24 |
+| --- | ---: | ---: | ---: | ---: |
+|Idle|.001425→.001155|24→24|.009590→.006695|24→24|
+|Straight .3/0|.145172→.144749|0→0|.248578→.267715|0→0|
+|Negative arc .2/-.2|.095936→.097678|13→14|.294186→.268246|0→0|
+|Positive arc .2/.2|.097646→.091587|14→18|.268252→.285016|0→0|
+
+Moving speed totals27→32/72 and yaw0→0/72. Straight achieved vx is nearly
+unchanged, .154828→.155251m/s against.3. Negative-turn signed yaw improves
+-.059533→-.139113 against-.2, but positive-turn response worsens
+.160880→+.051479 against+.2. Straight signed yaw is near zero,
+.003195→-.024008, despite absolute/yaw MAE.249→.268: these retained averages
+suggest oscillation and directional asymmetry, not an identified gait mechanism.
+
+All24 first episodes survive240 steps; no terminal/rated-speed exceedance,
+hard-range violation or right-hip stop exposure. Maximum moving-case pooled
+torque p99.575214→.513050, below.60; minimum all-case14-joint hard margin
++.134469→+.141539rad. Idle torque p99 increases.292465→.341958. Some paired
+torque/range margins worsen without crossing a gate; no average hides those
+regressions. Moving mechanical-power means (straight/negative/positive) are
+1.325790/.928337/.896792→1.329012/.927279/.942853W; corresponding thermal
+proxies.031040/.028865/.028679→.028808/.027032/.027504. Idle power/thermal
+.022960/.011889→.087104/.013451. These are means of three case scalars per
+command, not new pooled power/thermal acceptance gates.
+
+Training falls1320→1424, first100120→104, last100125→147. Fully recovered
+updates502–1000 raw action cost1.190550→1.585576, with signed cost nearly its
+negative in both. Release early raw/signed costs are1.486820/-.148682 at1–250
+and1.831139/-.732456 at252–500. Exploration contributes to these raw target
+differences; do not call them deterministic gait motion or prove an attempt-tax
+cause. The predeclared descriptive benefit is false: speed does not improve in
+all groups, yaw regresses in two groups, and paired safety margins also regress.
+Close this schedule rather than adopt it, replicate it, stack its rejected
+endpoint or automatically lengthen training.
+
+Native proof SHA256 `f9887a63df6f5b717d1c0fa4b62d17837a5b0fa058953de198f0061212ec4113`;
+59-payload manifest `bfee7539632ff337e39199564bc2c78643b1a81d5f2d54b9fdd94cd6fa6f9434`;
+aggregate `d3bed5c8cbdb075fb5b82d26ad818ecb1971876561a489ed18fd08e93796ed90`.
+Final control checkpoint `1deb9a22671a095a4fb4e693f2bf5dbd36b6d74969354f8003aa33a3e3652113`;
+release `a4380715f02ac46f652d6c1469149f3466b1b741ca1600b403cb36525106cfc9`.
+Mac stdlib verification authenticated59 payloads/71834184bytes without fetching
+weights/ONNX: summary `33c259500930f5432342fa5e3741fbcc1e58d3a7720b04645a317f8e7d28b56b`,
+portable proof `08f6b727f04043b4c252901dc6517f8da075d91f4b5a74240b297b1384b3f8f6`.
+Stage/paired analysis `472ade77548acf6d6403b55bd901ab5183924a4a030d55c67e2f992a6f98d5e4`
+is hash-bound and preserves every original decision. Six stdlib tests include
+end-to-end24-case/2000-row sealed fixtures and partial/missing-sample refusals.
+Independent real-data review agrees on the mixed/rejected motion result.
+
+Analysis operations are retained natively under
+`/home/converge/.local/state/actionrelease-17d80717-analysis-v2`: analyzer SHA256
+`a9ef444e09735958e309498a0c4c926b132f64d218655f2d076fefdf3edde6d8`, tests
+`0171867373791da2d66d7a4a4fd68fbf727d5d0d4c1b8f4897d5f76cd19ce1d2`.
+These are ignored operational assets, not installed training source. The earlier
+unexecuted analysis backup is superseded; v2 fixes a return-hash binding and
+strictly rejects changed acceptance flags before any real output is produced.
+
+User vLLM restored at10:46:35 Beijing with GPU engine631495/9692MiB and DINO2029/
+946MiB preserved; other three protected scopes remain inactive. Restoration
+receipt SHA256 `74f4dcf5c98a467f91e217fe6ed78ebec7e90bdf2eff51f1abdbc0d24f4c6d68`.
+Duck peak2374MiB/69°C; temporary vLLM startup heating is outside that Duck
+health stream. Physical/simulator/policy acceptance remains false. Next is one
+separately declared direct linear-tracking contrast from936a, with full
+smoothness and stock angular tracking, not another smoothness sweep or harder
+skill promotion.

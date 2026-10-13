@@ -182,6 +182,14 @@ by command and stage before autoreset. This tests a hypothesis, not a demonstrat
 cause of underspeed or a qualified phase-based curriculum. Only final999 may be
 evaluated; source tests and native preflight still precede either learner.
 
+That matched pair has now completed and is rejected: moving speed passes27→32/72
+but moving yaw0→0/72, straight speed stays about.155m/s against.3, and two yaw
+groups regress. Both safety/episode subsets pass, but no foundation endpoint
+qualifies. Evidence/checkpoints are sealed and original user vLLM restored.
+Close the release schedule; a separately predeclared direct linear-tracking
+contrast keeps full smoothness and all safety gates, with no rejected endpoint
+adopted as a teacher or new hop/obstacle/football promotion.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

@@ -1135,3 +1135,12 @@ heading error. Reset/priming/physics-refresh tests and actual pre-reset telemetr
 precede its fresh smoke. Keep BOTH cautious and steady speed/idle retention
 references and every existing route/motor gate. It is reward-only simulator
 state, not an actor-observation expansion or position-aware navigation claim.
+
+That contrast completed1000 updates at `fe23cc80`, with0 NaNs and both
+walking/idle retention references passing (66/72 moving speed,24/24 idle).
+Every moving world now has6–8 physical cycles, but turning-speed/XY gains come
+with worse straight-path accuracy. All9 moving route cases still reject and
+only2/72 moving worlds pass all components. Keep the result as a mixed contrast,
+not a promoted skill. Next isolate projected yaw-rate bias with the original
+filter, rather than blindly extending the hidden cumulative-heading target.
+Its next budget is not yet predeclared/launched; retain all existing gates.

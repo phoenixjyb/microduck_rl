@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import copy
+import hashlib
 from types import SimpleNamespace
 
 import pytest
@@ -31,9 +33,24 @@ def test_recipe_is_only_fixed_yaw_bias_term_beyond_cautious(mode, worlds, update
     assert "microduck_yaw_bias" in cfg.metrics
     assert proof["matched_after_removing_owned_reward_and_metric"] is True
     assert proof["identity_masked_fields"] == ["experiment_name", "run_name"]
+    assert proof["protocol"] == "v8-steady-steering-recipe-match-v2"
     assert proof["steady_recipe_sha256"] != proof["cautious_recipe_sha256"]
     assert cfg.commands == cautious_cfg.commands and cfg.curriculum == cautious_cfg.curriculum
     assert agent.algorithm.learning_rate == cautious_agent.algorithm.learning_rate == 1e-4
+
+
+def test_metric_callable_recipe_identity_is_stable_across_import_context(monkeypatch):
+    cfg, agent = steady.prepare_config("smoke")
+    expected = hashlib.sha256(steady._canonical_config(cfg, agent).encode()).hexdigest()
+
+    monkeypatch.setattr(steady.capture_bias_metric, "__module__", "__main__")
+    changed_context = hashlib.sha256(steady._canonical_config(cfg, agent).encode()).hexdigest()
+    assert changed_context == expected
+
+    mismatched = copy.deepcopy(cfg)
+    mismatched.metrics["microduck_yaw_bias"].func = lambda _env: None
+    with pytest.raises(ValueError, match="known steady-steering metric callable"):
+        steady._canonical_config(mismatched, agent)
 
 
 class _RewardManager:

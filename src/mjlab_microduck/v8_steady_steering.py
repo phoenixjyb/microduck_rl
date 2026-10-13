@@ -73,6 +73,12 @@ def prepare_config(mode: str):
 def _canonical_config(cfg, agent) -> str:
     """Canonicalize a complete recipe, masking only campaign/run identity."""
     cfg_value, agent_value = asdict(cfg), asdict(agent)
+    metric_cfg = cfg.metrics.get("microduck_yaw_bias")
+    if metric_cfg is not None:
+        base.require(metric_cfg.func is capture_bias_metric and metric_cfg.per_substep is False,
+                     "known steady-steering metric callable before canonicalization")
+        cfg_value["metrics"]["microduck_yaw_bias"]["func"] = (
+            "mjlab_microduck.v8_steady_steering:capture_bias_metric")
     agent_value["experiment_name"] = "<protocol>"
     agent_value["run_name"] = "<mode>"
     value = profiles._canonical({"environment": cfg_value, "agent": agent_value})
@@ -95,7 +101,7 @@ def recipe_match(mode: str) -> dict:
     left, right = _canonical_config(reduced, steady_agent), _canonical_config(cautious_cfg, cautious_agent)
     digest = hashlib.sha256(_canonical_config(steady_cfg, steady_agent).encode()).hexdigest()
     base.require(left == right, "steady recipe differs from cautious only by its fixed reward and metric")
-    return dict(protocol="v8-steady-steering-recipe-match-v1", mode=mode,
+    return dict(protocol="v8-steady-steering-recipe-match-v2", mode=mode,
                 cautious_recipe_sha256=hashlib.sha256(right.encode()).hexdigest(),
                 reduced_steady_recipe_sha256=hashlib.sha256(left.encode()).hexdigest(),
                 steady_recipe_sha256=digest, fixed_reward_weight=BIAS_WEIGHT,
@@ -342,7 +348,7 @@ def validate_training_receipt(root, mode, source):
     match = json.loads((output / "recipe-match.json").read_text())
     expected_match = recipe_match(mode)
     base.require(result["recipe_match"] == match == expected_match and match["mode"] == mode
-        and match["protocol"] == "v8-steady-steering-recipe-match-v1"
+        and match["protocol"] == "v8-steady-steering-recipe-match-v2"
         and match["fixed_reward_weight"] == BIAS_WEIGHT and match["matched_after_removing_owned_reward_and_metric"],
         "honest steady-versus-cautious recipe match proof")
     matched = json.loads((output / "matched-initialization.json").read_text())

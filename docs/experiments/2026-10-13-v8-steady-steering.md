@@ -162,6 +162,19 @@ state under a new tested source identity; never restart/overwrite the old run.
 Corrected-source preparation:135 focused tests and1549 affected local tests
 pass,18 existing warnings; no learning recipe or numerical gate changed.
 
+An additional CPU-only audit on the retained smoke identified callable-name
+instability: the script records the owned read-only metric as `__main__`, while
+an imported independent verifier sees its package name. All cautious/reduced
+recipe hashes were identical; only that metric's name changed the steady hash
+(`c327d953…` script vs `db390c44…` import), reproduced without simulation.
+Normalize ONLY this verified owned callable to its package-qualified identity
+in the canonical audit copy, with recipe-proof protocolv2. Do not modify the
+live function, cfg or reward, or hide any unrelated callable/parameter. A
+namespace regression checks import/script equivalence and still rejects a
+different metric. The `adfc48fc` corrected revision passed1549 native tests but
+no learner was launched from it; the next fresh source incorporates this audit
+fix so its receipts can be independently verified without rewriting old ones.
+
 Preserved partial packet `artifacts/training/v8-steady-steering-a6ed1bb6-20261013`
 contains initial/final smoke checkpoints, updates, actual activity, recipe/state
 proofs, guard and export. Original user vLLM was restored active after the

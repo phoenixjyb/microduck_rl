@@ -156,7 +156,7 @@ The [second matched-seed replication](experiments/2026-10-13-motor-range-yaw-onl
 is predeclared at training seed1481, repeating both original-parent arms with
 unchanged1000-update budgets, objective, safety terms and held-out gates. First
 seed1447 remains in the evidence; no favorable second seed erases its failed
-speed retention or establishes a qualified skill. Source/native admission are
+speed retention or establishes a qualified skill. Source checks are
 complete:82 focused/1052 integrated checks passed. Native admission remains
 pending; only tested/pushed exact source may start the guarded handoff.
 

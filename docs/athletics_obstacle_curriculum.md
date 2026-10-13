@@ -270,11 +270,15 @@ simulator or physical acceptance and do not automatically authorize a PPO job.
 The v8 plain-plant matrix is closed too: moving speed4/72, instantaneous yaw0/72,
 all nine moving cases rejected. Signed mean heading slopes nevertheless improve
 to −.184/+ .174 rad/s at commands±.2. Preserve this useful reference signal without
-calling it a qualified fork skill. The next
+calling it a qualified fork skill. The completed
 [fixed-policy backlash probe](experiments/2026-10-13-v8-backlash-reference.md)
 isolates the coupled mechanical/encoder contract on the existing flat walking
 twin. It does not reproduce the entire Rough/VelStand training plant or change
-the old PPO collectors, acceptance gates, drivers or packages.
+the old PPO collectors, acceptance gates, drivers or packages. It also rejects
+all nine moving cases (speed5/72, yaw0/72), with no terminal or motor/range failure.
+The original user vLLM is restored. Next prepare a CPU-verified actor-only v8
+import with frozen exported normalization and explicitly fresh PPO state; source
+parity is not skill acceptance or automatic admission for another training job.
 
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only

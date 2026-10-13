@@ -204,6 +204,15 @@ teacher. Shift the next bounded hypothesis to lesson complexity (small nonzero
 head goals before large secondary head motion), preserving the original parent,
 full locomotion coverage and unchanged final gates; do not continue scalar sweeps.
 
+The [locomotion-first head lesson](experiments/2026-10-13-motor-range-head-lesson.md)
+predeclares that single factor: exact existing small nonzero four-slot head
+commands versus final large ranges, with the same full idle/straight/mirrored-turn
+training and unchanged rewards/safety. Keep stock linear2 and full action-rate-1.
+Actual command exposure and weighted head reward mass are retained without
+recomputing the stateful EMA. Gate-driven secondary-range expansion and command
+transitions follow only a qualified foundation; this declaration alone is not
+an accepted lesson, new capability or permission for harder-skill promotion.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

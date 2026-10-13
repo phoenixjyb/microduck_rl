@@ -1105,3 +1105,12 @@ whereas adaptation increases speed and persistent route drift. Next prioritize
 steady steering without taxing gait oscillation, with speed/idle retention and
 the newly fixed route protocol. Reward-source preparation is not another run;
 separately predeclare and test its experiment before allocating a new budget.
+
+The next separately declared
+[steady-steering experiment](experiments/2026-10-13-v8-steady-steering.md)
+adds only a fixed negative reward for persistent one-second body-yaw residual,
+with original-v8 actor-only initialization and the cautious optimizer settings.
+The EMA is reward state, never an action/observation filter. Actual pre-reset
+activity, exact initial model-state matches and a first-update KL guard precede
+the full budget. Keep measured route gates and explicit speed/idle retention;
+do not trade away walking to improve steering or promote old rejected actors.

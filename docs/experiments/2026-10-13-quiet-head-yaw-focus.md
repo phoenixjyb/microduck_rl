@@ -163,3 +163,104 @@ preserved, all four protected scopes inactive during scoped user-vLLM pause.
 Native source154516d8 is frozen while active. Final numerical results, extended
 trace coverage, checkpoint seal and original-service restoration are pending;
 no qualified motion, video, harder-skill promotion or physical authority follows.
+
+## Closed matched result: sharper yaw tracking rejected
+
+Both learners completed their declared1000 updates,6144000 transitions and
+20000 minibatches: control673.359s, yawfocus685.137s. Exact initial936a restore,
+all0/250/500/750/999 saves, final normalizer49152000 and17 Adam160000 are
+verified. Final checkpoints:
+
+- Control `d4bd37d07a1d076e55888befb21aa8557fdaebe6b1fee27d2b199b1dc48258c1`.
+- Yawfocus `a9a553560a5d8216de42a19cacac33519ef1a974e5087dd5ef50a4efd95e74b3`.
+
+All24 held-out cases completed240 first-episode steps, with no terminal,
+rated-speed exceedance, hard-range violation or sampled hip-stop exposure.
+Both idle groups pass24/24 speed and yaw worlds. **Both motion foundations
+remain rejected:** all nine moving cases fail tracking, moving yaw0/72 in both.
+Speed47→49/72 is not improvement of the full skill: straight and positive-turn
+speed means regress, and all three moving yaw means regress.
+
+|Command (m/s, rad/s)|Speed MAE control→yawfocus|Yaw MAE control→yawfocus|Speed passes /24 control→yawfocus|Worst case torque p99 Nm control→yawfocus|
+|---|---:|---:|---:|---:|
+|Idle|.000712→.000642|.005010→.004670|24→24|.238158→.271133|
+|(.3,0)|.114210→.123195|.248060→.356390|2→1|.476041→.459198|
+|(.2,-.2)|.075421→.061630|.256478→.366299|22→24|.449089→.483332|
+|(.2,+.2)|.069734→.071518|.237777→.317625|23→24|.462711→.487955|
+
+All motor/range subsets remain within their unchanged limits, but this is not
+paired nonregression. Minimum all14-joint margin decreases+.245582→+.208753rad.
+Training falls967→1232; first100100→126, last10083→149, zero NaNs.
+Actual mean angular reward.702928→.349142 decreases under the narrower kernel;
+raw yaw-error square.495202→.562948 and XY-rate square.667833→.818607 increase.
+Linear reward.715371→.715724 and action cost1.059972→1.103709 do not establish
+better motion. Head ranges remain small in both arms, with comparable actual
+four-slot command exposure and head tracking/bias mass. Do not pool this new
+seed1663 control with the earlier head-lesson seed1567 control.
+
+Independent read-only numerical review confirms moving speed MAE regresses in
+38/72 paired worlds, yaw MAE in66/72. All nine moving seed-command yaw means
+regress. Minimum joint margin decreases in all nine moving cases; torque p99
+rises in6/9, soft-limit exposure in8/9 and thermal proxy in6/9. The predeclared
+descriptive-benefit rule therefore fails independently of the hard rejection.
+
+### Full-command heading and gait diagnosis
+
+All24 body/gait trace identities, metadata, raw sample coverage, actor/manager
+commands, body/world frames and complete episode clocks validate. The CPU-only
+audit authenticates the exact59-file inventory and uses the immutable heading
+engine plus the existing pinned stdlib gait summarizer, not new simulation or
+reward calls. Five fast tests pass10.614s, including full idle/arc traces,
+ready/not-ready decision preservation, partial prefixes, stale pins and output
+overwrite refusal; independent read-only review cleared it.
+
+Straight-world mean absolute heading change worsens.290651→.392859rad over
+3.58s; worst absolute drift44.037°→71.537°. Signed group means.220904→.315864rad
+do not hide the opposite-sign worlds. Worst25-sample moving-mean body-wz error
+.378822→.506769rad/s; its group mean absolute windowed error.088837→.118220.
+Negative-turn mean body wz−.053400→+.015499rad/s even though command is−.2;
+world-heading net rate−.050642→+.016435rad/s. This is real steering degradation,
+not merely an instantaneous gait oscillation artifact. For arcs, body-wz command
+tracking and projected world-heading rate are different quantities; no new
+integrated-heading acceptance gate was invented.
+
+Moving traces show predominantly one sampled foot contact (93–96% group means),
+no sampled double flight; idle has two contacts throughout. Contact-masked
+foot-site speed changes are mixed across left/right feet, not a universal slip
+improvement. Straight mean absolute head-yaw velocity rises.859630→1.460850rad/s,
+with head-roll1.121759→1.220856rad/s. Within-world head-yaw/yaw-error correlations
+shift from a mixed−.429..+.508 to uniformly negative−.772..−.221; head-roll also
+shows stronger anticorrelation. This describes co-occurrence, **not causation**;
+do not freeze the head, add an attempt tax, or relax gates on this evidence.
+These are sampled pre-action sensor/contact diagnostics, not simultaneous
+contact-patch slip or substep-resolved flight measurements.
+
+### Sealed evidence and host closeout
+
+Native `artifacts/training/quiet-yawfocus-154516d8-20261013`; JSON-only Mac packet
+`artifacts/evaluations/quiet-yawfocus-154516d8-20261013`.
+Native and independent portable verification each ran once successfully:
+59 authenticated files,260773765 bytes;2000 full-update rows pass all four
+action/linear/head/angular contracts. All original decisions remain unchanged.
+
+|Evidence|SHA-256|
+|---|---|
+|Aggregate|`92995c5d4d9c5fc552aa4049fd1f5f76c399dab24e81c4aa0157442290b76459`|
+|Native proof|`557b0bb19fefd3b777fc2567e1849d39c9a8005f475b59568f066e1b0a3401da`|
+|Retained manifest|`0c37e8c8e0915341c4af78e99f91465f01da6fca572718ddbb9507f15e1ef15c`|
+|Portable summary|`bcd536777950cccce3beaa9f9c2e42695685b44c3be3fb05b8f36f73c5f57783`|
+|Portable proof|`453014074fa3d8595f8d60ca1d535680204ea3cb17c2c446e0e96283da53e1de`|
+|Heading/gait audit|`4f0abf3e1b10705ae2fa38c4811f4f7a0d8a5b3519ff5b9cbf2a387a81e1e5a9`|
+|Restoration|`eeb21b21acab3f4c155aca920f3fce7f4cddd69968131feaba2d9e53c29db8c3`|
+
+All three retained user services finish inactive/success/MainPID0. During Duck
+work, maximum GPU1926MiB/69°C; all four protected scopes inactive, DINO2029
+preserved. Owned closeout restores only originally active user vLLM: service
+MainPID775915, GPU engine776102/9692MiB alongside DINO2029/946MiB; other three
+scopes stay inactive. No Duck GPU process remains. No driver/package change,
+video, publication, harder-skill promotion or physical motion occurred.
+
+The narrower-yaw branch is closed as a rejected diagnostic, not a teacher.
+The next hypothesis must address lesson complexity and measured gait/steering
+behavior rather than extending this scalar sweep; easier signed-turn command
+exposure is under source/history review, not yet declared or launched.

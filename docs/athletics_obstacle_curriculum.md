@@ -226,6 +226,16 @@ kernel only, original936a in both arms and unchanged speed/turn/motor gates.
 Existing read-only orientation/gait telemetry will cover arcs and idle too;
 no numerical qualification follows from that added trace coverage or source setup.
 
+That matched contrast is now sealed and rejected: moving speed47→49/72 but
+yaw0/72 in both arms; all three moving yaw means regress, as do straight and
+positive-turn speed means. Training falls967→1232 and worst straight-world
+heading drift44.04°→71.54°. All held-out episodes and motor/range safety subsets
+pass, not the motion gate. Full-command gait traces are retained; head/yaw
+anticorrelation is descriptive, not a cause or permission to freeze the head.
+Preserve the simpler-head lesson signal and reject sharper-yaw endpoint
+promotion. The next bounded curriculum hypothesis is under easier-command
+source/history review; no follow-on training or new capability is implied.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

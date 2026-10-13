@@ -244,6 +244,15 @@ high-yaw samples. Both arms still face the full unchanged idle/straight/±.20
 held-out gate; no harder-skill promotion or follow-on GPU job precedes tested
 source, a fresh native admission and measured timing caps.
 
+That lesson is now closed and rejected too. Actual target-band practice rises
+20.01%→39.61%, but moving speed53→51/72, yaw0/72 in both, and all moving yaw
+means regress. Worst straight drift improves54.77°→41.47° while mean absolute
+drift worsens; neither is motion qualification. All held-out episodes and
+motor/range safety subsets pass, not the full gate. Preserve the mixed evidence,
+do not promote the endpoint or repeat this scalar/support line automatically.
+Next investigate structural learning and a compatible positive walking reference
+before another predeclared training experiment; no acceptance bar is lowered.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

@@ -183,3 +183,100 @@ control → gentleturn → both final matrices. First audit control 220/1,000,
 preserved, all four protected scopes inactive during the scoped user-vLLM pause.
 Final checkpoints, held-out outcomes, evidence seal and service restoration
 remain pending. No motion capability, video or harder-skill promotion is claimed.
+
+## Closed result: exposure shift achieved, motion gate still rejected
+
+Both learners completed 1,000 updates / 6,144,000 transitions / 20,000 optimizer
+minibatches: control 672.690 s, gentleturn 680.046 s. All declared saves, exact
+initial-parent restoration and final normalizer 49,152,000 / Adam 160,000 are
+verified. Final checkpoint hashes:
+
+- Control `188475601ffa2004c12cf77b9870ccbe11d8f22c47911550d9dc1d510e0c4c84`.
+- Gentleturn `80b5dbf22fe6049ba4f5a781b653977b8288eb0ebda79edf4a9bf9dd51a2e2e6`.
+
+All 24 held-out cases complete the unchanged 240-step first episode. Idle speed
+and yaw pass 24/24 worlds in each arm. Every moving case still fails tracking:
+moving speed passes **53→51/72**, moving yaw **0/72 in both**. Both decisions
+remain `foundation-not-ready`, not policy or simulator qualification.
+
+| Command (m/s, rad/s) | Speed MAE control→gentleturn | Yaw MAE control→gentleturn | Speed passes /24 | Worst case torque p99 Nm |
+| --- | ---: | ---: | ---: | ---: |
+| Idle | .000947→.001087 | .006776→.007787 | 24→24 | .247408→.244288 |
+| (.3,0) | .110048→.112365 | .227538→.275427 | 5→3 | .490175→.464991 |
+| (.2,−.2) | .064319→.060304 | .232111→.276454 | 24→24 | .462060→.432989 |
+| (.2,+.2) | .063210→.070974 | .245758→.266547 | 24→24 | .465213→.430127 |
+
+No terminal, rated-speed exceedance, hard-range violation or right-hip stop
+exposure occurs. All case torque p99 values remain under .60 Nm; minimum joint
+margin stays positive but decreases .252958→.206727 rad. These safety-subset
+passes are not motion qualification. Independent matched numerical review also
+finds paired regressions: torque p99 3/12 cases, soft-limit fraction 3/12, power
+2/12, thermal proxy 3/12, minimum joint margin 11/12. The descriptive-benefit rule
+fails: straight and positive-turn speed means regress, as do all three moving
+yaw means. Do not pool this seed-1697 control with earlier controls.
+
+Training falls 934→1,035; first100 96→97, last100 101→119; zero NaNs.
+Actual mean angular reward .738544→.729868, yaw-error square .457705→.460727,
+XY-rate square .633483→.644428, raw linear reward .722670→.714689 and action
+cost 1.036990→1.072214. These are telemetry, not causal explanations.
+
+### Authenticated support and heading/gait evidence
+
+The intended rehearsal actually happened: target-band (.15,.25] exposure among
+nonzero-yaw action steps is 698,143 / 3,488,292 = **20.0139%** for control and
+1,374,861 / 3,471,339 = **39.6061%** for gentleturn. Both treatment high bins are
+exactly zero; all four required command groups have actual exposure. Every
+1,000-row training log passes integer/bin/support/standing/clock/cumulative
+continuity checks. Exposure is a measured lesson property, not an acceptance gate.
+
+All 24 body/gait trace identities and complete clocks validate. Six stdlib
+audit tests pass 11.411 s, using synthetic partial/complete idle/straight/arc
+cases and rejecting stale pins, malformed counters and output overwrite.
+The audit reuses the unchanged pinned heading/gait math and portable support
+helper; no new physics, RNG, observation or reward call was introduced.
+
+Straight heading is mixed, not uniformly better: mean absolute net change
+.247862→.264221 rad over 3.58 s, while worst absolute change improves
+54.770° (control seed857/world1) → 41.473° (gentleturn seed853/world6).
+Signed means −.202717→−.075076 rad hide opposite-sign worlds and are not a
+substitute for per-world evidence. Straight group mean absolute 25-sample
+windowed body-wz error .078048→.081322 rad/s also regresses.
+
+Negative-turn mean body wz −.114301→−.073065 rad/s (target−.2), world-heading
+slope −.116220→−.073964; positive-turn mean body wz .073663→.121350
+(target+.2), heading slope .076488→.117683. Arcs remain asymmetric and their
+instantaneous yaw MAE worsens in both directions. Projected world heading and
+body-wz command tracking are distinct; no integrated-heading gate was invented.
+The retained gait/contact/head correlations remain descriptive, not causation
+or permission to freeze the head or loosen the motor/turn gates.
+
+### Evidence seal and original-service restoration
+
+Native packet `artifacts/training/quiet-gentleturn-c5274c58-20261013`; JSON-only
+Mac packet `artifacts/evaluations/quiet-gentleturn-c5274c58-20261013`. Native and
+portable one-shot verification each pass: **59 files / 260,822,301 bytes**.
+All 2,000 learner rows pass the five contracts; original decisions remain intact.
+Models remain on native storage; derived proofs and analysis are retained there.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Aggregate | `5d5af2abe20f7e827825411be78abeb55ef977659b311fc8fcc838d786df896a` |
+| Native proof | `40a5a56b6e8468c9d338bf3b1e6815d6ca3f2e7c47eb35469e5598bb80e9bb15` |
+| Retained manifest | `515015c226df66cc3a0403177778e748b928daa05739145a2102cc79bb7b066c` |
+| Portable summary | `acd64deeb5a7046e2c54574db3b9f1fc7eb336690c5536125199f4a4f9f48d34` |
+| Portable proof | `8144f35a22f3cabecaf575ba79fc12c21178a9224a9db73d449100107c23543b` |
+| Heading/gait/support audit | `25e8a4fe2649c788ad8420edb34299f634e462ee63af2c03ffc0e41dbc07a903` |
+| Restoration | `8c09ea65f21014c2e4cd3df539bb4351403d014f3cb3a544508a4bdb3b4136aa` |
+
+All three Duck services finish inactive/success/MainPID0. Maximum Duck GPU
+1,926 MiB / 69°C, DINO2029 preserved, all protected scopes inactive during
+the owned pause. Original user vLLM is restored with GPU engine823303/9,692 MiB
+alongside DINO2029/946 MiB; the other three protected scopes stay inactive.
+No Duck GPU process remains; no unrelated workload, driver/package, physical
+robot, video, publication or harder-skill promotion was changed.
+
+Do not launch another support/width scalar repeat on this rejection. Next work
+checks structural learning evidence and a compatible positive locomotion
+reference before choosing a new predeclared experiment. Old optimizer state,
+finite adaptation and command-to-gait response are hypotheses, not a proven
+cause or authority for a blind reset, longer run or acceptance-gate change.

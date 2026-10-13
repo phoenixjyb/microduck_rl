@@ -220,6 +220,12 @@ straight world-heading drift43.41° over3.58s. Preserve this curriculum-complexi
 signal, not an accepted endpoint; separately target steering before transitions,
 obstacles, hopping combinations or football promotion.
 
+The [small-head steering-precision contrast](experiments/2026-10-13-quiet-head-yaw-focus.md)
+predeclares the next bounded lesson: identical quiet-head controls, narrower yaw
+kernel only, original936a in both arms and unchanged speed/turn/motor gates.
+Existing read-only orientation/gait telemetry will cover arcs and idle too;
+no numerical qualification follows from that added trace coverage or source setup.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

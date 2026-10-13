@@ -94,6 +94,80 @@ acceptance. Any failure stops the sequence, retains evidence and restores only
 the authorized original workload after proven Duck exit. Diagnose read-only
 before fixes. No H2, multi-seed promotion, MP4, raw perception or physical motion.
 
-Results pending; source/focused checks and a native affected-suite run precede
-launch. The successful earlier smoke is retained separately; it is not counted
-as part of this new budget.
+The successful earlier smoke is retained separately; it is not counted as part
+of this new budget.
+
+## Fixed final999 result — forward gains, endpoint rejected
+
+Executed source `722e7a6ac6f9cf2995cbab37b7b13aa14e7c218a`;145 focused local tests
+passed (two export deprecation warnings),1409 affected native tests passed
+(18 warnings). The actual saved smoke initial/final actors were also validated
+CPU-only before launch. The sequential user service completed successfully and
+the original user vLLM was restored with DINO preserved.
+
+The10-update benchmark took9.517498 s (61,440 transitions), projecting1487.6247 s
+against the2070-s admission bar. Its original-mean baseline passed the required
+first-episode/motor/range safety subsets but rejected all nine moving tracking
+cases, as anticipated. The fresh1000-update learner completed6,144,000 transitions
+in567.4296 s, with finite optimizer/model state,1321 training falls and zero NaN
+terminations. All17 Adam states reached20,000 steps; the actor affine stayed
+byte-equal/count0 while the critic accumulated6,144,000 samples. Actual command
+exposure reconciles to the complete budget. All declared checkpoints are durable.
+
+| Command vx / wz | Initial → final actual vx | Initial → final actual wz | Speed passes /24 | Yaw passes /24 |
+| --- | --- | --- | --- | --- |
+| 0 / 0 | -0.000117 → 0.000365 | 0.000381 → 0.009594 | 24 → 24 | 24 → 23 |
+| .3 / 0 | .124786 → .221941 | .029246 → .118079 | 0 → 17 | 0 → 0 |
+| .2 / -.2 | .082334 → .148851 | -.188499 → -.070434 | 2 → 24 | 0 → 0 |
+| .2 / +.2 | .081179 → .151294 | .174431 → .201844 | 2 → 24 | 0 → 0 |
+
+These signed body-rate/speed means are descriptive, not replacement gates.
+Moving speed passes improve4→65/72. Moving speed MAE means improve
+.175214→.080965, .117666→.054419 and .118835→.051732. But moving yaw MAE means
+worsen .255327→.303241, .261885→.282239 and .232182→.249833: yaw remains0/72.
+The final endpoint rejects all nine moving cases plus idle seed853, whose world4
+has yaw MAE.300762 and mean body wz.183229. Positive mean turning approaches its
+target while straight/negative-turn mean authority regresses; averaging hides
+the instantaneous and idle failures. The endpoint is not promoted.
+
+All12 initial and12 final cases completed240 steps without a first terminal,
+rated-speed, motor or range gate failure. Final maximum case force-utilization
+p99.571236 (raw.342741 Nm) is below the unchanged.60/.36 Nm bar. Minimum named
+motor-hinge margin tightens .176525→.023102 rad; the final closest joint is
+**left_hip_yaw**, not the previously investigated right hip. It remains in range,
+but this is a meaningful new safety/steering diagnostic, not physical acceptance.
+Do not clip intentional low-kp targets or copy the old right-joint fix blindly.
+
+GPU peak1854 MiB, minimum free14340 MiB, maximum temperature67 C. Stochastic
+training's peak utilization1.067539 and soft/rated exposures are training guards,
+not deterministic safety acceptance; the full retained summary reports them.
+No harder skill, video or physical motion followed the failed numerical gate.
+
+## Read-only next diagnosis and seals
+
+The very first foundation update has raw minibatch KL mean3.788118, maximum
+minibatch mean4.282735 against target.01; adaptive LR ranges1e-5–.0015 during
+that update. Subsequent early means settle near.01–.02. This substantial initial
+policy change is a concrete retention-risk lead, **not proof** that it caused
+the final steering/idle loss. Final reward components and named-joint diagnostics
+must be considered alongside it. The next useful bounded contrast is a cautious
+initial learning rate from the ORIGINAL v8 actor with matched seeds/initial
+actor/critic states and unchanged target recipe, rather than adopting final999
+or running another blind reward/command scalar experiment. It needs its own
+declaration, small smoke and early-KL admission guard before another long job.
+
+Native full packet: `artifacts/training/v8-actor-foundation-722e7a6a-20261013`.
+Create-exclusive CPU closeout verified the complete training budgets, optimizer/
+normalizer clocks, original-mean initial actors, final checkpoint, all ordered
+case files and recomputed unchanged gate. The inventory/summary are received
+on the Mac (`-closeout`) with matching hashes; full traces/checkpoints stay native.
+
+- Foundation result SHA256: `11c12dcc8fd31ffba3d39418a83776028d5861736fb5d63b62398985298aaaec`.
+- Initial foundation PT SHA256: `29d3ea8491c84d57db12ea37ffad9d586fa8ab582be621e3028e5f27055ba974`.
+- Final999 PT SHA256: `4631f81d36f7cc846cbed42efdedb9a16e2a40b2d1cadbcbc2834b43e016d7bb`.
+- Final ONNX SHA256: `aab5f33d339f888977b7f2cc0a7413813d5727625b123dbf47bbc89df1870680`.
+- Initial evaluation SHA256: `d28e0e866b6f38074f7f88f9f7861d9ba5626d2b1e741922a7371c24968e6b98`.
+- Final evaluation SHA256: `aa083fd44993813ccd2cfd5f499075b8a562441420686c416396f60201273351`.
+- Inventory SHA256: `90107a56f78ee5df936f5ef4db268d381dc97cf20c6677232f7c339796c59ec3`.
+- Summary SHA256: `71f43db1064146eaee7e6bbef570c53f4288c5804bd57c0be0264d785d89017a`.
+- Restoration SHA256: `dd70ae32a15553693c6459d2cfa46e5239bffad4f28d46ba780e513e24cb50f4`.

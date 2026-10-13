@@ -294,6 +294,14 @@ fixes a256-world benchmark, original-mean held-out baseline and1000 fresh target
 updates with unchanged final held-out gates. Longer curriculum stages, harder
 skills and physical motion remain gated; no rejected old endpoint is promoted.
 
+That1000-update round completed6.144m transitions and improves moving speed
+passes4→65/72 (.3-m/s command actual mean .125→.222). It still fails all moving
+yaw gates and one idle world, so it is not promoted. Full held-out episodes and
+motor/range subsets pass; left-hip-yaw margin tightens to.023 rad. Read-only
+telemetry exposes a large first-update KL spike before otherwise finite learning.
+Next test cautious actor-seed adaptation with matched initial states and explicit
+early-KL admission; preserve the forward result and all rejected gate evidence.
+
 After a foundation candidate passes, qualify stop/start and command transitions,
 then compact externally supplied obstacle geometry with slowdown permitted only
 inside the avoidance segment and speed tracking retained before/after it.

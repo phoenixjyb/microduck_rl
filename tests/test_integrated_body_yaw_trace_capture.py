@@ -75,6 +75,7 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
             self.num_envs, self.device, self.step_dt = 8, "cpu", .02
             robot, self.command = robot_and_command()
             robot.data.root_link_lin_vel_b = torch.zeros(8, 3)
+            robot.data.root_link_pos_w = torch.zeros(8, 3)
             robot.data.joint_pos = torch.zeros(8, 14)
             robot.data.default_joint_pos = torch.zeros(8, 14)
             robot.data.joint_vel = torch.zeros(8, 14)
@@ -117,6 +118,7 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
             data = self.env.scene["robot"].data
             data.data.time.fill_(self.env.count * .02)
             data.root_link_lin_vel_b[:, 0] = self.env.count / 1000
+            data.root_link_pos_w[:, 0] = self.env.count / 100
             data.root_link_ang_vel_b[:, 2] = self.env.count / 1000
             data.root_link_ang_vel_w.copy_(data.root_link_ang_vel_b)
             return self.get_observations(), torch.zeros(8), torch.zeros(8, dtype=torch.bool), {}
@@ -194,6 +196,20 @@ def test_optional_trace_keeps_original_case_evidence_and_reads_before_step(monke
     gait_summary = summarize_gait(gait_case, gait_trace)
     assert gait_summary["recomputed_yaw_mae_per_world"] == pytest.approx(default["yaw_mae"])
     assert gait_summary["contact_pattern_count_per_world"]["two-contacts"] == [180]*8
+
+    with pytest.raises(ValueError, match="requires aligned gait"):
+        base.evaluate_case(checkpoint, 839, .2, -.2, lambda: None, gait_path_trace=True)
+    path_case = base.evaluate_case(checkpoint, 839, .2, -.2, lambda: None,
+        diagnostics=True, yaw_trace=True, gait_trace=True, gait_path_trace=True)
+    path_trace = path_case.pop("gait_path_trace")
+    assert path_case.pop("body_yaw_trace") == trace
+    assert path_case.pop("gait_yaw_trace") == gait_trace
+    assert path_case == default
+    assert path_trace["protocol"] == "microduck-gait-path-trace-v1"
+    assert path_trace["root_position_w"][0][0] == [0., 0., 0.]
+    assert path_trace["root_position_w"][-1][0] == pytest.approx([2.39, 0., 0.])
+    assert all(path_trace[key] == gait_trace[key] for key in gait_trace if key != "protocol")
+    assert closed == [240]*4
 
     # A terminal episode retains its short raw trace but cannot be summarized
     # as a complete held-out case or have startup/terminal samples hidden.

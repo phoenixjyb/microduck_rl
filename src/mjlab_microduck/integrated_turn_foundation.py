@@ -333,7 +333,7 @@ def body_yaw_trace_sample(robot, command, actor_command):
 def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, target_diagnostics=False,
                   angular_diagnostics=False, yaw_trace=False, gait_trace=False, action_trace=False,
                   head_yaw_command=None, observation_trace=False, onnx_reference=None,
-                  evaluation_task_override=None, frozen_v8_checkpoint=None):
+                  evaluation_task_override=None, frozen_v8_checkpoint=None, gait_path_trace=False):
     if frozen_v8_checkpoint is not None:
         from mjlab_microduck.v8_actor_checkpoint import FrozenV8Checkpoint
         require(type(frozen_v8_checkpoint) is FrozenV8Checkpoint,
@@ -348,6 +348,8 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
 
     require(not target_diagnostics or diagnostics, "target capture requires position diagnostics")
     require(not gait_trace or yaw_trace, "gait capture requires unchanged body-yaw trace")
+    require(not gait_path_trace or (gait_trace and yaw_trace),
+            "path capture requires aligned gait and body-yaw traces")
     require(not action_trace or (diagnostics and target_diagnostics and yaw_trace),
             "action capture requires position/target/body-yaw diagnostics")
     require(not observation_trace or angular_diagnostics,
@@ -444,6 +446,7 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         angular_samples = []
         yaw_samples = []
         gait_samples = []
+        path_samples = []
         action_samples = []
         observation_samples = []
         limits = robot.data.joint_pos_limits[:, stream.joint_ids].cpu().clone() if diagnostics else None
@@ -473,7 +476,11 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
                     yaw_samples.append(body_yaw_trace_sample(robot, command, obs["actor"][:, 48:51]))
                 if gait_trace:
                     from mjlab_microduck import gait_yaw_capture
-                    gait_samples.append(gait_yaw_capture.capture(env, robot, obs["actor"]))
+                    sample = gait_yaw_capture.capture(env, robot, obs["actor"])
+                    gait_samples.append(sample)
+                    if gait_path_trace:
+                        from mjlab_microduck import gait_path_capture
+                        path_samples.append(gait_path_capture.capture(robot, sample))
                 if diagnostics:
                     positions.append(robot.data.joint_pos[:, stream.joint_ids].cpu().clone())
                 if target_diagnostics:
@@ -550,6 +557,9 @@ def evaluate_case(checkpoint, seed, speed, yaw, health, *, diagnostics=False, ta
         if gait_trace:
             from mjlab_microduck import gait_yaw_capture
             result["gait_yaw_trace"] = gait_yaw_capture.trace(gait_samples, result["checkpoint_sha256"])
+        if gait_path_trace:
+            from mjlab_microduck import gait_path_capture
+            result["gait_path_trace"] = gait_path_capture.trace(path_samples, result["checkpoint_sha256"])
         if head_yaw_command is not None:
             result["head_yaw_command"] = head_yaw_command
             result["head_measurement_view"] = "named plain-servo qpos minus HOME"

@@ -1086,3 +1086,12 @@ packets lack root XY positions: no actual path acceptance can be derived from
 those files. Add aligned position capture and explicit contact-cycle coverage
 before measuring this new contract; do not relabel old rejections or infer an
 obstacle, hopping, football or physical capability from forward-speed gains.
+
+The matched cautious contrast also completed1000 updates: first-update KL
+3.788→.01045, moving speed66/72 and idle24/24, but legacy moving yaw0/72 and
+steering degradation persists. Its exact final999 stays rejected. The approved
+[new route protocol](experiments/2026-10-13-gait-aware-route-qualification.md)
+adds measured world XY and contact-cycle coverage with endpoint AND trajectory
+checks, continuously unwrapped heading and unchanged motor/stability gates.
+Replay only the original mean and the two declared final999 checkpoints before
+choosing the next learning objective; no new skill follows from source tests.

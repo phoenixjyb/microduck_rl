@@ -84,3 +84,71 @@ Read-only native inspection confirms all three retained control initial PTs
 carry `infos.env_state.common_step_counter=0`, iteration0 and fresh Adam.
 Exact native affected checks, guarded service preflight and actual candidate
 matched-control validation still precede learning admission. Results pending.
+
+## Native closeout — completed, legacy gate rejected
+
+Tested/pushed source `934bdff47a63d458f571189fe5db155fcd4fd8d0` ran as
+`recomo-duck-v8-cautious-lr-934bdff4-20261013.service`, inactive/success0 after
+the five sequential stages. Native affected tests:1436 pass,18 warnings. Full
+packet remains only on100.100 at
+`artifacts/training/v8-cautious-lr-934bdff4-20261013`; Mac retains just the
+independently checked summary/inventory, not duplicate checkpoints/traces.
+
+All three actual candidate actor/critic state digests match the retained stock
+controls before updating. Both normalizer counts0, clocks0, empty Adam and all
+17 ordered optimizer parameters/settings match except the declared initial LR.
+The masked full recipe hashes match too. These are verified initial model-state
+matches, not a claim of byte-identical ensuing physics trajectories.
+
+| Stage | Complete budget | Learner elapsed | First-update mean / max minibatch KL |
+| --- | --- | --- | --- |
+| Smoke |64×5,7680 transitions |4.154s |.014070 / .026477 |
+| Benchmark |256×10,61440 transitions |7.256s |.010639 / .022693 |
+| Foundation |256×1000,6144000 transitions |556.117s |.010451 / .020339 |
+
+All prospective first-update guards pass. Conservative benchmark projection
+1148.362s fits2070s. Final checkpoint0/250/500/750/999 durable; final999 hash
+`820c86e28b3d05d8bd292b63777b78cfa0b4657d69cc028ad17f8afe1ab91738`.
+Actor count0/affine unchanged; critic count6144000;17 Adam states each20000
+steps;20 captured raw minibatches/update;0 NaN terminations. Training falls1131
+(stock1321), a descriptive count, not held-out or physical stability acceptance.
+The foundation initial PT differs in whole bytes because LR differs; its model
+tensor digests match. Updated Gaussian std remains our PPO state, not v8 history.
+
+All12 final held-out cases complete240 steps with no terminals or motor/range
+gate failure. Moving speed passes66/72 (stock65, original4); raw instantaneous
+yaw passes0/72. Idle speed/yaw each24/24 (stock idle yaw23/24). The original
+legacy decision is still `foundation-not-ready`: all9 moving cases rejected.
+
+| Command vx / yaw | Original v8 mean vx / body wz | Stock final999 | Cautious final999 |
+| --- | --- | --- | --- |
+| .30 / 0 | .12479 / +.02925 | .22194 / +.11808 | .23196 / +.13181 |
+| .20 / −.20 | .08233 / −.18850 | .14885 / −.07043 | .17006 / −.04381 |
+| .20 / +.20 | .08118 / +.17443 | .15129 / +.20184 | .17063 / +.15871 |
+
+Cautious final mean speed MAE .07413/.04091/.03973 and raw yaw MAE
+.32133/.29671/.28994 for these three commands. Forward tracking improves, but
+the substantial steering degradation persists despite removing the first-update
+KL shock. Therefore initial LR alone is not an adequate steering-retention fix;
+do not promote the candidate or infer an obstacle/hop/football skill. The next
+[gait-aware route measurement](2026-10-13-gait-aware-route-qualification.md)
+tests actual path/heading separately, without rewriting this rejection.
+
+Final held-out maximum force utilization p99 .593614 (raw .356169 Nm), zero
+rated-speed exceedance, minimum motor-hinge margin .037974rad. GPU maximum
+1854MiB, minimum free14340MiB, maximum67°C. DINO PID2029 preserved; originally
+active user vLLM restored and owns GPU again; both system scopes and user subject
+worker remain inactive. The certificate verifies all checkpoints, finite updates,
+norm/Adam clocks, exports, per-case files and recomputed legacy decision.
+
+| Sealed artifact | SHA256 |
+| --- | --- |
+| Foundation result | `81fb85083254d641a1e7e9a623c39e8aae4e4aec27386195be7cef1507019beb` |
+| Final normalized ONNX | `4d35c804dbeb9c6a0eb9ba58e94fbc358ce276cbfe312aa3302fc2cc77d1a5af` |
+| Final held-out result | `39bb68c9149a3f47f8d6b604fa825ed9669362a1790ed0034eeb7d81f25beeb8` |
+| Summary | `5c8542012dd31a42e6482300290de20ea1a90b68735a720f94f7c7b2f20f0b32` |
+| Full packet inventory | `2a902da7e38b6faad9ce5a79fa87ac8dc5e44e13ed9bb58d2b6470f03c42e27e` |
+| Scoped restoration | `166558503ffa57fbf0e70495671c5ca23d25e3e5f3592bced3f3c7bc60ab75ce` |
+
+No automatic retry, checkpoint search, extra budget, raw perception, video,
+policy publication, harder-skill promotion or physical motion occurred.

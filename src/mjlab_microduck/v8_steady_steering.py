@@ -288,6 +288,33 @@ def benchmark_projection_seconds(elapsed_s):
     return elapsed_s * 100 * 1.5 + 60
 
 
+def validate_command_coverage(result, worlds, updates):
+    """Validate both schemas; base signed counts use a strict 0.01 threshold.
+
+    Observer bins classify every nonzero yaw by sign, so small signed yaw values
+    can also count as base "straight" while appearing in a signed low bin.
+    """
+    transitions = worlds * updates * 24
+    bins = result.get("command_exposure")
+    base_counts = {key: result.get(key) for key in base.FULL_COMMAND_COVERAGE}
+    base.require(result.get("worlds") == worlds and result.get("updates") == updates
+        and result.get("steps") == updates * 24 and result.get("transitions") == transitions,
+        "exact world/update/step/transition budget")
+    base.require(type(bins) is dict and set(bins) == set(exposure.EXPOSURE_BINS)
+        and all(type(count) is int and count >= 0 for count in bins.values())
+        and sum(bins.values()) == transitions,
+        "exact eight-bin nonnegative actor command dwell totals")
+    base.require(all(type(count) is int and count > 0 for count in base_counts.values())
+        and base_counts["idle"] == bins["idle"]
+        and base_counts["negative_yaw"] <= sum(bins[k] for k in
+            ("negative-low", "negative-target", "negative-high"))
+        and base_counts["positive_yaw"] <= sum(bins[k] for k in
+            ("positive-low", "positive-target", "positive-high"))
+        and bins["straight"] <= base_counts["straight"]
+        and base_counts["straight"] <= bins["straight"] + bins["negative-low"] + bins["positive-low"],
+        "base and signed-bucket command coverage mappings agree")
+
+
 def validate_training_receipt(root, mode, source):
     base.require(mode in MODES, "declared steady-steering receipt stage")
     output = Path(root) / mode
@@ -343,9 +370,9 @@ def validate_training_receipt(root, mode, source):
         and matched.get("policy_acceptance") is False
         and matched.get("physical_motion_authorized") is False,
         "steady identity adapted from authenticated retained stock initial checkpoint")
-    coverage = result["command_exposure"]
-    base.require(base.finite_tree(result) and all(coverage.get(key, 0) > 0 for key in base.FULL_COMMAND_COVERAGE)
-                 and result["elapsed_s"] <= CAPS[mode], "finite receipt, full command support and bounded duration")
+    validate_command_coverage(result, worlds, updates)
+    base.require(base.finite_tree(result) and result["elapsed_s"] <= CAPS[mode],
+                 "finite receipt and bounded duration")
     kl_report = validate_first_update_kl(output, mode, source)
     base.require(result.get("first_update_kl") == kl_report,
                  "training receipt binds its first-update KL guard")

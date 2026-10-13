@@ -277,6 +277,36 @@ def test_first_update_guard_limits_and_nonfinite_values():
         assert steady.first_update_kl_report("smoke", SOURCE, summary, steps=24)["passed"] is False
 
 
+def _native_smoke_coverage_receipt():
+    return {"worlds": 64, "updates": 5, "steps": 120, "transitions": 7680,
+        "idle": 480, "straight": 1680, "negative_yaw": 2760, "positive_yaw": 2760,
+        "command_exposure": {"idle": 480, "straight": 1560,
+            "negative-low": 960, "negative-target": 480, "negative-high": 1320,
+            "positive-low": 480, "positive-target": 480, "positive-high": 1920}}
+
+
+def test_native_smoke_receipt_uses_distinct_base_and_eight_bin_coverage_schemas():
+    steady.validate_command_coverage(_native_smoke_coverage_receipt(), worlds=64, updates=5)
+
+
+@pytest.mark.parametrize("damage", ["missing-bin", "bad-bin-total", "bad-bin-type",
+                                     "bad-negative-map", "budget"])
+def test_command_coverage_receipt_rejects_missing_bins_mapping_and_budget(damage):
+    receipt = _native_smoke_coverage_receipt()
+    if damage == "missing-bin":
+        del receipt["command_exposure"]["positive-high"]
+    elif damage == "bad-bin-total":
+        receipt["command_exposure"]["positive-high"] -= 1
+    elif damage == "bad-bin-type":
+        receipt["command_exposure"]["positive-high"] = True
+    elif damage == "bad-negative-map":
+        receipt["negative_yaw"] = 2761
+    elif damage == "budget":
+        receipt["transitions"] = 7681
+    with pytest.raises(ValueError):
+        steady.validate_command_coverage(receipt, worlds=64, updates=5)
+
+
 def test_evaluator_uses_fixed_frozen_v8_diagnostics_and_saves_full_case_first(tmp_path, monkeypatch):
     from mjlab_microduck import gait_path_qualification as route
     from mjlab_microduck import v8_actor_checkpoint

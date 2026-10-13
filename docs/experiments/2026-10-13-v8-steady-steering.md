@@ -131,3 +131,49 @@ its stale-zero input report remains retained and INVALID, hash
 The correction copies into the held tensor and asserts scene/input identity.
 No learner or runtime source was changed to fix that harness, and neither old
 raw packets nor their sealed results were overwritten.
+
+## Initial native smoke and software-only corrections
+
+Exact source `a6ed1bb677067721a95a2b33ce555060343a8d98` passed1543 native
+affected tests. The first launcher failed CPU preflight with
+`TypeError: dict() got multiple values for keyword argument 'mode'`; no Duck
+packet/learner existed, original vLLM PID1123738 was never paused or restarted.
+The old failed unit/receipt remain intact. The corrected unique `-preflight-v2`
+launcher passed CPU preflight with no weight, rate, recipe or gate change.
+
+That run completed its native64×5 smoke:7680 transitions,4.212s,0 falls,
+0 NaNs, actual reward activity120/120 steps, mean raw EMA cost.13579684 and
+weighted reward−.13579684. First-update KL mean.014301/max minibatch.026966
+passes. Imported initial tensor states match the controls; actor normalizer
+remains frozen and regular normalized export is durable. The benchmark did NOT
+start: its prerequisite validator incorrectly looked for `negative_yaw` and
+`positive_yaw` inside the eight-bin exposure map. Those four full-coverage
+counters are top-level; the bins separately partition all actual transitions.
+This is a schema bug, not a failed learning/skill gate.
+
+The fix checks both actual layouts: four top-level positive counters and exact
+eight integer/nonnegative bins totaling the declared transitions. It preserves
+the different straight/sign thresholds (`abs(wz)<.01` versus exact-zero/any
+sign), rather than forcing incompatible counters equal. A regression fixture
+uses the retained native counts: top idle480/straight1680/negative2760/positive
+2760; eight bins480/1560/960/480/1320/480/480/1920. The recipe, budget, signal,
+first-KL and qualification gates are unchanged. Repeat the smoke from fresh
+state under a new tested source identity; never restart/overwrite the old run.
+Corrected-source preparation:135 focused tests and1549 affected local tests
+pass,18 existing warnings; no learning recipe or numerical gate changed.
+
+Preserved partial packet `artifacts/training/v8-steady-steering-a6ed1bb6-20261013`
+contains initial/final smoke checkpoints, updates, actual activity, recipe/state
+proofs, guard and export. Original user vLLM was restored active after the
+prerequisite failure, with DINO unchanged; no long training budget was spent.
+
+| Partial smoke evidence | SHA256 |
+| --- | --- |
+| Result | `f902c9245cc80d7f93cbc38250de8f4add84d174f59ed2c3000d7887ac1ac7fa` |
+| Initial PT | `b3953680298c950979245519a3c107af19dca8e963af8aec37cc1e485faffb49` |
+| Final model4 | `695cfdf0e3b50f6c63d11a934f781c31b23364d774a53d8944aff86c4eb0f1ff` |
+| First-update KL | `424a93facd81fe5ae261557d7216ec564fdfe3f741f34ffee2e7829609eb6f0c` |
+| Normalized ONNX | `229cbba519dc1c58e84952aea600dd0cb66f0243b27e5735a514d7195066dd56` |
+| Invalid first preflight script | `90c271ca52543ca0140a3a39f9c724286083a6582b4bab3406661b5af5f7590b` |
+| First no-restart receipt | `74011b1eaedcc07aeaf816675b911695f10b60660dcc7bc551d4185cb36091e3` |
+| Correct CPU preflight script | `968266748fee21b953904951c9a4b83185caecf0c5caeab5465ec15753d85327` |

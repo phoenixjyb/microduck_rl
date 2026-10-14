@@ -191,3 +191,68 @@ treatment foundation, both final999 evaluations and deterministic CPU
 comparison, then restores only original user vLLM after proven Duck exit.
 Keep the active native checkout frozen at the executed source; subsequent
 documentation commits must not advance it while this service is running.
+
+## Completed pair: motor reduction rejected, unchanged control retained for research
+
+Both1000-update foundations and both final999 evaluations completed; service
+exit0/success, no failure or partial files. Each arm adds6.144M transitions,
+12.288M total. Control/treatment took625.544/636.940s with541/642 training
+falls and0 NaN terminations. All0/250/500/750/999 checkpoints are durable;
+final Adam60000, critic18432000 and local iter999/env24000 are verified.
+All six initial checkpoints have the previously recorded identical SHA256.
+
+An independent CUDA-hidden closeout authenticates every stage, initial/final
+tensors and clocks, both sealed walking references, raw/routes, deterministic
+comparison and live scoped restoration. The complete145-file/334,476,484-byte
+packet remains native. Only100,685-byte summary and22,999-byte manifest are
+copied to `artifacts/training/v8-motor-headroom-06c2b709-20261014-closeout/`.
+
+| Moving command | Control speed MAE | Headroom speed MAE | Control full-heading error rate | Headroom full-heading error rate |
+| --- | --- | --- | --- | --- |
+| .30m/s straight | .059750 | .062212 | .049868 | .095710 |
+| .20m/s, −.20rad/s | .044749 | .048002 | .057118 | .064891 |
+| .20m/s, +.20rad/s | .040180 | .042102 | .036039 | .101254 |
+
+Speed MAE is m/s; heading is equal-world mean absolute full-settled endpoint
+error/duration, rad/s, not a claim that every cycle or trajectory maximum
+passes. Both arms retain BOTH original walking references, idle24/24 speed/yaw,
+all12 complete held-out cases with no terminal and all motor/range safety
+checks. Moving speed passes69/72 control versus68/72 headroom. Neither passes
+any of the nine moving route cases or moving instantaneous-yaw cases.
+
+The predeclared diagnostic decision is **headroom-lesson-rejected**. Worst
+selected-actuator case p99 drops5.302% (.449412→.425583Nm), but left-ankle
+load rises>5% in both turn directions, heading regresses beyond.01rad/s in
+straight/positive commands, and moving speed-pass count falls. No paired
+mean-speed-MAE gate fails. The global pooled p99 improves.335161→.330080Nm;
+neither metric is a calibrated continuous hardware limit. Maximum training
+power3.200→3.078W/duty proxy.084722→.080912 improves, but this does not excuse
+the motion regressions. Do not carry the−.25 motor penalty into the next lesson.
+
+The continued control is a provisional research seed, **not an accepted
+teacher**. Full-settled heading endpoint AND maximum passes23/21/23 worlds
+across straight/negative/positive commands, or67/72, but complete route-component
+passes only4/3/5=12/72 worlds. Its479 complete moving cycles have73 heading
+endpoint failures plus160 additional within-cycle maximum failures;18 XY
+failures are all straight. There are0 cycle-duration failures and0 motor-safety
+failed cases. Cycle medians.48/.46/.46s do not identify a unique causal phase.
+Next test additional optimization exposure under exactly the unchanged recipe,
+not a phase-specific penalty inferred from associations or a relaxed route gate.
+
+Exact SHA256 receipts:
+
+- Control PT: `dddd37576fa7d2cd17bb4201826a7fa8aec0404b7b5af1339b79d492e4a9355a`
+- Headroom PT: `24677f3b4ba15a8631221f8fcdab44d655c597b68ea520ae42e893dfcf65a489`
+- Control ONNX: `892ab44744a2e914d01ac2459ad0c50ba68ad542aab918f184abebfcf2d7b1e8`
+- Headroom ONNX: `5bd0d0e6cf48bce1e1d30e29473e3c09d7862f0212b51dde1ca41eadda6b8305`
+- Summary: `61391992bf577974883c454155f01367d8faccad916734719aef06a30e574671`
+- Manifest: `f5e7d7a15b6796172d57af354c022c21ec6f7a7281ce40ac9049b8d304341bbf`
+- Deterministic comparison: `59e94481c5ce0bd9bc00e9cb0106439c119b28f4fc1b99af9cabba6d12880824`
+- Independent verifier: `17295c311afcd47bc1dc048de390297c795ea3a60accfbf23327084b467b7e53`
+
+Sampled GPU maximum1710MiB/67C; DINO2029 preserved. Original user vLLM restored
+and live engine1826117/cgroup ownership rechecked; all other protected scopes
+remain inactive. Context/idle-proof/restored SHA256:
+`1074cfbc1c497b76343a1d09a2c268d502024e0340da621241a777d88e416a73`,
+`192f9ac2eac8b2beebdfa0de7fc989d6b542f8d1aa33e04315121ca287eeab43`,
+`fb9d5b096ed9a70d9daed1f1b0766acc0a21bea6310e4629d76923e050605ae1`.

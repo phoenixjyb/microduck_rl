@@ -137,3 +137,79 @@ claimed complete. The service continues to control999, extended1999, the
 unchanged held-out matrix and deterministic three-reference retention checks,
 then restores only original user vLLM after proven Duck GPU exit. No new
 campaign or skill promotion follows automatically.
+
+## Completed matched exposure comparison: rejected
+
+Both full budgets and final held-out evaluations completed successfully at the
+executed source `c340ff00`. Control1000 took632.350s; extended2000 took1276.559s.
+The full pair collected **18.432M transitions**, with613/1391 training falls and
+zero NaN terminations. All update/reward/optimizer/motor fields are finite.
+All six initial PTs share the admitted `c6b09dc2...` hash. Final local clocks
+are999/env24000 and1999/env48000; Adam80000/100000 and critic24576000/30720000
+are verified. Actor affine and updater count0 remain unchanged. Both first-update
+guards pass (control mean/max.016327/.023938; extended.016588/.024003).
+
+Both12-case held-out matrices are complete first episodes without falls or
+terminals. Idle retains24/24 worlds each; motor/range safety and BOTH original
+walking references pass. Legacy instantaneous-yaw and complete route gates
+still reject all nine moving cases in both arms. Numerical gates are unchanged.
+
+| Command vx / yaw | Complete route worlds:1000→2000 | Speed passes | Mean full heading endpoint/T rad/s | Mean full XY endpoint/T m/s |
+| --- | --- | --- | --- | --- |
+| .30 / 0 |2→9/24 |18→21/24 |.053328→.042922 |.082669→.071556 |
+| .20 / −.20 |0→6/24 |24→24/24 |.072484→.046402 |.054286→.031901 |
+| .20 / +.20 |5→0/24 |24→24/24 |.052882→.076419 |.047082→.043405 |
+
+The extended arm gains8 complete moving route worlds (7→15/72) and moving
+speed passes66→69/72, but **positive-turn heading error worsens44.5%**,
+an increase.023537rad/s versus the allowed.01. The1000-update control also
+fails the sealed provisional-parent walking reference (66 rather than69 speed
+passes). Extended retains that reference. These are two explicit failures of
+the predeclared comparison, yielding **`budget-lesson-rejected`**. Do not treat
+either new checkpoint as a promoted teacher, extend this recipe again, or
+reinterpret the partial gains as complete steering qualification.
+
+Cycle counts479→480; endpoint failures120→93 and additional peak-only failures
+143→91. Straight cycle XY failures36→23; turns have none. Positive-turn
+endpoint failures rise33→50 while its complete route worlds fall5→0. This
+directional trade-off, rather than missing gait cycles, blocks progression.
+Held-out modeled raw force p99 maxima.321092→.333461Nm remain below.36Nm;
+minimum named motor-hinge margins.160951/.197471rad. Training maxima are
+separate: modeled utilization.836131/.839613, soft-limit exposure.021659/.023344,
+mechanical power2.95844/3.03013W and thermal proxy.076957/.080334. Neither the
+proxy nor these modeled limits establish physical servo safety.
+
+### Durable assets and independent verification
+
+The packet contains149 files /362,603,025 bytes, retained on100.100. Mac stores
+only110,644-byte summary and23,628-byte manifest in
+`artifacts/training/v8-steering-budget-c340ff00-20261014-closeout/` (ignored).
+CUDA-hidden independent verification authenticated every receipt, initial and
+final state, checkpoint cadence, raw evaluation hash and all three walking
+references; it recomputed the complete deterministic decision without writing
+over the original. `verified-evidence-not-policy-acceptance`, with both
+authorization flags false.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Control final999 PT | `4a29f18855349550625ff5df3170ffbd680a7046ed7d7fec5a4398062ecb9368` |
+| Extended final1999 PT | `3e3924cf693c89c5289adfb996d4f6ac35c93bc54ac01ee4fd6e032b052e3742` |
+| Control evaluation receipt | `7eb94b874b6fdaa10be42c9f1d5d0ed59538c8a80add76e07e46f504b7aef4f6` |
+| Extended evaluation receipt | `2f680774fa17639a339b8711c27bb19b46f6faf31f5757ff7f17650e4ce147c6` |
+| Decision | `770c5a59a10b546b3e1c2eef617fe14cf0e8d59950e18b46a74ddb668c6cca09` |
+| Verified summary | `bfba1397b4a6657b2411f72eac25afb2f1bbb401b11f1d5443df6bc7f4d58987` |
+| Inventory manifest | `55bfe531793362c938c99eabc3650d6f42426b424c098ca85cf4dcfaa5b8e436` |
+| Independent verifier | `7d0ba6d42671fb1671d29ae0f6fddf3fed87d3c8bb1088062f886b79ce197ed5` |
+
+Service exitsuccess/0, inactive. Guarded handback proves a DINO-only idle GPU
+before restoring only original user vLLM, then the independent verifier confirms
+live vLLM GPU PID1885812 belongs to its user-service cgroup. DINO2029 survives;
+user subject worker and both system scopes remain inactive. No Duck GPU process
+remains. Maximum sampled GPU1710MiB/67°C. Native executed checkout remains clean.
+Closeout checks:55 focused CPU tests pass, including the retained diagnostic and
+old continuation contracts; no install, perception, video or physical motion.
+
+The next bounded lesson will change only the existing yaw-bias price, not the
+EMA horizon or budget. It must start from the earlier sealed `dddd3757...`
+control parent, not either rejected new actor. See the separately predeclared
+[gain contrast](2026-10-14-v8-yaw-gain-contrast.md) for its unchanged gates.

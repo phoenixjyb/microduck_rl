@@ -167,10 +167,10 @@ def frozen_profile_report(source, arm, mode):
 
 
 class Observer(driver.Observer):
-    def __init__(self, mode, arm):
+    def __init__(self, mode, arm, *, bias_weight=None):
         base.require(arm in ARMS, "declared motor lesson arm")
         super().__init__(mode, "gait-scale", protocol=PROTOCOL,
-                         report_arm=arm, receipt_profile=KL_PROFILE)
+                         report_arm=arm, receipt_profile=KL_PROFILE, bias_weight=bias_weight)
         self.selected_arm = arm
         self.motor_costs, self.motor_rewards, self.motor_forces = [], [], []
 

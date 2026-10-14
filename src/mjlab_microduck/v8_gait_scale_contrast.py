@@ -139,14 +139,33 @@ def _treatment_metric(env):
     return capture_metric(env, "gait-scale")
 
 
-def capture_metric(env, arm: str):
+def bias_weight(experiment, arm):
+    """Explicit per-arm opt-in; historical scalar-weight recipes remain unchanged."""
+    arms, default = _bindings(experiment, "ARMS WEIGHT")
+    _require(arm in arms, "declared yaw-bias weight arm")
+    weights = getattr(experiment, "WEIGHTS", None)
+    if weights is not None:
+        _require(isinstance(weights, dict) and set(weights) == set(arms),
+                 "complete explicit yaw-bias weight mapping")
+        for value in weights.values():
+            _require(type(value) in (int, float) and math.isfinite(value) and value < 0,
+                     "finite strictly negative yaw-bias price")
+    value = default if weights is None else weights[arm]
+    _require(type(value) in (int, float) and math.isfinite(value) and value < 0,
+             "finite strictly negative yaw-bias price")
+    return float(value)
+
+
+def capture_metric(env, arm: str, *, weight=WEIGHT):
     from .tasks import mdp
 
+    _require(type(weight) in (int, float) and math.isfinite(weight) and weight < 0,
+             "finite strictly negative yaw-bias price")
     _require(arm in ARMS and getattr(env, "_microduck_yaw_bias_snapshot", None) is None,
              "known arm and previous yaw-bias snapshot consumed")
     tau = TAUS[arm]
     term = env.reward_manager.get_term_cfg(steady.TERM)
-    _require(term.func is mdp.body_yaw_bias_cost and term.weight == WEIGHT
+    _require(term.func is mdp.body_yaw_bias_cost and term.weight == weight
              and term.params == {"command_name": "twist", "tau_s": tau},
              "live contrast reward function, weight, and arm time constant")
     cost = term.func(env, **term.params)
@@ -156,7 +175,7 @@ def capture_metric(env, arm: str):
     weighted = env.reward_manager._step_reward[:, index]
     _require(isinstance(weighted, torch.Tensor) and weighted.shape == cost.shape
              and base.finite_tree(weighted) and bool((weighted <= 0).all())
-             and torch.allclose(weighted, WEIGHT * cost, atol=1e-6, rtol=1e-5),
+             and torch.allclose(weighted, weight * cost, atol=1e-6, rtol=1e-5),
              "actual weighted reward matches the configured nonpositive cost")
     env._microduck_yaw_bias_snapshot = {
         key: state[key].detach().clone() for key in ("signed_residual", "signed_ema", "cost")}
@@ -464,13 +483,17 @@ def _optimizer_steps(optimizer):
 class Observer(learning.Observer):
     """Read-only command, frozen-curriculum, and pre-reset reward observer."""
     def __init__(self, mode, arm, *, protocol=PROTOCOL, report_arm=None,
-                 receipt_profile=KL_PROFILE):
+                 receipt_profile=KL_PROFILE, bias_weight=None):
         _require(mode in MODES and arm in ARMS, "known observer stage and arm")
         super().__init__()
         self.mode, self.arm = mode, arm
         self.protocol = protocol
         self.report_arm = arm if report_arm is None else report_arm
         self.receipt_profile = receipt_profile
+        self.bias_weight = WEIGHT if bias_weight is None else bias_weight
+        _require(type(self.bias_weight) in (int, float)
+                 and math.isfinite(self.bias_weight) and self.bias_weight < 0,
+                 "finite strictly negative observer yaw-bias price")
         self.profile = "gait-scale-contrast"
         self.bias_costs, self.bias_rewards, self.signed_biases = [], [], []
         self.raw_errors, self.signed_raw_errors = [], []
@@ -486,7 +509,7 @@ class Observer(learning.Observer):
         super().before(env)
         self._assert_live_profile(env)
         live = env.reward_manager.get_term_cfg(steady.TERM)
-        _require(live.func is mdp.body_yaw_bias_cost and live.weight == WEIGHT
+        _require(live.func is mdp.body_yaw_bias_cost and live.weight == self.bias_weight
                  and live.params == {"command_name": "twist", "tau_s": TAUS[self.arm]},
                  "frozen arm-specific reward remains live throughout training")
         _require(getattr(env, "_microduck_yaw_bias_snapshot", None) is None,
@@ -542,7 +565,7 @@ class Observer(learning.Observer):
             ("signed_residual", "signed_ema", "cost", "weighted_reward"))
         _require(bool((cost >= 0).all()) and torch.equal(cost, ema.abs())
                  and bool((weighted <= 0).all())
-                 and torch.allclose(weighted, WEIGHT * cost, atol=1e-6, rtol=1e-5),
+                 and torch.allclose(weighted, self.bias_weight * cost, atol=1e-6, rtol=1e-5),
                  "actual pre-reset reward matches cost and fixed weight")
         command = self._bias_command
         self.activity_steps += int(bool((cost > 0).any()))
@@ -580,6 +603,7 @@ class Observer(learning.Observer):
             report["initial_learning_rate"] = self.initial_lr
             report["arm"] = self.report_arm
             report["profile"] = self.receipt_profile
+            report["fixed_reward_weight"] = self.bias_weight
             self.first_update_report = report
             base.write_new(self.output / "first-update-kl.json", report)
             row["first_update_kl"] = report
@@ -592,7 +616,7 @@ class Observer(learning.Observer):
                     "physical_motion_authorized": False,
                     "first_update_kl_sha256": base.sha256(self.output / "first-update-kl.json")})
                 _require(False, "gait-scale-contrast first-update KL guard")
-        row.update(arm=self.report_arm, yaw_bias_weight=WEIGHT, yaw_bias_tau_s=TAUS[self.arm],
+        row.update(arm=self.report_arm, yaw_bias_weight=self.bias_weight, yaw_bias_tau_s=TAUS[self.arm],
             yaw_bias_cost_mean=sum(self.bias_costs)/24,
             weighted_yaw_bias_reward_mean=sum(self.bias_rewards)/24,
             signed_yaw_bias_mean=sum(self.signed_biases)/24,
@@ -623,6 +647,7 @@ def validate_training_receipt(root, arm, mode, source, *, experiment=None):
         "ARMS MODES PROTOCOL PARENT_SHA PARENT_ITERATION PARENT_STEPS "
         "PARENT_ADAM_STEP PARENT_CRITIC_COUNT TAUS WEIGHT CAPS KL_PROFILE "
         "recipe_match frozen_profile_report _read_parent")
+    WEIGHT = bias_weight(experiment, arm)
     _require(arm in ARMS and mode in MODES, "declared contrast receipt")
     output = Path(root) / arm / mode
     result = json.loads((output / "result.json").read_text())
@@ -754,7 +779,7 @@ def validate_training_receipt(root, arm, mode, source, *, experiment=None):
     expected_kl.update(protocol=PROTOCOL + ":first-update-kl-v1",
         inherited_parent_lr=expected_init["inherited_learning_rate"],
         initial_learning_rate=expected_init["inherited_learning_rate"], arm=arm,
-        profile=KL_PROFILE)
+        profile=KL_PROFILE, fixed_reward_weight=WEIGHT)
     _require(kl_report == expected_kl and result.get("first_update_kl") == kl_report
         and kl_report["passed"] is True and kl_report["source"] == source
         and kl_report["mode"] == mode and kl_report["arm"] == arm

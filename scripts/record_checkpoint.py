@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from dataclasses import asdict
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 from mjlab.utils.torch import configure_torch_backends
 from mjlab.utils.wrappers import VideoRecorder
 from mjlab.viewer import ViewerConfig
+from mjlab_microduck.evaluation import fix_velocity_commands
 
 
 def _sha256(path: Path) -> str:
@@ -27,26 +29,16 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _fix_commands(env_cfg, speed: float) -> None:
-    """Hold a straight-ahead velocity command and neutral pose commands."""
-    commands = env_cfg.commands
-    twist = commands["twist"]
-    twist.resampling_time_range = (1.0e6, 1.0e6)
-    twist.rel_standing_envs = 0.0
-    twist.rel_heading_envs = 0.0
-    twist.rel_world_envs = 0.0
-    twist.rel_forward_envs = 1.0
-    twist.rel_turn_in_place_envs = 0.0
-    twist.init_velocity_prob = 0.0
-    twist.ranges.lin_vel_x = (speed, speed)
-    twist.ranges.lin_vel_y = (0.0, 0.0)
-    twist.ranges.ang_vel_z = (0.0, 0.0)
+def _fix_commands(env_cfg, speed: float, yaw_rate: float = 0.0) -> None:
+    """Pin twist and neutral pose commands using the evaluator's sampler fix."""
+    fix_velocity_commands(env_cfg, speed, yaw_rate)
 
-    for name in ("head_pose", "body_pose"):
-        command = commands[name]
-        command.resampling_time_range = (1.0e6, 1.0e6)
-        command.ranges = tuple((0.0, 0.0) for _ in command.ranges)
-        command.zero_command_prob = 1.0
+
+def _video_name_prefix(speed: float, yaw_rate: float) -> str:
+    prefix = f"microduck-run-{speed:.2f}mps"
+    if yaw_rate != 0.0:
+        prefix += f"-yaw{yaw_rate:+.2f}radps"
+    return prefix
 
 
 def parse_args() -> argparse.Namespace:
@@ -55,12 +47,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--task", default="Mjlab-Run-Flat-MicroDuck")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--speed", type=float, default=0.8)
+    parser.add_argument("--yaw-rate", type=float, default=0.0)
     parser.add_argument("--frames", type=int, default=300)
     parser.add_argument("--width", type=int, default=960)
     parser.add_argument("--height", type=int, default=540)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="cuda:0")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not math.isfinite(args.speed) or not math.isfinite(args.yaw_rate):
+        parser.error("speed and yaw-rate must be finite")
+    return args
 
 
 def main() -> None:
@@ -98,12 +94,12 @@ def main() -> None:
 
     # Keep the replay command fixed. Curricula would otherwise overwrite it,
     # and interval pushes make a poor first visual baseline.
-    _fix_commands(env_cfg, args.speed)
+    _fix_commands(env_cfg, args.speed, args.yaw_rate)
     env_cfg.curriculum = {}
     env_cfg.events.pop("push_robot", None)
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    name_prefix = f"microduck-run-{args.speed:.2f}mps"
+    name_prefix = _video_name_prefix(args.speed, args.yaw_rate)
     expected_video = output_dir / f"{name_prefix}-step-0.mp4"
     if expected_video.exists():
         raise FileExistsError(expected_video)
@@ -124,6 +120,7 @@ def main() -> None:
     env = RslRlVecEnvWrapper(recorder, clip_actions=agent_cfg.clip_actions)
 
     speeds: list[float] = []
+    yaw_rates: list[float] = []
     episode_ends = 0
     try:
         runner_cls = load_runner_cls(args.task) or OnPolicyRunner
@@ -136,8 +133,11 @@ def main() -> None:
             for _ in range(args.frames):
                 actions = policy(observations)
                 observations, _, dones, _ = env.step(actions)
-                speed = raw_env.scene["robot"].data.root_link_lin_vel_b[0, 0]
+                robot_data = raw_env.scene["robot"].data
+                speed = robot_data.root_link_lin_vel_b[0, 0]
                 speeds.append(float(speed.item()))
+                yaw_rate = robot_data.root_link_ang_vel_b[0, 2]
+                yaw_rates.append(float(yaw_rate.item()))
                 episode_ends += int(dones[0].item())
     finally:
         env.close()
@@ -150,10 +150,16 @@ def main() -> None:
         "checkpoint": str(checkpoint),
         "checkpoint_sha256": _sha256(checkpoint),
         "commanded_forward_speed_mps": args.speed,
+        "commanded_yaw_rate_rad_s": args.yaw_rate,
         "observed_forward_speed_mps": {
             "mean": sum(speeds) / len(speeds),
             "min": min(speeds),
             "max": max(speeds),
+        },
+        "observed_body_yaw_rate_rad_s": {
+            "mean": sum(yaw_rates) / len(yaw_rates),
+            "min": min(yaw_rates),
+            "max": max(yaw_rates),
         },
         "episode_ends": episode_ends,
         "frames": args.frames,

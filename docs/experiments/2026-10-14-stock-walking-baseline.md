@@ -52,13 +52,18 @@ drivers, reboot, credential setup, publication or physical motion.
 ## Behavior check after learning
 
 Keep historical failures unchanged. Inspect the final checkpoint in its own
-flat/backlash training plant, then through the CPU deployment rehearsal with
-the matching exported normalizer. First report forward speed, both turn signs,
+flat/backlash training plant with `scripts/evaluate_checkpoint.py` and
+`scripts/record_checkpoint.py`; both load the checkpoint normalizer. First report forward speed, both turn signs,
 upright survival and idle drift alongside a visual rollout. A useful simulation
 demo need not satisfy every prior diagnostic precision gate, but neither a
 finite checkpoint nor a demo means robust navigation or hardware qualification.
 Only then proceed to stop/recovery and an obstacle supervisor over the working
 gait; hopping/football remain specialist tracks.
+
+The existing generic CPU `infer_policy.py` reads direct servo joint positions
+and lacks the training plant's passive-backlash encoder feedback. Its rehearsal
+remains useful as a distinct transfer diagnostic, not an exact-plant walking
+verdict. Use the native task evaluator/recorder for the first gait milestone.
 
 ## First native admissions and thermal stop
 
@@ -81,3 +86,30 @@ resource test, not a promoted gait or warm start. It retains the75C cutoff and
 all other bounds. Choose a full training batch only after stable temperature
 and measured runtime; do not relax cooling limits to get4096. The native profile
 assets remain at `artifacts/training/stock-walk-profile-s1019-20261014`.
+
+## Selected full training slice (predeclared)
+
+The CPU100% thermal admission completed120 updates in124.81s, with finite final
+checkpoint/ONNX and all scalar logs, zeroNaNs, peak2690MiB and71C (last70C).
+Last60 updates averaged1.002s, p95=1.02045s and maximum1.02592s. The conservative
+projection `180 + 1.25 × p95 × 6000` is **7833.4s**, below the10800s child cap.
+Its checkpoint is retained but is not loaded into the full run.
+
+Select **1024 environments ×6000 updates**, seed1019, fresh stock initialization:
+**147,456,000 transitions**,24× the earlier6.144M-transition diagnostics. One
+retained user service, CPUQuota100%, MemoryMax8GiB, RuntimeMax11200s, child cap
+10800s plus hard timeout10815s and scoped post-exit vLLM restoration. Existing
+GPU/motor/NaN limits remain unchanged; no larger batch or recipe change is
+admitted. Run ID `stock-walk-foundation-s1019-20261014`; task-native checkpoints,
+TensorBoard logs and exports live in `artifacts/training/<run-id>/train`.
+The exact committed learning source is bound in launch/context JSON before pause.
+
+Retain every250-update checkpoint and final `model_5999.pt`; assess the final
+checkpoint without cherry-picking a favorable intermediate. If the safety or
+runtime guard stops the job, retain the latest durable checkpoint and report
+the incomplete learning budget; do not call it completed or auto-reroll.
+After completion, use the existing task evaluator for idle/straight/both turns
+and the bounded recorder with `--yaw-rate` for corresponding visual evidence.
+The recorder now pins the actual command without the forward-only sampler's
+hidden speed clamp/yaw suppression. Rendering quality remains unverified until
+the actual MP4s are made and inspected. Robust navigation remains a later tier.

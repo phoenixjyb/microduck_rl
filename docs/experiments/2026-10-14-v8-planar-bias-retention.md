@@ -1,6 +1,6 @@
 # Persistent planar-speed retention lesson
 
-Status: **source/native and both GPU admissions passed; matched foundation active**.
+Status: **completed; planar-bias lesson rejected; GPU lease closed and vLLM restored**.
 Branch `integration/upstream-2026-10-10`; protocol `v8-planar-bias-retention-v1`.
 
 ## Question and prior evidence
@@ -161,3 +161,40 @@ Executed context/restorer/handoff/unit SHA256 respectively:
 `d4fcc6b28f5dcb9ba3c29065b8e2db89ab3c6d688cdc25a5051834d55a36b96e`,
 `daf227216f3ed4cf45b454de05b814f1d6dc5d7a3510df1e63a844f27f7703f6`,
 `77fe61a53261420da33d4b766ccd45bd2232b371b80beb308477b5389d41393b`.
+
+## Final closeout (2026-10-14)
+
+Both arms completed 1000 updates / 6,144,000 transitions and retained initial,
+0/250/500/750/999 checkpoints. Control/treatment runtime was 651.823/661.531s;
+training falls were 601/626, with zero NaN terminations. Final999 optimizer and
+normalizer tensors were finite. Both 12-case evaluations completed, and all
+three walking references in each arm remained `walking-idle-retained`.
+
+The unchanged decision is **`planar-bias-lesson-rejected`**: complete moving
+worlds fell **13→5**, paired speed passes **71→69/72**, and negative-turn heading
+regressed. Neither endpoint is a promoted policy or a new teacher. No reroll,
+obstacle/hop/football/video job follows this pair.
+
+Final control/treatment checkpoint SHA256:
+`abe5d4db20055a118b61b3ef9e6dfa77657937772338708a31f4d5d0ed69dbae` /
+`705ad52df15452cc0c3b3e60760a59038d6f3c03dc090f2fb3b283aed14023b7`.
+Decision SHA256:
+`2c85d1cfae57ea731cb1c0c7c5c4d175ef03d743e3948beca97869722ffbd7eb`.
+Large receipts/checkpoints remain in the native run directory above.
+
+Independent import-mode validation found a metadata defect in all six training
+receipts: the original `python -m` invocation serialized the observer callable
+as `__main__:capture_planar_metric`; imported recomputation used
+`mjlab_microduck.v8_planar_bias:capture_planar_metric`. Changing only that field
+in a read-only recomputation reproduces all saved full/masked recipe hashes.
+Original CLI validations and both evaluation validations passed; independent
+training-receipt validation did not. Historical receipt/decision bytes are
+preserved. The future canonical serializer now fixes the callable name, with
+a regression test; this is not a retrospective acceptance or a reason to
+repeat rejected learning.
+
+Native service finished inactive/success/exit0. At the post-exit check,
+original USER vLLM was active (PID2208422,9692MiB), DINO2029 remained alive
+(946MiB), GPU50C, and no Duck GPU process remained. The next development slice
+restores the pinned upstream v8 recipe and exercises its deployment simulator;
+it does not extend the custom reward campaign.

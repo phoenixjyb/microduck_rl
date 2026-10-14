@@ -95,6 +95,12 @@ def test_foundation_recipe_keeps_original_ranges_terms_and_actor_contract():
     assert cfg.observations["critic"].terms == parent_cfg.observations["critic"].terms
 
 
+def test_recipe_identity_does_not_depend_on_cli_callable_module(monkeypatch):
+    before = planar.recipe_match("smoke")
+    monkeypatch.setattr(planar.capture_planar_metric, "__module__", "__main__")
+    assert planar.recipe_match("smoke") == before
+
+
 def test_parent_reader_authenticates_fixed_json_and_rejects_corruption(monkeypatch):
     report = {"decision": "staged-head-replication-rejected", "learning_seed": 977,
         "policy_acceptance": False, "physical_motion_authorized": False,

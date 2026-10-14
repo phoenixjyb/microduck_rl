@@ -8,6 +8,40 @@ the real robot. Sim2real transfer
 is the whole point: every convention below exists because breaking it produced a
 policy that worked in the viewer and failed on hardware.
 
+## Project working agreement: delivery first (2026-10-14)
+
+The owner explicitly wants usable duck capabilities, not an expanding diagnostic
+project. Apply these priorities alongside the technical invariants below:
+
+- Make each work chunk serve one observable behavior milestone. Report actual
+  walking/turning, stability, recovery or obstacle performance; green tests,
+  checkpoint counts and evidence packaging are supporting work, not new skills.
+- Reproduce a proven upstream baseline before inventing another recipe. Match
+  its task, plant, observations, timing, normalization, teacher/BC anchors and
+  deployment rehearsal. A modified flat-task ONNX fine-tune is not a faithful
+  reproduction of upstream VelStand training.
+- Use a measured, adequate learning budget. Profile larger parallel batches
+  within available resources and compare transitions, not iteration counts alone.
+  Preserve smoke tests; do not substitute endless tiny diagnostic runs for a
+  production-scale training attempt, or assume that more training guarantees a fix.
+- Time-box diagnosis and add instrumentation only when it resolves a concrete
+  blocker or informs the next decision. When a family of tweaks repeatedly fails,
+  revisit the baseline/learning method rather than repeat scalar or seed sweeps.
+  Reuse existing checks and assets; keep documentation proportionate.
+- Establish walking/turning first, then stop/recovery and obstacle supervision
+  over a working gait. Keep hopping/jumping and football balance as specialist
+  tracks; do not require one monolithic policy to learn everything at once.
+- Define simulation-demonstration, robust-navigation and physical-deployment
+  tiers in advance. Use behavioral inspection as well as numerical evidence.
+  Do not treat a diagnostic precision gate as a universal capability verdict,
+  rewrite historical failures, or mistake a demo for deployment qualification.
+- Preserve motor/contact safety, observation/action contracts, unrelated GPU
+  workloads and explicit motion/publication authority. This priority change is
+  not permission to relax safety or change an active experiment mid-run.
+- After the current bounded planar-bias pair closes, prioritize faithful upstream
+  reproduction and a visible walking/turning milestone; no automatic queue of
+  further reward tweaks. Update the plan from the actual results.
+
 ## Commands
 
 ```bash

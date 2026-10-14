@@ -97,6 +97,10 @@ def prepare_config(mode, arm):
 def _canonical(mode, arm, *, mask):
     cfg, agent = prepare_config(mode, arm)
     env, algo = asdict(cfg), asdict(agent)
+    # CLI execution names this callable __main__; imports use its real module.
+    # Recipe identity must not depend on how the identical source was invoked.
+    env["metrics"]["microduck_planar_bias"]["func"] = (
+        "mjlab_microduck.v8_planar_bias:capture_planar_metric")
     if mask:
         env["rewards"][TERM]["weight"] = "<declared-planar-cost-weight>"
     return json.dumps(profiles._canonical({"environment": env, "agent": algo}),

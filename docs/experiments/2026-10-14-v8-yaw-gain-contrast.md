@@ -149,7 +149,82 @@ Only this small matching proof is copied to
 Raw models/logs remain native. Keep the active native checkout frozen at7acacf87;
 later documentation commits do not advance it while running.
 
-Both full budgets, final evaluations and deterministic comparison remain
-**pending**. The retained service continues sequentially and restores only
-original user vLLM after proven Duck exit. No automatic subsequent campaign,
-checkpoint promotion, perception task, video or physical motion.
+At this admission snapshot the full budgets, evaluations and comparison were
+pending; their completed results and workload restoration are recorded below.
+No automatic subsequent campaign, checkpoint promotion, perception task, video
+or physical motion follows from this historical snapshot.
+
+## Completed gain contrast: rejected
+
+Both final1000-update learners and their final-only evaluations completed at
+the declared source7acacf87. Control627.947s/reduced630.719s; **12.288M full
+training transitions** across the pair. Training falls615→712; zero NaN
+terminations, all reward/optimizer/motor metrics finite. Six initial PTs share
+the admitted `c6b09dc2...` hash. Final local iter999/env24000,17 Adam entries
+80000, critic count24576000 and unchanged actor affine/count0 are verified.
+First full-update mean/max KL.016126/.021966 and.016295/.023704 pass, with
+honest−1/−.5 metadata and actually weighted rewards.
+
+Both held-out12-case matrices completed their first episodes without falls or
+terminals. Both preserve24/24 idle worlds, motor/range safety and BOTH original
+walking references. All nine moving cases still fail the unchanged complete
+route gate; instantaneous moving yaw remains0/72 as a separate diagnostic.
+
+| Command vx / yaw | Complete route worlds:−1→−.5 | Speed passes | Mean full heading endpoint/T rad/s | Mean full XY endpoint/T m/s |
+| --- | --- | --- | --- | --- |
+| .30 / 0 |3→1/24 |20→23/24 |.047063→.106711 |.075227→.080863 |
+| .20 / −.20 |4→3/24 |24→24/24 |.063716→.104560 |.038826→.047032 |
+| .20 / +.20 |5→2/24 |24→24/24 |.052230→.087818 |.039967→.039306 |
+
+Moving speed passes68→71/72, but complete moving route worlds **12→6/72**.
+Heading endpoint error worsens126.7%/64.1%/68.1% in straight/negative/positive
+commands, exceeding the+.01rad/s allowance in all three. Control additionally
+fails the original-parent walking reference (68 versus69 required speed passes);
+reduced retains that reference. The deterministic decision is
+**`gain-lesson-rejected`**, for five retained failures: insufficient complete-world
+gain, three heading regressions and control walking-reference loss. Do not adopt
+the weaker price, either endpoint, or a favorable speed aggregate as a teacher.
+
+Complete moving cycles480→492, with endpoint-heading failures82→216 and
+additional peak-only failures142→130. Straight cycle XY failures24→11; turns
+have none. Thus the reduced arm buys speed at the expense of persistent heading
+accuracy, not missing cycle coverage. Modeled held-out raw force p99 maxima
+.321973→.344293Nm remain below.36Nm but headroom shrinks. Minimum named motor
+hinge margins.149998/.178537rad; training maxima are separate: modeled
+utilization.832325/.849759, soft-limit fraction.022298/.024205, mechanical
+power2.98376/3.16037W and thermal proxy.078055/.081448. These proxies and modeled
+limits do not establish physical servo safety.
+
+### Independent closeout and retained state
+
+The CUDA-hidden independent verifier recomputes every receipt, raw-case hash,
+normalizer/optimizer clock, initial-state equality, recipe pair, all three
+walking references and the complete decision. It checks the original/restored
+service scope inventory and live per-PID vLLM cgroup ownership, not merely
+service status. `verified-evidence-not-policy-acceptance`, both authority flags
+false. Native packet:145 files /334,526,538 bytes. Only112,418-byte summary and
+22,930-byte inventory were copied to
+`artifacts/training/v8-yaw-gain-7acacf87-20261014-closeout/` (ignored).
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Control final999 PT | `79d78acf9345180fcd1b331d5b5545c67425c7d9bde753699fea1e29d77995f6` |
+| Reduced final999 PT | `f8961093ce1848cdbb547cb424eef704fc7995957d3000fd6c0da5576c50bea8` |
+| Control evaluation receipt | `48f934e5cb95827e0a1d7336168ad761ee643a6105eb6ef87cbe019161f67f79` |
+| Reduced evaluation receipt | `65c8e73681b76d8dfc95289ef54188be8b739a13e819f253ddf21d648cc1a39b` |
+| Deterministic decision | `e331c02e391f8f4e67f6b87efe234f34ddba28951b0b49218f5043d2e612570d` |
+| Verified summary | `c7f962464669c250cb8c2c4d62085d3614b10085747a9c95085d01591e3d4125` |
+| Inventory manifest | `4768d07efd6650ed47bc73f8ac33156a55e78ef1ed017259eacc6fa3d19ffda9` |
+| Independent verifier | `b058d2f1c4dab6b0f26f8309bca41dd35730b229fadd5bf6a43363768da62c25` |
+
+Service exitsuccess/0, inactive; no Duck GPU process remains. A DINO-only idle
+proof precedes restoration of only original user vLLM; independent live check
+confirms engine1928047 in its expected user-service cgroup. DINO2029 remains;
+user subject worker and both system scopes remain inactive. Maximum sampled
+GPU1710MiB/67°C; native executed checkout clean at7acacf87. Closeout checks:
+45 focused CPU tests pass, with CUDA hidden, and document links/whitespace checked.
+No runtime change, raw perception, video, publication or physical motion.
+
+Next is the separately predeclared [head-goal timing lesson](2026-10-14-v8-staged-head-goals.md),
+not another automatic gain/horizon/budget sweep. The weaker-price failure does
+not causally prove that head goals caused drift or that stronger penalties help.

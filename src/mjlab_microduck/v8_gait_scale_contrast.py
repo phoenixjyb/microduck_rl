@@ -525,8 +525,7 @@ class Observer(learning.Observer):
                  "parent live reward curriculum snapshot remains frozen")
         twist = env.command_manager.get_term("twist").cfg
         _require(twist.rel_standing_envs == .10, "parent standing command fraction remains frozen")
-        for name, expected in (("head_pose", ((-.39, .39), (-.39, .39),
-                                                (-.49, .49), (-.11, .11))),
+        for name, expected in (("head_pose", self.expected_head_ranges(env.common_step_counter)),
                                ("body_pose", ((-.005, .005), (-.005, .005),
                                                (-.005, .005), (-.05, .05),
                                                (-.05, .05), (-.05, .05)))):
@@ -538,6 +537,10 @@ class Observer(learning.Observer):
             _require(term.params.get("ranges") == (-value, value),
                      f"parent live {name} distribution remains frozen")
         _require(env.common_step_counter >= 0, "valid local counter boundary")
+
+    def expected_head_ranges(self, step):
+        """Historical fixed profile; a declared lesson may override only this view."""
+        return ((-.39, .39), (-.39, .39), (-.49, .49), (-.11, .11))
 
     @staticmethod
     def _bucket_masks(command):
@@ -589,7 +592,7 @@ class Observer(learning.Observer):
         _require(profile.get("action_rate_weight") == -.4
                  and profile.get("head_pose_bias_weight") == 1.0
                  and profile.get("rel_standing_envs") == .10
-                 and profile.get("head_pose_ranges") == [[-.39,.39],[-.39,.39],[-.49,.49],[-.11,.11]]
+                 and profile.get("head_pose_ranges") == [list(x) for x in self.expected_head_ranges(env.common_step_counter)]
                  and profile.get("randomize_com", {}).get("ranges") == [-.005,.005]
                  and profile.get("randomize_head_com", {}).get("ranges") == [-.005,.005],
                  "manager-applied parent live curriculum snapshot remains exact")

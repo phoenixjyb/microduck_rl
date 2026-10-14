@@ -1,6 +1,6 @@
 # Staged secondary head goals during steering practice
 
-Status: **predeclared design, not implemented/admitted or launched**.
+Status: **implemented and CPU-tested; native GPU admission and training pending**.
 Protocol `v8-staged-head-goals-v1`, planned run
 `v8-staged-head-goals-<tested-source8>-20261014`. Existing rejected results and
 their gates remain unchanged. This is a curriculum-complexity hypothesis, not
@@ -81,7 +81,7 @@ phase tax, command-yaw restriction, sensor or plant change.
 
 ## Implementation and temporal telemetry gate before launch
 
-Implementation is still required. Before each action, both arms must apply the
+Before each action, both arms must apply the
 same existing pose-range machinery to live command-manager config at the actual
 local common step, then validate it; a reset-only callback cannot establish exact
 boundary exposure. Do not write only the original env cfg after manager deepcopy.
@@ -156,3 +156,23 @@ workloads; pause/restore only originally active user vLLM after proven Duck exit
 leave other scopes as found and preserve100.98/NX/FilmBrain. No raw perception,
 MP4, policy publication, package/driver change, reboot or physical motion.
 The design does not itself authorize a launch or imply an active next learner.
+
+## Implemented admission machinery
+
+The shared [schedule](../../src/mjlab_microduck/v8_head_goal_schedule.py),
+[learner](../../src/mjlab_microduck/v8_staged_head_goals.py) and
+[frozen-actor probe](../../src/mjlab_microduck/v8_head_goal_boundary_probe.py)
+implement the declared histories. Historical observers retain their fixed head
+ranges. The new observer reapplies live ranges before each action and before
+the closed update snapshot, while retaining the actual pre-action commands
+across resampling and autoreset. Existing head rewards are read from their
+already-weighted columns, never recomputed to advance their EMA.
+
+On the Mac, 124 affected CPU tests across the schedule, learner, probe and four
+existing continuation suites passed. Compilation and `git diff --check` passed.
+This includes both sides of every boundary, cached actor-slot equality,
+non-fabricated widening exposure, reward/sampler invariance, the supported
+motor-stream capacity bucket, fail-closed later-stage admission and unchanged
+historical profiles. The exact tested source must still pass the same native
+CPU suite and authenticated preflight before the guarded sequential service.
+CPU/source evidence is not GPU admission, a motion result or policy acceptance.

@@ -13,6 +13,13 @@ from torch import nn
 from mjlab_microduck import v8_gait_scale_contrast as contrast
 
 
+def test_historical_observer_head_ranges_remain_fixed_at_every_clock():
+    observer = contrast.Observer("foundation", "control")
+    expected = ((-.39, .39), (-.39, .39), (-.49, .49), (-.11, .11))
+    for step in (0, 80, 160, 11999, 12000, 17999, 18000, 24000):
+        assert observer.expected_head_ranges(step) == expected
+
+
 @pytest.mark.parametrize("mode,worlds,updates,seed", [
     ("smoke", 64, 5, 947), ("benchmark", 256, 10, 953),
     ("foundation", 256, 1000, 967),

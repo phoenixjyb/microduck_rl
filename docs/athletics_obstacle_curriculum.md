@@ -1198,3 +1198,15 @@ Keep the faster provisional gait and yaw objective; compare one fixed named
 knee/ankle load penalty against an unchanged continued control. Preserve
 both sealed walking references and all route/safety gates. Diagnostic motor
 improvement does not qualify steering or promote obstacle/hop/ball skills.
+
+### October 14: retain the control and test consolidation exposure
+
+The named-motor penalty reduced a worst-load metric but failed its predeclared
+steering, load-shift and speed-count nonregression bars; reject it. Both
+1000-update runs completed with walking/idle retained, no NaNs and durable
+checkpoints. The unchanged control improves average steering but remains
+unqualified:67/72 full-settled heading passes, only12/72 complete moving route
+worlds. The [next consolidation comparison](experiments/2026-10-14-v8-steering-consolidation-budget.md)
+holds rewards/plant/commands fixed and tests1000 versus2000 additional updates.
+The longer arm must improve complete-cycle steering while retaining both
+original walking references and the sealed provisional control baseline.

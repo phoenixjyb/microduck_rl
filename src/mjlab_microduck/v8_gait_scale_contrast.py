@@ -64,6 +64,51 @@ def _bindings(experiment, names):
     return tuple(getattr(recipe, name) for name in names.split())
 
 
+def stage_spec(experiment, mode: str, arm: str):
+    """Resolve the shared legacy budget or the single supported explicit matrix."""
+    recipe = sys.modules[__name__] if experiment is None else experiment
+    arms, modes = recipe.ARMS, recipe.MODES
+    _require(arm in arms and mode in modes, "declared contrast stage and arm")
+    specs = getattr(recipe, "STAGE_SPECS", None)
+    if specs is None:
+        return modes[mode]
+
+    _require(len(arms) == 2 and arms[0] == "control" and len(set(arms)) == 2,
+             "exact supported control and treatment arms")
+    expected = {
+        arms[0]: {"smoke": (64, 5, 947), "benchmark": (256, 10, 953),
+                  "foundation": (256, 1000, 967)},
+        arms[1]: {"smoke": (64, 5, 947), "benchmark": (256, 10, 953),
+                 "foundation": (256, 2000, 967)},
+    }
+    _require(set(modes) == set(expected[arms[0]])
+             and isinstance(specs, Mapping) and set(specs) == set(expected),
+             "exact supported explicit stage-spec arms and modes")
+    for spec_arm, stages in expected.items():
+        _require(isinstance(specs[spec_arm], Mapping)
+                 and set(specs[spec_arm]) == set(stages),
+                 "exact supported explicit stage-spec matrix")
+        for spec_mode, value in stages.items():
+            candidate = specs[spec_arm][spec_mode]
+            _require(isinstance(candidate, (tuple, list)) and len(candidate) == 3
+                     and all(type(item) is int for item in candidate)
+                     and tuple(candidate) == value,
+                     "exact supported explicit stage-spec values")
+    _require(tuple(modes["smoke"]) == (64, 5, 947)
+             and tuple(modes["benchmark"]) == (256, 10, 953)
+             and tuple(modes["foundation"]) == (256, 1000, 967),
+             "legacy modes remain the default control recipe")
+    return tuple(specs[arm][mode])
+
+
+def final_iteration(experiment, arm: str) -> int:
+    return stage_spec(experiment, "foundation", arm)[1] - 1
+
+
+def foundation_checkpoint(root, experiment, arm: str) -> Path:
+    return Path(root) / arm / "foundation" / f"model_{final_iteration(experiment, arm)}.pt"
+
+
 def verify_source(args, *, training, run_prefix=RUN_PREFIX):
     _require(re.fullmatch(r"[a-f0-9]{40}", args.source) is not None
         and args.run_id == f"{run_prefix}-{args.source[:8]}-20261014",
@@ -581,7 +626,7 @@ def validate_training_receipt(root, arm, mode, source, *, experiment=None):
     _require(arm in ARMS and mode in MODES, "declared contrast receipt")
     output = Path(root) / arm / mode
     result = json.loads((output / "result.json").read_text())
-    worlds, updates, seed = MODES[mode]
+    worlds, updates, seed = stage_spec(experiment, mode, arm)
     checkpoint = output / f"model_{updates-1}.pt"
     init = json.loads((output / "initialization.json").read_text())
     recipe = recipe_match(mode)
@@ -600,6 +645,8 @@ def validate_training_receipt(root, arm, mode, source, *, experiment=None):
         "source-bound exact complete contrast budget and checkpoint bytes")
     _require(launch["protocol"] == PROTOCOL and launch["source"] == source
         and launch["arm"] == arm and launch["mode"] == mode
+        and (launch.get("worlds"), launch.get("updates"), launch.get("seed"))
+            == (worlds, updates, seed)
         and launch["parent_sha256"] == PARENT_SHA and launch["recipe_match"] == recipe
         and launch["frozen_profile_sha256"] == base.sha256(output / "frozen-profile.json")
         and all(runtime.get(key, "").split("+")[0] == version
@@ -635,7 +682,8 @@ def validate_training_receipt(root, arm, mode, source, *, experiment=None):
         and init["parent_optimizer_sha256"] == _tree_digest(parent["optimizer_state_dict"]),
         "authenticated optimizer-preserving local-zero initialization")
     _require(result["recipe_match"] == recipe and recipe["matched_after_declared_mask"]
-        and recipe["full_recipe_hashes_distinct"]
+        and recipe["full_recipe_hashes_distinct"] is (
+            mode == "foundation" if getattr(experiment, "STAGE_SPECS", None) is not None else True)
         and recipe["control_recipe_sha256"] == recipe["treatment_recipe_sha256"],
         "paired recipe hash proof")
     onnx = result.get("onnx", {})
@@ -720,10 +768,20 @@ def validate_training_receipt(root, arm, mode, source, *, experiment=None):
     return result
 
 
-def projection_seconds(elapsed_s):
+def projection_seconds(elapsed_s, updates=1000):
     _require(type(elapsed_s) in (int, float) and math.isfinite(elapsed_s) and elapsed_s > 0,
              "finite positive benchmark timing")
-    return elapsed_s * 100 * 1.5 + 60
+    _require(type(updates) is int and 1 <= updates <= 2000,
+             "integer foundation budget within the supported bound")
+    return elapsed_s * updates / 10 * 1.5 + 60
+
+
+def _verify_config_budget(cfg, agent, spec):
+    worlds, updates, seed = spec
+    _require(cfg.scene.num_envs == cfg.scene.terrain.num_envs == worlds
+             and cfg.seed == agent.seed == seed
+             and agent.max_iterations == updates,
+             "training config worlds, terrain worlds, seeds, and iterations match declared stage budget")
 
 
 def validate_evaluation_receipt(root, arm, source, checkpoint_sha, *, experiment=None):
@@ -742,7 +800,7 @@ def validate_evaluation_receipt(root, arm, source, checkpoint_sha, *, experiment
         and receipt.get("arm") == arm and receipt.get("mode") == "final-eval"
         and launch.get("protocol") == PROTOCOL and launch.get("source") == source
         and launch.get("arm") == arm and launch.get("mode") == "final-eval"
-        and launch.get("foundation_iteration") == 999
+        and launch.get("foundation_iteration") == final_iteration(experiment, arm)
         and launch.get("cap_seconds") == CAPS["final-eval"]
         and isinstance(launch.get("host"), dict)
         and all(launch.get("runtime", {}).get(key, "").split("+")[0] == version
@@ -803,7 +861,7 @@ def validate_evaluation_receipt(root, arm, source, checkpoint_sha, *, experiment
         and math.isfinite(receipt["elapsed_s"]) and receipt["elapsed_s"] <= CAPS["final-eval"],
         "bounded non-acceptance evaluation receipt")
     if arm == ARMS[1]:
-        control_sha = base.sha256(Path(root) / "control/foundation/model_999.pt")
+        control_sha = base.sha256(foundation_checkpoint(root, experiment, ARMS[0]))
         _, control_rows = validate_evaluation_receipt(root, "control", source, control_sha,
                                                      experiment=experiment)
         _require(receipt.get("paired_descriptive_deltas") ==
@@ -869,7 +927,8 @@ def _main_impl(experiment=None):
         for arm in ARMS:
             validate_training_receipt(output_root, arm, "smoke", args.source)
             benchmark = validate_training_receipt(output_root, arm, "benchmark", args.source)
-            _require(projection_seconds(benchmark["elapsed_s"]) < CAPS["foundation"] - 30,
+            _, foundation_updates, _ = stage_spec(experiment, "foundation", arm)
+            _require(projection_seconds(benchmark["elapsed_s"], foundation_updates) < CAPS["foundation"] - 30,
                      "both paired benchmarks project inside the foundation cap")
 
     if args.mode == "final-eval":
@@ -882,14 +941,15 @@ def _main_impl(experiment=None):
         _ACTIVE_STAGE = (mode_dir, {"source": args.source, "arm": arm, "mode": "final-eval"})
         base.write_new(mode_dir / "launch.json", {"protocol": PROTOCOL, "source": args.source,
             "mode": "final-eval", "arm": arm, "host": host, "runtime": runtime,
-            "cap_seconds": CAPS["final-eval"], "foundation_iteration": 999,
+            "cap_seconds": CAPS["final-eval"],
+            "foundation_iteration": final_iteration(experiment, arm),
             "policy_acceptance": False, "physical_motion_authorized": False})
         started = time.monotonic()
         torch.set_num_threads(1)
         torch.cuda.set_per_process_memory_fraction(.20, device=0)
         from mjlab.utils.torch import configure_torch_backends
         configure_torch_backends()
-        checkpoint = output_root / arm / "foundation" / "model_999.pt"
+        checkpoint = foundation_checkpoint(output_root, experiment, arm)
         def eval_health():
             _require(time.monotonic()-started < CAPS["final-eval"]-15,
                      "bounded final held-out evaluation")
@@ -932,8 +992,8 @@ def _main_impl(experiment=None):
             "elapsed_s": time.monotonic()-started,
             "policy_acceptance": False, "physical_motion_authorized": False}
         if arm == ARMS[1]:
-            control_sha = base.sha256(output_root / "control/foundation/model_999.pt")
-            _, control_rows = validate_evaluation_receipt(output_root, "control", args.source, control_sha)
+            control_sha = base.sha256(foundation_checkpoint(output_root, experiment, ARMS[0]))
+            _, control_rows = validate_evaluation_receipt(output_root, ARMS[0], args.source, control_sha)
             result["paired_descriptive_deltas"] = learning.paired_comparison(control_rows, raw)
         base.write_new(mode_dir / "result.json", result)
         validate_evaluation_receipt(output_root, arm, args.source, base.sha256(checkpoint))
@@ -951,6 +1011,8 @@ def _main_impl(experiment=None):
     output.mkdir(parents=True, exist_ok=False)
     _ACTIVE_STAGE = (output, {"source": args.source, "arm": arm, "mode": mode})
     cfg, agent = prepare_config(mode, arm)
+    spec = stage_spec(experiment, mode, arm)
+    _verify_config_budget(cfg, agent, spec)
     observer = Observer(mode, arm)
     observer.output, observer.source, observer.runner = output, args.source, None
     recipe = recipes[mode]
@@ -959,8 +1021,8 @@ def _main_impl(experiment=None):
     base.write_new(output / "recipe-match.json", recipe)
     base.write_new(output / "launch.json", {"protocol": PROTOCOL, "source": args.source,
         "mode": mode, "arm": arm, "host": host, "runtime": runtime,
-        "cap_seconds": CAPS[mode], "worlds": MODES[mode][0],
-        "updates": MODES[mode][1], "seed": MODES[mode][2],
+        "cap_seconds": CAPS[mode], "worlds": spec[0],
+        "updates": spec[1], "seed": spec[2],
         "parent_sha256": PARENT_SHA, "recipe_match": recipe,
         "frozen_profile_sha256": base.sha256(output / "frozen-profile.json"),
         "policy_acceptance": False, "physical_motion_authorized": False})

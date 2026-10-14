@@ -156,3 +156,27 @@ This is a conservative estimate, not a proven throttle-speed law. Keep the same
 the previous192-update stop and verify a durable100/200 checkpoint before
 handing off. If a guard stops it again, retain and report the actual partial
 state rather than quietly declaring this a full training success.
+
+## Enforced wall-clock cooling
+
+The CPU75% attempt also stopped at update216. `model_100.pt` and `model_200.pt`
+are durable; finite metrics and zeroNaNs do not make this a6000-update result.
+vLLM was restored with DINO preserved. Read-only inspection found no `cpu.max`
+file in the user-service cgroup: the requested CPUQuota property did not impose
+the expected pacing. Do not change host controller delegation or raise the75C
+guard to work around this.
+
+Next run `stock-walk-cooled-foundation-s1019-20261014` uses a **0.5s wall-clock
+pause after each completed PPO update**. The existing logger is called unchanged,
+CUDA is synchronized, then the process sleeps; the temporary process-local
+logging hook is restored in `finally`. No simulated step, reward, action,
+normalizer update, RNG draw or curriculum clock is added or removed. Standard
+`run_train` still owns learning. TensorBoard Perf timing excludes this pause,
+so runtime admission explicitly adds3000s for6000 pauses.
+
+Projection is `180 + 1.25 × 1.0204525 × 6000 + .5 × 6000` = **10833.4s**.
+Predeclare child cap12600s (3.5h), hard timeout12615s, serviceRuntimeMax13000s;
+all other limits and scoped restoration remain. First run a paced64×5 smoke,
+then the fresh1024×6000 run in the same sequential service if smoke succeeds.
+No new reward lesson or seed search. The earlier partial checkpoint200 is
+retained as fallback evidence, not silently treated as a finished baseline.

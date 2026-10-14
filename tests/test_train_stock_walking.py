@@ -84,10 +84,61 @@ def test_run_id_is_safe_and_dated(run_id):
         driver.validate_args("a" * 40, run_id, 1800)
 
 
-@pytest.mark.parametrize("cap", [0, -1, 10801, True, 2.5])
+@pytest.mark.parametrize("cap", [0, -1, 12601, True, 2.5])
 def test_deadline_cap_is_bounded_integer(cap):
-    with pytest.raises(ValueError, match="between 1 and 10800"):
+    with pytest.raises(ValueError, match="between 1 and 12600"):
         driver.validate_args("a" * 40, "stock-walk-profiles-s1019-20261014", cap)
+
+
+def test_cap_accepts_the_predeclared_three_and_half_hour_limit():
+    driver.validate_args("a" * 40, "stock-walk-profiles-s1019-20261014", 12600)
+
+
+@pytest.mark.parametrize("cooldown", [-0.01, float("inf"), float("-inf"), float("nan"), 1.01, True])
+def test_cooldown_must_be_finite_and_bounded(cooldown):
+    with pytest.raises(ValueError, match="finite and between 0 and 1"):
+        driver.validate_args("a" * 40, "stock-walk-profiles-s1019-20261014", 1800, cooldown)
+
+
+def test_paced_logger_synchronizes_then_sleeps_once_and_restores():
+    calls = []
+
+    class FakeLogger:
+        def log(self, *args, **kwargs):
+            calls.append(("log", args, kwargs))
+            return "logged"
+
+    original = FakeLogger.log
+    fake_torch = SimpleNamespace(cuda=SimpleNamespace(
+        synchronize=lambda: calls.append(("synchronize",)),
+    ))
+    with driver.paced_update_logging(
+        0.25, logger_class=FakeLogger, torch_module=fake_torch,
+        sleep_fn=lambda seconds: calls.append(("sleep", seconds)),
+    ):
+        assert FakeLogger().log(7, collect_time=1.5) == "logged"
+        assert FakeLogger.log is not original
+    assert FakeLogger.log is original
+    assert calls == [
+        ("log", (7,), {"collect_time": 1.5}),
+        ("synchronize",), ("sleep", 0.25),
+    ]
+
+
+def test_paced_logger_restores_when_training_raises():
+    class FakeLogger:
+        def log(self, *_args, **_kwargs):
+            return None
+
+    original = FakeLogger.log
+    with pytest.raises(RuntimeError, match="training failed"):
+        with driver.paced_update_logging(
+            0.1, logger_class=FakeLogger,
+            torch_module=SimpleNamespace(cuda=SimpleNamespace(synchronize=lambda: None)),
+            sleep_fn=lambda _seconds: None,
+        ):
+            raise RuntimeError("training failed")
+    assert FakeLogger.log is original
 
 
 def test_stock_actor_contract_accepts_the_backlash_cfg():

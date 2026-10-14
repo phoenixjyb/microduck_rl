@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import fcntl
 import hashlib
 import importlib.metadata as metadata
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -64,13 +66,48 @@ def build_config(phase: str, *, worlds: int | None = None, seed: int = 1019):
     return cfg
 
 
-def validate_args(source: str, run_id: str, cap_seconds: int) -> None:
+def validate_cooldown_seconds(cooldown_seconds: float) -> None:
+    if (type(cooldown_seconds) not in (int, float)
+            or not math.isfinite(cooldown_seconds) or not 0 <= cooldown_seconds <= 1):
+        raise ValueError("--cooldown-seconds must be finite and between 0 and 1")
+
+
+def validate_args(source: str, run_id: str, cap_seconds: int,
+                  cooldown_seconds: float = 0.0) -> None:
     if re.fullmatch(r"[0-9a-f]{40}", source) is None:
         raise ValueError("--source must be a lowercase 40-character commit SHA")
     if re.fullmatch(r"stock-walk-[a-z0-9-]+-s[0-9]+-[0-9]{8}", run_id) is None:
         raise ValueError("--run-id must be a dated stock-walk identifier")
-    if type(cap_seconds) is not int or not 1 <= cap_seconds <= 10800:
-        raise ValueError("--cap-seconds must be between 1 and 10800")
+    if type(cap_seconds) is not int or not 1 <= cap_seconds <= 12600:
+        raise ValueError("--cap-seconds must be between 1 and 12600")
+    validate_cooldown_seconds(cooldown_seconds)
+
+
+@contextmanager
+def paced_update_logging(cooldown_seconds: float, *, logger_class=None,
+                         torch_module=None, sleep_fn=time.sleep):
+    validate_cooldown_seconds(cooldown_seconds)
+    if cooldown_seconds == 0:
+        yield
+        return
+    if logger_class is None:
+        from rsl_rl.utils.logger import Logger as logger_class
+    if torch_module is None:
+        import torch as torch_module
+
+    original = logger_class.log
+
+    def paced_log(self, *args, **kwargs):
+        result = original(self, *args, **kwargs)
+        torch_module.cuda.synchronize()
+        sleep_fn(cooldown_seconds)
+        return result
+
+    logger_class.log = paced_log
+    try:
+        yield
+    finally:
+        logger_class.log = original
 
 
 def finite_tree(value, torch) -> bool:
@@ -125,8 +162,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--worlds", type=int, choices=WORLD_CHOICES)
     parser.add_argument("--seed", type=int, default=1019)
     parser.add_argument("--cap-seconds", type=int, required=True)
+    parser.add_argument("--cooldown-seconds", type=float, default=0.0)
     args = parser.parse_args(argv)
-    validate_args(args.source, args.run_id, args.cap_seconds)
+    validate_args(args.source, args.run_id, args.cap_seconds, args.cooldown_seconds)
     worlds, updates = phase_settings(args.phase, args.worlds)
 
     def git(*argv):
@@ -205,6 +243,7 @@ def main(argv: list[str] | None = None) -> int:
             json.dump({"source": args.source, "task": TASK, "run_id": args.run_id,
                        "phase": args.phase, "worlds": worlds, "updates": updates,
                        "seed": args.seed, "cap_seconds": args.cap_seconds,
+                       "cooldown_seconds": args.cooldown_seconds,
                        "runtime": runtime, "fresh_initialization": True},
                       launch, indent=2, allow_nan=False)
             launch.write("\n")
@@ -213,7 +252,8 @@ def main(argv: list[str] | None = None) -> int:
         try:
             from mjlab.scripts.train import run_train
 
-            run_train(TASK, cfg, output)
+            with paced_update_logging(args.cooldown_seconds, torch_module=torch):
+                run_train(TASK, cfg, output)
             final = output / f"model_{updates - 1}.pt"
             if not final.is_file():
                 raise RuntimeError("stock trainer did not save the final expected iteration")
@@ -247,6 +287,8 @@ def main(argv: list[str] | None = None) -> int:
         "transitions": worlds * cfg.agent.num_steps_per_env * updates,
         "elapsed_seconds": elapsed, "final_checkpoint": final.name,
         "checkpoint_sha256": digest, "checkpoint_finite": True, "onnx": onnx,
+        "cooldown_seconds": args.cooldown_seconds,
+        "Perf_wall_time_excludes_cooldown": True,
         "runtime": runtime, "tensorboard_scalars": tensorboard_summary(output, updates),
         "policy_acceptance": False,
     }

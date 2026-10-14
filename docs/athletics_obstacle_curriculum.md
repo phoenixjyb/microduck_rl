@@ -1153,3 +1153,16 @@ Keep all61 actor inputs, raw14 actions and both prior speed/idle references.
 This separate matched recipe must pass source/native/smoke admission before its
 fixed1000-update budget. No harder skill or new accepted capability is claimed
 by its declaration.
+
+That round completed1000 updates /6.144M transitions at `db9a77ae`, with0
+NaNs/invalid projections and independently verified checkpoint/export receipts.
+All12 held-out first episodes finish without fall/motor/range failure; BOTH
+walking/idle bars pass (67/72 moving speed,24/24 idle). Nevertheless all9 moving
+route cases still reject, with4/72 moving worlds passing every component.
+Negative-turn speed improves versus steady, but mean heading endpoint errors
+worsen for all moving commands. Preserve the checkpoint and this mixed/rejected
+result rather than promote or stack it. Scoped user vLLM is restored after
+proven Duck exit, with DINO preserved. Next localize heading errors by command
+and contact phase from retained traces before predeclaring another gait lesson;
+no further GPU learner, observation expansion, harder skill or video is launched
+by the [sealed closeout](experiments/2026-10-14-v8-projected-yaw-bias.md).

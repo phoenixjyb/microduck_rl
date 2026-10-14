@@ -35,8 +35,10 @@ def read(*args):
     return subprocess.check_output(args, text=True, timeout=10).strip()
 
 
-def shared_host():
+def shared_host(*, max_temperature_c=75):
     """Observe shared occupancy; never stop the retained DINO worker."""
+    require(type(max_temperature_c) is int and max_temperature_c in (75, 80),
+            "explicit approved temperature cutoff (75 or 80 C)")
     # Reboots change PIDs. An operator may pin a newly verified worker, but
     # never discover/whitelist arbitrary processes by name at runtime.
     pinned = os.environ.get("MICRODUCK_RETAINED_DINO_PID", str(DINO_PID))
@@ -50,7 +52,9 @@ def shared_host():
                "--format=csv,noheader,nounits").split(",")
     require(len(row) == 4 and row[0].strip() == GPU, "exact native GPU")
     used, free, temperature = map(lambda v: int(v.strip()), row[1:])
-    require(used <= 6144 and free >= 8192 and temperature < 75, "shared GPU budget/temperature")
+    require(used <= 6144 and free >= 8192 and temperature < max_temperature_c,
+            f"shared GPU budget/temperature: used={used} MiB free={free} MiB "
+            f"temperature={temperature} C cutoff={max_temperature_c} C")
     processes = []
     for line in read("nvidia-smi", "--query-compute-apps=pid,process_name,used_memory",
                      "--format=csv,noheader,nounits").splitlines():
@@ -66,7 +70,8 @@ def shared_host():
             states[key] = read("systemctl", *namespace, "show", service, "-p", "ActiveState", "--value")
             require(states[key] == "inactive", "protected service active: " + key)
     return dict(memory_used_mib=used, memory_free_mib=free, temperature_c=temperature,
-                processes=processes, protected_services=states, retained_dino_pid=dino_pid)
+                processes=processes, protected_services=states, retained_dino_pid=dino_pid,
+                temperature_cutoff_c=max_temperature_c)
 
 
 def prepare_config(mode):

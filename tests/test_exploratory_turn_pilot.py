@@ -132,6 +132,33 @@ def test_same_executable_new_worker_is_not_silently_whitelisted(monkeypatch):
         pilot.shared_host()
 
 
+@pytest.mark.parametrize("cutoff,temperature,allowed", [(75, 74, True), (75, 75, False),
+    (80, 75, True), (80, 79, True), (80, 80, False)])
+def test_explicit_temperature_approval_is_prospective_and_bounded(monkeypatch, cutoff, temperature, allowed):
+    monkeypatch.delenv("MICRODUCK_RETAINED_DINO_PID", raising=False)
+    def fake(*args):
+        if args[0] == "readlink": return pilot.DINO_EXE
+        if args[0] == "stat": return str(pilot.os.getuid())
+        if "--query-gpu=uuid,memory.used,memory.free,temperature.gpu" in args:
+            return f"{pilot.GPU}, 1000, 15000, {temperature}"
+        if "--query-compute-apps=pid,process_name,used_memory" in args:
+            return f"1592, {pilot.DINO_EXE}, 946"
+        return "inactive"
+    monkeypatch.setattr(pilot, "read", fake)
+    if allowed:
+        assert pilot.shared_host(max_temperature_c=cutoff)["temperature_cutoff_c"] == cutoff
+    else:
+        with pytest.raises(ValueError, match=f"temperature={temperature} C cutoff={cutoff} C"):
+            pilot.shared_host(max_temperature_c=cutoff)
+
+
+@pytest.mark.parametrize("cutoff", [True, 74, 81, 87, 80.0, "80", None])
+def test_unapproved_temperature_cutoff_rejected_before_queries(monkeypatch, cutoff):
+    monkeypatch.setattr(pilot, "read", lambda *args: pytest.fail("no malformed cutoff host query"))
+    with pytest.raises(ValueError, match="approved temperature cutoff"):
+        pilot.shared_host(max_temperature_c=cutoff)
+
+
 @pytest.mark.parametrize("fault", [None, "executable", "owner", "name", "competitor", "duplicate", "missing", "service", "budget", "temperature", "gpu"])
 def test_explicit_reboot_worker_binding_remains_fail_closed(monkeypatch, fault):
     monkeypatch.setenv("MICRODUCK_RETAINED_DINO_PID", "2021")

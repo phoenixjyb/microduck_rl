@@ -180,3 +180,57 @@ all other limits and scoped restoration remain. First run a paced64×5 smoke,
 then the fresh1024×6000 run in the same sequential service if smoke succeeds.
 No new reward lesson or seed search. The earlier partial checkpoint200 is
 retained as fallback evidence, not silently treated as a finished baseline.
+
+## October 15 overnight continuation (predeclared)
+
+The cooled run exited143 at iteration576 on `ValueError: shared GPU
+budget/temperature`. Its last successful sample was2690MiB used,13504MiB free,
+71C; the failing sample was not logged, so do not invent an exact peak. Metrics
+remained finite with zeroNaN terminations. The durable resume parent is
+`stock-walk-cooled-foundation-s1019-20261014/train/model_500.pt`, SHA256
+`083b45b695e9bc4c1c45662a1dbba9458c154534a9b116f4fdb43b85e4cd1dbb`, iteration500,
+common_step_counter12024. Original USER vLLM2343998 was restored, DINO2029
+preserved, other protected scopes inactive. Preserve this failed run unchanged.
+
+The user explicitly approved **80C software cutoff for the next run**, and
+training through **2026-10-15 07:00 Asia/Shanghai** (2026-10-14T23:00:00Z).
+Existing callers remain75C by default; only prospective commands pass80C.
+Driver, power/clocks/fans, host controller delegation and robot motor limits
+remain unchanged. The new guard logs actual failing resource values.
+
+Finite service `recomo-duck-stock-walk-overnight-s1019-20261015.service` runs
+the exact committed source in one sequential process group:
+
+1. Same-checkpoint stock resume smoke:1024 worlds ×5 additional PPO updates.
+2. Task-native parent evaluation: idle(0,0), straight(.3,0), left(.2,.2),
+   right(.2,-.2), seeds42/211/223,8 worlds,500 scored+50 warmup steps each.
+   Four seed42 clips,500 frames each. These are partial-policy diagnostics.
+3. Standard stock resume from model500:1024×5500 additional updates,
+   cap11000s, final label5999. Prior501+5500=6001 actual PPO updates;
+  147480576 actual transitions including the parent. Label reuse is standard
+   rsl_rl behavior, not an extra simulation/optimizer step.
+4. Repeat the same task-native evaluation and four clips.
+5. At most two4000-update same-recipe continuations, each **only if** its
+   measured wall-clock projection plus1800s review+600s exit margin fits before
+  07:00. Cap = ceil(180+1.5×last-run elapsed/update×4000), maximum12600s.
+   Do not admit a projection above that maximum. Each admitted round retains
+   its final checkpoint and repeats the same review. No reward/seed search.
+
+Resume restores actor/critic, optimizer, normalizers and curriculum counter;
+it does not restore simulator state or RNG trajectory bit-for-bit.
+`MICRODUCK_WARM_START` must be unset. Same task, stock recipe, seed1019,
+1024 worlds,24 steps/update and0.5s idle pause/update remain unchanged.
+Save every100 updates; provenance and all local/cumulative budgets are retained.
+
+All GPU children share the existing lease, exact DINO identity,20% allocator,
+≤6144MiB used/≥8192MiB free, explicit<80C cutoff, finite checks and outer
+wall-clock bounds. One GPU workload at a time. The parent service alone owns
+the original USER vLLM pause; ExecStopPost restores it only after proven Duck
+exit and DINO preservation. The absolute service cutoff leaves ten minutes for
+restoration before07:00. Unrelated workloads and other protected scopes remain
+untouched. No physical motion, policy publication or curriculum expansion.
+
+The Codex heartbeat creation request has not returned or registered; no agent
+continuation is claimed. This is a finite native training/review service, not
+a cron/heartbeat workaround. Generated clips remain visually uninspected until
+an actual frame review; training completion is not walking qualification.

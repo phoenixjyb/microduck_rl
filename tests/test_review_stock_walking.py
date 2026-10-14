@@ -49,3 +49,9 @@ def test_command_response_sweep_extends_without_rewriting_gentle_protocol():
     assert ("strong-left", .3, .8) in cases and ("strong-right", .3, -.8) in cases
     with pytest.raises(ValueError):
         review.review_cases("choose-best-checkpoint")
+
+
+def test_moving_turn_demo_keeps_calibrated_commands_and_original_protocols():
+    assert review.review_cases("moving-turn-demo") == (("left", .3, .5), ("right", .3, -.5))
+    assert len(review.review_cases("command-response")) == 12
+    assert review.review_cases("gentle") == review.CASES

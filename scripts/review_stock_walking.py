@@ -26,6 +26,7 @@ COMMAND_RESPONSE_CASES = (*CASES,
     ("spin-left", 0.0, 0.5), ("spin-right", 0.0, -0.5),
     ("moving-left", 0.3, 0.5), ("moving-right", 0.3, -0.5),
     ("strong-left", 0.3, 0.8), ("strong-right", 0.3, -0.8))
+MOVING_TURN_DEMO_CASES = (("left", 0.3, 0.5), ("right", 0.3, -0.5))
 
 
 def review_cases(protocol):
@@ -33,6 +34,8 @@ def review_cases(protocol):
         return CASES
     if protocol == "command-response":
         return COMMAND_RESPONSE_CASES
+    if protocol == "moving-turn-demo":
+        return MOVING_TURN_DEMO_CASES
     raise ValueError("unknown stock review protocol")
 
 
@@ -64,7 +67,7 @@ def main(argv=None):
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--cap-seconds", type=int, default=1800)
     parser.add_argument("--max-temperature-c", type=int, choices=(75, 80), default=75)
-    parser.add_argument("--protocol", choices=("gentle", "command-response"), default="gentle")
+    parser.add_argument("--protocol", choices=("gentle", "command-response", "moving-turn-demo"), default="gentle")
     parser.add_argument("--evaluation-only", action="store_true")
     args = parser.parse_args(argv)
     if not 1 <= args.cap_seconds <= 1800:

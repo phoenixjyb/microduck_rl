@@ -343,3 +343,50 @@ next learning budget are chosen only after this sweep, not pre-queued blindly.
 The07:00 training window has elapsed and vLLM is back. The sweep is prepared and
 CPU-tested but **not launched**; a renewed GPU window and scoped vLLM pause are
 the remaining execution gate.
+
+## Approved30-minute command-response window: moving turns are present
+
+The owner approved the scoped user-vLLM pause. Unit
+`recomo-duck-stock-walk-command-response-s1019-20261015.service` started
+2026-10-15 **07:51:09 Shanghai**, exact review source
+`22ea6bdfc3082587f324dda8bbb6eae0f1fe3369`. The unchangedmodel9998 was evaluated;
+no optimizer, reward, normalizer, driver or robot-motor setting changed.
+GPU child cap1200s, outer runtime1300s, scoped restoration retained. All36
+cases completed in335.64s, with zero falls/NaNs/nonfinite steps across2880
+scored world-seconds and no rated-motor-speed exceedances. Result SHA256
+`c74a81a5ec407df3bcd61d192eba4bed6655380c093c634f4ca386b1bbc2ee51`.
+All evaluation files bind the same checkpoint hash. Across79 retained health
+samples, observed peak65C/1636MiB used; DINO2029 and inactive protected scopes
+were retained. USER vLLM was restored with GPU PID2749804 after the test.
+
+| Command vx / yaw | Observed vx / yaw (three-seed mean) | Behavior supported |
+| --- | --- | --- |
+|0.2 /0 |0.00474 /+0.00602 | mostly standing |
+|0.3 /0 |0.17737 /+0.03460 | forward walking |
+|0.4 /0 |0.23254 /+0.01647 | faster forward walking |
+|0 /+0.5 | -0.00006 /+0.00321 | no useful turn-in-place |
+|0 /-0.5 | +0.00001 /-0.00320 | no useful turn-in-place |
+|0.3 /+0.5 |0.17828 /+0.42819 | left walking arc |
+|0.3 /-0.5 |0.16955 /-0.32407 | right walking arc |
+|0.3 /+0.8 |0.17860 /+0.66891 | stronger left walking arc |
+|0.3 /-0.8 |0.16453 /-0.54874 | stronger right walking arc |
+
+For±0.5 walking turns, every held-out seed had the requested yaw sign: left
+0.405–0.442rad/s, right-0.334 to-0.318rad/s. Torque p99≤0.2911Nm in these two
+points. Stronger walking turns also had the requested sign at every seed.
+These are measured simulation responses, not precise command tracking or
+physical qualification. The earlier gentle-turn rejection remains valid;
+it does not imply that all steering is absent.
+
+Next within the **same approved window**, record the two working0.3/±0.5
+commands. `moving-turn-demo` is an explicit two-point review protocol: repeat
+the same six held-out cases then record one500-frame seed42 clip per direction,
+with identical plant and checkpoint. Preserve `gentle` and `command-response`
+protocols and historical results. No new training is authorized by the demo.
+Use a600s child bound and scoped restoration; complete before08:21:09 Shanghai.
+
+The immediate next motion milestone is a bounded waypoint/path-control trial
+using forward walking arcs and stop, not another blind reward-width sweep.
+Slow-command activation and turn-in-place remain separate gaps. Obstacle
+avoidance and physical deployment remain unqualified; do not promote the policy
+on this flat-task response alone.

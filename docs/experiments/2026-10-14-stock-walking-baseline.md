@@ -274,3 +274,72 @@ had finite metrics, zeroNaNs, GPU2690MiB used/13504MiB free,67C, only leased
 Duck2366546 and DINO2029, all four protected scopes inactive. Later completion
 and final clips remain pending. No model was promoted and no new reward lesson
 was introduced. This documentation commit does not change frozen learning source.
+
+## Overnight result: completed, steady standing, steering not demonstrated
+
+Checked live on2026-10-15 at07:37 Shanghai. The finite service exited successfully,
+and original USER vLLM was restored at04:07:19 with GPU PID2561248. DINO2029
+remains present; other three protected scopes are inactive. No Duck GPU process
+remains. The second extension was correctly **not started** under the predeclared
+conservative deadline admission. This does not authorize a new GPU window.
+
+The main run completed5500 updates in7699.48s; extension1 completed4000 in5587.34s.
+Thus9500 additional updates/233472000 transitions were actually learned, not just
+smoked. Including the501-update parent, final exposure is10001 updates and
+**245784576 transitions**. Pipeline stages, including smoke and reviews, took
+3h50m02.5s. Exact source remains `23b35c1d0ee6bf92aa884dfb86a413c08e485435`.
+
+| Run | Final file | SHA256 | Saved curriculum counter |
+| --- | --- | --- | --- |
+| foundation | `resume-main/model_5999.pt` | `638820e797fe137a55a2ffa7f1f6c6434f56d75e91f165a585d579d7b6df982c` |144024 |
+| extension1 | `resume-later/model_9998.pt` | `acaeec42cec3640df4500feed3013bcab93ca7910c67dda2ac6120906ff6e2f1` |240024 |
+
+Both actual checkpoints were CPU-loaded and checked finite; saved counters,
+launch/result provenance, ONNX exports and all video/evaluation checkpoint hashes
+match. There are2631 training health samples (1524+1107), peak76C, peak2690MiB
+GPU use, minimum13504MiB free. DINO and inactive protected scopes were retained
+in every sample. All46 TensorBoard tags were finite, with zeroNaNs and no
+positive penalty-like Episode_Reward terms. The80C approval removed the previous
+thermal blocker without driver/power/fan changes.
+
+Both full checkpoint reviews had zero falls/NaNs/nonfinite steps across their
+12 short cases. This is stability evidence on flat simulation, **not steering
+or obstacle acceptance**:
+
+| Command vx / yaw | Foundation observed vx / yaw | Extension1 observed vx / yaw |
+| --- | --- | --- |
+| idle0 /0 | -0.00009 /+0.00168 | -0.00008 /-0.00019 |
+| straight0.3 /0 |0.15020 /+0.04537 |0.17730 /+0.03733 |
+| left0.2 /+0.2 | -0.00003 /+0.00192 |0.00474 /+0.01429 |
+| right0.2 /-0.2 |0.00158 /-0.00241 |0.00462 /+0.00003 |
+
+Ten1fps frames from each of the six moving clips were inspected. Straight
+walking shows upright steps; gentle left/right clips mostly show standing, in
+agreement with metrics. Full video playback remains unreviewed. Final clips and
+small training receipts are copied to Mac under
+`artifacts/evaluations/stock-walk-extension1-s1019-20261015-review` and the matching
+foundation-review directory; models remain durable on native without duplicate
+Mac checkpoint storage. No policy was promoted. Further exposure improved
+straight speed but did not resolve gentle steering; do not blindly queue another
+unchanged long run or claim a good obstacle avoider.
+
+### Next bounded action: command-response calibration, not a new reward lesson
+
+Prepared `review_stock_walking.py --protocol command-response --evaluation-only`.
+It preserves the original four-point gentle protocol and adds straight0.2/0.4,
+turn-in-place±0.5, moving0.3/±0.5 and moving0.3/±0.8. These all lie within the
+unchanged stock training ranges vx[-0.4,0.4],yaw[-1,1]; stock turn-in-place training
+already includes angular magnitudes0.4–1.0. Test whether stronger commands reveal
+a useful turning response before concluding all steering is absent or altering
+reward widths. That is a hypothesis, not a validated capability.
+
+Fixed candidate: extension1model9998, exact hash above; same task/plant,
+normalizers, seeds42/211/223,8 worlds,500 scored+50 warmup steps,36 cases,
+1800s cap, existing lease/occupancy guard and explicitly approved80C cutoff.
+No training, checkpoint selection, reward edits, raw perception or motion.
+Numerical receipt remains `policy_acceptance=false`. Stronger-turn clips and any
+next learning budget are chosen only after this sweep, not pre-queued blindly.
+
+The07:00 training window has elapsed and vLLM is back. The sweep is prepared and
+CPU-tested but **not launched**; a renewed GPU window and scoped vLLM pause are
+the remaining execution gate.

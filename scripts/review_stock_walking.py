@@ -21,6 +21,19 @@ ROOT = Path(__file__).resolve().parents[1]
 TASK = "Mjlab-Velocity-Flat-Backlash-MicroDuck"
 CASES = (("idle", 0.0, 0.0), ("straight", 0.3, 0.0),
          ("left", 0.2, 0.2), ("right", 0.2, -0.2))
+COMMAND_RESPONSE_CASES = (*CASES,
+    ("slow-straight", 0.2, 0.0), ("fast-straight", 0.4, 0.0),
+    ("spin-left", 0.0, 0.5), ("spin-right", 0.0, -0.5),
+    ("moving-left", 0.3, 0.5), ("moving-right", 0.3, -0.5),
+    ("strong-left", 0.3, 0.8), ("strong-right", 0.3, -0.8))
+
+
+def review_cases(protocol):
+    if protocol == "gentle":
+        return CASES
+    if protocol == "command-response":
+        return COMMAND_RESPONSE_CASES
+    raise ValueError("unknown stock review protocol")
 
 
 def script_args(kind, checkpoint, output, speed, yaw):
@@ -51,6 +64,8 @@ def main(argv=None):
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--cap-seconds", type=int, default=1800)
     parser.add_argument("--max-temperature-c", type=int, choices=(75, 80), default=75)
+    parser.add_argument("--protocol", choices=("gentle", "command-response"), default="gentle")
+    parser.add_argument("--evaluation-only", action="store_true")
     args = parser.parse_args(argv)
     if not 1 <= args.cap_seconds <= 1800:
         parser.error("review cap must be 1..1800 seconds")
@@ -104,9 +119,9 @@ def main(argv=None):
         thread.start()
         evidence = []
         try:
-            for kind in ("evaluate", "record"):
+            for kind in (("evaluate",) if args.evaluation_only else ("evaluate", "record")):
                 script = ROOT / "scripts" / ("evaluate_checkpoint.py" if kind == "evaluate" else "record_checkpoint.py")
-                for name, speed, yaw in CASES:
+                for name, speed, yaw in review_cases(args.protocol):
                     destination = output / kind / name
                     with script_argv(script, script_args(kind, checkpoint, destination, speed, yaw)):
                         runpy.run_path(str(script), run_name="__main__")
@@ -129,9 +144,12 @@ def main(argv=None):
             stopped.set(); thread.join()
     with (output / "result.json").open("x") as stream:
         json.dump({"source": args.source, "checkpoint_sha256": args.checkpoint_sha256,
-                   "task": TASK, "evaluation_cases": 12, "videos": evidence,
+                   "task": TASK, "protocol": args.protocol,
+                   "evaluation_cases": 3 * len(review_cases(args.protocol)), "videos": evidence,
                    "elapsed_seconds": time.monotonic()-started, "temperature_cutoff_c": args.max_temperature_c,
-                   "visual_inspection_pending": True, "policy_acceptance": False}, stream, indent=2, allow_nan=False)
+                   "visual_inspection_pending": not args.evaluation_only,
+                   "video_not_requested": args.evaluation_only,
+                   "policy_acceptance": False}, stream, indent=2, allow_nan=False)
         stream.write("\n")
     return 0
 

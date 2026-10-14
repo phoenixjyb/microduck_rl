@@ -36,3 +36,16 @@ def test_argv_restored_after_script_failure():
 def test_unknown_review_kind_rejected():
     with pytest.raises(ValueError):
         review.script_args("train", Path("x"), Path("y"), 0., 0.)
+
+
+def test_command_response_sweep_extends_without_rewriting_gentle_protocol():
+    assert review.review_cases("gentle") == review.CASES
+    cases = review.review_cases("command-response")
+    assert cases[:4] == review.CASES
+    assert len(cases) == 12
+    assert len({name for name, _, _ in cases}) == 12
+    assert all(0 <= speed <= .4 and abs(yaw) <= 1. for _, speed, yaw in cases)
+    assert ("spin-left", 0., .5) in cases and ("spin-right", 0., -.5) in cases
+    assert ("strong-left", .3, .8) in cases and ("strong-right", .3, -.8) in cases
+    with pytest.raises(ValueError):
+        review.review_cases("choose-best-checkpoint")

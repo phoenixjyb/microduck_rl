@@ -1,6 +1,6 @@
 # Staged secondary head goals during steering practice
 
-Status: **implemented and CPU-tested; native GPU admission and training pending**.
+Status: **six native short admissions passed; paired foundation training active**.
 Protocol `v8-staged-head-goals-v1`, planned run
 `v8-staged-head-goals-<tested-source8>-20261014`. Existing rejected results and
 their gates remain unchanged. This is a curriculum-complexity hypothesis, not
@@ -209,3 +209,61 @@ comparisons. Canonical recipe hashes, manager schedules and learner settings
 are unchanged. Six mode-by-arm durable JSON-roundtrip tests were added; the
 complete affected Mac suite now passes130 tests in58.75s, with compilation
 and diff checks clean. Native revalidation and fresh admission remain required.
+
+## Corrected native admission and active learner (bb223f66)
+
+Executed source `bb223f668c556de2dc651ef40a381ac5fcd5a0ad` passed all130
+native CPU tests in18.43s and authenticated source/runtime/parent/recipe
+preflight. Read-only forensic validation of the first failed smoke now passes
+with the JSON-shape correction; the failed service/run remains unchanged and
+is not reused as admission evidence.
+
+The new nonenabled user service
+`recomo-duck-v8-staged-head-goals-bb223f66-20261014.service` started at
+2026-10-14 18:22:27 Shanghai. Its retained root is
+`/home/converge/work/microduck_rl-upstream-20261010/artifacts/training/v8-staged-head-goals-bb223f66-20261014`.
+All six fresh short admissions passed before the first foundation started:
+
+| Admission | Control | Staged |
+| --- | --- | --- |
+| Ordinary64×5 smoke time | 4.320s | 4.337s |
+| Smoke first KL mean / max minibatch mean | .018421 / .031920 | .020115 / .034277 |
+| Frozen64×320 boundary probe falls / resets / NaNs | 0 / 0 / 0 | 0 / 0 / 0 |
+| Actual stage action steps | 320 parent | 80 small / 80 intermediate / 160 parent |
+| Benchmark256×10 time | 7.872s | 7.522s |
+| Benchmark first KL mean / max minibatch mean | .016674 / .022343 | .015497 / .023192 |
+| Conservative1000-update projection | 1240.84s | 1188.24s |
+
+Both projections fit2070s. Both frozen probes authenticated the exact original
+actor tensors before and after inference, count-zero affine, unchanged head
+rewards and real cached actor/manager commands. The staged probe sampled beyond
+the preceding smaller range in every component without forced resampling:
+intermediate counts `[682,783,703,651]`, restored-parent counts
+`[2068,2698,3107,2683]` (component order neck/pitch/yaw/roll).
+
+Boundary receipt hashes control/staged are
+`aab6afe934a82706285ab323e30d1ee8b8ca8fa66131964d22939858b3398d23` /
+`a031a9d9f1e6413b3c21d0b6e4f34205751f49f2d0e5324f52dbb29cec36baf8`;
+their stats hashes are
+`2c600364045bc1fb86bed774cea7783e4086f7ba535913415ab49d625e5333ff` /
+`50dc7119818451842cadf6b99ca51b90fd9aab0cbd34e604e772e499551d6af6`.
+Ordinary smoke result hashes are
+`7c0d7f6a257d9c7b97e74062645439c443c2aa88dcb49e30d8baceb342425d64` /
+`b8ca4999ef027d7664914bd6b080582982f9cef45b0508e93dc38f33d90a7975`;
+benchmark result hashes are
+`3165cace4727860cba4284cde86c16fe81d9613a7afbc94a7482329e6b83b950` /
+`dcda9c67400e3ee23de633e858f05253e53b8041bec777d75e950adbbe316457`.
+
+At the first retained live check the control foundation reached update106,
+all106 optimizer/reward/telemetry rows finite, zero NaN terminations, local
+counter2544/Adam62120. First KL mean.014769/max.020183 passed. Durable initial
+and iteration0 checkpoints exist; later cadence checkpoints are still pending.
+GPU occupancy1710MiB/free14484MiB at59C included preserved DINO2029 and only
+the leased Duck child. All four protected service scopes were inactive during
+training. This snapshot is not a completed foundation or steering result.
+
+The guarded sequence still owes two final999 checkpoints, both held-out
+evaluations, the unchanged three-reference comparison, and restoration after
+proven Duck exit. No new capability, teacher or physical policy is accepted.
+The active native checkout stays clean at the executed source; later evidence
+documentation commits must not change its code while the service is active.

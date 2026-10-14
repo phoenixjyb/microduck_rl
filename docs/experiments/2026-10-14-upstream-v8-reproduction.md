@@ -68,3 +68,38 @@ Then smoke the unchanged task and profile larger parallel batches to choose a
 measured resource/transition budget. Only one GPU workload may run under the
 existing lease; original vLLM/DINO ownership must remain protected. No automatic
 reward-tweak queue, obstacle promotion or physical deployment follows source tests.
+
+## Retained result
+
+Source `e8b671e4862ec5f29a6911010f21068b60a01ea6` passed69 focused tests on
+Mac (6.06s) and100.100 (6.71s): VelStand recipe/reset contracts, BAM actuator
+equivalence, upstream integration, finite CPU rehearsal and planar serializer.
+The three restored file blobs still match the pinned upstream commit exactly.
+
+Native default rehearsal ran with MuJoCo3.10.0 / ONNX Runtime1.24.4. All four
+segments completed200 control steps with finite state. The continuous sequence
+recorded idle/straight/left/right fall samples **0/49/95/0** (of200 each).
+Idle mean forward speed was−.000148m/s; moving means were−.00444,−.05112,
++.03361m/s. This is not a successful walking/turning demo; do not promote it.
+The last segment starts from the preceding recovery state, not a fresh HOME
+trial. Mac also remained finite and stable at idle but fell while moving.
+
+Retained native JSON:
+`artifacts/evaluations/official-v8-cpu-rehearsal-20261014/allcollisions.json`,
+SHA256 `17a94f621913423e5726b396cb9bc921a55470369c384cadedc3122a0752cbee`.
+No GPU pause was needed; USER vLLM2208422 and DINO2029 retained their ownership.
+
+Public Hub assets contained inference policies, not the required teacher PPO
+files. The native existing authorized W&B account returned
+`Could not find run .../69u48n8l (not found)`; a subsequent attempt failed during
+API-key verification with an HTTPS read timeout. This does not establish that
+the run was deleted or that the credential is invalid. Exact teacher access
+remains unresolved; no credentials, packages or historical artifacts changed.
+
+Next practical training choice: if the upstream PPO teacher pair cannot be
+obtained, profile the existing stock walking task **from scratch**, without
+VelStand BC, as a separate foundational gait run. Do not call that fallback a
+v8 reproduction. Keep its first milestone simple: upright forward locomotion
+and both-sign turning in its own training plant, followed by the deployment
+rehearsal. Adequate parallelism and a measured learning budget come before any
+obstacle/hop/football combination or another custom scalar-reward sweep.

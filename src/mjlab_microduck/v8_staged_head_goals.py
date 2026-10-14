@@ -315,6 +315,9 @@ def diagnostic_comparison(control, staged, *, experiment=None):
     groups["staged"] = groups.pop("reduced")
     failures = []
     for failure in report["failures"]:
+        if isinstance(failure, str):
+            failures.append(failure)
+            continue
         failures.append(["staged" if failure[0] == "reduced" else failure[0], *failure[1:]])
     report.update(protocol=lesson.PROTOCOL + ":comparison-v1", groups=groups,
         failures=failures,

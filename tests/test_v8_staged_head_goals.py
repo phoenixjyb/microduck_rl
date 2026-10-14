@@ -100,7 +100,8 @@ def test_control_observer_keeps_original_parent_ranges_for_all_steps():
 def test_comparison_relabels_staged_arm_and_preserves_paired_thresholds(monkeypatch):
     source = {"groups": {"control": {"complete_moving_route_worlds": 9},
                          "reduced": {"complete_moving_route_worlds": 16}},
-        "failures": [["reduced", "heading-endpoint-growth"]],
+        "failures": ["fewer-than-six-additional-complete-moving-worlds",
+                     ["reduced", "heading-endpoint-growth"]],
         "thresholds": {"additional_complete_moving_worlds": 6,
                        "paired_heading_allowance_rad_s": .01,
                        "paired_xy_allowance_mps": .02},
@@ -113,10 +114,15 @@ def test_comparison_relabels_staged_arm_and_preserves_paired_thresholds(monkeypa
     assert report["protocol"] == lesson.PROTOCOL + ":comparison-v1"
     assert report["groups"]["staged"]["complete_moving_route_worlds"] == 16
     assert "reduced" not in report["groups"]
-    assert report["failures"] == [["staged", "heading-endpoint-growth"]]
+    assert report["failures"] == [
+        "fewer-than-six-additional-complete-moving-worlds",
+        ["staged", "heading-endpoint-growth"],
+    ]
     assert report["thresholds"] == source["thresholds"]
     assert report["weights"] == {"control": -1.0, "staged": -1.0}
     assert report["decision"] == "staged-head-goals-lesson-rejected"
+    assert report["groups"] == {"control": {"complete_moving_route_worlds": 9},
+                                "staged": {"complete_moving_route_worlds": 16}}
     assert report["policy_acceptance"] is report["physical_motion_authorized"] is False
 
 

@@ -1,6 +1,6 @@
 # Matched learning-seed replication of staged head goals
 
-Status: **seed977 short admissions passed; paired foundation active; seed983 locked**.
+Status: **seed977 completed and rejected; replication stopped; seed983 remains locked**.
 This design follows the sealed [staged-head pilot](2026-10-14-v8-staged-head-goals.md).
 It is not permission to promote a teacher, change evaluation gates or run hardware.
 
@@ -166,7 +166,101 @@ Executed handoff/context/restorer/unit hashes respectively:
 `0a54f40603b7c1df0b2c18c85952f23c110d6b2f7fef6c895065ca47d4a9ecbe`,
 `089457b02bed6eaf35c012cff3cd872b4980c81c22bcac6f732d639e98f0b0df`,
 `91319a60f527ddbe1c2effdf2a0e5a4de6bde0de0ba6b2af9acf228f2056a05c`.
-The service sequence still owes two final999 checkpoints, both held-out
-evaluations, unchanged three-reference comparison and guarded restoration.
-Seed983 has no enabled job and stays locked. Do not fast-forward or edit the
-active native checkout away from its executed source while this service runs.
+That snapshot preceded completion. The service subsequently finished both final999
+checkpoints, both held-out evaluations, the unchanged three-reference comparison
+and guarded restoration, as retained below. Seed983 has no enabled job and stays
+locked. Never edit or fast-forward an active training checkout.
+
+## Seed977 completed closeout and rejection
+
+The sequential service exited successfully on2026-10-14: comparison completed
+at20:01:23 Shanghai and scoped USER vLLM restoration at20:01:52. This operational
+success is not a policy pass. Both foundations completed256×1000 updates with
+6,144,000 transitions each, zero NaN terminations and every declared0/250/500/750/999
+checkpoint. Final iteration999/local env24000/Adam80000/critic24576000 and frozen
+actor affine/count0 were independently rechecked. Initial tensors and optimizer
+match the original parent, not either rejected pilot endpoint.
+
+| Retained result | Control | Staged |
+| --- | --- | --- |
+| Foundation seconds | 645.66 | 643.45 |
+| Training falls across256 worlds | 809 | 615 |
+| Complete moving routes, out of72 | 15 | 8 |
+| Moving speed passes, out of72 | 67 | 67 |
+| Idle route/speed worlds | 24/24 | 24/24 |
+| Held-out motor/range/idle safety | pass | pass |
+| Projected-heading / cautious walking references | pass / pass | pass / pass |
+| Original-parent walking retention, speed bar69 | fail | fail |
+
+All12 held-out cases per arm completed without terminal substitution. All nine
+moving cases remain route-not-qualified in both arms. The deterministic
+`staged-head-replication-rejected` decision has four failures: route improvement
+is−7 rather than at least+6; negative-turn heading endpoint regression exceeds
+.01rad/s; and BOTH arms fail original-parent speed-count retention67<69. Equal
+paired speed counts do not satisfy original-parent retention.
+
+### Read-only diagnosis, without another learner
+
+The negative-turn mean full-trajectory heading error rises
+.053102854→.096465957rad/s (+.043363103). Mean body yaw rate changes
+−.189123→−.114103rad/s against the−.2 command. Complete negative-turn routes
+fall5→1/24; cycle heading endpoint failures rise28/152→64/148. Its speed MAE
+improves.055099→.042331m/s and cycle XY failures fall4→0, but neither compensates
+for lost turning. Straight routes also fall6→3/24 with speed passes unchanged19.
+Positive-turn routes remain4/24. This is a measured steering/retention failure,
+not evidence of a motor safety violation or an evaluator crash.
+
+Actual staged exposure is exactly12000/6000/6000 action steps; all four head
+components have nonzero sampled commands throughout. Intermediate outside-prior
+counts are `[1076188,1072970,1018507,1027508]`; parent-stage counts are
+`[842526,836630,865078,875886]`. Thus a dead curriculum or missed range mutation
+does not explain this rejection. Training falls are lower in staged, but held-out
+route quality is worse: training stability/reward averages are not sufficient.
+The observed seed-dependent reversal does not establish the causal mechanism;
+do not assert that a specific range boundary or reward caused it without a
+separately declared diagnostic. No intermediate checkpoint was selected/evaluated.
+
+The prospective replication stops here. Do not unlock983 as a rescue, reroll a
+seed, soften route/retention gates, promote either checkpoint, or start an
+obstacle/hop teacher from these results. Any follow-on experiment needs a fresh
+question and frozen protocol addressing straight-speed retention and negative
+turn response; it is not an extension of this rejected confirmation campaign.
+
+### Exact retained evidence and source repair
+
+Native retained state:
+`/home/converge/.local/state/v8-staged-head-replication-s977-986c6f4f-20261014-handoff`.
+The independent CPU-only verifier reauthenticated all receipts, initial/final
+tensors, temporal exposure, all trace/route hashes, the three walking references,
+deterministic comparison and live restoration cgroups. It sealed151 run files,
+373,219,566 bytes. Raw traces/checkpoints stay only on100.100; the Mac keeps just
+the small summary/inventory in ignored artifacts.
+
+- `replication-summary.json` SHA256:
+  `a344c638a7da8f398cc1832d4da41680f8cdeb5c0dc251366b3d8b9f64c82634`.
+- `replication-manifest.json` SHA256:
+  `66081b90b72ed98a4ae01cda7198b09085ed83167166d4027e486ea61c8cdfaa`.
+- Historical decision SHA256:
+  `6786ae7b4b4c81c154fb0a5fb24d4d6fa68a5f3bca052fbc7f245fe4b1aa8246`.
+- Final control / staged PT SHA256:
+  `a03b77282b480daca6e6ff8b3e61f1b6f16c5c4416c6962edd1cb5b503e951f7` /
+  `e7a6a8f5eeb505a66b128b95813345189ba097a2e0a815d9ab80502820c015eb`.
+- Final evaluation control / staged result SHA256:
+  `5559acb977ca5781b8b8422857b55ab71c2f03251d5c199f22b49e4a47bff8fd` /
+  `dfa105554ce36e0f0e9d27119173f509713c6295f37e5cf03a14bb9bf30e0728`.
+- Native independent verifier SHA256:
+  `a338b1c3ffe9d62ead13794dbd301ed3d54d30cef4a60c0b4b6ade1df7271929`.
+
+Observed Duck GPU peak1754MiB, minimum free14440MiB and maximum temperature67C.
+The exit guard proved DINO2029-only idle before restoring only the original USER
+vLLM; live GPU owners are DINO2029 plus vLLM2163857 in that service's cgroup.
+The other three protected scopes remain inactive. No further GPU job is queued.
+
+The historical comparison exposed a formatting defect: the failure string
+`fewer-than-six-additional-complete-moving-worlds` was serialized as a character
+list by the arm-name remapper. Its bytes and decision remain untouched. The
+source repair preserves strings and relabels only structured arm records;
+thresholds, groups and decisions do not change. The regression plus replication
+and exposure suites passed67 CPU tests on the Mac in11.80s; diff checks passed.
+This tested reporting repair and Luna's independent receipt audit do not qualify
+a motion skill or replace the numerical rejection.

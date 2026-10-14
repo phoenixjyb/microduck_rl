@@ -1166,3 +1166,13 @@ proven Duck exit, with DINO preserved. Next localize heading errors by command
 and contact phase from retained traces before predeclaring another gait lesson;
 no further GPU learner, observation expansion, harder skill or video is launched
 by the [sealed closeout](experiments/2026-10-14-v8-projected-yaw-bias.md).
+
+The contact-phase diagnosis is now complete and hash-bound to all three sealed
+steering packets. Opposite per-world drift can cancel in a mean; both support
+and transition intervals contribute, without one clear phase-only cause. The
+next [matched gait-scale continuation](experiments/2026-10-14-v8-gait-scale-steering-contrast.md)
+tests reward EMA1.0s versus.5s (measured cycle medians.44–.46s), starting both
+arms from identical steady actor/critic/Adam state under the same frozen live
+curriculum snapshot. This preserves the existing61D/raw14D interface and every
+route/retention gate; it is not adoption of a rejected actor or a new skill.
+Both short-run admissions must pass before the paired1000-update budgets.

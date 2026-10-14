@@ -101,3 +101,55 @@ exact one-factor config hashes. Parallel bounded implementation was owner-review
 integration corrected native evidence paths, retained the historical observer
 profile, and kept the foundation cap2100s. Diff-whitespace checks pass. Native
 exact-source checks, CPU preflight and both GPU admissions are still separate.
+
+## Native admission and active run
+
+Executed source `7acacf87313c08973d682e2d701c7ef7b8cabe35`, unique run
+`v8-yaw-gain-7acacf87-20261014`. After the previous service completed and its
+restoration was independently verified, the clean native detached worktree was
+fast-forwarded to this exact tested fork commit. Corrected12-file native CPU
+suite: **165 passed**,25.56s. CPU-hidden preflight authenticates the original
+parent, completed rejection seals, all PPO state/runtime pins and three honest
+recipe pairs. No install or runtime change.
+
+Native operation hashes match preparation; Bash syntax and user-unit validation
+pass. Fresh original service context is retained before one start of the
+nonenabled sequential service `recomo-duck-v8-yaw-gain-7acacf87-20261014.service`.
+
+| Installed operation | SHA-256 |
+| --- | --- |
+| Context recorder | `c50c7a75bfe71cb6f2577cf259fdee2bcfd8529e2e6d90f947e3e78203bd8d87` |
+| Guarded restorer | `f887e77783b196cbca509573d30ef0453990878d331c5368b951e8b558ec1f79` |
+| Sequential handoff | `abcf1b1896b07f437cc1c0021a561b4ebf92e7db1ebb6efced1f0bf580087a9f` |
+| User unit | `d478b715d6952bdab43cab6c47287badd7c8a093bce8d10c31aa88d0a00904ca` |
+
+All four short admissions complete and independently revalidate. Smoke
+control/reduced4.323/4.338s; first mean/max KL.018067/.032062 and.018207/.030564.
+Benchmark7.610/7.860s; KL.016362/.021430 and.016458/.022366. Both1000-update
+projections fit the2070s admission bound. Reduced actual weighted reward and KL
+metadata bind−.5; control binds−1. Both horizons.5s; rejected motor penalty0.
+All four short initial PTs and the control foundation initial share SHA256
+`c6b09dc25d4693074e086faa5d5745ce04f5aa30cc12a03e9531f65e6a7e9562`;
+actor/critic/Adam tensors and saved LR exactly match the original parent.
+
+A CUDA-hidden read-only admission proof observes control312/1000 updates,
+durable0/250 checkpoints, finite reward/optimizer/motor metrics,166 training
+falls and0 NaN terminations. First full-update KL.016126/.021966 passes.
+These are training diagnostics, not held-out stability or skill acceptance.
+The proof independently binds GPU PID(s) to the Duck user-service cgroup and
+confirms all four protected user/system scopes inactive, with DINO2029 preserved.
+Sampled GPU1710MiB/67°C; other workloads and100.98 remain untouched.
+
+Retained proof: native
+`/home/converge/.local/state/v8-yaw-gain-7acacf87-20261014-handoff/admission-proof.json`,
+17,310 bytes, SHA256
+`262b951f1a809d8fc597c0ed6b73dee23ceaa2f9295d6d7b7c00336fff567699`.
+Only this small matching proof is copied to
+`artifacts/training/v8-yaw-gain-7acacf87-20261014-admission/admission-proof.json`.
+Raw models/logs remain native. Keep the active native checkout frozen at7acacf87;
+later documentation commits do not advance it while running.
+
+Both full budgets, final evaluations and deterministic comparison remain
+**pending**. The retained service continues sequentially and restores only
+original user vLLM after proven Duck exit. No automatic subsequent campaign,
+checkpoint promotion, perception task, video or physical motion.

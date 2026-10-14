@@ -1176,3 +1176,16 @@ arms from identical steady actor/critic/Adam state under the same frozen live
 curriculum snapshot. This preserves the existing61D/raw14D interface and every
 route/retention gate; it is not adoption of a rejected actor or a new skill.
 Both short-run admissions must pass before the paired1000-update budgets.
+
+The matched continuation completed both1000-update rounds at `1b223f93`:
+12.288M additional transitions, exact inherited model/Adam state and frozen
+conditions,0 NaNs. Treatment moving speed checks improve66/72→71/72 and
+straight mean body vx.217→.257m/s at the.30 target; idle24/24 and all24 held-out
+case motor/range/survival subsets pass. Complete moving-world route components
+improve6/72→8/72, but all9 moving route cases still fail in both arms.
+Positive-turn heading endpoint error worsens82%, and treatment raw motor p99
+has only about.00092Nm below the numerical cap. This is a useful walking gain
+with steering/headroom trade-offs, not an accepted integrated skill or new
+obstacle/hop/ball capability. Evidence is sealed, vLLM restored and DINO preserved.
+Next address the measured directional-steering/headroom constraints with an
+explicit bounded declaration; do not automatically promote or extend this actor.

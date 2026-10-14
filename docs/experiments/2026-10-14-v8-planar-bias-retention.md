@@ -1,6 +1,6 @@
 # Persistent planar-speed retention lesson
 
-Status: **predeclared; source/native/GPU admissions required before foundation**.
+Status: **source/native and both GPU admissions passed; matched foundation active**.
 Branch `integration/upstream-2026-10-10`; protocol `v8-planar-bias-retention-v1`.
 
 ## Question and prior evidence
@@ -109,3 +109,55 @@ preserve DINO2029 and unrelated workloads; prove Duck exit and DINO-only idle
 before scoped restoration. No100.98/NX/FilmBrain, packages/drivers/reboot,
 policy publication, perception training or physical motion. Raw assets stay
 native; keep only small seals on the Mac.
+
+## Exact source and first native admissions
+
+Executed source `03ede0e67a4291ab144b30e22a3aa92b77d098c5` passed136 focused
+CPU tests on Mac in5.72s and on100.100 in6.16s, including the inherited yaw,
+continuation and closed head-replication contracts. Owner review caught and
+tested the observer seam where the parent consumes its command: the planar
+observer retains that pre-action command before the inherited step clears it.
+Luna's separate reward tests and driver/gate tests were reviewed before admission.
+Compilation, shell syntax, unit verification and diff checks passed.
+
+Native CPU preflight authenticated the rejected977 seals, ORIGINAL parent
+actor/critic/Adam hashes, all matched recipes and unchanged runtime pins:
+torch2.9.1, Warp1.12.0, MuJoCo3.10.0, MuJoCo-Warp3.8.1, mjlab1.3.0,
+rsl-rl-lib5.0.1, ONNX1.22.0 and ONNX Runtime1.24.4. No install or driver change.
+
+Service `recomo-duck-v8-planar-bias-s991-03ede0e6-20261014.service` started
+2026-10-14 20:27:48 Shanghai. Native assets:
+`/home/converge/work/microduck_rl-upstream-20261010/artifacts/training/v8-planar-bias-s991-03ede0e6-20261014`.
+The original USER vLLM-only restoration context is retained separately at
+`/home/converge/.local/state/v8-planar-bias-s991-03ede0e6-20261014-handoff`.
+
+| Admission | Control | Planar |
+| --- | --- | --- |
+| Smoke64×5 seconds | 4.400 | 4.451 |
+| Smoke KL mean / maximum minibatch mean | .018230 / .032449 | .018680 / .031811 |
+| Benchmark256×10 seconds | 8.012 | 8.177 |
+| Benchmark KL mean / maximum minibatch mean | .016612 / .021898 | .016355 / .021766 |
+| Conservative1000-update projection | 1261.80s | 1286.53s |
+
+All four short runs passed before the full pair, projections<2070s. Both ordinary
+smokes had zero falls/NaNs. Actual smoke-final planar cost/reward is
+.075478/0 control versus.073521/−.073521 treatment, with24 observed steps/update.
+This proves the treatment is active and the control inert, not improved skill.
+Short result SHA256 control/planar:
+
+- Smoke `f1caf40091db9e1eecee53f7fc28666090e6ace3fb2096284404233f1d3f4e77` /
+  `07afaa01bd2ec87b000a8f320864b317ee2d04b77188628fcb856f842520d123`.
+- Benchmark `d65f22d41df752de1f585b5ba6307572f4724ca40f3077ea77a6d030a6980c61` /
+  `2acc7d5f4ad8c0362d77cf85844fb383bddb561b79616f71c72fd069d493ee56`.
+
+At the first retained full check, control reached update27/common648 with zero
+NaN terminations. GPU used1710MiB/free14484MiB at59C; owners were only preserved
+DINO2029 and the leased Duck child. All four protected scopes were inactive.
+Full training, both final999 evaluations, unchanged comparison and post-exit
+restoration remain pending. Do not advance the active native checkout from03ede0e6.
+
+Executed context/restorer/handoff/unit SHA256 respectively:
+`632c91c1b2ede83cbfb0e9da951a61f52c6e5d38657b2d7caafb866a91bbc6c9`,
+`d4fcc6b28f5dcb9ba3c29065b8e2db89ab3c6d688cdc25a5051834d55a36b96e`,
+`daf227216f3ed4cf45b454de05b814f1d6dc5d7a3510df1e63a844f27f7703f6`,
+`77fe61a53261420da33d4b766ccd45bd2232b371b80beb308477b5389d41393b`.

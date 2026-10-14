@@ -126,3 +126,33 @@ scopes were inactive. Original USER vLLM restoration is independently retained
 in `/home/converge/.local/state/stock-walk-foundation-s1019-20261014-handoff`.
 Do not advance or modify the active native checkout. Training completion,
 final-checkpoint qualification and visual rollouts are still pending.
+
+## Sustained-runtime correction after the first full attempt
+
+The first full attempt stopped at update192 on the same resource guard; the last
+successful sample was2690MiB/74C and all optimizer/reward metrics were finite,
+with zeroNaNs. Only `model_0.pt` had reached the original250-update cadence, so
+the192-update learning budget is incomplete and its live progress was not
+durable. vLLM was restored (PID2314029) with DINO2029 preserved. Keep the failed
+run unchanged; the120-update thermal admission did not prove steady state.
+
+Read-only device telemetry was51C with36C T.Limit margin, maximum-operating
+T.Limit offset0 and target87C. NVIDIA documents T.Limit as the margin to maximum
+operating temperature ([reference](https://docs.nvidia.com/deploy/nvidia-smi/index.html)).
+The75C cutoff was conservative, not a hardware-overheat/driver failure. It remains
+unchanged for this work; no power limit, clocks, fan settings or driver is altered.
+
+Next prospective run `stock-walk-paced-foundation-s1019-20261014`: same fresh
+seed1019,1024 worlds and6000 updates, but **CPUQuota75%** and **save every100**.
+This changes wall-clock duty cycle/checkpoint cadence only, not rewards,
+commands, physics timestep, normalization, PPO or curricula. Save more frequently
+because the previous guard fired before the first regular checkpoint. Model_5999
+remains the final evaluation target; extra checkpoints are not a selection sweep.
+
+Projected cap admission uses the measured CPU100% p95 scaled by100/75:
+`180 + 1.25 × 1.0204525 × (100/75) × 6000` = **10384.5s**, still below10800s.
+This is a conservative estimate, not a proven throttle-speed law. Keep the same
+10800s child/11200s service caps,8GiB memory and scoped restoration. Monitor past
+the previous192-update stop and verify a durable100/200 checkpoint before
+handing off. If a guard stops it again, retain and report the actual partial
+state rather than quietly declaring this a full training success.

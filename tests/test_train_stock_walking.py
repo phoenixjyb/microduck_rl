@@ -68,7 +68,7 @@ def test_stock_cfg_differs_only_by_allowed_operational_overrides():
     assert cfg.agent.logger == "tensorboard"
     assert cfg.agent.upload_model is False
     assert cfg.agent.resume is False
-    assert cfg.agent.save_interval == 250
+    assert cfg.agent.save_interval == 100
     assert cfg.video is False
 
 

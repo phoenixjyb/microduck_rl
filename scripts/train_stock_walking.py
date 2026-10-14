@@ -57,7 +57,7 @@ def build_config(phase: str, *, worlds: int | None = None, seed: int = 1019):
     cfg.agent.logger = "tensorboard"
     cfg.agent.upload_model = False
     cfg.agent.resume = False
-    cfg.agent.save_interval = 250
+    cfg.agent.save_interval = 100
     # The actor cfg checker is intentionally cfg-only; simulator dimensions are
     # still owned by the native trainer at runtime.
     validate_actor_contract(cfg.env, expected_actuator="BacklashEncoderBamActuatorCfg")

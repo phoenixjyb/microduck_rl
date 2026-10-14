@@ -103,3 +103,37 @@ parent optimizer/normalizer ownership and the six-world diagnostic comparison.
 Owner integration corrected recipe-hook dispatch and kept config-budget checks
 read-only. Independent read-only review found no blocking defect. Native
 exact-source tests, CPU preflight and GPU admissions remain separate gates.
+
+## Admitted native execution, final results pending
+
+Executed source `c340ff00d8d532fa4a664a298589b7fa401d7467`, run
+`v8-steering-budget-c340ff00-20261014`. Native11-file affected suite passes216
+tests (three existing warnings,23.58s). CPU-hidden preflight authenticates the
+sealed control parent, all optimizer/normalizer state, original references,
+runtime and honest complete/masked recipe hashes. Transferred operation hashes,
+Bash syntax and unit verification match local preparation; retain original
+service context before one start of the nonenabled sequential service.
+
+Both complete smokes and benchmarks pass. Control/extended smoke4.319/4.342s,
+first mean/max KL.018543/.032189 and.017454/.032386. Benchmarks7.792/7.846s,
+KL.016163/.021844 and.016242/.022250; both per-budget projections fit the
+foundation cap. All four short initial PTs and the control foundation initial
+share SHA256 `c6b09dc25d4693074e086faa5d5745ce04f5aa30cc12a03e9531f65e6a7e9562`.
+Actor/critic/Adam fingerprints and inherited LR match the exact parent; the
+rejected penalty is actually0, and the existing yaw penalty stays negative.
+
+A read-only snapshot authenticates all four admitted receipts and observes
+control109/1000 updates, finite rows,0 NaN terminations and85 training falls
+so far. First foundation KL.016327/.023938 passes; these are training
+diagnostics, not held-out acceptance. Latest sampled GPU1710MiB/63C,
+DINO2029 retained, Duck PID1853745; protected user vLLM/subject worker are
+inactive during the lease. Small local proof:
+`artifacts/training/v8-steering-budget-c340ff00-20261014-admission/partial-report.json`.
+Models/logs remain native. Keep native source frozen at the executed SHA while
+the sequential job continues; later documentation commits do not advance it.
+
+Both full budgets and final evaluations/comparison are **pending**, not
+claimed complete. The service continues to control999, extended1999, the
+unchanged held-out matrix and deterministic three-reference retention checks,
+then restores only original user vLLM after proven Duck GPU exit. No new
+campaign or skill promotion follows automatically.

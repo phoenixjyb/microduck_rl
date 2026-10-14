@@ -234,3 +234,43 @@ The Codex heartbeat creation request has not returned or registered; no agent
 continuation is claimed. This is a finite native training/review service, not
 a cron/heartbeat workaround. Generated clips remain visually uninspected until
 an actual frame review; training completion is not walking qualification.
+
+### Live admission and early visual evidence
+
+Exact learning/review source `23b35c1d0ee6bf92aa884dfb86a413c08e485435` passed102
+focused tests on Mac/native (6.88/5.68s), with clean checkouts. The finite unit
+started **2026-10-15 00:16:46 Shanghai**, RuntimeMax6h34m17s (hard fallback
+around06:51), TimeoutStop300s; stage admission separately reserves600s before
+07:00. Do not advance the native checkout while this service is active.
+
+The standard resume smoke completed5 updates in10.01s, savedmodel504 SHA256
+`219a0c4db85cf32b6cbf8d0c13bc6afe198eaa18feb5376bad755479978fa01a`, with finite
+checkpoint/optimizer state, restored cumulative curriculum counter and zeroNaNs.
+This is506 actual cumulative updates, not505 despite the final label504.
+
+The model500 task-native review completed in149.08s, retained at
+`artifacts/evaluations/stock-walk-overnight-s1019-20261015-partial-review` on
+native and as a small3.4MiB Mac copy. All12 cases had zero falls/NaNs/nonfinite
+steps across960 scored world-seconds. Means below are over three held-out seeds:
+
+| Command vx / yaw | Observed vx (m/s) | Observed yaw (rad/s) |
+| --- | --- | --- |
+| idle0 /0 |0.044 | -0.246 |
+| straight0.3 /0 |0.161 | -0.226 |
+| left0.2 /+0.2 |0.123 | -0.266 |
+| right0.2 /-0.2 |0.120 | -0.264 |
+
+The partial policy is upright and moving slowly, **not command-qualified**:
+substantial rightward yaw bias remains, including on a left-turn command.
+Four MP4s decode as960×540,50fps,500 frames,10s each. Ten1fps sampled frames
+per clip were actually inspected: render is clear, the duck remains upright,
+and stepping/turning is visible. This is sampled visual evidence, not complete
+playback, robust navigation or physical acceptance. Preserve the receipt's
+`visual_inspection_pending=true`; the inspection is separately documented here.
+
+The5500-update main continuation is active in
+`stock-walk-resume-foundation-s1019-20261015/resume-main`. At iteration564 it
+had finite metrics, zeroNaNs, GPU2690MiB used/13504MiB free,67C, only leased
+Duck2366546 and DINO2029, all four protected scopes inactive. Later completion
+and final clips remain pending. No model was promoted and no new reward lesson
+was introduced. This documentation commit does not change frozen learning source.

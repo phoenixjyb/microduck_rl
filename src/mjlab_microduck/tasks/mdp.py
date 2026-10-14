@@ -8046,6 +8046,15 @@ def motor_envelope_monitor(
     return zeros
 
 
+def selected_motor_torque_load_cost(env, actuator_names, rated_stall_torque_nm=0.60,
+                                    soft_limit_fraction=0.70, over_limit_gain=4.0,
+                                    asset_cfg=SceneEntityCfg("robot")):
+    """Strict exact-actuator cost; no action clamp or nonfinite sanitization."""
+    from mjlab_microduck.selected_motor_load import selected_motor_torque_load_cost as cost
+    return cost(env, actuator_names, rated_stall_torque_nm, soft_limit_fraction,
+                over_limit_gain, asset_cfg)
+
+
 def motor_torque_load_cost(
     env: ManagerBasedRlEnv,
     rated_stall_torque_nm: float,

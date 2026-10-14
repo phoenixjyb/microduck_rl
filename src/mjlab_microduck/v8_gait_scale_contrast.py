@@ -19,6 +19,7 @@ import os
 import re
 import stat
 import subprocess
+import sys
 import time
 from collections.abc import Mapping
 from dataclasses import asdict
@@ -49,6 +50,7 @@ PARENT_ADAM_STEP, PARENT_CRITIC_COUNT = 20000, 6144000
 TAUS = {"control": 1.0, "gait-scale": 0.5}
 WEIGHT = -1.0
 FIRST_KL_MEAN_MAX, FIRST_KL_MINIBATCH_MEAN_MAX = .05, .10
+KL_PROFILE = "gait-scale-contrast"
 _ACTIVE_STAGE = None
 
 
@@ -56,9 +58,15 @@ def _require(ok: bool, message: str) -> None:
     base.require(ok, message)
 
 
-def verify_source(args, *, training):
+def _bindings(experiment, names):
+    """Explicit recipe dependency injection; never mutate historical globals."""
+    recipe = sys.modules[__name__] if experiment is None else experiment
+    return tuple(getattr(recipe, name) for name in names.split())
+
+
+def verify_source(args, *, training, run_prefix=RUN_PREFIX):
     _require(re.fullmatch(r"[a-f0-9]{40}", args.source) is not None
-        and args.run_id == f"{RUN_PREFIX}-{args.source[:8]}-20261014",
+        and args.run_id == f"{run_prefix}-{args.source[:8]}-20261014",
         "exact source-bound 20261014 run identity")
     git = lambda *argv: subprocess.check_output(
         ("git", "-C", str(base.ROOT), *argv), text=True).strip()
@@ -296,15 +304,16 @@ def validate_parent_live_profile(summary):
     return live
 
 
-def validate_parent_payload(payload):
+def validate_parent_payload(payload, *, iteration=PARENT_ITERATION, steps=PARENT_STEPS,
+                            adam_step=PARENT_ADAM_STEP, critic_count=PARENT_CRITIC_COUNT):
     required = {"actor_state_dict", "critic_state_dict", "optimizer_state_dict", "iter", "infos"}
     _require(isinstance(payload, Mapping) and set(payload) == required,
              "exact PPO checkpoint fields required for continuation")
-    _require(type(payload["iter"]) is int and payload["iter"] == PARENT_ITERATION
+    _require(type(payload["iter"]) is int and payload["iter"] == iteration
              and isinstance(payload["infos"], Mapping)
              and isinstance(payload["infos"].get("env_state"), Mapping)
              and type(payload["infos"]["env_state"].get("common_step_counter")) is int
-             and payload["infos"]["env_state"]["common_step_counter"] == PARENT_STEPS,
+             and payload["infos"]["env_state"]["common_step_counter"] == steps,
              "exact historical parent clocks")
     _require(base.finite_tree(payload["actor_state_dict"]) and base.finite_tree(payload["critic_state_dict"])
              and base.finite_tree(payload["optimizer_state_dict"]), "finite parent PPO tensors")
@@ -317,23 +326,28 @@ def validate_parent_payload(payload):
              and set(param_ids) == set(states) and len(states) == 17
              and all(set(state) == {"step", "exp_avg", "exp_avg_sq"}
                  and isinstance(state["step"], torch.Tensor) and state["step"].ndim == 0
-                 and int(state["step"].item()) == PARENT_ADAM_STEP
+                 and int(state["step"].item()) == adam_step
                  and isinstance(state["exp_avg"], torch.Tensor)
                  and isinstance(state["exp_avg_sq"], torch.Tensor)
                  and state["exp_avg"].shape == state["exp_avg_sq"].shape
                  and base.finite_tree(state)
                  for state in states.values()),
-             "exact inherited 17-entry Adam state at step 20000")
-    critic_count = payload["critic_state_dict"].get("obs_normalizer.count")
-    _require(isinstance(critic_count, torch.Tensor) and critic_count.item() == PARENT_CRITIC_COUNT,
+             "exact inherited 17-entry Adam state")
+    actual_count = payload["critic_state_dict"].get("obs_normalizer.count")
+    _require(isinstance(actual_count, torch.Tensor) and actual_count.item() == critic_count,
              "exact inherited critic normalizer count")
     return payload
 
 
-def initialize(runner, env, output):
+def initialize(runner, env, output, *, experiment=None):
     """Load authenticated model/critic/Adam tensors without importing runner clocks."""
     from .integrated_fresh_foundation import normalizer_count
     from .v8_actor_seed import FrozenV8Actor
+
+    (_read_parent, PROTOCOL, PARENT_SHA, PARENT_ITERATION, PARENT_STEPS,
+     PARENT_ADAM_STEP, PARENT_CRITIC_COUNT) = _bindings(experiment,
+        "_read_parent PROTOCOL PARENT_SHA PARENT_ITERATION PARENT_STEPS "
+        "PARENT_ADAM_STEP PARENT_CRITIC_COUNT")
 
     payload = _read_parent()
     alg = runner.alg
@@ -404,10 +418,14 @@ def _optimizer_steps(optimizer):
 
 class Observer(learning.Observer):
     """Read-only command, frozen-curriculum, and pre-reset reward observer."""
-    def __init__(self, mode, arm):
+    def __init__(self, mode, arm, *, protocol=PROTOCOL, report_arm=None,
+                 receipt_profile=KL_PROFILE):
         _require(mode in MODES and arm in ARMS, "known observer stage and arm")
         super().__init__()
         self.mode, self.arm = mode, arm
+        self.protocol = protocol
+        self.report_arm = arm if report_arm is None else report_arm
+        self.receipt_profile = receipt_profile
         self.profile = "gait-scale-contrast"
         self.bias_costs, self.bias_rewards, self.signed_biases = [], [], []
         self.raw_errors, self.signed_raw_errors = [], []
@@ -512,11 +530,11 @@ class Observer(learning.Observer):
         if self.updates == 1:
             report = steady.first_update_kl_report(
                 self.mode, self.source, row["optimizer"], steps=env.common_step_counter)
-            report["protocol"] = PROTOCOL + ":first-update-kl-v1"
+            report["protocol"] = self.protocol + ":first-update-kl-v1"
             report["inherited_parent_lr"] = getattr(self, "initial_lr", None)
             report["initial_learning_rate"] = self.initial_lr
-            report["arm"] = self.arm
-            report["profile"] = "gait-scale-contrast"
+            report["arm"] = self.report_arm
+            report["profile"] = self.receipt_profile
             self.first_update_report = report
             base.write_new(self.output / "first-update-kl.json", report)
             row["first_update_kl"] = report
@@ -524,12 +542,12 @@ class Observer(learning.Observer):
                 _require(self.runner is not None, "runner attached for durable KL refusal")
                 self.runner.save(str(self.output / "aborted-first-update.pt"), infos={
                     "env_state": {"common_step_counter": env.common_step_counter},
-                    "profile": "gait-scale-contrast", "arm": self.arm, "mode": self.mode,
+                    "profile": self.receipt_profile, "arm": self.report_arm, "mode": self.mode,
                     "full_budget_completed": False, "policy_acceptance": False,
                     "physical_motion_authorized": False,
                     "first_update_kl_sha256": base.sha256(self.output / "first-update-kl.json")})
                 _require(False, "gait-scale-contrast first-update KL guard")
-        row.update(arm=self.arm, yaw_bias_weight=WEIGHT, yaw_bias_tau_s=TAUS[self.arm],
+        row.update(arm=self.report_arm, yaw_bias_weight=WEIGHT, yaw_bias_tau_s=TAUS[self.arm],
             yaw_bias_cost_mean=sum(self.bias_costs)/24,
             weighted_yaw_bias_reward_mean=sum(self.bias_rewards)/24,
             signed_yaw_bias_mean=sum(self.signed_biases)/24,
@@ -553,7 +571,13 @@ class Observer(learning.Observer):
         return row
 
 
-def validate_training_receipt(root, arm, mode, source):
+def validate_training_receipt(root, arm, mode, source, *, experiment=None):
+    (ARMS, MODES, PROTOCOL, PARENT_SHA, PARENT_ITERATION, PARENT_STEPS,
+     PARENT_ADAM_STEP, PARENT_CRITIC_COUNT, TAUS, WEIGHT, CAPS, KL_PROFILE,
+     recipe_match, frozen_profile_report, _read_parent) = _bindings(experiment,
+        "ARMS MODES PROTOCOL PARENT_SHA PARENT_ITERATION PARENT_STEPS "
+        "PARENT_ADAM_STEP PARENT_CRITIC_COUNT TAUS WEIGHT CAPS KL_PROFILE "
+        "recipe_match frozen_profile_report _read_parent")
     _require(arm in ARMS and mode in MODES, "declared contrast receipt")
     output = Path(root) / arm / mode
     result = json.loads((output / "result.json").read_text())
@@ -682,11 +706,11 @@ def validate_training_receipt(root, arm, mode, source):
     expected_kl.update(protocol=PROTOCOL + ":first-update-kl-v1",
         inherited_parent_lr=expected_init["inherited_learning_rate"],
         initial_learning_rate=expected_init["inherited_learning_rate"], arm=arm,
-        profile="gait-scale-contrast")
+        profile=KL_PROFILE)
     _require(kl_report == expected_kl and result.get("first_update_kl") == kl_report
         and kl_report["passed"] is True and kl_report["source"] == source
         and kl_report["mode"] == mode and kl_report["arm"] == arm
-        and kl_report["profile"] == "gait-scale-contrast"
+        and kl_report["profile"] == KL_PROFILE
         and kl_report["initial_learning_rate"] == expected_init["inherited_learning_rate"]
         and kl_report["common_step_counter"] == 24
         and kl_report["mean_raw_kl"] <= FIRST_KL_MEAN_MAX
@@ -702,7 +726,8 @@ def projection_seconds(elapsed_s):
     return elapsed_s * 100 * 1.5 + 60
 
 
-def validate_evaluation_receipt(root, arm, source, checkpoint_sha):
+def validate_evaluation_receipt(root, arm, source, checkpoint_sha, *, experiment=None):
+    ARMS, PROTOCOL, CAPS = _bindings(experiment, "ARMS PROTOCOL CAPS")
     _require(arm in ARMS, "declared final-evaluation arm")
     output = Path(root) / arm / "final-eval"
     receipt = json.loads((output / "result.json").read_text())
@@ -777,9 +802,10 @@ def validate_evaluation_receipt(root, arm, source, checkpoint_sha):
         and type(receipt.get("elapsed_s")) in (float, int)
         and math.isfinite(receipt["elapsed_s"]) and receipt["elapsed_s"] <= CAPS["final-eval"],
         "bounded non-acceptance evaluation receipt")
-    if arm == "gait-scale":
+    if arm == ARMS[1]:
         control_sha = base.sha256(Path(root) / "control/foundation/model_999.pt")
-        _, control_rows = validate_evaluation_receipt(root, "control", source, control_sha)
+        _, control_rows = validate_evaluation_receipt(root, "control", source, control_sha,
+                                                     experiment=experiment)
         _require(receipt.get("paired_descriptive_deltas") ==
                  learning.paired_comparison(control_rows, raw),
                  "paired descriptive deltas recompute against exact control raw cases")
@@ -789,7 +815,13 @@ def validate_evaluation_receipt(root, arm, source, checkpoint_sha):
     return receipt, raw
 
 
-def _main_impl():
+def _main_impl(experiment=None):
+    (ARMS, MODES, PROTOCOL, CAPS, PARENT_SHA, verify_source, _read_parent,
+     recipe_match, prepare_config, frozen_profile_report, Observer, initialize,
+     validate_training_receipt, validate_evaluation_receipt) = _bindings(experiment,
+        "ARMS MODES PROTOCOL CAPS PARENT_SHA verify_source _read_parent "
+        "recipe_match prepare_config frozen_profile_report Observer initialize "
+        "validate_training_receipt validate_evaluation_receipt")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", required=True)
     parser.add_argument("--run-id", required=True)
@@ -899,7 +931,7 @@ def _main_impl():
             "cautious_reference_summary_sha256": cautious_retention.BASELINE_SUMMARY_SHA,
             "elapsed_s": time.monotonic()-started,
             "policy_acceptance": False, "physical_motion_authorized": False}
-        if arm == "gait-scale":
+        if arm == ARMS[1]:
             control_sha = base.sha256(output_root / "control/foundation/model_999.pt")
             _, control_rows = validate_evaluation_receipt(output_root, "control", args.source, control_sha)
             result["paired_descriptive_deltas"] = learning.paired_comparison(control_rows, raw)
@@ -976,11 +1008,11 @@ def _main_impl():
         raise
 
 
-def main():
+def main(experiment=None):
     global _ACTIVE_STAGE
     _ACTIVE_STAGE = None
     try:
-        return _main_impl()
+        return _main_impl(experiment)
     except Exception as exc:
         if _ACTIVE_STAGE is not None:
             output, identity = _ACTIVE_STAGE

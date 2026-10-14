@@ -1189,3 +1189,12 @@ with steering/headroom trade-offs, not an accepted integrated skill or new
 obstacle/hop/ball capability. Evidence is sealed, vLLM restored and DINO preserved.
 Next address the measured directional-steering/headroom constraints with an
 explicit bounded declaration; do not automatically promote or extend this actor.
+
+### October 14: next bounded lesson, named-motor headroom
+
+Following the October14 gait-scale contrast, predeclare the
+[selected motor headroom comparison](experiments/2026-10-14-v8-selected-motor-headroom.md).
+Keep the faster provisional gait and yaw objective; compare one fixed named
+knee/ankle load penalty against an unchanged continued control. Preserve
+both sealed walking references and all route/safety gates. Diagnostic motor
+improvement does not qualify steering or promote obstacle/hop/ball skills.

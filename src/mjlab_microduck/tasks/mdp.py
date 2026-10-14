@@ -4279,6 +4279,140 @@ def _publish_body_yaw_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None
     }
 
 
+def body_planar_bias_cost(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    tau_s: float = 0.5,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Positive planar L1 cost of the EMA command-minus-velocity residual.
+
+    The cost sums the absolute forward and lateral components after EMA
+    filtering, so persistent drift is priced while alternating motion can
+    cancel. Use a negative reward weight. Episode resets and changes to any
+    twist component clear per-world history; repeated reads within one common
+    step are idempotent.
+    """
+    if isinstance(tau_s, bool) or not isinstance(tau_s, (int, float)):
+        raise ValueError("tau_s must be a finite positive number")
+    try:
+        tau_s = float(tau_s)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("tau_s must be a finite positive number") from exc
+    if not math.isfinite(tau_s) or tau_s <= 0:
+        raise ValueError("tau_s must be a finite positive number")
+    if not isinstance(command_name, str) or not command_name:
+        raise ValueError("command_name must be a nonempty string")
+    asset_name = getattr(asset_cfg, "name", None)
+    if not isinstance(asset_name, str) or not asset_name:
+        raise ValueError("asset_cfg.name must be a nonempty string")
+    step_dt = getattr(env, "step_dt", None)
+    if isinstance(step_dt, bool) or not isinstance(step_dt, (int, float)):
+        raise ValueError("env.step_dt must be a finite positive number")
+    try:
+        step_dt = float(step_dt)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("env.step_dt must be a finite positive number") from exc
+    if not math.isfinite(step_dt) or step_dt <= 0:
+        raise ValueError("env.step_dt must be a finite positive number")
+    step = getattr(env, "common_step_counter", None)
+    if type(step) is not int or step < 0:
+        raise ValueError("env.common_step_counter must be a nonnegative integer")
+
+    command = env.command_manager.get_command(command_name)
+    linear = env.scene[asset_name].data.root_link_lin_vel_b
+    episode_length = getattr(env, "episode_length_buf", None)
+    if not isinstance(command, torch.Tensor) or not isinstance(linear, torch.Tensor):
+        raise TypeError("planar-bias command and body linear velocity must be tensors")
+    if command.ndim != 2 or command.shape[1] != 3:
+        raise ValueError("planar-bias command must have shape (worlds, 3)")
+    if linear.ndim != 2 or linear.shape != command.shape:
+        raise ValueError("body linear velocity must match command shape (worlds, 3)")
+    if (not isinstance(episode_length, torch.Tensor) or episode_length.ndim != 1
+            or episode_length.shape[0] != command.shape[0]
+            or episode_length.dtype == torch.bool or torch.is_floating_point(episode_length)):
+        raise ValueError("episode_length_buf must be an integer vector matching worlds")
+    num_envs = getattr(env, "num_envs", command.shape[0])
+    if type(num_envs) is not int or num_envs <= 0 or num_envs != command.shape[0]:
+        raise ValueError("env.num_envs must match planar-bias tensor worlds")
+    if (command.device != linear.device or command.device != episode_length.device
+            or command.dtype != linear.dtype or not command.is_floating_point()
+            or not linear.is_floating_point()):
+        raise ValueError("planar-bias tensors must share floating dtype and device")
+    if not bool(torch.isfinite(command).all() & torch.isfinite(linear).all()):
+        raise FloatingPointError("nonfinite planar-bias command or body linear velocity")
+    if bool((episode_length < 0).any()):
+        raise ValueError("episode_length_buf cannot be negative")
+
+    residual = (command[:, :2] - linear[:, :2]).detach().clone()
+    full_command = command.detach().clone()
+    if not bool(torch.isfinite(residual).all()):
+        raise FloatingPointError("nonfinite raw body planar velocity residual")
+
+    signature = (command_name, asset_name, tau_s, step_dt, command.shape,
+                 str(command.device), command.dtype)
+    internal = getattr(env, "_microduck_body_planar_bias_internal", None)
+    if internal is not None and internal["signature"] != signature:
+        raise ValueError("body planar-bias state reused with incompatible config or tensor layout")
+
+    if internal is not None and step == internal["step"]:
+        if not torch.equal(residual, internal["signed_residual"]):
+            raise RuntimeError("body planar-bias inputs changed within one common step")
+        if not torch.equal(full_command, internal["command"]):
+            raise RuntimeError("body planar-bias inputs changed within one common step")
+        _publish_body_planar_bias_state(env, internal)
+        return internal["cost"].clone()
+
+    rollback = internal is not None and step < internal["step"]
+    if internal is not None and not rollback and step != internal["step"] + 1:
+        raise RuntimeError("body planar-bias common-step counter skipped forward")
+    alpha = min(1.0, step_dt / tau_s)
+    if internal is None or rollback:
+        ema = torch.zeros_like(residual)
+        previous_command = full_command.clone()
+    else:
+        ema = internal["signed_ema"].clone()
+        previous_command = internal["command"]
+
+    fresh = (episode_length <= 1) | (full_command != previous_command).any(dim=1)
+    ema[fresh] = 0.0
+    ema = ((1.0 - alpha) * ema + alpha * residual).detach()
+    cost = ema.abs().sum(dim=1).detach()
+    if not bool(torch.isfinite(ema).all() & torch.isfinite(cost).all()):
+        raise FloatingPointError("nonfinite body planar-bias EMA cost")
+    internal = {
+        "signature": signature,
+        "step": step,
+        "command_name": command_name,
+        "asset_name": asset_name,
+        "tau_s": tau_s,
+        "step_dt": step_dt,
+        "command": full_command.clone(),
+        "signed_residual": residual.clone(),
+        "signed_ema": ema.clone(),
+        "cost": cost.clone(),
+    }
+    env._microduck_body_planar_bias_internal = internal
+    _publish_body_planar_bias_state(env, internal)
+    return cost.clone()
+
+
+def _publish_body_planar_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None:
+    """Publish an alias-free post-reward snapshot for planar diagnostics."""
+    env._microduck_body_planar_bias_state = {
+        "protocol": "body-planar-bias-cost-v1",
+        "step": internal["step"],
+        "command_name": internal["command_name"],
+        "asset_name": internal["asset_name"],
+        "tau_s": internal["tau_s"],
+        "step_dt": internal["step_dt"],
+        "command": internal["command"].detach().clone(),
+        "signed_residual": internal["signed_residual"].detach().clone(),
+        "signed_ema": internal["signed_ema"].detach().clone(),
+        "cost": internal["cost"].detach().clone(),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Projected world-heading rate bias. This is a post-physics reward and owns a
 # separate cache from body_yaw_bias_cost so metric reads cannot advance either

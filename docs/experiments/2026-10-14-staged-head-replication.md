@@ -1,6 +1,6 @@
 # Matched learning-seed replication of staged head goals
 
-Status: **driver implemented and CPU-tested; native admission and launch pending**.
+Status: **seed977 short admissions passed; paired foundation active; seed983 locked**.
 This design follows the sealed [staged-head pilot](2026-10-14-v8-staged-head-goals.md).
 It is not permission to promote a teacher, change evaluation gates or run hardware.
 
@@ -108,3 +108,65 @@ ordinary stages use `--arm control|staged --mode smoke|benchmark|foundation|fina
 The guarded service is prepared only for977; its cap/ownership/restoration
 contract is unchanged. Implementation/source evidence is not a completed run,
 curriculum confirmation or accepted motion skill.
+
+## Seed977 native admission and retained service
+
+Executed source `986c6f4facb44333a3daa76d1f411058c0820ac7` passed all152
+native CPU tests in18.28s. The unchanged six pilot training receipts also
+reauthenticated under the refactored default helpers. Native preflight bound
+the exact rejected pilot seals, original parent actor/critic/Adam tensors,
+runtime pins and seed977 matched recipes. Neither pilot endpoint is adopted.
+
+The nonenabled user service
+`recomo-duck-v8-staged-head-replication-s977-986c6f4f-20261014.service`
+started2026-10-14 19:35:07 Shanghai with the unchanged7800s/8GiB/CPU200% cap
+and post-exit scoped restoration. Retained assets belong under
+`/home/converge/work/microduck_rl-upstream-20261010/artifacts/training/v8-staged-head-replication-s977-986c6f4f-20261014`.
+
+| Admission | Control | Staged |
+| --- | --- | --- |
+| Ordinary64×5 smoke seconds | 4.388 | 4.408 |
+| Smoke KL mean / max minibatch mean | .018335 / .032874 | .020124 / .034112 |
+| Frozen64×320 boundary falls / resets / NaNs | 0 / 0 / 0 | 0 / 0 / 0 |
+| Actual range action steps | 320 parent | 80 small / 80 intermediate / 160 parent |
+| Benchmark256×10 seconds | 8.016 | 7.852 |
+| Benchmark KL mean / max minibatch mean | .016533 / .021425 | .013359 / .023881 |
+| Conservative1000-update projection | 1262.38s | 1237.82s |
+
+All six short admissions passed before either foundation. Both projections
+fit2070s; actor tensors/affine/count0 stayed unchanged in the frozen probes.
+Staged intermediate/parent actual outside-prior samples in all four components
+were `[682,783,703,651]` / `[2068,2698,3107,2683]`; no resampling was forced.
+Smoke and benchmark keep actual stage seeds947/953, while receipts correctly
+bind the prospective learning seed977. The live foundation launch records977.
+
+Short receipt hashes (control / staged):
+
+- Smoke:
+  `b81c2676b5d01b170c8a6993de122c92427fcc10ea1ceb35b9820a3ac5681fc3` /
+  `8738c1a541936ff8308a55dfbe0fe26b95f60e69b7f5b7ebb7bc77b3f2804189`.
+- Boundary:
+  `d21088a677cb7e91dcc38f94b4738589049f28346ba012fbf4d60c8307007cf3` /
+  `aacf62d48d67faf70e19658416b12a36cbf9e5b7b2748109781853b5a725d633`.
+- Benchmark:
+  `da63d36c050b48bbd5d1a031832113bb5f2266f6bd009a4b3f7d3dfd16a8a544` /
+  `2017141b6a73618a2204c834cedfbc5331a046f8b36b581ca32c3f53a6a79f5b`.
+
+At the first retained foundation check control reached update140/common3360/
+Adam62800; latest NaN terminations0. First-update KL mean.0150344/max.0209004
+passed, with original inherited LR.00011390625000000005. Durable initial PT
+SHA `c6b09dc25d4693074e086faa5d5745ce04f5aa30cc12a03e9531f65e6a7e9562`
+matches the original parent-preserving initialization. GPU occupancy1710MiB,
+free14484MiB at64C comprised preserved DINO2029 and only the leased Duck
+child; all four protected scopes were inactive during training. This is a
+live snapshot, not completion or a numerical qualification result.
+
+Executed handoff/context/restorer/unit hashes respectively:
+`90fef04cb1e65620a66dc3ae742e9dc9de775a3dbdcbef9e3a715112f7df5def`,
+`0a54f40603b7c1df0b2c18c85952f23c110d6b2f7fef6c895065ca47d4a9ecbe`,
+`089457b02bed6eaf35c012cff3cd872b4980c81c22bcac6f732d639e98f0b0df`,
+`91319a60f527ddbe1c2effdf2a0e5a4de6bde0de0ba6b2af9acf228f2056a05c`.
+The service sequence still owes two final999 checkpoints, both held-out
+evaluations, unchanged three-reference comparison and guarded restoration.
+Seed983 has no enabled job and stays locked. Do not fast-forward or edit the
+active native checkout away from its executed source while this service runs.

@@ -176,3 +176,36 @@ motor-stream capacity bucket, fail-closed later-stage admission and unchanged
 historical profiles. The exact tested source must still pass the same native
 CPU suite and authenticated preflight before the guarded sequential service.
 CPU/source evidence is not GPU admission, a motion result or policy acceptance.
+
+### First native admission refusal (be6545df)
+
+Exact source `be6545df8350611bc48b6c68c20faf9830251b2f` passed the same
+124 native CPU tests in18.52s and authenticated preflight. Its nonenabled
+sequential service started at2026-10-14 18:15:59 Shanghai. Control completed
+the ordinary64-world,5-update smoke:120 steps/7680 transitions in4.377s,
+final PT SHA `66182cec4d5bb447c043bc2235b4618f0c8fede706250ecbe2c906abf76f06f9`.
+First-update KL mean.0181223/max minibatch mean.0322125 passed.
+
+The post-run validator then refused
+`source/runtime/parent/frozen-curriculum/recipe-bound training receipt`.
+Read-only diagnosis showed the exact parent/runtime/live-profile/hash fields
+matched, but expected recipe history retained Python tuples while saved JSON
+contained lists. The expected recipe after a JSON roundtrip matched exactly.
+This is a serialization defect, not an admitted smoke or a steering result.
+No second arm, boundary probe, benchmark or full learner ran. Preserve this
+failed run unchanged under `artifacts/training/v8-staged-head-goals-be6545df-20261014`.
+
+The exit guard proved Duck GPU exit and restored only original user vLLM;
+DINO2029 remained untouched. The restoration context/idle-proof/restored hashes
+are respectively
+`52568d330f8920fdf240f78c8942685f5364b675bfa2f34a1c98dec1648d91ac`,
+`f764937956d619a0f10acebb9bd98d6ae016c97b76d847e8464cf65dae5f14b2`,
+`90ed7fa0b17d552ee486d3610c9b4f2dcc76f512a7cc3f6d2fbfa222af06aab5`.
+Any corrected run must use a new tested source/run identity, not overwrite or
+promote this receipt. Training settings and the predeclared protocol stay fixed.
+
+The correction normalizes only the range metadata returned to receipt
+comparisons. Canonical recipe hashes, manager schedules and learner settings
+are unchanged. Six mode-by-arm durable JSON-roundtrip tests were added; the
+complete affected Mac suite now passes130 tests in58.75s, with compilation
+and diff checks clean. Native revalidation and fresh admission remain required.

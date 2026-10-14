@@ -24,9 +24,12 @@ def test_recipe_masks_only_initial_head_ranges_and_stage_history(mode):
     assert proof["full_recipe_hashes_distinct"] is True
     assert proof["comparison_mask"] == [
         "commands.head_pose.ranges", "curriculum.head_pose_range.range_stages"]
-    assert proof["range_history"]["control"]["initial"] == list(schedule.PARENT_RANGES)
-    assert proof["range_history"]["staged"]["initial"] == list(schedule.BEGINNER_RANGES)
-    assert proof["range_history"]["staged"]["stages"] == schedule.stages_for("staged")
+    assert proof["range_history"]["control"]["initial"] == [
+        list(pair) for pair in schedule.PARENT_RANGES]
+    assert proof["range_history"]["staged"]["initial"] == [
+        list(pair) for pair in schedule.BEGINNER_RANGES]
+    assert proof["range_history"]["staged"]["stages"] == json.loads(json.dumps(
+        schedule.stages_for("staged")))
 
     left = json.loads(lesson._canonical(mode, "control", mask=False))
     right = json.loads(lesson._canonical(mode, "staged", mask=False))
@@ -35,6 +38,16 @@ def test_recipe_masks_only_initial_head_ranges_and_stage_history(mode):
     left["environment"]["curriculum"]["head_pose_range"]["params"]["range_stages"] = "<declared>"
     right["environment"]["curriculum"]["head_pose_range"]["params"]["range_stages"] = "<declared>"
     assert left == right
+
+
+@pytest.mark.parametrize("mode", lesson.MODES)
+@pytest.mark.parametrize("arm", lesson.ARMS)
+def test_each_recipe_is_stable_across_durable_json_roundtrip(mode, arm):
+    recipe = lesson.recipe_match(mode)
+    assert recipe["range_history"][arm] == json.loads(json.dumps(
+        {"initial": schedule.ranges_at(arm, 0), "stages": schedule.stages_for(arm)},
+        allow_nan=False))
+    assert recipe == json.loads(json.dumps(recipe, sort_keys=True, allow_nan=False))
 
 
 def test_both_arms_keep_parent_nonhead_profile_and_frozen_yaw_terms():

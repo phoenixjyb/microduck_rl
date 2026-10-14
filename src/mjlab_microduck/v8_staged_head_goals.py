@@ -81,7 +81,11 @@ def initialize(runner, env, output):
 
 
 def _ranges_payload(arm):
-    return dict(initial=schedule.ranges_at(arm, 0), stages=schedule.stages_for(arm))
+    # Receipts are compared after durable JSON encoding. Normalize tuples to
+    # lists here so the in-memory recipe has exactly the same shape.
+    return json.loads(json.dumps(dict(
+        initial=schedule.ranges_at(arm, 0), stages=schedule.stages_for(arm)),
+        allow_nan=False))
 
 
 def prepare_config(mode, arm):

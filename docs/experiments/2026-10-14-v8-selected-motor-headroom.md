@@ -153,3 +153,41 @@ inactive. Context/idle-proof/restored SHA256 respectively:
 `4529d2fb97def68136862fcabe45495cb55bcdad7643e3e0d70dd0e8d6e35a77`,
 `765e897fae3e397dbc9fb94ceffb66f209554a3de9ee96b6e6a813de50406ba0`,
 `377301ab2308c404d789dccc9a01602d496a9751d07a078b34214c803a82c088`.
+
+## Corrected-source admission and active learning
+
+Executed source `06c2b709dc1c536d83edf7f6f2ab5f33422cb99f`, run
+`v8-motor-headroom-06c2b709-20261014`. Native affected suite passes187 tests
+(three existing warnings,18.88s), including the five ordering regressions.
+CPU-hidden preflight authenticated parent/retention/runtime and every paired
+recipe; masked recipe hashes match the original declaration, so the repair
+did not alter the learning question. All transferred operation hashes, Bash
+syntax and user-unit verification passed; retain the original scoped service
+context and start the fresh nonenabled service once. The old failed run stays
+unchanged.
+
+Both complete smokes and benchmarks are admitted. Control/treatment smoke
+times4.270/4.327s, mean/max first KL.014288/.023359 and.014451/.023685.
+Benchmark times7.601/7.527s, KL.009865/.015261 and.009781/.015660;
+both conservative projections fit the declared foundation cap. Every admitted
+short start and the active control foundation's initial PT share SHA256
+`e906d832537c3c9883c234b40cf5a97357ca4410bf24152660b82396d5d619d3`.
+Parent actor/critic/optimizer fingerprints and inherited LR are identical.
+Treatment reward is actually negative; control's actual selected reward is0.
+
+A read-only active snapshot authenticated all four short-stage receipts, then
+observed control foundation234/1000 updates, local5616 steps and Adam44680.
+All retained reward/optimizer rows are finite,0 NaN terminations;145 training
+falls so far are diagnostic, not held-out policy acceptance. Frozen manager
+settings remain exact. Control foundation first mean/max KL.010355/.016322
+passes. Latest sampled GPU1710MiB/63C, DINO2029 preserved, Duck PID1806147;
+protected user vLLM and subject worker remain inactive during the lease.
+
+The small admission snapshot is local at
+`artifacts/training/v8-motor-headroom-06c2b709-20261014-admission/partial-report.json`;
+models/full logs stay native. **Training and final qualification are pending**,
+not claimed completed. The retained service proceeds sequentially to the
+treatment foundation, both final999 evaluations and deterministic CPU
+comparison, then restores only original user vLLM after proven Duck exit.
+Keep the active native checkout frozen at the executed source; subsequent
+documentation commits must not advance it while this service is running.

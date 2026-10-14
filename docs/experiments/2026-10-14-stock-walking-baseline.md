@@ -59,3 +59,25 @@ demo need not satisfy every prior diagnostic precision gate, but neither a
 finite checkpoint nor a demo means robust navigation or hardware qualification.
 Only then proceed to stop/recovery and an obstacle supervisor over the working
 gait; hopping/football remain specialist tracks.
+
+## First native admissions and thermal stop
+
+Source `275ef098dac8fad5c9812baf6f17be8d559a81fd` passed24 focused checks on
+Mac/native (6.56/5.25s). Seed1019 smoke64×5 completed6.13s; final checkpoint and
+61D→14D ONNX were finite, NaN termination maximum0, GPU peak1542MiB/temp57C.
+The1024×20 profile completed23.68s, finite checkpoints/exports/scalars, zeroNaNs,
+23,584 final transitions/s, peak2688MiB and67C.
+
+The2048×20 profile was stopped at about iteration16 by the unchanged shared GPU
+budget/temperature guard (exit143). Last successful samples were4060MiB used /
+12134MiB free, temperature72→73→74C. The memory evidence points to the75C thermal
+threshold, although the failed sample itself was not retained.4096 was not run.
+No failed profile is accepted; preserve its partial artifacts. Scoped restoration
+completed with vLLM owning the GPU again and DINO2029 preserved.
+
+Next bounded admission is **thermal-1024:1024×120**, seed1019, fresh stock recipe,
+CPUQuota100% instead of200%, child≤600s and service≤1000s. This is a sustained
+resource test, not a promoted gait or warm start. It retains the75C cutoff and
+all other bounds. Choose a full training batch only after stable temperature
+and measured runtime; do not relax cooling limits to get4096. The native profile
+assets remain at `artifacts/training/stock-walk-profile-s1019-20261014`.

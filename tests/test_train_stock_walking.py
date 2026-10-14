@@ -19,6 +19,7 @@ def test_phase_budgets_and_world_selection_are_fixed():
     assert driver.phase_settings("profile-1024") == (1024, 20)
     assert driver.phase_settings("profile-2048") == (2048, 20)
     assert driver.phase_settings("profile-4096") == (4096, 20)
+    assert driver.phase_settings("thermal-1024") == (1024, 120)
     assert driver.phase_settings("train", 256) == (256, 6000)
     for phase in ("smoke", "profile-1024"):
         with pytest.raises(ValueError, match="only valid for train"):

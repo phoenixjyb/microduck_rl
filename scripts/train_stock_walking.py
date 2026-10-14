@@ -32,6 +32,10 @@ def phase_settings(phase: str, worlds: int | None = None) -> tuple[int, int]:
         if worlds is not None:
             raise ValueError("--worlds is only valid for train")
         return PROFILE_WORLDS[phase], 20
+    if phase == "thermal-1024":
+        if worlds is not None:
+            raise ValueError("--worlds is only valid for train")
+        return 1024, 120
     if phase == "train":
         if worlds not in WORLD_CHOICES:
             raise ValueError("train requires --worlds from the approved choices")
@@ -117,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--source", required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--phase", required=True,
-                        choices=("smoke", *PROFILE_WORLDS, "train"))
+                        choices=("smoke", *PROFILE_WORLDS, "thermal-1024", "train"))
     parser.add_argument("--worlds", type=int, choices=WORLD_CHOICES)
     parser.add_argument("--seed", type=int, default=1019)
     parser.add_argument("--cap-seconds", type=int, required=True)

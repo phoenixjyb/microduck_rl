@@ -362,3 +362,17 @@ Next, [predeclare matched learning-seed replication](2026-10-14-staged-head-repl
 of the promising unchanged schedule, rather than adopting the pilot endpoint
 or changing rewards after observing this result. The original rejection remains
 immutable, all gates stay unchanged, and no new GPU job is admitted by this document.
+
+The completed learner service was inactive/success before the native worktree
+fast-forwarded to tested auditor source
+`a1767022a277fecf6268d65fc0fa5e088b747cf3`. All90 affected tests passed on100.100
+in9.88s. Both CPU audits then rehashed the original immutable151-file inventory
+entries and reconciled their actual phase counts, nonzero and outside-prior
+command counts against the independently sealed closeout. The old executed
+source remains `bb223f66`; no training receipt or raw asset was rewritten.
+Separate exposure report hashes control/staged are
+`e7329aeec091e973aa89f1e669718a62743599fa2ba56af685c6643a28772d59` /
+`a4cf569880ff3b2492b7a611a87b95a4ae7566f0a525aab3d3b05c9b963c9a80`.
+These compact reports live in the native handoff and Mac closeout folders;
+the raw data/checkpoints are not duplicated to the Mac. User vLLM and DINO
+remain the only GPU owners. The replication driver is still pending.

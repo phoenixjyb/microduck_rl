@@ -901,7 +901,7 @@ def validate_evaluation_receipt(root, arm, source, checkpoint_sha, *, experiment
     return receipt, raw
 
 
-def _main_impl(experiment=None):
+def _main_impl(experiment=None, argv=None):
     (ARMS, MODES, PROTOCOL, CAPS, PARENT_SHA, verify_source, _read_parent,
      recipe_match, prepare_config, frozen_profile_report, Observer, initialize,
      validate_training_receipt, validate_evaluation_receipt) = _bindings(experiment,
@@ -914,7 +914,7 @@ def _main_impl(experiment=None):
     parser.add_argument("--arm", choices=ARMS)
     parser.add_argument("--mode", choices=(*MODES, "final-eval"))
     parser.add_argument("--preflight", action="store_true")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     _require(args.preflight or (args.arm is not None and args.mode is not None),
              "training requires one declared arm and mode")
     runtime = verify_source(args, training=not args.preflight)
@@ -1098,11 +1098,11 @@ def _main_impl(experiment=None):
         raise
 
 
-def main(experiment=None):
+def main(experiment=None, argv=None):
     global _ACTIVE_STAGE
     _ACTIVE_STAGE = None
     try:
-        return _main_impl(experiment)
+        return _main_impl(experiment, argv=argv)
     except Exception as exc:
         if _ACTIVE_STAGE is not None:
             output, identity = _ACTIVE_STAGE

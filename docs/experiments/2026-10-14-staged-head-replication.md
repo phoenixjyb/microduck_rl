@@ -1,6 +1,6 @@
 # Matched learning-seed replication of staged head goals
 
-Status: **predeclared next experiment; learner driver not implemented or launched**.
+Status: **driver implemented and CPU-tested; native admission and launch pending**.
 This design follows the sealed [staged-head pilot](2026-10-14-v8-staged-head-goals.md).
 It is not permission to promote a teacher, change evaluation gates or run hardware.
 
@@ -68,3 +68,43 @@ pause/restore only originally active USER vLLM after proven Duck exit. No100.98,
 packages/drivers/reboots, raw perception, actor-input expansion, MP4, publication
 or physical motion. The second pair needs review of the first sealed decision;
 there is no automatic long-job queue in this design.
+
+## Implemented first-pair driver
+
+[The replication wrapper](../../src/mjlab_microduck/v8_staged_head_replication.py)
+uses immutable per-seed recipe objects and explicit helper/argument injection.
+No mutable module-level seed switch or temporary global recipe replacement is
+used. Both the environment and PPO agent get the declared foundation seed;
+other modes keep947/953 and the frozen probe keeps971. Receipts distinguish
+the prospective `learning_seed` from their actual `stage_seed`.
+
+The driver reauthenticates the rejected pilot summary/inventory before resolving
+the ORIGINAL parent, never either pilot endpoint. It preserves all six short
+admissions, temporal command/reward telemetry, first-update KL refusal,
+checkpoint cadence, three walking references and unchanged decision thresholds.
+Source/run identities include both seed and exact tested revision.
+
+Seed983 may be configured and CPU-preflighted, but all training, evaluation and
+comparison entrypoints remain locked. A later reviewed change must bind the
+exact independently sealed seed977 decision before unlocking it. There is no
+arbitrary previous-result path, automatic rescue seed or queued second learner.
+
+The152 affected Mac CPU tests passed in174.14s, including both-seed object
+isolation, cfg/agent seed agreement, metadata JSON roundtrips, seed/run mismatch
+refusal, locked983 paths, unchanged pilot recipe against the small retained
+seal and historical continuation tests. Compilation and diff checks passed.
+Native tests, parent/runtime preflight and fresh GPU admissions remain separate.
+
+First-pair invocation shape:
+
+```bash
+python -m mjlab_microduck.v8_staged_head_replication \
+  --learning-seed 977 --source <source40> \
+  --run-id v8-staged-head-replication-s977-<source8>-20261014 --preflight
+```
+
+The `boundary-smoke` and `compare` subcommands also require `--learning-seed`;
+ordinary stages use `--arm control|staged --mode smoke|benchmark|foundation|final-eval`.
+The guarded service is prepared only for977; its cap/ownership/restoration
+contract is unchanged. Implementation/source evidence is not a completed run,
+curriculum confirmation or accepted motion skill.

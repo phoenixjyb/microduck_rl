@@ -40,6 +40,9 @@ TAUS = dict.fromkeys(ARMS, .5)
 WEIGHT = -1.0
 KL_PROFILE = "staged-head-goals"
 ROOT = base.ROOT
+DECISION_USEFUL = "staged-head-goals-lesson-useful-not-qualified"
+DECISION_REJECTED = "staged-head-goals-lesson-rejected"
+DECISION_FILENAME = "staged-head-goals-decision.json"
 
 REJECTED_GAIN_SOURCE = "7acacf87313c08973d682e2d701c7ef7b8cabe35"
 REJECTED_GAIN_RUN = "v8-yaw-gain-7acacf87-20261014"
@@ -76,8 +79,13 @@ def _read_parent():
     return gain._read_parent()
 
 
-def initialize(runner, env, output):
-    return driver.initialize(runner, env, output, experiment=sys.modules[__name__])
+def _experiment(experiment):
+    """Resolve an explicitly injected lesson without changing module globals."""
+    return sys.modules[__name__] if experiment is None else experiment
+
+
+def initialize(runner, env, output, *, experiment=None):
+    return driver.initialize(runner, env, output, experiment=_experiment(experiment))
 
 
 def _ranges_payload(arm):
@@ -102,8 +110,8 @@ def prepare_config(mode, arm):
     return cfg, agent
 
 
-def _canonical(mode, arm, *, mask):
-    cfg, agent = prepare_config(mode, arm)
+def _canonical(mode, arm, *, mask, experiment=None):
+    cfg, agent = _experiment(experiment).prepare_config(mode, arm)
     env, algo = asdict(cfg), asdict(agent)
     env["metrics"]["microduck_yaw_bias"]["func"] = (
         "mjlab_microduck.v8_yaw_gain:_capture_metric")
@@ -117,35 +125,38 @@ def _canonical(mode, arm, *, mask):
                       sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
-def recipe_match(mode):
-    base.require(mode in MODES, "declared staged-head-goal recipe mode")
-    left, right = [_canonical(mode, arm, mask=True) for arm in ARMS]
+def recipe_match(mode, *, experiment=None):
+    lesson = _experiment(experiment)
+    base.require(mode in lesson.MODES, "declared staged-head-goal recipe mode")
+    left, right = [_canonical(mode, arm, mask=True, experiment=lesson) for arm in lesson.ARMS]
     base.require(left == right, "only initial head range and head range stages differ")
-    full = [_canonical(mode, arm, mask=False) for arm in ARMS]
+    full = [_canonical(mode, arm, mask=False, experiment=lesson) for arm in lesson.ARMS]
     digest = lambda value: hashlib.sha256(value.encode()).hexdigest()
-    return dict(protocol=PROTOCOL + ":recipe-v1", mode=mode,
+    return dict(protocol=lesson.PROTOCOL + ":recipe-v1", mode=mode,
         control_recipe_sha256=digest(left), treatment_recipe_sha256=digest(right),
         comparison_recipe_sha256=digest(left), control_full_recipe_sha256=digest(full[0]),
         treatment_full_recipe_sha256=digest(full[1]),
         full_recipe_hashes_distinct=digest(full[0]) != digest(full[1]),
         comparison_mask=["commands.head_pose.ranges",
                          "curriculum.head_pose_range.range_stages"],
-        range_history={arm: _ranges_payload(arm) for arm in ARMS},
+        range_history={arm: _ranges_payload(arm) for arm in lesson.ARMS},
         matched_after_declared_mask=True, policy_acceptance=False,
         physical_motion_authorized=False)
 
 
-def frozen_profile_report(source, arm, mode):
-    base.require(arm in ARMS and mode in MODES, "declared frozen profile identity")
+def frozen_profile_report(source, arm, mode, *, experiment=None):
+    lesson = _experiment(experiment)
+    base.require(arm in lesson.ARMS and mode in lesson.MODES, "declared frozen profile identity")
     value = gain.frozen_profile_report(source, "control", mode)
     value["live_values"]["head_pose_ranges"] = [
         list(pair) for pair in schedule.ranges_at(arm, 0)]
     value["curriculum_stage_counts"]["head_pose_range"] = len(schedule.stages_for(arm))
     value["curriculum_clock_start"] = 0
     value["curriculum_clock_policy"] = "local-common-step-full-training-range-history"
-    value.update(protocol=PROTOCOL + ":frozen-profile-v1", arm=arm,
-        parent_sha256=PARENT_SHA, head_range_schedule=_ranges_payload(arm),
-        yaw_bias_weight=WEIGHT, yaw_bias_tau_s=TAUS[arm], selected_load_weight=0.)
+    value.update(protocol=lesson.PROTOCOL + ":frozen-profile-v1", arm=arm,
+        parent_sha256=lesson.PARENT_SHA, head_range_schedule=_ranges_payload(arm),
+        yaw_bias_weight=lesson.WEIGHT, yaw_bias_tau_s=lesson.TAUS[arm], selected_load_weight=0.,
+        stage_spec=list(lesson.MODES[mode]))
     return json.loads(json.dumps(value))
 
 
@@ -259,16 +270,17 @@ class Observer(gain.Observer):
         return row
 
 
-def validate_training_receipt(root, arm, mode, source):
+def validate_training_receipt(root, arm, mode, source, *, experiment=None):
+    lesson = _experiment(experiment)
     value = driver.validate_training_receipt(root, arm, mode, source,
-                                             experiment=sys.modules[__name__])
+                                             experiment=lesson)
     rows = [json.loads(line) for line in
             (Path(root) / arm / mode / "updates.jsonl").read_text().splitlines()]
     base.require(all(row["selected_motor_load_weight"] == 0.
         and row["selected_motor_weighted_reward_mean"] == 0.
         and row["selected_actuator_names"] == list(headroom.ACTUATORS)
         and row["selected_motor_observed_steps"] == 24
-        and row["yaw_bias_weight"] == WEIGHT and row["yaw_bias_tau_s"] == .5
+        and row["yaw_bias_weight"] == lesson.WEIGHT and row["yaw_bias_tau_s"] == .5
         and row["weighted_yaw_bias_reward_mean"] <= 0
         and row["head_pose_reward_observed_steps"] == 24
         and row["head_pose_tracking_weighted_reward_mean"] >= 0
@@ -285,63 +297,64 @@ def validate_training_receipt(root, arm, mode, source):
             "actual manager head range at each update follows the declared common-step schedule")
     if mode in ("benchmark", "foundation"):
         from . import v8_head_goal_boundary_probe as probe
-        for paired_arm in ARMS:
-            probe.validate_receipt(root, paired_arm, source, experiment=sys.modules[__name__])
+        for paired_arm in lesson.ARMS:
+            probe.validate_receipt(root, paired_arm, source, experiment=lesson)
     return value
 
 
-def validate_evaluation_receipt(root, arm, source, checkpoint_sha):
+def validate_evaluation_receipt(root, arm, source, checkpoint_sha, *, experiment=None):
     return driver.validate_evaluation_receipt(root, arm, source, checkpoint_sha,
-                                              experiment=sys.modules[__name__])
+                                              experiment=_experiment(experiment))
 
 
-def diagnostic_comparison(control, staged):
+def diagnostic_comparison(control, staged, *, experiment=None):
     """Reuse the retained gain-lesson paired thresholds with this arm's name."""
+    lesson = _experiment(experiment)
     report = gain.diagnostic_comparison(control, staged)
     groups = report["groups"]
     groups["staged"] = groups.pop("reduced")
     failures = []
     for failure in report["failures"]:
         failures.append(["staged" if failure[0] == "reduced" else failure[0], *failure[1:]])
-    report.update(protocol=PROTOCOL + ":comparison-v1", groups=groups,
+    report.update(protocol=lesson.PROTOCOL + ":comparison-v1", groups=groups,
         failures=failures,
-        decision="staged-head-goals-lesson-useful-not-qualified" if not failures
-                 else "staged-head-goals-lesson-rejected",
-        weights=dict.fromkeys(ARMS, WEIGHT),
+        decision=lesson.DECISION_USEFUL if not failures else lesson.DECISION_REJECTED,
+        weights=dict.fromkeys(lesson.ARMS, lesson.WEIGHT),
         policy_acceptance=False, physical_motion_authorized=False)
     return report
 
 
-def compare_retained(source, run_id):
+def compare_retained(source, run_id, *, experiment=None):
     """Recompute paired diagnostics and all three retained walking references."""
     import torch
 
     base.require(os.environ.get("CUDA_VISIBLE_DEVICES") == "" and not torch.cuda.is_initialized(),
                  "CPU-only staged-head-goal comparison")
+    lesson = _experiment(experiment)
     args = argparse.Namespace(source=source, run_id=run_id)
-    verify_source(args, training=False)
-    root = ROOT / "artifacts/training" / run_id
+    lesson.verify_source(args, training=False)
+    root = lesson.ROOT / "artifacts/training" / run_id
     # Reauthenticate gain/budget evidence and the original control parent before
     # interpreting any new output as a continuation.
-    _read_parent()
+    lesson._read_parent()
     parent_summary = json.loads(headroom._owned_payload(budget.SUMMARY, budget.SUMMARY_SHA))
     baseline = {"source": parent_summary["source"],
                 "evaluations": {"final-eval": parent_summary["evaluations"]["control"]}}
     from . import steady_steering_retention as retention
 
     rows, receipts, parent_retention = {}, {}, {}
-    for arm in ARMS:
-        for mode in MODES:
-            validate_training_receipt(root, arm, mode, source)
-        checkpoint = driver.foundation_checkpoint(root, sys.modules[__name__], arm)
-        receipts[arm], rows[arm] = validate_evaluation_receipt(
+    for arm in lesson.ARMS:
+        for mode in lesson.MODES:
+            lesson.validate_training_receipt(root, arm, mode, source)
+        checkpoint = driver.foundation_checkpoint(root, lesson, arm)
+        receipts[arm], rows[arm] = lesson.validate_evaluation_receipt(
             root, arm, source, base.sha256(checkpoint))
         parent_retention[arm] = retention._compare_sealed_reference(
             rows[arm], baseline, source=parent_summary["source"],
-            checkpoint_sha=PARENT_SHA, summary_sha=budget.SUMMARY_SHA,
-            protocol=PROTOCOL + ":original-parent-retention-v1")
+            checkpoint_sha=lesson.PARENT_SHA, summary_sha=budget.SUMMARY_SHA,
+            protocol=lesson.PROTOCOL + ":original-parent-retention-v1")
 
-    report = diagnostic_comparison(rows["control"], rows["staged"])
+    report = lesson.diagnostic_comparison(rows["control"], rows["staged"])
     report["original_parent_retention"] = parent_retention
     for arm, receipt in receipts.items():
         evaluation = receipt["evaluation"]
@@ -351,60 +364,69 @@ def compare_retained(source, run_id):
         if parent_retention[arm]["decision"] != "walking-idle-retained":
             report["failures"].append([arm, "original_parent", "walking-idle-retention-failure"])
     if report["failures"]:
-        report["decision"] = "staged-head-goals-lesson-rejected"
-    report.update(source=source, run_id=run_id, parent_sha256=PARENT_SHA,
+        report["decision"] = lesson.DECISION_REJECTED
+    report.update(source=source, run_id=run_id, parent_sha256=lesson.PARENT_SHA,
         rejected_gain_summary_sha256=REJECTED_GAIN_SUMMARY_SHA,
         qualification_gates={arm: {key: receipt["evaluation"][key] for key in
             ("legacy_gate", "route_gate")} for arm, receipt in receipts.items()},
         evaluated_result_sha256={arm: base.sha256(root / arm / "final-eval" / "result.json")
-                                 for arm in ARMS},
+                                 for arm in lesson.ARMS},
         checkpoint_sha256={arm: base.sha256(driver.foundation_checkpoint(
-            root, sys.modules[__name__], arm)) for arm in ARMS})
-    base.write_new(root / "staged-head-goals-decision.json", report)
+            root, lesson, arm)) for arm in lesson.ARMS})
+    metadata = getattr(lesson, "COMPARISON_METADATA", {})
+    base.require(isinstance(metadata, dict) and not (set(metadata) & set(report)),
+                 "comparison provenance cannot overwrite a computed gate")
+    report.update(metadata)
+    base.write_new(root / lesson.DECISION_FILENAME, report)
     return report
 
 
-def _boundary_smoke(argv):
+def _boundary_smoke(argv, *, experiment=None):
     from . import v8_head_goal_boundary_probe as probe
 
+    lesson = _experiment(experiment)
     parser = argparse.ArgumentParser(description="Run the separate bounded GPU head-range boundary probe")
     parser.add_argument("--source", required=True)
     parser.add_argument("--run-id", required=True)
-    parser.add_argument("--arm", choices=ARMS, required=True)
+    parser.add_argument("--arm", choices=lesson.ARMS, required=True)
     args = parser.parse_args(argv)
-    verify_source(args, training=True)
-    root = ROOT / "artifacts/training" / args.run_id
-    for arm in ARMS:
-        validate_training_receipt(root, arm, "smoke", args.source)
-    return probe.main(argv=argv, experiment=sys.modules[__name__])
+    lesson.verify_source(args, training=True)
+    root = lesson.ROOT / "artifacts/training" / args.run_id
+    for arm in lesson.ARMS:
+        lesson.validate_training_receipt(root, arm, "smoke", args.source)
+    return probe.main(argv=argv, experiment=lesson)
 
 
-def _require_boundary_receipts(root, source):
+def _require_boundary_receipts(root, source, *, experiment=None):
     from . import v8_head_goal_boundary_probe as probe
-    for arm in ARMS:
-        probe.validate_receipt(root, arm, source, experiment=sys.modules[__name__])
+    lesson = _experiment(experiment)
+    for arm in lesson.ARMS:
+        probe.validate_receipt(root, arm, source, experiment=lesson)
 
 
-def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "boundary-smoke":
-        return _boundary_smoke(sys.argv[2:])
-    if len(sys.argv) > 1 and sys.argv[1] == "compare":
+def main(argv=None, *, experiment=None):
+    lesson = _experiment(experiment)
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "boundary-smoke":
+        return _boundary_smoke(argv[1:], experiment=lesson)
+    if argv and argv[0] == "compare":
         parser = argparse.ArgumentParser(description="Recompute the CPU-only staged-head-goal comparison")
         parser.add_argument("--source", required=True)
         parser.add_argument("--run-id", required=True)
-        args = parser.parse_args(sys.argv[2:])
-        return compare_retained(args.source, args.run_id)
+        args = parser.parse_args(argv[1:])
+        return lesson.compare_retained(args.source, args.run_id)
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--source")
     parser.add_argument("--run-id")
-    parser.add_argument("--mode", choices=(*MODES, "final-eval"))
+    parser.add_argument("--mode", choices=(*lesson.MODES, "final-eval"))
     parser.add_argument("--preflight", action="store_true")
-    args, _unknown = parser.parse_known_args(sys.argv[1:])
+    args, _unknown = parser.parse_known_args(argv)
     if args.mode in ("benchmark", "foundation") and not args.preflight:
         base.require(args.run_id is not None and args.source is not None,
                      "boundary admission has source and run identity")
-        _require_boundary_receipts(ROOT / "artifacts/training" / args.run_id, args.source)
-    return driver.main(experiment=sys.modules[__name__])
+        _require_boundary_receipts(lesson.ROOT / "artifacts/training" / args.run_id,
+                                   args.source, experiment=lesson)
+    return driver.main(experiment=lesson, argv=argv)
 
 
 if __name__ == "__main__":

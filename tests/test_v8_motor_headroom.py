@@ -181,3 +181,53 @@ def test_motor_comparison_rejects_matrix_and_invalid_named_force(comparison_rows
     bad[1]["response_diagnostics"]["abs_force_p99_nm_by_joint"][3] = float("nan")
     with pytest.raises(ValueError, match="finite nonnegative"):
         lesson.comparison(comparison_rows, bad)
+
+
+@pytest.mark.parametrize("arm", lesson.ARMS)
+@pytest.mark.parametrize("reset_force", (0., 9.))
+def test_actual_mjlab_step_aligns_metric_counter_and_stream_across_autoresets(arm, reset_force):
+    from test_motor_measurement_audit import make_env
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.managers import RewardTermCfg
+    from mjlab.managers.reward_manager import RewardManager
+    from mjlab.managers.metrics_manager import MetricsManager, MetricsTermCfg
+    from mjlab_microduck.motor_step_stream import MotorStepStream, MotorStepCostCfg, capture_metric, TERM
+    from mjlab_microduck.gait_path_qualification import MOTOR_JOINTS
+    env = make_env(None, reset_force)
+    robot = env.scene["robot"]
+    robot.data.actuator_force = torch.zeros(2,14)
+    robot.data.joint_vel = torch.zeros(2,14)
+    robot.find_actuators = lambda names, preserve_order: (
+        [MOTOR_JOINTS.index(name) for name in names], list(names))
+    forces = torch.tensor([[.03*i for i in range(14)], [-.02*i for i in range(14)]])
+    def physics_step():
+        robot.data.actuator_force.copy_(forces)
+        robot.data.joint_vel.fill_(1.)
+    env.sim.step = physics_step
+    weight = lesson.LOAD_WEIGHTS[arm]
+    env.reward_manager = RewardManager({lesson.TERM: RewardTermCfg(
+        func=mdp.selected_motor_torque_load_cost, params=lesson.PARAMS, weight=weight)}, env)
+    stream = MotorStepStream(2, MOTOR_JOINTS, tuple(range(14)), device="cpu", cost_cfg=MotorStepCostCfg())
+    env._microduck_motor_step_stream = stream
+    env.metrics_manager = MetricsManager({TERM: MetricsTermCfg(func=capture_metric),
+        "selected": MetricsTermCfg(func=lesson.capture_motor_metric)}, env)
+    columns = [MOTOR_JOINTS.index(name) for name in lesson.ACTUATORS]
+    for step in range(3):
+        stream.begin(step, torch.zeros(2, dtype=torch.long))
+        _, _, terminated, timeout, _ = ManagerBasedRlEnv.step(env, torch.ones(2,2))
+        sample = stream.consume(terminated | timeout)
+        assert env.common_step_counter == step + 1
+        assert env._microduck_selected_load_snapshot["step"] == step + 1
+        assert torch.equal(robot.data.actuator_force[0], torch.full((14,),reset_force))
+        cost, weighted, observed = lesson.consume_motor_snapshot(env, sample, weight)
+        assert torch.equal(observed, forces[:,columns])
+        torch.testing.assert_close(weighted.double(), weight*cost)
+        assert env._microduck_selected_load_snapshot is None
+        with pytest.raises(ValueError, match="exactly once"):
+            lesson.consume_motor_snapshot(env, sample, weight)
+
+
+def test_old_off_by_one_snapshot_clock_is_refused():
+    env = SimpleNamespace(common_step_counter=1, _microduck_selected_load_snapshot={"step":0,"weight":0.})
+    with pytest.raises(ValueError, match="exactly once"):
+        lesson.consume_motor_snapshot(env, SimpleNamespace(step=0),0.)

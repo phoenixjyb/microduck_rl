@@ -185,20 +185,10 @@ class Observer(driver.Observer):
 
     def step(self, env, sample, extras):
         super().step(env, sample, extras)
-        snap = getattr(env, "_microduck_selected_load_snapshot", None)
-        base.require(isinstance(snap, dict) and snap["step"] == env.common_step_counter - 1
-                     and snap["weight"] == LOAD_WEIGHTS[self.selected_arm],
-                     "same-step selected motor snapshot crosses reset exactly once")
-        columns = [sample.joint_names.index(name) for name in ACTUATORS]
-        expected = sample.joint_cost[:, columns].mean(-1)
-        base.require(torch.allclose(snap["cost"].double(), expected, atol=1e-6, rtol=1e-5)
-                     and torch.allclose(snap["weighted"].double(), snap["weight"] * expected,
-                                        atol=1e-6, rtol=1e-5),
-                     "actual selected reward matches named pre-reset motor stream")
-        self.motor_costs.append(float(expected.mean()))
-        self.motor_rewards.append(float(snap["weighted"].mean()))
-        self.motor_forces.append(sample.force_nm[:, columns].detach().clone())
-        env._microduck_selected_load_snapshot = None
+        cost, weighted, force = consume_motor_snapshot(env, sample, LOAD_WEIGHTS[self.selected_arm])
+        self.motor_costs.append(float(cost.mean()))
+        self.motor_rewards.append(float(weighted.mean()))
+        self.motor_forces.append(force)
 
     def update(self, env):
         row = super().update(env)
@@ -212,6 +202,23 @@ class Observer(driver.Observer):
             selected_motor_p99_nm_by_actuator=torch.quantile(forces, .99, dim=0).tolist())
         self.motor_costs.clear(); self.motor_rewards.clear(); self.motor_forces.clear()
         return row
+
+
+def consume_motor_snapshot(env, sample, weight):
+    """mjlab increments its env counter before rewards/metrics, stream IDs are zero-based."""
+    snap = getattr(env, "_microduck_selected_load_snapshot", None)
+    base.require(isinstance(snap, dict) and snap["step"] == env.common_step_counter
+                 and snap["step"] == sample.step + 1 and snap["weight"] == weight,
+                 "same-step selected motor snapshot crosses reset exactly once")
+    columns = [sample.joint_names.index(name) for name in ACTUATORS]
+    expected = sample.joint_cost[:, columns].mean(-1)
+    base.require(torch.allclose(snap["cost"].double(), expected, atol=1e-6, rtol=1e-5)
+                 and torch.allclose(snap["weighted"].double(), weight * expected,
+                                   atol=1e-6, rtol=1e-5),
+                 "actual selected reward matches named pre-reset motor stream")
+    weighted = snap["weighted"]
+    env._microduck_selected_load_snapshot = None
+    return expected, weighted, sample.force_nm[:, columns].detach().clone()
 
 
 def validate_training_receipt(root, arm, mode, source):

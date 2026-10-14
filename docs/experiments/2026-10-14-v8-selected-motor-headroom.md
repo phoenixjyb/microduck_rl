@@ -124,3 +124,32 @@ this document and the curriculum resolve. Independent read-only review found
 no blocking defect; owner inspection corrected mjlab's registered-column versus
 zero-weight-callable distinction. Native exact-source tests, CPU preflight and
 GPU admission remain separate launch gates.
+
+## First smoke: clock instrumentation refusal and repair
+
+Source `220cfa7c8e532246d9e4a9bd182176ee9f058485` passed182 native affected
+tests and CPU preflight. The first control smoke then refused at its first
+physics-step observation, before any PPO update: `ValueError: same-step selected
+motor snapshot crosses reset exactly once`. This is not a trained-policy or
+numerical-gate result. Retain the failed run unchanged; do not overwrite or
+restart its service or use its initial PT as a new training parent.
+
+Read-only inspection of the installed `ManagerBasedRlEnv.step` proved the
+counter increments **before** reward/metric computation. Thus the captured
+metric counter equals the returned environment counter and zero-based motor
+stream ID+1, not returned counter−1. The correction changes only this
+instrumentation check, no objective/weight/seed/budget/acceptance bar. Five new
+CPU regression tests pass: actual installed mjlab stepping with both arms and
+repeated autoresets at reset force0 or9 preserves pre-reset motor/reward data;
+the old off-by-one clock is explicitly refused. Relaunch only from a fresh
+tested source/run identity after native tests and preflight.
+
+Retained failure SHA256
+`30f908b212b1dbbac4c640762b3703bea0772114a2d92962fc8b3bc10fc2cbb2`;
+initial PT `e906d832537c3c9883c234b40cf5a97357ca4410bf24152660b82396d5d619d3`.
+The service exited1 and its scoped restore succeeded: DINO2029 preserved,
+original user vLLM active with engine1799434, all other protected scopes
+inactive. Context/idle-proof/restored SHA256 respectively:
+`4529d2fb97def68136862fcabe45495cb55bcdad7643e3e0d70dd0e8d6e35a77`,
+`765e897fae3e397dbc9fb94ceffb66f209554a3de9ee96b6e6a813de50406ba0`,
+`377301ab2308c404d789dccc9a01602d496a9751d07a078b34214c803a82c088`.

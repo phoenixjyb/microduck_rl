@@ -1,6 +1,6 @@
 # Staged secondary head goals during steering practice
 
-Status: **six native short admissions passed; paired foundation training active**.
+Status: **training/evaluation complete and independently verified; lesson rejected**.
 Protocol `v8-staged-head-goals-v1`, planned run
 `v8-staged-head-goals-<tested-source8>-20261014`. Existing rejected results and
 their gates remain unchanged. This is a curriculum-complexity hypothesis, not
@@ -267,3 +267,98 @@ evaluations, the unchanged three-reference comparison, and restoration after
 proven Duck exit. No new capability, teacher or physical policy is accepted.
 The active native checkout stays clean at the executed source; later evidence
 documentation commits must not change its code while the service is active.
+
+## Completed paired result and closeout
+
+The service finished successfully and exited before the independent CPU
+closeout. Both arms completed1000 updates/6,144,000 transitions,12,288,000 total;
+control637.122s, staged644.807s. Training falls638/609 and zero NaN terminations
+in both arms; these training falls are distinct from held-out first episodes.
+Both final checkpoints are iteration999/env24000,17 Adam clocks80000 and critic
+normalizer count24576000. All six initialization checkpoints had identical
+SHA `c6b09dc25d4693074e086faa5d5745ce04f5aa30cc12a03e9531f65e6a7e9562`.
+Actor affine/count0 stayed unchanged; no simulator/RNG recovery is claimed.
+
+Final PT hashes control/staged:
+`22ee1f4c6f6336d3c1b824cde2a960698d594c850411b367e642520d371602a2` /
+`812cbdbc5efe26ac6339cc0137f05656fd2647b63e4eb644ea26b2df29a28766`.
+Final evaluation receipt hashes:
+`06254e0697eef8b66dcf9b1613eb0e5eecab8c6709fb4bc6addc32f2d6b12bf4` /
+`62741a045adaeab179b7c00c4c06f6afa796497f0327d4faa2e2c2394713a12e`.
+
+### Motion evidence, not policy acceptance
+
+| Held-out motion group | Complete route worlds, control → staged | Speed passes | Full heading endpoint/T, rad/s | Full XY endpoint/T, m/s |
+| --- | --- | --- | --- | --- |
+| Idle | 24 → 24 /24 | 24 → 24 | .001638 → .001568 | .000164 → .000141 |
+| .30 straight | 3 → 7 /24 | 19 → 24 | .047402 → .040991 | .075506 → .060380 |
+| .20 / −.20 turn | 1 → 1 /24 | 24 → 24 | .050838 → .055494 | .040523 → .034680 |
+| .20 / +.20 turn | 3 → 5 /24 | 24 → 24 | .041588 → .032135 | .044525 → .033299 |
+
+Moving totals improved7→13/72 complete-route worlds and67→72/72 speed passes.
+The paired diagnostic gain reaches the declared+6-world bar with no speed
+count loss or endpoint-regression violation. Both arms retain BOTH original
+walking references and pass motor/range/idle safety. Held-out raw force p99
+maxima.329938/.339729Nm remain below.36Nm, minimum hinge margins.154950/.171474rad.
+All24 first-episode cases completed without substituted terminal/fall episodes.
+Training peak force-utilization p99.819851/.816128, soft-limit fractions
+.020206/.020136, mean mechanical power maxima2.897516/2.849746W, thermal proxies
+.074667/.073754 are simulation diagnostics, not measured motor temperatures.
+
+However, control fails the additional original-headroom walking baseline:
+67 moving speed passes <69. Staged passes that baseline, but the protocol
+requires retention in BOTH arms. The deterministic decision therefore stays
+**`staged-head-goals-lesson-rejected`**, with the single failure
+`[control, original_parent, walking-idle-retention-failure]`.
+Do not retrospectively exempt control or relabel the pilot as accepted.
+All nine moving route cases in each arm still fail full qualification;
+instantaneous yaw remains0/72 diagnostic-only. No actor is promoted.
+
+Negative-turn cycle heading endpoint failures worsen23→42; positive-turn
+endpoint failures improve22→6 but peak-only failures increase47→66. Straight
+cycle XY failures improve31→2. Thus the average improvement does not close
+the gait-cycle envelope. Do not raise maximum-error limits to obtain acceptance.
+
+### Temporal proof and retained assets
+
+Independent closed-row reconciliation verifies control24000 parent-range action
+steps, staged12000 small/6000 intermediate/6000 parent steps (500/250/250 updates).
+Every head component has a nonzero sampled command in every world-step.
+Staged intermediate outside-prior-range counts are
+`[1070970,1064074,1029566,1025416]`; parent-stage counts
+`[850509,855995,872678,881234]`. The complete parent consolidation is actual
+exposure, not an initial/final-config inference.
+
+The native independent closeout script
+`/home/converge/.local/state/verify-v8-staged-head-goals-bb223f66-closeout.py`
+SHA `a154385240d7a2286448ab3f323131f54b6bef62db44a9d03505ecad826566cf`
+reauthenticated every receipt, checkpoint, raw held-out trace, decision,
+three walking references and restoration ownership. The151-file inventory
+contains373,251,071 bytes, retained only on100.100. Mac copies only the small
+summary and inventory under
+`artifacts/training/v8-staged-head-goals-bb223f66-20261014-closeout`.
+
+Summary SHA `a81efd4ea694dd0d5147bd45c575544c273f910e7f5470de6c186a4bf1fc2b15`;
+inventory SHA `dc420efcea50e0f355d715f29a88c77c005f1062ba515db794762ddaf4871f6b`;
+decision SHA `967ef520149f8e731ea329b240e2380ef0fe71716c90fb800845c681c421b3be`.
+Restoration context/idle-proof/restored hashes:
+`b81b56c50ce83a75fbd0483c336ac93aa76f6543bfc2684ea7bd1b20b6d24aa3`,
+`826aad5b7a892845237f5b9d1581e2cb61e3cf37cbea12502d54562ec8557632`,
+`04c3bf658c271ff411c1441f31531155a0feec035786cd43eb41120bb67db5c2`.
+Only original user vLLM was restored, GPU PID2107020 with DINO2029 preserved;
+other protected scopes remain inactive. Peak GPU occupancy1754MiB/temp67C,
+minimum free14440MiB. These ownership claims were rechecked live read-only.
+
+### Next development gate
+
+The new [CPU exposure audit](../../src/mjlab_microduck/v8_head_goal_exposure_audit.py)
+streams exactly1000 closed updates, rejects counter/Adam/range/probe-kind/NaN
+faults and fabricated widening, and binds its compact report to the input hash.
+It produces exposure evidence only, never policy qualification. Its15 focused
+tests and the combined90-test affected suite passed; compilation/diff checks
+passed. Native use and results are separate from the executed learner source.
+
+Next, [predeclare matched learning-seed replication](2026-10-14-staged-head-replication.md)
+of the promising unchanged schedule, rather than adopting the pilot endpoint
+or changing rewards after observing this result. The original rejection remains
+immutable, all gates stay unchanged, and no new GPU job is admitted by this document.

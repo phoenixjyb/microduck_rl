@@ -113,3 +113,16 @@ and the bounded recorder with `--yaw-rate` for corresponding visual evidence.
 The recorder now pins the actual command without the forward-only sampler's
 hidden speed clamp/yaw suppression. Rendering quality remains unverified until
 the actual MP4s are made and inspected. Robust navigation remains a later tier.
+
+## Execution handoff
+
+Full learning source `ac8c0d869104df6c00977027ebac3bad9a9dfbf8` passed82 focused
+tests on Mac/native (6.37/5.19s). Service
+`recomo-duck-stock-walk-foundation-s1019-20261014.service` started2026-10-14
+23:20:06 Shanghai. At the first check it was active at update20/6000, with durable
+`model_0.pt`, zeroNaN terminations, GPU2690MiB used/13504MiB free and63C.
+Only leased Duck2310583 and retained DINO2029 owned GPU memory; all protected
+scopes were inactive. Original USER vLLM restoration is independently retained
+in `/home/converge/.local/state/stock-walk-foundation-s1019-20261014-handoff`.
+Do not advance or modify the active native checkout. Training completion,
+final-checkpoint qualification and visual rollouts are still pending.

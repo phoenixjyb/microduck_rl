@@ -1144,3 +1144,12 @@ only2/72 moving worlds pass all components. Keep the result as a mixed contrast,
 not a promoted skill. Next isolate projected yaw-rate bias with the original
 filter, rather than blindly extending the hidden cumulative-heading target.
 Its next budget is not yet predeclared/launched; retain all existing gates.
+
+The owner approved the next
+[projected yaw-rate bias contrast](experiments/2026-10-14-v8-projected-yaw-bias.md):
+keep the same one-second filter, weight and yaw-reset semantics, changing only
+the measured rate from body Z to the analytic world-projected heading rate.
+Keep all61 actor inputs, raw14 actions and both prior speed/idle references.
+This separate matched recipe must pass source/native/smoke admission before its
+fixed1000-update budget. No harder skill or new accepted capability is claimed
+by its declaration.

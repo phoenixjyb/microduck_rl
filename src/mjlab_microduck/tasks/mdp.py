@@ -4279,6 +4279,187 @@ def _publish_body_yaw_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None
     }
 
 
+# ---------------------------------------------------------------------------
+# Projected world-heading rate bias. This is a post-physics reward and owns a
+# separate cache from body_yaw_bias_cost so metric reads cannot advance either
+# estimator. The measured rate is the analytic derivative of the world-XY
+# projection of body X, not body omega_z and not a pose finite difference.
+# ---------------------------------------------------------------------------
+
+_PROJECTED_YAW_BIAS_PROTOCOL = "projected-yaw-bias-cost-v1"
+_PROJECTED_YAW_BIAS_MIN_NORM_XY_SQ = 1.0e-4
+
+
+def projected_yaw_bias_cost(
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    tau_s: float = 1.0,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+    """Positive L1 cost of EMA(command yaw rate - projected world heading rate).
+
+    The measured rate is the exact instantaneous derivative of the heading of
+    body X projected into world XY. Undefined projections receive cost 1 and
+    clear their EMA; a valid recovery begins with alpha times its current
+    residual. Calls after reward at the same common step are read-only.
+    """
+    if isinstance(tau_s, bool) or not isinstance(tau_s, (int, float)):
+        raise ValueError("tau_s must be a finite positive number")
+    try:
+        tau_s = float(tau_s)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("tau_s must be a finite positive number") from exc
+    if not math.isfinite(tau_s) or tau_s <= 0.0:
+        raise ValueError("tau_s must be a finite positive number")
+    if not isinstance(command_name, str) or not command_name:
+        raise ValueError("command_name must be a nonempty string")
+    asset_name = getattr(asset_cfg, "name", None)
+    if not isinstance(asset_name, str) or not asset_name:
+        raise ValueError("asset_cfg.name must be a nonempty string")
+    step_dt = getattr(env, "step_dt", None)
+    if isinstance(step_dt, bool) or not isinstance(step_dt, (int, float)):
+        raise ValueError("env.step_dt must be a finite positive number")
+    step_dt = float(step_dt)
+    if not math.isfinite(step_dt) or step_dt <= 0.0:
+        raise ValueError("env.step_dt must be a finite positive number")
+    step = getattr(env, "common_step_counter", None)
+    if type(step) is not int or step < 0:
+        raise ValueError("env.common_step_counter must be a nonnegative integer")
+
+    num_envs = getattr(env, "num_envs", None)
+    if type(num_envs) is not int or num_envs <= 0:
+        raise ValueError("env.num_envs must be a positive integer")
+    command = env.command_manager.get_command(command_name)
+    try:
+        data = env.scene[asset_name].data
+        quat = data.root_link_quat_w
+        omega_b = data.root_link_ang_vel_b
+    except (AttributeError, KeyError, TypeError) as exc:
+        raise ValueError("asset quaternion/body angular velocity is unavailable") from exc
+    episodes = getattr(env, "episode_length_buf", None)
+    if not isinstance(command, torch.Tensor) or command.shape != (num_envs, 3):
+        raise ValueError("command must have shape (num_envs, 3)")
+    if not command.is_floating_point():
+        raise ValueError("command must be floating point")
+    if not isinstance(quat, torch.Tensor) or quat.shape != (num_envs, 4):
+        raise ValueError("root_link_quat_w must have shape (num_envs, 4)")
+    if not isinstance(omega_b, torch.Tensor) or omega_b.shape != (num_envs, 3):
+        raise ValueError("root_link_ang_vel_b must have shape (num_envs, 3)")
+    if not quat.is_floating_point() or not omega_b.is_floating_point():
+        raise ValueError("quaternion and body angular velocity must be floating point")
+    if command.dtype != quat.dtype or command.dtype != omega_b.dtype:
+        raise ValueError("projected-yaw inputs must share a floating point dtype")
+    if command.device != quat.device or command.device != omega_b.device:
+        raise ValueError("projected-yaw inputs must share a device")
+    if (not isinstance(episodes, torch.Tensor) or episodes.shape != (num_envs,)
+            or episodes.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8)):
+        raise ValueError("episode_length_buf must be an integer vector matching worlds")
+    if episodes.device != command.device or bool((episodes < 0).any()):
+        raise ValueError("episode_length_buf must be nonnegative and share the input device")
+    if not bool(torch.isfinite(command).all() & torch.isfinite(quat).all()
+                 & torch.isfinite(omega_b).all()):
+        raise FloatingPointError("nonfinite projected-yaw input")
+
+    qnorm = torch.linalg.vector_norm(quat, dim=-1)
+    if not bool(torch.isfinite(qnorm).all()) or bool((qnorm <= 0.0).any()):
+        raise ValueError("root_link_quat_w norm must be finite and positive")
+    if bool(((qnorm - 1.0).abs() > 1.0e-5).any()):
+        raise ValueError("root_link_quat_w must be unit normalized")
+    q = quat / qnorm.unsqueeze(-1)
+    w, x, y, z = q.unbind(-1)
+    # b = R(q)e_x, with q in wxyz order.
+    bx = 1.0 - 2.0 * (y.square() + z.square())
+    by = 2.0 * (x * y + w * z)
+    bz = 2.0 * (x * z - w * y)
+    b = torch.stack((bx, by, bz), dim=-1)
+    omega_w = quat_apply(q, omega_b)
+    db = torch.linalg.cross(omega_w, b, dim=-1)
+    norm_xy_sq = bx.square() + by.square()
+    projection_valid = norm_xy_sq >= _PROJECTED_YAW_BIAS_MIN_NORM_XY_SQ
+    safe_denominator = torch.where(projection_valid, norm_xy_sq, torch.ones_like(norm_xy_sq))
+    projected_rate = (bx * db[:, 1] - by * db[:, 0]) / safe_denominator
+    projected_rate = torch.where(projection_valid, projected_rate, torch.zeros_like(projected_rate))
+    if not bool(torch.isfinite(norm_xy_sq).all() & torch.isfinite(projected_rate).all()):
+        raise FloatingPointError("nonfinite projected-yaw geometry or rate")
+
+    command_yaw = command[:, 2].detach().clone()
+    residual = (command_yaw - projected_rate).detach()
+    residual = torch.where(projection_valid, residual, torch.zeros_like(residual)).clone()
+    if not bool(torch.isfinite(residual).all()):
+        raise FloatingPointError("nonfinite projected-yaw residual")
+    signature = (command_name, asset_name, tau_s, step_dt, tuple(command.shape),
+                 tuple(quat.shape), tuple(omega_b.shape), str(command.device), command.dtype,
+                 quat.dtype, omega_b.dtype, tuple(episodes.shape), episodes.dtype,
+                 str(episodes.device))
+    internal = getattr(env, "_microduck_projected_yaw_bias_internal", None)
+    if internal is not None and (not isinstance(internal, dict)
+                                 or internal.get("signature") != signature):
+        raise ValueError("projected-yaw-bias state reused with incompatible config or tensor layout")
+
+    if internal is not None and step == internal["step"]:
+        if (not torch.equal(command_yaw, internal["command_yaw"])
+                or not torch.equal(quat, internal["quat"])
+                or not torch.equal(omega_b, internal["omega_b"])
+                or not torch.equal(episodes, internal["episodes"])):
+            raise RuntimeError("projected-yaw-bias inputs changed within one common step")
+        _publish_projected_yaw_bias_state(env, internal)
+        return internal["cost"].clone()
+
+    rollback = internal is not None and step < internal["step"]
+    if internal is not None and not rollback and step != internal["step"] + 1:
+        raise RuntimeError("projected-yaw-bias common-step counter skipped forward")
+    alpha = min(1.0, step_dt / tau_s)
+    ema = torch.zeros_like(residual) if internal is None or rollback else internal["signed_ema"].clone()
+    previous_command = command_yaw.clone() if internal is None or rollback else internal["command_yaw"]
+    previous_valid = (torch.zeros_like(projection_valid) if internal is None or rollback
+                      else internal["projection_valid"])
+    episode_reset = episodes <= 1
+    command_changed = command_yaw != previous_command
+    fresh = episode_reset | command_changed | (~previous_valid) | (~projection_valid)
+    ema[fresh] = 0.0
+    ema = ((1.0 - alpha) * ema + alpha * residual).detach()
+    cost = torch.where(projection_valid, ema.abs(), torch.ones_like(ema)).detach()
+    if not bool(torch.isfinite(ema).all() & torch.isfinite(cost).all()):
+        raise FloatingPointError("nonfinite projected-yaw-bias EMA cost")
+    internal = {
+        "signature": signature,
+        "step": step,
+        "command_name": command_name,
+        "asset_name": asset_name,
+        "tau_s": tau_s,
+        "step_dt": step_dt,
+        "command_yaw": command_yaw,
+        "quat": quat.detach().clone(),
+        "omega_b": omega_b.detach().clone(),
+        "episodes": episodes.detach().clone(),
+        "signed_residual": residual.clone(),
+        "signed_ema": ema.clone(),
+        "cost": cost.clone(),
+        "projection_valid": projection_valid.detach().clone(),
+        "projected_yaw_rate_rad_s": projected_rate.detach().clone(),
+    }
+    env._microduck_projected_yaw_bias_internal = internal
+    _publish_projected_yaw_bias_state(env, internal)
+    return cost.clone()
+
+
+def _publish_projected_yaw_bias_state(env: ManagerBasedRlEnv, internal: dict) -> None:
+    """Publish alias-free projected-yaw reward diagnostics."""
+    env._microduck_projected_yaw_bias_state = {
+        "protocol": _PROJECTED_YAW_BIAS_PROTOCOL,
+        "step": internal["step"],
+        "command_name": internal["command_name"],
+        "asset_name": internal["asset_name"],
+        "tau_s": internal["tau_s"],
+        "step_dt": internal["step_dt"],
+        "signed_residual": internal["signed_residual"].detach().clone(),
+        "signed_ema": internal["signed_ema"].detach().clone(),
+        "cost": internal["cost"].detach().clone(),
+        "projection_valid": internal["projection_valid"].detach().clone(),
+        "projected_yaw_rate_rad_s": internal["projected_yaw_rate_rad_s"].detach().clone(),
+    }
+
+
 def capture_linear_tracking_training_metric(env: ManagerBasedRlEnv) -> torch.Tensor:
     """Read-only official linear-kernel reward capture after reward/before reset."""
     from mjlab.tasks.velocity.mdp.rewards import track_linear_velocity

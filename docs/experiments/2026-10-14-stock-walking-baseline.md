@@ -390,3 +390,33 @@ using forward walking arcs and stop, not another blind reward-width sweep.
 Slow-command activation and turn-in-place remain separate gaps. Obstacle
 avoidance and physical deployment remain unqualified; do not promote the policy
 on this flat-task response alone.
+
+### Walking-turn clips completed and inspected
+
+The two-point demo ran at exact source
+`199fef5142613ae3ea0c80c7a8d7dfdeca1d5c5d`, starting07:59:38 Shanghai. It repeated
+six cases and produced two clips in74.86s; zero falls/NaNs/nonfinite steps.
+Both units finished successfully. USER vLLM was restored at08:01:30 with GPU
+PID2754957, DINO2029 retained, and other three protected scopes inactive.
+The full approved window closed early; no Duck process remains.
+
+Result SHA256 `4d8f80ac335af304517723ec5c1b90a53882e9ee81889c899531d6e339244643`.
+Video hashes were rechecked after copying the1.6MiB demo artifacts to Mac at
+`artifacts/evaluations/stock-walk-moving-turn-demo-s1019-20261015`:
+
+| Clip | SHA256 | Recorded mean vx / yaw |
+| --- | --- | --- |
+| left | `7aa7592962b0010294385c9f6ff4007a2f496814d99ad357940fc3e235d37cb2` |0.17863 /+0.44818 |
+| right | `bf34a1fc9a78499700b606fbaed84ab1528cb4f5bc9739243be1a1fcc5fee525` |0.17114 /-0.37328 |
+
+Both decode as960×540,50fps,500 frames,10s, with zero recorded episode ends.
+Ten1fps frames per clip were actually inspected: upright alternating steps
+and rotation in opposite requested directions are visible, rather than the
+stationary gentle-command behavior. Full playback remains unreviewed; preserve
+the original receipt's pending flag and `policy_acceptance=false`.
+
+This test discovered a usable response in the existing learned policy; it did
+**not** retrain or add a new skill. Next use these measured walking-arc commands
+in a bounded waypoint controller, judged by actual path/heading over gait cycles.
+Do not use turn-in-place as a fallback until it is separately trained/validated,
+and do not infer obstacle or hardware acceptance from these clips.
